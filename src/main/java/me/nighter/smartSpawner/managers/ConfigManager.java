@@ -243,17 +243,29 @@ public class ConfigManager {
     }
 
     public EntityType getDefaultEntityType() {
-        return (EntityType) configCache.computeIfAbsent("spawner.default-entity", key -> {
-            String defaultValue = "PIG";
-            setDefaultIfNotExists(key, defaultValue);
-            String entityName = config.getString(key, defaultValue).toUpperCase();
-            try {
-                return EntityType.valueOf(entityName);
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Invalid default entity type: " + entityName);
-                return EntityType.PIG;
-            }
-        });
+        String key = "spawner.default-entity";
+
+        Object cachedValue = configCache.get(key);
+
+        if (cachedValue instanceof EntityType) {
+            return (EntityType) cachedValue;
+        }
+
+        String defaultValue = "PIG";
+        setDefaultIfNotExists(key, defaultValue);
+        String entityName = config.getString(key, defaultValue).toUpperCase();
+
+        EntityType entityType;
+
+        try {
+            entityType = EntityType.valueOf(entityName);
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Invalid default entity type: " + entityName);
+            entityType = EntityType.PIG;
+        }
+
+        configCache.put(key, entityType);
+        return entityType;
     }
 
     public int getMaxStackSize() {

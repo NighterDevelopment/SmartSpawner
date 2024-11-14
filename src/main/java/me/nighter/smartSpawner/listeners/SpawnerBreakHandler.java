@@ -27,6 +27,7 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 public class SpawnerBreakHandler implements Listener {
     private final SmartSpawner plugin;
@@ -295,18 +296,39 @@ public class SpawnerBreakHandler implements Listener {
         }
 
         BlockStateMeta blockMeta = (BlockStateMeta) meta;
+
+        // Create a new Spawner when placed by a player
+        String newSpawnerId = UUID.randomUUID().toString().substring(0, 8);
+
         // Get the stored spawner state
         CreatureSpawner storedState = (CreatureSpawner) blockMeta.getBlockState();
-        EntityType storedEntity = storedState.getSpawnedType();
-
-        // Apply the stored entity type to the placed spawner
+        EntityType entityType = storedState.getSpawnedType();
         Block placedBlock = event.getBlock();
         CreatureSpawner placedSpawner = (CreatureSpawner) placedBlock.getState();
-        placedSpawner.setSpawnedType(storedEntity);
+
+        if (entityType == null || entityType == EntityType.UNKNOWN) {
+            entityType = configManager.getDefaultEntityType();
+        }
+
+        placedSpawner.setSpawnedType(entityType);
         placedSpawner.update();
-        languageManager.sendMessage(player, "messages.entity-spawner-placed");
+        Location location = placedBlock.getLocation();
+        location.getWorld().spawnParticle(
+                Particle.WITCH,
+                location.clone().add(0.5, 0.5, 0.5),
+                50, 0.5, 0.5, 0.5, 0
+        );
+
+        // Create new spawner
+        SpawnerData spawner = new SpawnerData(newSpawnerId, location, entityType, plugin);
+        spawner.setSpawnerActive(true);
+
+        spawnerManager.addSpawner(newSpawnerId, spawner);
+        spawnerManager.saveSpawnerData();
+
+        languageManager.sendMessage(player, "messages.activated");
         // Debug message
-        configManager.debug("Player " + player.getName() + " placed " + storedEntity + " spawner at " + block.getLocation());
+        configManager.debug("Created new spawner with ID: " + newSpawnerId + " at " + block.getLocation());
     }
 
     private void cleanupSpawner(Block block, SpawnerData spawner, Player player) {

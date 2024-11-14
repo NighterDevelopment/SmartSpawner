@@ -65,30 +65,25 @@ public class SpawnerListener implements Listener {
     }
 
     // Helper method to create new spawner
-    private SpawnerData createNewSpawner(Block block, Player player) {
+    public SpawnerData createNewSpawner(Block block, Player player) {
         String newSpawnerId = UUID.randomUUID().toString().substring(0, 8);
         CreatureSpawner creatureSpawner = (CreatureSpawner) block.getState();
         EntityType entityType = creatureSpawner.getSpawnedType();
 
         // Handle null entityType
         if (entityType == null || entityType == EntityType.UNKNOWN) {
-            entityType = EntityType.PIG;
-            creatureSpawner.setSpawnedType(EntityType.PIG);
-            creatureSpawner.update();
-            Location loc = block.getLocation();
-            loc.getWorld().spawnParticle(
-                    Particle.WITCH,
-                    loc.clone().add(0.5, 0.5, 0.5),
-                    50, 0.5, 0.5, 0.5, 0
-            );
-        } else {
-            Location loc = block.getLocation();
-            loc.getWorld().spawnParticle(
-                    Particle.WITCH,
-                    loc.clone().add(0.5, 0.5, 0.5),
-                    50, 0.5, 0.5, 0.5, 0
-            );
+            entityType = configManager.getDefaultEntityType();
         }
+
+        // The else condition was just a duplicate code & was doing nothing extra, simplified it removing it.
+        creatureSpawner.setSpawnedType(entityType);
+        creatureSpawner.update();
+        Location loc = block.getLocation();
+        loc.getWorld().spawnParticle(
+                Particle.WITCH,
+                loc.clone().add(0.5, 0.5, 0.5),
+                50, 0.5, 0.5, 0.5, 0
+        );
 
         // Create new spawner with default config values
         SpawnerData spawner = new SpawnerData(newSpawnerId, block.getLocation(), entityType, plugin);
