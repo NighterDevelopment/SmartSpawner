@@ -26,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.3-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
     compileOnly("org.geysermc.floodgate:api:2.2.3-SNAPSHOT")
     implementation 'net.kyori:adventure-api:4.14.0'
     implementation 'net.kyori:adventure-text-minimessage:4.14.0'
@@ -60,6 +60,11 @@ processResources {
     }
 }
 
+def minecraftVersion = "1.20+"
+
 jar {
     destinationDirectory = file('C:\\Users\\ADMIN\\OneDrive\\Desktop\\TestServer\\plugins\\')
+    archiveBaseName.set("SmartSpawner")
+    archiveVersion.set("${version}-MC-${minecraftVersion}")
 }
+

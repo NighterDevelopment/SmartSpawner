@@ -101,7 +101,7 @@ public class SpawnerStackHandler {
         World world = loc.getWorld();
         if (world == null) return;
 
-        world.spawnParticle(Particle.HAPPY_VILLAGER,
+        world.spawnParticle(Particle.VILLAGER_HAPPY,
                 loc.clone().add(0.5, 0.5, 0.5),
                 10, 0.3, 0.3, 0.3, 0);
 

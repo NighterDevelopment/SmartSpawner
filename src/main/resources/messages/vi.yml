@@ -15,7 +15,6 @@ format-number:
 #---------------------------------------------------
 mob_names:
   BLAZE: "Quỷ Lửa"
-  BOGGED: "Quái Vật Đầm Lầy"
   BREEZE: "Qủy Gió"
   CAVE_SPIDER: "Nhện Hang"
   CHICKEN: "Gà"
@@ -31,7 +30,6 @@ mob_names:
   HUSK: "Quái Khô Tàn"
   IRON_GOLEM: "Người Sắt"
   MAGMA_CUBE: "Khối Dung Nham"
-  MOOSHROOM: "Mooshroom"
   PIG: "Lợn"
   PIGLIN: "Piglin"
   PIGLIN_BRUTE: "Piglin Hung Bạo"

@@ -382,7 +382,7 @@ public class SpawnerBreakHandler implements Listener {
 
         // Visual effect
         block.getWorld().spawnParticle(
-                Particle.WITCH,
+                Particle.SPELL_WITCH,
                 block.getLocation().clone().add(0.5, 0.5, 0.5),
                 50, 0.5, 0.5, 0.5, 0
         );

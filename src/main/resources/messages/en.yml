@@ -16,7 +16,6 @@ format-number:
 #---------------------------------------------------
 mob_names:
   BLAZE: "Blaze"
-  BOGGED: "Bogged"
   BREEZE: "Breeze"
   CAVE_SPIDER: "Cave Spider"
   CHICKEN: "Chicken"
@@ -32,7 +31,6 @@ mob_names:
   HUSK: "Husk"
   IRON_GOLEM: "Iron Golem"
   MAGMA_CUBE: "Magma Cube"
-  MOOSHROOM: "Mooshroom"
   PIG: "Pig"
   PIGLIN: "Piglin"
   PIGLIN_BRUTE: "Piglin Brute"

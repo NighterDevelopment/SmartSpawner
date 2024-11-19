@@ -22,7 +22,6 @@ public class SpawnerHeadManager {
     static {
         // Khởi tạo texture map
         TEXTURE_MAP.put(EntityType.BLAZE, "737623f79f7eb4f3f80da65b652cc44b2148eea41f9ffe2e86a23bdf49ab77b1");
-        TEXTURE_MAP.put(EntityType.BOGGED, "a3b9003ba2d05562c75119b8a62185c67130e9282f7acbac4bc2824c21eb95d9");
         TEXTURE_MAP.put(EntityType.BREEZE, "a275728af7e6a29c88125b675a39d88ae9919bb61fdc200337fed6ab0c49d65c");
         TEXTURE_MAP.put(EntityType.CAVE_SPIDER, "eccc4a32d45d74e8b14ef1ffd55cd5f381a06d4999081d52eaea12e13293e209");
         TEXTURE_MAP.put(EntityType.CHICKEN, "4e8f3ea46735ad0c106c549ccb6cd489c97a41e73d092497ee424becd9dfd29c");
@@ -37,7 +36,6 @@ public class SpawnerHeadManager {
         TEXTURE_MAP.put(EntityType.HUSK, "d674c63c8db5f4ca628d69a3b1f8a36e29d8fd775e1a6bdb6cabb4be4db121");
         TEXTURE_MAP.put(EntityType.IRON_GOLEM, "4271913a3fc8f56bdf6b90a4b4ed6a05c562ce0076b5344d444fb2b040ae57d");
         TEXTURE_MAP.put(EntityType.MAGMA_CUBE, "38957d5023c937c4c41aa2412d43410bda23cf79a9f6ab36b76fef2d7c429");
-        TEXTURE_MAP.put(EntityType.MOOSHROOM, "45603d539f666fdf0f7a0fe20b81dfef3abe6c51da34b9525a5348432c5523b2");
         TEXTURE_MAP.put(EntityType.PIG, "9b1760e3778f8087046b86bec6a0a83a567625f30f0d6bce866d4bed95dba6c1");
         TEXTURE_MAP.put(EntityType.PILLAGER, "4aee6bb37cbfc92b0d86db5ada4790c64ff4468d68b84942fde04405e8ef5333");
         TEXTURE_MAP.put(EntityType.PUFFERFISH, "292350c9f0993ed54db2c7113936325683ffc20104a9b622aa457d37e708d931");

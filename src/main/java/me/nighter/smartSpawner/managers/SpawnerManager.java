@@ -363,7 +363,7 @@ public class SpawnerManager {
 
             Location loc = spawner.getSpawnerLocation();
             World world = loc.getWorld();
-            world.spawnParticle(Particle.HAPPY_VILLAGER,
+            world.spawnParticle(Particle.VILLAGER_HAPPY,
                     loc.clone().add(0.5, 0.5, 0.5),
                     10, 0.3, 0.3, 0.3, 0);
 
