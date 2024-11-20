@@ -1,41 +1,20 @@
 # Important: this is per mob drop configuration, spawner will generate between min-mobs and max-mobs of these drops (1 to 4 mobs default) each time.
 per_mob_drop:
-# https://minecraft.wiki/w/Blaze#Drops
+  # https://minecraft.wiki/w/Blaze#Drops
   Blaze:
     experience: 10
     loot:
       blaze_rod:
         amount: 0-1
         chance: 100.0
-# https://minecraft.wiki/w/Bogged#Drops
-  Bogged:
-    experience: 5
-    loot:
-      bone:
-        amount: 0-2
-        chance: 100.0
-      arrow:
-        amount: 0-2
-        chance: 100.0
-      bow:
-        amount: 1-1
-        chance: 8.5
-        durability: 1-384
-      tipped_arrow:
-        amount: 0-2
-        chance: 50.0
-        potion_effect:
-          type: POISON # effect: POISON, REGENERATION, STRENGTH, etc.
-          duration: 100 # 5s time in ticks (20 ticks = 1 second)
-          amplifier: 0 # level: (0 = I, 1 = II, etc.)
-# https://minecraft.wiki/w/Breeze#Drops
+  # https://minecraft.wiki/w/Breeze#Drops
   Breeze:
     experience: 10
     loot:
       breeze_rod:
         amount: 1-2
         chance: 100.0
-# https://minecraft.wiki/w/Cave_Spider#Drops
+  # https://minecraft.wiki/w/Cave_Spider#Drops
   Cave_Spider:
     experience: 5
     loot:
@@ -45,7 +24,7 @@ per_mob_drop:
       string:
         amount: 0-2
         chance: 100.0
-# https://minecraft.wiki/w/Chicken#Drops
+  # https://minecraft.wiki/w/Chicken#Drops
   Chicken:
     experience: 3
     loot:
@@ -55,7 +34,7 @@ per_mob_drop:
       chicken:
         amount: 1-1
         chance: 100.0
-# https://minecraft.wiki/w/Cow#Drops
+  # https://minecraft.wiki/w/Cow#Drops
   Cow:
     experience: 3
     loot:
@@ -65,14 +44,14 @@ per_mob_drop:
       beef:
         amount: 1-3
         chance: 100.0
-# https://minecraft.wiki/w/Creeper#Drops
+  # https://minecraft.wiki/w/Creeper#Drops
   Creeper:
     experience: 5
     loot:
       gunpowder:
         amount: 0-2
         chance: 100.0
-# https://minecraft.wiki/w/Drowned#Drops
+  # https://minecraft.wiki/w/Drowned#Drops
   Drowned:
     experience: 5
     loot:
@@ -86,14 +65,14 @@ per_mob_drop:
         amount: 1-1
         chance: 0.53 # Each drowned has a 6.25% chance to spawn with a trident, A drowned holding a trident has an 8.5% chance to drop it when killed so it would be 6.25%×8.5% = 0.53125%
         durability: 1-250
-# https://minecraft.wiki/w/Enderman#Drops
+  # https://minecraft.wiki/w/Enderman#Drops
   Enderman:
     experience: 5
     loot:
       ender_pearl:
         amount: 0-1
         chance: 100.0
-# https://minecraft.wiki/w/Evoker#Drops
+  # https://minecraft.wiki/w/Evoker#Drops
   Evoker:
     experience: 10
     loot:
@@ -103,7 +82,7 @@ per_mob_drop:
       totem_of_undying:
         amount: 1-1
         chance: 100.0
-# https://minecraft.wiki/w/Ghast#Drops
+  # https://minecraft.wiki/w/Ghast#Drops
   Ghast:
     experience: 5
     loot:
@@ -113,14 +92,14 @@ per_mob_drop:
       gunpowder:
         amount: 0-2
         chance: 100.0
-# https://minecraft.wiki/w/Glow_Squid#Drops
+  # https://minecraft.wiki/w/Glow_Squid#Drops
   Glow_Squid:
     experience: 1
     loot:
       glow_ink_sac:
         amount: 1-3
         chance: 100.0
-# https://minecraft.wiki/w/Guardian#Drops
+  # https://minecraft.wiki/w/Guardian#Drops
   Guardian:
     experience: 10
     loot:
@@ -131,7 +110,7 @@ per_mob_drop:
         amount: 0-1
         chance: 100.0
       # random fish
-# https://minecraft.wiki/w/Hoglin#Drops
+  # https://minecraft.wiki/w/Hoglin#Drops
   Hoglin:
     experience: 5
     loot:
@@ -141,7 +120,7 @@ per_mob_drop:
       porkchop:
         amount: 2-4
         chance: 100.0
-# https://minecraft.wiki/w/Husk#Drops
+  # https://minecraft.wiki/w/Husk#Drops
   Husk:
     experience: 5
     loot:
@@ -157,7 +136,7 @@ per_mob_drop:
       potato:
         amount: 1-1
         chance: 0.83
-# https://minecraft.wiki/w/Iron_Golem#Drops
+  # https://minecraft.wiki/w/Iron_Golem#Drops
   Iron_Golem:
     experience: 0
     loot:
@@ -167,15 +146,15 @@ per_mob_drop:
       poppy:
         amount: 0-2
         chance: 100.0
-# https://minecraft.wiki/w/Magma_Cube#Drops
+  # https://minecraft.wiki/w/Magma_Cube#Drops
   Magma_Cube: # Average Drop
     experience: 4
     loot:
       magma_cream:
         amount: 2-6
         chance: 25.0
-# https://minecraft.wiki/w/Mooshroom#Drops
-  Mooshroom:
+  # https://minecraft.wiki/w/Mooshroom#Drops
+  Mushroom_Cow:
     experience: 1
     loot:
       leather:
@@ -184,14 +163,14 @@ per_mob_drop:
       beef:
         amount: 1-3
         chance: 100.0
-# https://minecraft.wiki/w/Pig#Drops
+  # https://minecraft.wiki/w/Pig#Drops
   Pig:
     experience: 1
     loot:
       porkchop:
         amount: 1-3
         chance: 100.0
-# https://minecraft.wiki/w/Piglin#Drops
+  # https://minecraft.wiki/w/Piglin#Drops
   Piglin:
     experience: 5
     loot:
@@ -203,7 +182,7 @@ per_mob_drop:
         amount: 1-1
         chance: 8.5
         durability: 1-32
-# https://minecraft.wiki/w/Piglin_Brute#Drops
+  # https://minecraft.wiki/w/Piglin_Brute#Drops
   Piglin_Brute:
     experience: 20
     loot:
@@ -211,7 +190,7 @@ per_mob_drop:
         amount: 1-1
         chance: 8.5
         durability: 1-32
-# https://minecraft.wiki/w/Pillager#Drops
+  # https://minecraft.wiki/w/Pillager#Drops
   Pillager:
     experience: 5
     loot:
@@ -222,7 +201,7 @@ per_mob_drop:
       arrow:
         amount: 0-2
         chance: 100.0
-# https://minecraft.wiki/w/Pufferfish#Drops
+  # https://minecraft.wiki/w/Pufferfish#Drops
   Pufferfish:
     experience: 3
     loot:
@@ -232,7 +211,7 @@ per_mob_drop:
       bone_meal:
         amount: 1-1
         chance: 5.0
-# https://minecraft.wiki/w/Rabbit#Drops
+  # https://minecraft.wiki/w/Rabbit#Drops
   Rabbit:
     experience: 3
     loot:
@@ -245,14 +224,14 @@ per_mob_drop:
       rabbit_foot:
         amount: 1-1
         chance: 10.0
-# https://minecraft.wiki/w/Ravager#Drops
+  # https://minecraft.wiki/w/Ravager#Drops
   Ravager:
     experience: 20
     loot:
       saddle:
         amount: 1-1
         chance: 100.0
-# https://minecraft.wiki/w/Salmon#Drops
+  # https://minecraft.wiki/w/Salmon#Drops
   Salmon:
     experience: 1
     loot:
@@ -262,7 +241,7 @@ per_mob_drop:
       bone_meal:
         amount: 1-1
         chance: 5.0
-# https://minecraft.wiki/w/Sheep#Drops
+  # https://minecraft.wiki/w/Sheep#Drops
   Sheep:
     experience: 1
     loot:
@@ -272,14 +251,14 @@ per_mob_drop:
       mutton:
         amount: 1-2
         chance: 100.0
-# https://minecraft.wiki/w/Shulker#Drops
+  # https://minecraft.wiki/w/Shulker#Drops
   Shulker:
     experience: 5
     loot:
       shulker_shell:
         amount: 1-1
         chance: 50.0
-# https://minecraft.wiki/w/Skeleton#Drops
+  # https://minecraft.wiki/w/Skeleton#Drops
   Skeleton:
     experience: 5
     loot:
@@ -293,14 +272,14 @@ per_mob_drop:
         amount: 1-1
         chance: 8.5
         durability: 1-384  # Bow has a maximum durability of 384
-# https://minecraft.wiki/w/Slime#Drops
+  # https://minecraft.wiki/w/Slime#Drops
   Slime: # Average Drop
     experience: 4
     loot:
       slime_ball:
         amount: 1-6
         chance: 100.0
-# https://minecraft.wiki/w/Spider#Drops
+  # https://minecraft.wiki/w/Spider#Drops
   Spider:
     experience: 5
     loot:
@@ -310,14 +289,14 @@ per_mob_drop:
       spider_eye:
         amount: 1-1
         chance: 33.33
-# https://minecraft.wiki/w/Squid#Drops
+  # https://minecraft.wiki/w/Squid#Drops
   Squid:
     experience: 3
     loot:
       ink_sac:
         amount: 1-3
         chance: 100.0
-# https://minecraft.wiki/w/Stray#Drops
+  # https://minecraft.wiki/w/Stray#Drops
   Stray:
     experience: 5
     loot:
@@ -338,14 +317,14 @@ per_mob_drop:
           type: SLOWNESS # effect: POISON, REGENERATION, STRENGTH, etc.
           duration: 100 # 5s time in ticks (20 ticks = 1 second)
           amplifier: 0 # level: (0 = I, 1 = II, etc).
-# https://minecraft.wiki/w/Strider#Drops
+  # https://minecraft.wiki/w/Strider#Drops
   Strider:
     experience: 3
     loot:
       string:
         amount: 2-5
         chance: 100.0
-# https://minecraft.wiki/w/Tropical_Fish#Drops
+  # https://minecraft.wiki/w/Tropical_Fish#Drops
   Tropical_Fish:
     experience: 1
     loot:
@@ -355,7 +334,7 @@ per_mob_drop:
       bone_meal:
         amount: 1-1
         chance: 5.0
-# https://minecraft.wiki/w/Vindicator#Drops
+  # https://minecraft.wiki/w/Vindicator#Drops
   Vindicator:
     experience: 10
     loot:
@@ -366,7 +345,7 @@ per_mob_drop:
         amount: 1-1
         chance: 8.5
         durability: 1-250
-# https://minecraft.wiki/w/Witch#Drops
+  # https://minecraft.wiki/w/Witch#Drops
   Witch:
     experience: 5
     loot:
@@ -391,7 +370,7 @@ per_mob_drop:
       stick:
         amount: 0-2
         chance: 0.27
-# https://minecraft.wiki/w/Wither_Skeleton#Drops
+  # https://minecraft.wiki/w/Wither_Skeleton#Drops
   Wither_Skeleton:
     experience: 5
     loot:
@@ -408,14 +387,14 @@ per_mob_drop:
         amount: 1-1
         chance: 8.5
         durability: 1-131
-# https://minecraft.wiki/w/Zoglin#Drops
+  # https://minecraft.wiki/w/Zoglin#Drops
   Zoglin:
     experience: 5
     loot:
       rotten_flesh:
         amount: 1-3
         chance: 100.0
-# https://minecraft.wiki/w/Zombie#Drops
+  # https://minecraft.wiki/w/Zombie#Drops
   Zombie:
     experience: 5
     loot:
@@ -431,7 +410,7 @@ per_mob_drop:
       potato:
         amount: 1-1
         chance: 0.83
-# https://minecraft.wiki/w/Zombie_Villager#Drops
+  # https://minecraft.wiki/w/Zombie_Villager#Drops
   Zombie_Villager:
     experience: 5
     loot:
@@ -447,7 +426,7 @@ per_mob_drop:
       potato:
         amount: 1-1
         chance: 0.83
-# https://minecraft.wiki/w/Zombified_Piglin#Drops
+  # https://minecraft.wiki/w/Zombified_Piglin#Drops
   Zombified_Piglin:
     experience: 5
     loot:

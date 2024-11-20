@@ -30,6 +30,7 @@ mob_names:
   HUSK: "Quái Khô Tàn"
   IRON_GOLEM: "Người Sắt"
   MAGMA_CUBE: "Khối Dung Nham"
+  MUSHROOM_COW: "Mooshroom"
   PIG: "Lợn"
   PIGLIN: "Piglin"
   PIGLIN_BRUTE: "Piglin Hung Bạo"
@@ -367,12 +368,24 @@ equipment-toggle:
 # Thông báo lệnh
 #---------------------------------------------------
 command:
+  usage: |
+    &aLệnh SmartSpawner:
+    &f/ss reload &7- Tải lại cấu hình plugin
+    &f/ss give <người chơi> <loại mob> <số lượng> &7- Tặng spawner cho người chơi
   reload:
     usage: "&cSử dụng: /smartspawner reload"
     success: "&aĐã tải lại plugin thành công!"
-    loot-success: "&aĐã tải lại cấu hình vật phẩm thành công!"
     error: "&cLỗi khi tải lại plugin. Kiểm tra console để biết chi tiết."
-    loot-error: "&cLỗi khi tải lại cấu hình vật phẩm. Kiểm tra console để biết chi tiết."
+  give:
+    usage: "&cSử dụng: /smartspawner give <người chơi> <loại mob> <số lượng>"
+    player-not-found: "&cKhông tìm thấy người chơi!"
+    amount-too-large: "&cSố lượng tối đa cho phép là %max%!"
+    invalid-amount: "&cSố lượng không hợp lệ! Vui lòng nhập số từ 1 đến 64."
+    inventory-full: "&eTúi đồ của bạn đã đầy! Một số vật phẩm đã rơi xuống đất."
+    invalid-mob-type: "&cLoại mob không hợp lệ! Sử dụng tab để xem các loại có sẵn."
+    spawner-received: "&aBạn đã nhận được %amount% lồng spawn %entity%!"
+    spawner-given: "&aBạn đã cho %player% %amount% lồng spawn %entity%!"
+    spawner-given-dropped: "&eBạn đã cho %player% %amount% lồng spawn %entity% (một số đã rơi xuống đất)"
 
 no-permission:
   message: "&cBạn không có quyền thực hiện điều này!"

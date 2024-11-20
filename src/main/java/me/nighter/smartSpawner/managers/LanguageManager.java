@@ -206,11 +206,20 @@ public class LanguageManager {
         put("equipment-toggle.lore.disabled", "&7Status: &c&lBlocked");
 
         // Command Messages
+        put("command.usage", "&#00E689SmartSpawner Commands:\n&f/smartspawner reload &7- Reload the plugin configuration\n&f/smartspawner give <player> <mobtype> <amount> &7- Give spawners to a player");
         put("command.reload.usage", "&cUsage: /smartspawner reload [loot]");
         put("command.reload.success", "&aPlugin reloaded successfully!");
-        put("command.reload.loot-success", "&aLoot configuration reloaded successfully!");
         put("command.reload.error", "&cError reloading plugin. Check console for details.");
-        put("command.reload.loot-error", "&cError reloading loot configuration. Check console for details.");
+
+        put("command.give.usage", "&cUsage: /smartspawner give <player> <mobtype> <amount>");
+        put("command.give.player-not-found", "&cPlayer not found!");
+        put("command.give.invalid-mob-type", "&cInvalid mob type! Use tab completion to see available types.");
+        put("command.give.invalid-amount", "&cInvalid amount! Please enter a number between 1 and 64.");
+        put("command.give.amount-too-large", "&cMaximum amount allowed is %max%!");
+        put("command.give.inventory-full", "&eYour inventory is full! Some items have been dropped on the ground.");
+        put("command.give.spawner-received", "&aYou have received %amount% %entity% spawner(s)!");
+        put("command.give.spawner-given", "&aYou have given %player% %amount% %entity% spawner(s)!");
+        put("command.give.spawner-given-dropped", "&eYou have given %player% %amount% %entity% spawner(s) (some items were dropped on the ground)");
 
         // No Permission Message
         put("no-permission.message", "&cYou do not have permission to do that!");

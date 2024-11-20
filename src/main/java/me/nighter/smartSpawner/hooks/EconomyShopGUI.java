@@ -109,7 +109,7 @@ public class EconomyShopGUI {
 
             // Give money to player
             for (Map.Entry<EcoType, Double> entry : prices.entrySet()) {
-                if (!isClaimableCurrency(entry.getKey())) {
+                if (isClaimableCurrency(entry.getKey())) {
                     EconomyShopGUIHook.getEcon(entry.getKey()).depositBalance(player, entry.getValue());
                 }
             }

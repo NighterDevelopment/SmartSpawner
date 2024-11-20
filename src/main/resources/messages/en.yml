@@ -31,6 +31,7 @@ mob_names:
   HUSK: "Husk"
   IRON_GOLEM: "Iron Golem"
   MAGMA_CUBE: "Magma Cube"
+  MUSHROOM_COW: "Mooshroom"
   PIG: "Pig"
   PIGLIN: "Piglin"
   PIGLIN_BRUTE: "Piglin Brute"
@@ -368,12 +369,24 @@ equipment-toggle:
 # Command & Update Messages
 #---------------------------------------------------
 command:
+  usage: |
+    &aCommands Usage:
+    &f/smartspawner reload &7- Reload the plugin configuration
+    &f/smartspawner give <player> <mobtype> <amount> &7- Give spawners to a player
   reload:
     usage: "&cUsage: /smartspawner reload"
     success: "&aPlugin reloaded successfully!"
-    loot-success: "&aLoot configuration reloaded successfully!"
     error: "&cError reloading plugin. Check console for details."
-    loot-error: "&cError reloading loot configuration. Check console for details."
+  give:
+    usage: "&cUsage: /smartspawner give <player> <mobtype> <amount>"
+    player-not-found: "&cPlayer not found!"
+    amount-too-large: "&cMaximum amount allowed is %max%!"
+    invalid-amount: "&cInvalid amount! Please enter a number between 1 and 64."
+    inventory-full: "&eYour inventory is full! Some items have been dropped on the ground."
+    invalid-mob-type: "&cInvalid mob type! Use tab completion to see available types."
+    spawner-received: "&aYou have received %amount% %entity% spawner(s)!"
+    spawner-given: "&aYou have given %player% %amount% %entity% spawner(s)!"
+    spawner-given-dropped: "&eYou have given %player% %amount% %entity% spawner(s) (some items were dropped on the ground)"
 
 no-permission:
   message: "&cYou do not have permission to do that!"

@@ -21,6 +21,9 @@ permissions:
   smartspawner.reload:
     description: Permission to reload SmartSpawner plugin
     default: op
+  smartspawner.give:
+    description: Allow giving spawners to yourself or other players
+    default: op
   smartspawner.stack:
     description: Allow stacking spawners
     default: true
@@ -33,3 +36,13 @@ permissions:
   smartspawner.sellall:
     description: Allow selling items in spawner storage GUI
     default: true
+  smartspawner.*:
+    description: Grants access to all SmartSpawner permissions
+    default: op
+    children:
+      smartspawner.reload: true
+      smartspawner.give: true
+      smartspawner.stack: true
+      smartspawner.changetype: true
+      smartspawner.break: true
+      smartspawner.sellall: true

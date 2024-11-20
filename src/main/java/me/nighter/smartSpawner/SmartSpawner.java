@@ -1,6 +1,7 @@
 package me.nighter.smartSpawner;
 
 import me.nighter.smartSpawner.commands.ReloadCommand;
+import me.nighter.smartSpawner.commands.SmartSpawnerCommand;
 import me.nighter.smartSpawner.listeners.*;
 import me.nighter.smartSpawner.managers.*;
 import me.nighter.smartSpawner.hooks.EconomyShopGUI;
@@ -58,9 +59,9 @@ public class SmartSpawner extends JavaPlugin {
         updateChecker.initialize();
 
         // Register the reload command
-        ReloadCommand reloadCommand = new ReloadCommand(this);
-        getCommand("smartspawner").setExecutor(reloadCommand);
-        getCommand("smartspawner").setTabCompleter(reloadCommand);
+        SmartSpawnerCommand smartSpawnerCommand = new SmartSpawnerCommand(this);
+        getCommand("smartspawner").setExecutor(smartSpawnerCommand);
+        getCommand("smartspawner").setTabCompleter(smartSpawnerCommand);
 
         registerListeners();
         getLogger().info("SmartSpawner has been enabled!");
