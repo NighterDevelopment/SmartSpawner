@@ -405,14 +405,6 @@ public class ConfigManager {
         });
     }
 
-    public int getHopperTransferCooldown() {
-        return (int) configCache.computeIfAbsent("hopper.transfer-cooldown", key -> {
-            int defaultValue = 20;
-            setDefaultIfNotExists(key, defaultValue);
-            return config.getInt(key, defaultValue);
-        });
-    }
-
     public int getHopperItemsPerTransfer() {
         return (int) configCache.computeIfAbsent("hopper.items-per-transfer", key -> {
             int defaultValue = 64;

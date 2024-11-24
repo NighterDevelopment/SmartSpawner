@@ -122,6 +122,54 @@ public class SpawnerHeadManager {
             return new ItemStack(Material.SPAWNER);
         }
     }
+
+    public static ItemStack getCustomHead(EntityType entityType) {
+        switch (entityType) {
+            case ZOMBIE:
+                return new ItemStack(Material.ZOMBIE_HEAD);
+            case SKELETON:
+                return new ItemStack(Material.SKELETON_SKULL);
+            case WITHER_SKELETON:
+                return new ItemStack(Material.WITHER_SKELETON_SKULL);
+            case CREEPER:
+                return new ItemStack(Material.CREEPER_HEAD);
+            case PIGLIN, PIGLIN_BRUTE:
+                return new ItemStack(Material.PIGLIN_HEAD);
+        }
+
+        if (HEAD_CACHE.containsKey(entityType)) {
+            return HEAD_CACHE.get(entityType).clone();
+        }
+
+        if (!TEXTURE_MAP.containsKey(entityType)) {
+            return new ItemStack(Material.SPAWNER);
+        }
+
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+
+        try {
+            String texture = TEXTURE_MAP.get(entityType);
+
+            PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+            PlayerTextures textures = profile.getTextures();
+            URL url = new URL("http://textures.minecraft.net/texture/" + texture);
+            textures.setSkin(url);
+            profile.setTextures(textures);
+            meta.setOwnerProfile(profile);
+
+            head.setItemMeta(meta);
+
+            // Cache the head
+            HEAD_CACHE.put(entityType, head.clone());
+
+            return head;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ItemStack(Material.SPAWNER);
+        }
+    }
+
     // Phương thức để xóa cache nếu cần
     public static void clearCache() {
         HEAD_CACHE.clear();

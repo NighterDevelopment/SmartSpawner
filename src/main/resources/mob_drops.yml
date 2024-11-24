@@ -7,6 +7,27 @@ per_mob_drop:
       blaze_rod:
         amount: 0-1
         chance: 100.0
+  # https://minecraft.wiki/w/Bogged#Drops
+  Bogged:
+    experience: 5
+    loot:
+      bone:
+        amount: 0-2
+        chance: 100.0
+      arrow:
+        amount: 0-2
+        chance: 100.0
+      bow:
+        amount: 1-1
+        chance: 8.5
+        durability: 1-384
+      tipped_arrow:
+        amount: 0-2
+        chance: 50.0
+        potion_effect:
+          type: POISON # effect: POISON, REGENERATION, STRENGTH, etc.
+          duration: 100 # 5s time in ticks (20 ticks = 1 second)
+          amplifier: 0 # level: (0 = I, 1 = II, etc.)
   # https://minecraft.wiki/w/Breeze#Drops
   Breeze:
     experience: 10
@@ -154,7 +175,7 @@ per_mob_drop:
         amount: 2-6
         chance: 25.0
   # https://minecraft.wiki/w/Mooshroom#Drops
-  Mushroom_Cow:
+  Mooshroom:
     experience: 1
     loot:
       leather:

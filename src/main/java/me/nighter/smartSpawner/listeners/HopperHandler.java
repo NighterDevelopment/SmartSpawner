@@ -5,7 +5,7 @@ import me.nighter.smartSpawner.managers.ConfigManager;
 import me.nighter.smartSpawner.managers.LanguageManager;
 import me.nighter.smartSpawner.managers.SpawnerLootManager;
 import me.nighter.smartSpawner.managers.SpawnerManager;
-import me.nighter.smartSpawner.utils.PagedSpawnerLootHolder;
+import me.nighter.smartSpawner.holders.PagedSpawnerLootHolder;
 import me.nighter.smartSpawner.utils.SpawnerData;
 import me.nighter.smartSpawner.utils.VirtualInventory;
 import org.bukkit.*;

@@ -2,8 +2,8 @@ package me.nighter.smartSpawner.managers;
 
 import me.nighter.smartSpawner.serializers.ItemStackSerializer;
 import me.nighter.smartSpawner.SmartSpawner;
-import me.nighter.smartSpawner.utils.SpawnerMenuHolder;
-import me.nighter.smartSpawner.utils.PagedSpawnerLootHolder;
+import me.nighter.smartSpawner.holders.SpawnerMenuHolder;
+import me.nighter.smartSpawner.holders.PagedSpawnerLootHolder;
 import me.nighter.smartSpawner.utils.SpawnerData;
 import me.nighter.smartSpawner.utils.VirtualInventory;
 import org.bukkit.*;
@@ -117,89 +117,17 @@ public class SpawnerManager {
         return locationIndex.get(new LocationKey(location));
     }
 
-    private void setupSpawnerDataFile() {
+    public SpawnerData getSpawnerById(String id) {
+        return spawners.get(id);
+    }
+
+    public void setupSpawnerDataFile() {
         // Tạo file spawners_data.yml nếu chưa tồn tại
         spawnerDataFile = new File(plugin.getDataFolder(), "spawners_data.yml");
         if (!spawnerDataFile.exists()) {
             plugin.saveResource("spawners_data.yml", false);
         }
         spawnerData = YamlConfiguration.loadConfiguration(spawnerDataFile);
-    }
-
-    private void startSaveTask() {
-        configManager.debug("Starting spawner data save task");
-        int intervalSeconds = configManager.getSaveInterval();
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::saveSpawnerData, 0, intervalSeconds); // 5 phút
-    }
-
-    public void backupSpawnerData() {
-        try {
-            File backupFile = new File(plugin.getDataFolder(), "spawners_data_backup_" +
-                    System.currentTimeMillis() + ".yml");
-            spawnerData.save(backupFile);
-        } catch (IOException e) {
-            plugin.getLogger().warning("Could not create backup of spawners_data.yml!");
-            e.printStackTrace();
-        }
-    }
-
-    public boolean saveSingleSpawner(String spawnerId) {
-        try {
-            SpawnerData spawner = spawners.get(spawnerId);
-            if (spawner == null) {
-                plugin.getLogger().warning("Could not save spawner " + spawnerId + ": spawner not found");
-                return false;
-            }
-
-            String path = "spawners." + spawnerId;
-            Location loc = spawner.getSpawnerLocation();
-
-            // Lưu thông tin location
-            spawnerData.set(path + ".world", loc.getWorld().getName());
-            spawnerData.set(path + ".x", loc.getBlockX());
-            spawnerData.set(path + ".y", loc.getBlockY());
-            spawnerData.set(path + ".z", loc.getBlockZ());
-
-            // Lưu các thuộc tính cơ bản
-            spawnerData.set(path + ".entityType", spawner.getEntityType().name());
-            spawnerData.set(path + ".spawnerExp", spawner.getSpawnerExp());
-            spawnerData.set(path + ".spawnerActive", spawner.getSpawnerActive());
-            spawnerData.set(path + ".spawnerRange", spawner.getSpawnerRange());
-            spawnerData.set(path + ".spawnerStop", spawner.getSpawnerStop());
-            spawnerData.set(path + ".lastSpawnTime", spawner.getLastSpawnTime());
-            spawnerData.set(path + ".spawnDelay", spawner.getSpawnDelay());
-            spawnerData.set(path + ".maxSpawnerLootSlots", spawner.getMaxSpawnerLootSlots());
-            spawnerData.set(path + ".maxStoredExp", spawner.getMaxStoredExp());
-            spawnerData.set(path + ".minMobs", spawner.getMinMobs());
-            spawnerData.set(path + ".maxMobs", spawner.getMaxMobs());
-            spawnerData.set(path + ".stackSize", spawner.getStackSize());
-
-            // Lưu virtual inventory nếu có
-            VirtualInventory virtualInv = spawner.getVirtualInventory();
-            if (virtualInv != null) {
-                List<String> serializedItems = new ArrayList<>();
-
-                for (int slot = 0; slot < virtualInv.getSize(); slot++) {
-                    ItemStack item = virtualInv.getItem(slot);
-                    if (item != null) {
-                        String serialized = slot + ":" + ItemStackSerializer.itemStackToJson(item);
-                        serializedItems.add(serialized);
-                    }
-                }
-
-                spawnerData.set(path + ".virtualInventory.size", virtualInv.getSize());
-                spawnerData.set(path + ".virtualInventory.items", serializedItems);
-            }
-
-            // Lưu file
-            spawnerData.save(spawnerDataFile);
-            return true;
-
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save spawner " + spawnerId + " to spawners_data.yml!");
-            e.printStackTrace();
-            return false;
-        }
     }
 
     public void saveSpawnerData() {
@@ -350,6 +278,82 @@ public class SpawnerManager {
 
     public List<SpawnerData> getAllSpawners() {
         return new ArrayList<>(spawners.values());
+    }
+
+    private void startSaveTask() {
+        configManager.debug("Starting spawner data save task");
+        int intervalSeconds = configManager.getSaveInterval();
+        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::saveSpawnerData, 0, intervalSeconds); // 5 phút
+    }
+
+    public void backupSpawnerData() {
+        try {
+            File backupFile = new File(plugin.getDataFolder(), "spawners_data_backup_" +
+                    System.currentTimeMillis() + ".yml");
+            spawnerData.save(backupFile);
+        } catch (IOException e) {
+            plugin.getLogger().warning("Could not create backup of spawners_data.yml!");
+            e.printStackTrace();
+        }
+    }
+
+    public boolean saveSingleSpawner(String spawnerId) {
+        try {
+            SpawnerData spawner = spawners.get(spawnerId);
+            if (spawner == null) {
+                plugin.getLogger().warning("Could not save spawner " + spawnerId + ": spawner not found");
+                return false;
+            }
+
+            String path = "spawners." + spawnerId;
+            Location loc = spawner.getSpawnerLocation();
+
+            // Lưu thông tin location
+            spawnerData.set(path + ".world", loc.getWorld().getName());
+            spawnerData.set(path + ".x", loc.getBlockX());
+            spawnerData.set(path + ".y", loc.getBlockY());
+            spawnerData.set(path + ".z", loc.getBlockZ());
+
+            // Lưu các thuộc tính cơ bản
+            spawnerData.set(path + ".entityType", spawner.getEntityType().name());
+            spawnerData.set(path + ".spawnerExp", spawner.getSpawnerExp());
+            spawnerData.set(path + ".spawnerActive", spawner.getSpawnerActive());
+            spawnerData.set(path + ".spawnerRange", spawner.getSpawnerRange());
+            spawnerData.set(path + ".spawnerStop", spawner.getSpawnerStop());
+            spawnerData.set(path + ".lastSpawnTime", spawner.getLastSpawnTime());
+            spawnerData.set(path + ".spawnDelay", spawner.getSpawnDelay());
+            spawnerData.set(path + ".maxSpawnerLootSlots", spawner.getMaxSpawnerLootSlots());
+            spawnerData.set(path + ".maxStoredExp", spawner.getMaxStoredExp());
+            spawnerData.set(path + ".minMobs", spawner.getMinMobs());
+            spawnerData.set(path + ".maxMobs", spawner.getMaxMobs());
+            spawnerData.set(path + ".stackSize", spawner.getStackSize());
+
+            // Lưu virtual inventory nếu có
+            VirtualInventory virtualInv = spawner.getVirtualInventory();
+            if (virtualInv != null) {
+                List<String> serializedItems = new ArrayList<>();
+
+                for (int slot = 0; slot < virtualInv.getSize(); slot++) {
+                    ItemStack item = virtualInv.getItem(slot);
+                    if (item != null) {
+                        String serialized = slot + ":" + ItemStackSerializer.itemStackToJson(item);
+                        serializedItems.add(serialized);
+                    }
+                }
+
+                spawnerData.set(path + ".virtualInventory.size", virtualInv.getSize());
+                spawnerData.set(path + ".virtualInventory.items", serializedItems);
+            }
+
+            // Lưu file
+            spawnerData.save(spawnerDataFile);
+            return true;
+
+        } catch (IOException e) {
+            plugin.getLogger().severe("Could not save spawner " + spawnerId + " to spawners_data.yml!");
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public void spawnLoot(SpawnerData spawner) {

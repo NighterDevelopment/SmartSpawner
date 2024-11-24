@@ -1,11 +1,10 @@
 package me.nighter.smartSpawner.managers;
 
 import me.nighter.smartSpawner.*;
-import me.nighter.smartSpawner.utils.PagedSpawnerLootHolder;
+import me.nighter.smartSpawner.holders.PagedSpawnerLootHolder;
 import me.nighter.smartSpawner.utils.SpawnerData;
 import me.nighter.smartSpawner.utils.VirtualInventory;
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;

@@ -6,23 +6,35 @@ authors: [Nighter, Samarth Sharma]
 softdepend:
   - EconomyShopGUI
   - EconomyShopGUI-Premium
-
   - Essentials
   - CMI
 
 commands:
   smartspawner:
     description: Main command for SmartSpawner plugin
-    usage: /smartspawner reload
     aliases: [ss, spawner]
     permission: smartspawner.reload
 
 permissions:
+  smartspawner.*:
+    description: Grants access to all SmartSpawner permissions
+    default: op
+    children:
+      smartspawner.reload: true
+      smartspawner.give: true
+      smartspawner.stack: true
+      smartspawner.changetype: true
+      smartspawner.break: true
+      smartspawner.sellall: true
+      smartspawner.list: true
   smartspawner.reload:
     description: Permission to reload SmartSpawner plugin
     default: op
   smartspawner.give:
     description: Allow giving spawners to yourself or other players
+    default: op
+  smartspawner.list:
+    description: Allow viewing list of spawners and teleporting to them
     default: op
   smartspawner.stack:
     description: Allow stacking spawners
@@ -36,13 +48,3 @@ permissions:
   smartspawner.sellall:
     description: Allow selling items in spawner storage GUI
     default: true
-  smartspawner.*:
-    description: Grants access to all SmartSpawner permissions
-    default: op
-    children:
-      smartspawner.reload: true
-      smartspawner.give: true
-      smartspawner.stack: true
-      smartspawner.changetype: true
-      smartspawner.break: true
-      smartspawner.sellall: true

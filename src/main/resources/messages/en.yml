@@ -16,6 +16,7 @@ format-number:
 #---------------------------------------------------
 mob_names:
   BLAZE: "Blaze"
+  BOGGED: "Bogged"
   BREEZE: "Breeze"
   CAVE_SPIDER: "Cave Spider"
   CHICKEN: "Chicken"
@@ -245,6 +246,21 @@ messages:
     type: CHAT
     sound: block.note_block.chime
 
+  #---------------------------------------------------
+  # Spawner List Teleport Message
+  #---------------------------------------------------
+  teleported:
+    message: "&aSuccessfully teleported to &6Spawner #%spawnerId%"
+    prefix: true
+    type: CHAT
+    sound: entity.enderman.teleport
+
+  not-found:
+    message: "&cCould not teleport to that Spawner! Spawner not found."
+    prefix: true
+    type: CHAT
+    sound: block.note_block.pling
+
 #---------------------------------------------------
 # GUI Titles
 #---------------------------------------------------
@@ -258,7 +274,7 @@ gui-title:
 # Main Menu GUI
 #---------------------------------------------------
 spawner-loot-item:
-  name: "&#FCD05CLoot Storage"
+  name: "&#FCD05C&lLoot Storage"
   lore:
     chest: |
       
@@ -268,17 +284,17 @@ spawner-loot-item:
       &#FCD05C➜ &7Click to open storage
 
 spawner-info-item:
-  name: "&#4fc3f7✧ Spawner Info &#4fc3f7✧"
+  name: "&#4fc3f7&lSpawner Info"
   lore:
     spawner-info: |
-      
+
       &8▪ &#81d4faEntity: &f%entity%
       &8▪ &#81d4faRange: &f%range% &7blocks
       &8▪ &#81d4faStack Size: &f%stack_size%
       &8▪ &#81d4faMob Rate: &f%min_mobs% &7- &f%max_mobs%
       &8▪ &#81d4faSpawn Delay: &f%delay%&7s
       &8▪ &#81d4faNext Spawn: &e
-      &8&m                       
+               
       &#81d4fa➜ &7Click to open stack menu
   lore-change: "&8▪ &#81d4faNext Spawn: &e"
   lore-inactive: "&cSpawner is inactive!"
@@ -286,12 +302,12 @@ spawner-info-item:
   lore-error: "&cError in spawn time! Please restart the server."
 
 exp-info-item:
-  name: "&#00F898Stored Exp: &e%current_exp%&#00F898"
+  name: "&#00F898&lStored Exp: &e%current_exp%&#00F898"
   lore:
     exp-bottle: |
       
-      &8▪ &#00E689Current: &e%current_exp%&7/&e%max_exp% XP
-      &8▪ &#00E689Stored: &e%percent_exp%&e%&7 XP
+      &8▪ &#00E689Current: &e%current_exp%&7/&e%max_exp% &7XP
+      &8▪ &#00E689Stored: &e%percent_exp%&e% &7XP
       
       &#00E689➜ &7Click to collect XP
 
@@ -364,6 +380,52 @@ equipment-toggle:
       &7Status: &a&lAllowed
     disabled: |
       &7Status: &c&lBlocked
+
+#---------------------------------------------------
+# Spawner List GUI (Command)
+#---------------------------------------------------
+spawner-list:
+  gui-title:
+    world-selection: "&#3287A9&lSpawner List"
+    page-title: "{world} &r- [{current}/{total}]"
+
+  world-buttons:
+    overworld:
+      name: "&a&lOverworld"
+      lore: |
+        &8▪ &7Total spawners: &a{total}
+        
+        &a➜ &7Click to view Overworld spawners
+    nether:
+      name: "&c&lNether"
+      lore: |
+        &8▪ &7Total spawners: &c{total}
+        
+        &c➜ &7Click to view Nether spawners
+    end:
+      name: "&5&lThe End"
+      lore: |
+        &8▪ &7Total spawners: &5{total}
+        
+        &5➜ &7Click to view The End spawners
+
+  spawner-item:
+    name: "&#4fc3f7&lSpawner #{id}"
+    id_pattern: "Spawner #([A-Za-z0-9]+)"    # Pattern to match the spawner id for teleportation
+    lore:
+      separator: "&8&m------------------------"
+      location: "&8▪ &7Location: &f{x}, {y}, {z}"
+      entity: "&8▪ &7Entity: &f{entity}"
+      stack_size: "&8▪ &7Stack Size: &6{size}"
+      status:
+        active: "&8▪ &7Status: &a&lACTIVE"
+        inactive: "&8▪ &7Status: &c&lINACTIVE"
+      teleport: "&#3287A9➜ &eClick to teleport"
+
+  navigation:
+    previous-page: "&e&lPrevious Page"
+    next-page: "&e&lNext Page"
+    back: "&c&lBack to World Selection"
 
 #---------------------------------------------------
 # Command & Update Messages

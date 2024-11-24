@@ -5,6 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,12 +15,14 @@ import java.util.stream.Collectors;
 public class SmartSpawnerCommand implements CommandExecutor, TabCompleter {
     private final ReloadCommand reloadCommand;
     private final GiveSpawnerCommand giveCommand;
+    private final SpawnerListCommand listCommand;
     private final SmartSpawner plugin;
 
     public SmartSpawnerCommand(SmartSpawner plugin) {
         this.plugin = plugin;
         this.reloadCommand = new ReloadCommand(plugin);
         this.giveCommand = new GiveSpawnerCommand(plugin);
+        this.listCommand = new SpawnerListCommand(plugin);
     }
 
     @Override
@@ -29,6 +32,13 @@ public class SmartSpawnerCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("Only players can use this command.");
+            return true;
+        }
+
+        Player player = (Player) sender;
+
         String subCommand = args[0].toLowerCase();
 
         switch (subCommand) {
@@ -36,6 +46,9 @@ public class SmartSpawnerCommand implements CommandExecutor, TabCompleter {
                 return reloadCommand.onCommand(sender, command, label, args);
             case "give":
                 return giveCommand.executeCommand(sender, args);
+            case "list":
+                listCommand.openWorldSelectionGUI(player);
+                return true;
             default:
                 sender.sendMessage(plugin.getLanguageManager().getMessageWithPrefix("command.usage"));
                 return true;
@@ -51,6 +64,9 @@ public class SmartSpawnerCommand implements CommandExecutor, TabCompleter {
             }
             if (sender.hasPermission("smartspawner.give")) {
                 completions.add("give");
+            }
+            if (sender.hasPermission("smartspawner.list")) {
+                completions.add("list");
             }
             return completions.stream()
                     .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))

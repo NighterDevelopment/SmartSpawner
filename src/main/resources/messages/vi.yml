@@ -15,6 +15,7 @@ format-number:
 #---------------------------------------------------
 mob_names:
   BLAZE: "Quỷ Lửa"
+  BOGGED: "Quái Vật Đầm Lầy"
   BREEZE: "Qủy Gió"
   CAVE_SPIDER: "Nhện Hang"
   CHICKEN: "Gà"
@@ -30,7 +31,7 @@ mob_names:
   HUSK: "Quái Khô Tàn"
   IRON_GOLEM: "Người Sắt"
   MAGMA_CUBE: "Khối Dung Nham"
-  MUSHROOM_COW: "Mooshroom"
+  MUSHROOM_COW: "Bò Nấm"
   PIG: "Lợn"
   PIGLIN: "Piglin"
   PIGLIN_BRUTE: "Piglin Hung Bạo"
@@ -244,6 +245,21 @@ messages:
     type: CHAT
     sound: block.note_block.chime
 
+  #---------------------------------------------------
+  # Tin nhắn khi dịch chuyển bằng lệnh /ss list
+  #---------------------------------------------------
+  teleported:
+    message: "&aDịch chuyển thành công đến &6Spawner #%spawnerId%"
+    prefix: true
+    type: CHAT
+    sound: entity.enderman.teleport
+
+  not-found:
+    message: "&cKhông thể dịch chuyển đến Spawner đó! Spawner không tồn tại."
+    prefix: true
+    type: CHAT
+    sound: block.note_block.pling
+
 #---------------------------------------------------
 # Tiêu đề giao diện
 #---------------------------------------------------
@@ -363,6 +379,53 @@ equipment-toggle:
       &7Trạng thái: &a&lCho phép
     disabled: |
       &7Trạng thái: &c&lChặn
+
+#---------------------------------------------------
+# Giao diện danh sách Spawner (Lệnh)
+#---------------------------------------------------
+spawner-list:
+  gui-title:
+    world-selection: "&#3287A9&lDanh sách Spawner"
+    spawner-list: "&#4fc3f7✧ Spawners thế giới %world% &#4fc3f7✧ &7Trang %page%/%total%"
+    page_title: "{world} &r- [{current}/{total}]"
+
+  world-buttons:
+    overworld:
+      name: "&a&lOverworld"
+      lore: |
+        &8▪ &7Tổng số spawner: &a{total}
+        
+        &a➜ &7Nhấn để xem các spawner ở Overworld
+    nether:
+      name: "&c&lNether"
+      lore: |
+        &8▪ &7Tổng số spawner: &c{total}
+        
+        &c➜ &7Nhấn để xem các spawner ở Nether
+    end:
+      name: "&5&lThe End"
+      lore: |
+        &8▪ &7Tổng số spawner: &5{total}
+        
+        &5➜ &7Nhấn để xem các spawner ở The End
+
+  spawner-item:
+    name: "&#4fc3f7&lSpawner #{id}"
+    id_pattern: "Spawner #([A-Za-z0-9]+)"    # Mẫu để khớp ID spawner cho việc dịch chuyển
+    lore:
+      separator: "&8&m------------------------"
+      location: "&8▪ &7Vị trí: &f{x}, {y}, {z}"
+      entity: "&8▪ &7Thực thể: &f{entity}"
+      stack_size: "&8▪ &7Kích thước stack: &6{size}"
+      status:
+        active: "&8▪ &7Trạng thái: &a&lHOẠT ĐỘNG"
+        inactive: "&8▪ &7Trạng thái: &c&lKHÔNG HOẠT ĐỘNG"
+      teleport: "&#3287A9➜ &eNhấn để dịch chuyển"
+
+  navigation:
+    previous-page: "&e&lTrang trước"
+    next-page: "&e&lTrang sau"
+    back: "&c&lQuay lại lựa chọn thế giới"
 
 #---------------------------------------------------
 # Thông báo lệnh

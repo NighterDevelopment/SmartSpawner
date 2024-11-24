@@ -156,11 +156,11 @@ public class LanguageManager {
         put("gui-title.loot-menu", "Spawner Storage");
 
         // GUI Items - Spawner Loot
-        put("spawner-loot-item.name", "&#FCD05CLoot Storage");
+        put("spawner-loot-item.name", "&#FCD05C&lLoot Storage");
         put("spawner-loot-item.lore.chest", "\n&8▪ &#FCD05CSlots: &f%current_items%&7/&f%max_slots%\n&8▪ &#FCD05CStorage: &a%percent_storage%&a%&f full\n\n&#FCD05C➜ &7Click to open");
 
         // GUI Items - Spawner Info
-        put("spawner-info-item.name", "&#4fc3f7✧ Spawner Info &#4fc3f7✧");
+        put("spawner-info-item.name", "&#4fc3f7&lSpawner Info");
         put("spawner-info-item.lore.spawner-info", "\n&8▪ &#81d4faEntity: &f%entity%\n&8▪ &#81d4faRange: &f%range% &7blocks\n&8▪ &#81d4faStack Size: &f%stack_size%\n&8▪ &#81d4faMob Rate: &f%min_mobs% &7- &f%max_mobs%\n&8▪ &#81d4faSpawn Delay: &f%delay%&7s\n&8▪ &#81d4faNext Spawn: &e\n&8&m                       \n&#81d4fa➜ &7Click to open stack menu");
         put("spawner-info-item.lore-change", "&8▪ &#81d4faNext Spawn: &e");
         put("spawner-info-item.lore-inactive", "&cSpawner is inactive!");
@@ -168,7 +168,7 @@ public class LanguageManager {
         put("spawner-info-item.lore-error", "&cError in spawn time! Please restart the server.");
 
         // Experience Info
-        put("exp-info-item.name", "&#00F898Stored Exp: &e%current_exp%&#00F898");
+        put("exp-info-item.name", "&#00F898&lStored Exp: &e%current_exp%&#00F898");
         put("exp-info-item.lore.exp-bottle", "\n&8▪ &#00E689Current: &e%current_exp%&7/&e%max_exp% XP\n&8▪ &#00E689Stored: &e%percent_exp%&e%&7 XP\n\n&#00E689➜ &7Click to collect XP");
 
         // Stacker GUI Buttons
@@ -226,6 +226,49 @@ public class LanguageManager {
         put("no-permission.prefix", "true");
         put("no-permission.type", "CHAT");
         put("no-permission.sound", "villager.no");
+
+        //---------------------------------------------------
+        // Spawner List GUI (Command)
+        //---------------------------------------------------
+        put("spawner-list.gui-title.world-selection", "&#3287A9&lSpawner List");
+        put("spawner-list.gui-title.page-title", "{world} &r- [{current}/{total}]");
+
+        // World Buttons
+        put("spawner-list.world-buttons.overworld.name", "&a&lOverworld");
+        put("spawner-list.world-buttons.overworld.lore", "&8▪ &7Total spawners: &a{total}\n\n&a➜ &7Click to view Overworld spawners");
+
+        put("spawner-list.world-buttons.nether.name", "&c&lNether");
+        put("spawner-list.world-buttons.nether.lore", "&8▪ &7Total spawners: &c{total}\n\n&c➜ &7Click to view Nether spawners");
+
+        put("spawner-list.world-buttons.end.name", "&5&lThe End");
+        put("spawner-list.world-buttons.end.lore", "&8▪ &7Total spawners: &5{total}\n\n&5➜ &7Click to view The End spawners");
+
+        // Spawner Item
+        put("spawner-list.spawner-item.name", "&#4fc3f7&lSpawner #{id}");
+        put("spawner-list.spawner-item.id_pattern", "Spawner #([A-Za-z0-9]+)");
+        put("spawner-list.spawner-item.lore.separator", "&8&m------------------------");
+        put("spawner-list.spawner-item.lore.location", "&8▪ &7Location: &f{x}, {y}, {z}");
+        put("spawner-list.spawner-item.lore.entity", "&8▪ &7Entity: &f{entity}");
+        put("spawner-list.spawner-item.lore.stack_size", "&8▪ &7Stack Size: &6{size}");
+        put("spawner-list.spawner-item.lore.status.active", "&8▪ &7Status: &a&lACTIVE");
+        put("spawner-list.spawner-item.lore.status.inactive", "&8▪ &7Status: &c&lINACTIVE");
+        put("spawner-list.spawner-item.lore.teleport", "&#3287A9➜ &eClick to teleport");
+
+        // Navigation
+        put("spawner-list.navigation.previous-page", "&e&lPrevious Page");
+        put("spawner-list.navigation.next-page", "&e&lNext Page");
+        put("spawner-list.navigation.back", "&c&lBack to World Selection");
+
+        // Teleport Messages
+        put("messages.teleported.message", "&aSuccessfully teleported to &6Spawner #%spawnerId%");
+        put("messages.teleported.prefix", "true");
+        put("messages.teleported.type", "CHAT");
+        put("messages.teleported.sound", "entity.enderman.teleport");
+
+        put("messages.not-found.message", "&cCould not teleport to that Spawner! Spawner not found.");
+        put("messages.not-found.prefix", "true");
+        put("messages.not-found.type", "CHAT");
+        put("messages.not-found.sound", "block.note_block.pling");
     }};
 
     public LanguageManager(Plugin plugin) {

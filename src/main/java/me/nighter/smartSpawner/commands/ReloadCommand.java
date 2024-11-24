@@ -3,6 +3,7 @@ package me.nighter.smartSpawner.commands;
 import me.nighter.smartSpawner.managers.LanguageManager;
 import me.nighter.smartSpawner.SmartSpawner;
 import me.nighter.smartSpawner.managers.ConfigManager;
+import me.nighter.smartSpawner.managers.SpawnerManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -13,11 +14,13 @@ import java.util.List;
 
 public class ReloadCommand implements CommandExecutor, TabCompleter {
     private final SmartSpawner plugin;
+    private final SpawnerManager spawnerManager;
     private final ConfigManager configManager;
     private final LanguageManager languageManager;
 
     public ReloadCommand(SmartSpawner plugin) {
         this.plugin = plugin;
+        this.spawnerManager = plugin.getSpawnerManager();
         this.configManager = plugin.getConfigManager();
         this.languageManager = plugin.getLanguageManager();
     }

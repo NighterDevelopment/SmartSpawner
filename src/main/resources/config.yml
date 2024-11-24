@@ -100,9 +100,6 @@ hopper:
   # Enable/disable hopper transfer functionality
   enabled: false
 
-  # Cooldown in ticks between item transfers
-  transfer-cooldown: 20
-
   # Maximum number of items transferred per hopper
   items-per-transfer: 1
 

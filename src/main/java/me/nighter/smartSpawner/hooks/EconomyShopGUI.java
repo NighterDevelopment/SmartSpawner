@@ -212,8 +212,7 @@ public class EconomyShopGUI {
                     }
                     return String.format("%.2f %s", value, ecoType.getType().name());
 
-                case LEVELS:
-                case EXP:
+                case EXP, LEVELS:
                     // Always round to integer for levels and exp
                     return String.format("%d %s", Math.round(value), ecoType.getType().name());
 

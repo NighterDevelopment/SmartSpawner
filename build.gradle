@@ -67,4 +67,3 @@ jar {
     archiveBaseName.set("SmartSpawner")
     archiveVersion.set("${version}-MC-${minecraftVersion}")
 }
-
