@@ -98,7 +98,6 @@ public class SpawnerRangeChecker implements Listener {
         }
     }
 
-
     private void startSpawnerTask(SpawnerData spawner) {
         // Cancel existing task if any
         stopSpawnerTask(spawner);

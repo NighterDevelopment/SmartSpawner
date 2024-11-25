@@ -21,9 +21,11 @@ import me.nighter.smartSpawner.SmartSpawner;
 
 public class EconomyShopGUI {
     private final SmartSpawner plugin;
+    private double taxPercentage;
 
     public EconomyShopGUI(SmartSpawner plugin) {
         this.plugin = plugin;
+        this.taxPercentage = plugin.getConfigManager().getTaxPercentage();
     }
 
     public boolean sellAllItems(Player player, SpawnerData spawner) {

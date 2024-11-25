@@ -279,6 +279,9 @@ per_mob_drop:
       shulker_shell:
         amount: 1-1
         chance: 50.0
+  # https://minecraft.wiki/w/Silverfish#Drops
+  Silverfish:
+    experience: 5
   # https://minecraft.wiki/w/Skeleton#Drops
   Skeleton:
     experience: 5

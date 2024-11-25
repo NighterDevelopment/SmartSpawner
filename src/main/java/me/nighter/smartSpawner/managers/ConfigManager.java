@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigManager {
-    private static ConfigManager instance;
     private final SmartSpawner plugin;
     private FileConfiguration config;
     private FileConfiguration lootConfig;
@@ -132,7 +131,6 @@ public class ConfigManager {
 
         // Cache hopper settings
         configCache.put("hopper.enabled", config.getBoolean("hopper.enabled"));
-        configCache.put("hopper.transfer-cooldown", config.getInt("hopper.transfer-cooldown"));
         configCache.put("hopper.items-per-transfer", config.getInt("hopper.items-per-transfer"));
         configCache.put("hopper.check-interval", config.getInt("hopper.check-interval"));
     }
@@ -418,6 +416,14 @@ public class ConfigManager {
             int defaultValue = 20;
             setDefaultIfNotExists(key, defaultValue);
             return config.getInt(key, defaultValue);
+        });
+    }
+
+    public double getTaxPercentage() {
+        return (double) configCache.computeIfAbsent("settings.tax-percentage", key -> {
+            double defaultValue = 0.0;
+            setDefaultIfNotExists(key, defaultValue);
+            return config.getDouble(key, defaultValue);
         });
     }
 

@@ -371,11 +371,11 @@ public class SpawnerManager {
                     loc.clone().add(0.5, 0.5, 0.5),
                     10, 0.3, 0.3, 0.3, 0);
 
-            // Thêm loot vào virtual inventory
+            // Add loot to virtual inventory
             lootGenerator.addLootToSpawner(spawner, loot);
             spawner.setLastSpawnTime(System.currentTimeMillis());
 
-            // Cập nhật cho tất cả người chơi đang xem
+            // Update for all players viewing the spawner
             Bukkit.getScheduler().runTask(plugin, () -> {
                 for (HumanEntity viewer : getViewersForSpawner(spawner)) {
                     if (viewer instanceof Player) {
@@ -384,9 +384,9 @@ public class SpawnerManager {
                         if (currentInv.getHolder() instanceof PagedSpawnerLootHolder) {
                             PagedSpawnerLootHolder holder = (PagedSpawnerLootHolder) currentInv.getHolder();
                             int currentPage = holder.getCurrentPage();
-                            // Tạo inventory mới với data mới nhất
+                            // Create new inventory with the latest data
                             Inventory newInv = lootManager.createLootInventory(spawner, languageManager.getGuiTitle("gui-title.loot-menu"), currentPage);
-                            // Copy items từ inventory mới sang inventory cũ
+                            // Copy items from new inventory to the current inventory
                             for (int i = 0; i < newInv.getSize(); i++) {
                                 currentInv.setItem(i, newInv.getItem(i));
                             }

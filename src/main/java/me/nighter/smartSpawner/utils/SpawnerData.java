@@ -46,7 +46,6 @@ public class SpawnerData {
         this.spawnerExp = 0;
         this.spawnerActive = true;
         this.spawnerStop = true;
-        this.lastSpawnTime = 0L;
         this.stackSize = 1;
         this.maxSpawnerLootSlots = 45;
         this.allowEquipmentItems = true;
@@ -123,6 +122,8 @@ public class SpawnerData {
             logger.warning("Invalid spawnerRange value. Setting to default: 16");
             this.spawnerRange = 16;
         }
+
+        this.lastSpawnTime = System.currentTimeMillis() + (long) spawnDelay;
     }
 
     public int getStackSize() {

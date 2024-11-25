@@ -42,6 +42,7 @@ mob_names:
   SALMON: "Cá Hồi"
   SHEEP: "Cừu"
   SHULKER: "Shulker"
+  SILVERFISH: "Cá Bạc"
   SKELETON: "Bộ Xương"
   SLIME: "Quái Vật Chất Nhờn"
   SPIDER: "Nhện"
@@ -434,6 +435,7 @@ command:
   usage: |
     &aLệnh SmartSpawner:
     &f/ss reload &7- Tải lại cấu hình plugin
+    &f/ss list &7- Xem danh sách spawner (dành cho admin)
     &f/ss give <người chơi> <loại mob> <số lượng> &7- Tặng spawner cho người chơi
   reload:
     usage: "&cSử dụng: /smartspawner reload"

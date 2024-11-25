@@ -44,6 +44,7 @@ public class SpawnerHeadManager {
         TEXTURE_MAP.put(EntityType.RAVAGER, "cd20bf52ec390a0799299184fc678bf84cf732bb1bd78fd1c4b441858f0235a8");
         TEXTURE_MAP.put(EntityType.SALMON, "d4d001589b86c22cf24f1618fe7efef12932aa9148b5e4fc6ff4a614b990ae12");
         TEXTURE_MAP.put(EntityType.SHEEP, "a723893df4cfb9c7240fc47b560ccf6ddeb19da9183d33083f2c71f46dad290a");
+        TEXTURE_MAP.put(EntityType.SILVERFISH, "bfe13237e1109cab7264dc53b0aa697cf9a7c62c984a269fb0755a288912bbca");
         TEXTURE_MAP.put(EntityType.SHULKER, "537a294f6b7b4ba437e5cb35fb20f46792e7ac0a490a66132a557124ec5f997a");
         TEXTURE_MAP.put(EntityType.SPIDER, "e5871c22b81c12e67f5aebd9afe0958b81cada6305c07599a07b01ab126ba2c4");
         TEXTURE_MAP.put(EntityType.SQUID, "d8705624daa2956aa45956c81bab5f4fdb2c74a596051e24192039aea3a8b8");

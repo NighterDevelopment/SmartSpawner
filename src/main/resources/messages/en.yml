@@ -43,6 +43,7 @@ mob_names:
   SALMON: "Salmon"
   SHEEP: "Sheep"
   SHULKER: "Shulker"
+  SILVERFISH: "Silverfish"
   SKELETON: "Skeleton"
   SLIME: "Slime"
   SPIDER: "Spider"
@@ -434,6 +435,7 @@ command:
   usage: |
     &aCommands Usage:
     &f/smartspawner reload &7- Reload the plugin configuration
+    &f/smartspawner list &7- Open the spawner list (for admin management)
     &f/smartspawner give <player> <mobtype> <amount> &7- Give spawners to a player
   reload:
     usage: "&cUsage: /smartspawner reload"
