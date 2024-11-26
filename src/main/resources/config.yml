@@ -69,8 +69,8 @@ spawner-break:
 shop-integration: EconomyShopGUI
 
 tax:
-  enabled: true
-  rate: 10.0  # Percentage tax on sales
+  enabled: false
+  rate: 10.0  # % tax on sales
 
 # ===============================================================
 #                  Hopper Mechanics (Experimental)

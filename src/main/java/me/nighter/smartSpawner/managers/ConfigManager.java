@@ -128,7 +128,7 @@ public class ConfigManager {
             config.set("shop-integration", "EconomyShopGUI");
         }
         if (!config.contains("tax")) {
-            config.set("tax.enabled", true);
+            config.set("tax.enabled", false);
             config.set("tax.rate", 10.0);
         }
 
