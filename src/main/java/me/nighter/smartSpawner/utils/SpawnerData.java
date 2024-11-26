@@ -79,47 +79,44 @@ public class SpawnerData {
     }
 
     private void loadConfigValues() {
-        FileConfiguration config = configManager.getMainConfig();
-
-        int maxAllowedStack = config.getInt("spawner.max-stack-size", 100);
-        int baseMaxStoredExp = config.getInt("spawner.max-stored-exp", 1000);
-        int baseMinMobs = config.getInt("spawner.min-mobs", 1);
-        int baseMaxMobs = config.getInt("spawner.max-mobs", 4);
-        int baseSpawnerDelay = config.getInt("spawner.delay", 600);
-
-        // Calculate scaled values based on stack size
-        this.maxSpawnerLootSlots = Math.min(45 * stackSize, 54 * maxAllowedStack);
-        if (this.maxSpawnerLootSlots < 9) {
-            logger.warning("Invalid maxSpawnerLootSlots value after scaling. Setting to minimum: 9");
-            this.maxSpawnerLootSlots = 9;
+        int baseMaxStoredExp = configManager.getMaxStoredExp();
+        int baseMinMobs = configManager.getMinMobs();
+        int baseMaxMobs = configManager.getMaxMobs();
+        int baseSpawnerDelay = configManager.getSpawnerDelay();
+        int maxStoragePages = configManager.getMaxStoragePages();
+        if (maxStoragePages <= 0) {
+            logger.warning("Invalid max-storage-pages value. Setting to default: 1");
+            maxStoragePages = 1;
         }
+        this.maxSpawnerLootSlots = (45 * maxStoragePages) * stackSize;
+        if (this.maxSpawnerLootSlots < 0) this.maxSpawnerLootSlots = 45;
 
         this.maxStoredExp = baseMaxStoredExp * stackSize;
         if (this.maxStoredExp <= 0) {
-            logger.warning("Invalid maxStoredExp value after scaling. Setting to base value: " + baseMaxStoredExp);
+            logger.warning("Invalid max-stored-exp value after scaling. Setting to base value: " + baseMaxStoredExp);
             this.maxStoredExp = baseMaxStoredExp;
         }
 
         this.minMobs = baseMinMobs * stackSize;
         if (this.minMobs <= 0) {
-            logger.warning("Invalid minMobs value after scaling. Setting to base value: " + baseMinMobs);
+            logger.warning("Invalid min-mobs value after scaling. Setting to base value: " + baseMinMobs);
             this.minMobs = baseMinMobs;
         }
 
         this.maxMobs = baseMaxMobs * stackSize;
         if (this.maxMobs <= 0 || this.maxMobs <= this.minMobs) {
-            logger.warning("Invalid maxMobs value after scaling. Setting to: " + (this.minMobs + stackSize));
+            logger.warning("Invalid max-mobs value after scaling. Setting to: " + (this.minMobs + stackSize));
             this.maxMobs = this.minMobs + stackSize;
         }
 
         this.spawnDelay = baseSpawnerDelay;
         if (this.spawnDelay <= 0) {
-            logger.warning("Invalid spawnDelay value. Setting to default: 600");
+            logger.warning("Invalid delay value. Setting to default: 600");
             this.spawnDelay = 600;
         }
         this.spawnerRange = configManager.getSpawnerRange();
         if (this.spawnerRange <= 0) {
-            logger.warning("Invalid spawnerRange value. Setting to default: 16");
+            logger.warning("Invalid range value. Setting to default: 16");
             this.spawnerRange = 16;
         }
 
@@ -132,6 +129,7 @@ public class SpawnerData {
 
     public void setStackSize(int stackSize) {
         int maxAllowedStack = configManager.getMaxStackSize();
+        int maxStoragePages = configManager.getMaxStoragePages();
         if (stackSize <= 0) {
             this.stackSize = 1;
             logger.warning("Invalid stack size. Setting to 1");
@@ -143,8 +141,7 @@ public class SpawnerData {
             Map<Integer, ItemStack> oldInventory = this.virtualInventory.getAllItems();
 
             // Tính toán số slot mới dựa trên stackSize mới
-            int newMaxSlots = Math.min(45 * stackSize, 54 * maxAllowedStack);
-            if (newMaxSlots < 9) newMaxSlots = 9;
+            int newMaxSlots = (45 * maxStoragePages) * stackSize;
 
             // Kiểm tra xem có items nào sẽ bị mất không
             boolean hasItemsInExcessSlots = false;
@@ -209,6 +206,7 @@ public class SpawnerData {
     public void setStackSize(int stackSize, Player player) {
         boolean stop = false;
         int maxAllowedStack = configManager.getMaxStackSize();
+        int maxStoragePages = configManager.getMaxStoragePages();
         if (stackSize <= 0) {
             this.stackSize = 1;
             configManager.debug("Invalid stack size. Setting to 1");
@@ -220,8 +218,7 @@ public class SpawnerData {
             Map<Integer, ItemStack> oldInventory = this.virtualInventory.getAllItems();
 
             // Tính toán số slot mới dựa trên stackSize mới
-            int newMaxSlots = Math.min(45 * stackSize, 54 * maxAllowedStack);
-            if (newMaxSlots < 9) newMaxSlots = 9;
+            int newMaxSlots = (45 * maxStoragePages) * stackSize;
 
             // Kiểm tra xem có items nào sẽ bị mất không
             boolean hasItemsInExcessSlots = false;
@@ -355,7 +352,7 @@ public class SpawnerData {
     public Integer getSpawnerRange() {
         return spawnerRange;
     }
-    
+
     public void setSpawnerRange(Integer spawnerRange) {
         this.spawnerRange = spawnerRange;
     }

@@ -16,7 +16,6 @@ format-number:
 #---------------------------------------------------
 mob_names:
   BLAZE: "Blaze"
-  BOGGED: "Bogged"
   BREEZE: "Breeze"
   CAVE_SPIDER: "Cave Spider"
   CHICKEN: "Chicken"
@@ -114,6 +113,12 @@ messages:
   #---------------------------------------------------
   sell-all:
     message: "&#d6e7edYou sold a total of &#3287A9%amount% items&#d6e7ed for&a %price%$ &#d6e7ed!"
+    prefix: true
+    type: CHAT
+    sound: block.note_block.bell
+
+  sell-all-tax:
+    message: "&#d6e7edYou sold a total of &#3287A9%amount% items&#d6e7ed for&a %price%$ &#d6e7ed (Tax: &#ff6b6b%tax%%&#d6e7ed)!"
     prefix: true
     type: CHAT
     sound: block.note_block.bell
@@ -295,7 +300,7 @@ spawner-info-item:
       &8▪ &#81d4faMob Rate: &f%min_mobs% &7- &f%max_mobs%
       &8▪ &#81d4faSpawn Delay: &f%delay%&7s
       &8▪ &#81d4faNext Spawn: &e
-               
+      
       &#81d4fa➜ &7Click to open stack menu
   lore-change: "&8▪ &#81d4faNext Spawn: &e"
   lore-inactive: "&cSpawner is inactive!"

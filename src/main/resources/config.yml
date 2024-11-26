@@ -1,135 +1,99 @@
-# ===================
-# Main Configuration
-# ===================
-
+# ===============================================================
+#                       Global Settings
+# ===============================================================
 settings:
-  # Choose the default language for the plugin
-  # Available options: en (English), vi (Vietnamese)
+  # Language Selection
+  # Supported: en (English), vi (Vietnamese)
   language: en
 
-  # Enable debug mode to print detailed information to console
-  # Useful for troubleshooting issues
+  # Debug Mode (for printing debug messages to console)
   debug: false
 
-  # How often (in ticks) the plugin saves data
-  # 20 ticks = 1 second
-  # Default: 6000 ticks (5 minutes)
+  # Data Persistence Interval
+  # 20 ticks = 1 second, default: 5 minutes
   save-interval: 6000
 
-  # Shop integration settings used for selling items in spawner storage GUI
-  # Available options: disabled, EconomyShopGUI, EconomyShopGUI-Premium
-  shop-integration: EconomyShopGUI
-
-# ===================
-# Spawner Settings
-# ===================
-
+# ===============================================================
+#                      Spawner Core Mechanics
+# ===============================================================
 spawner:
-  # Default entity type when creating new spawners
+  # Spawner Configuration
   default-entity: PIG
+  min-mobs: 1                 # Minimum mob spawn count
+  max-mobs: 4                 # Maximum mob spawn count
+  range: 16                   # Player proximity for activation (blocks)
+  delay: 600                  # Base spawn delay (ticks) - 30 seconds
 
-  # Minimum number of mobs to spawn for loot/exp (must be >= 1)
-  min-mobs: 1
+  # Resource Management
+  max-storage-pages: 1        # Storage page(s) per spawner (1 page = 45 slots)
+  max-stored-exp: 1000        # Maximum storable experience points
+  max-stack-size: 1000        # Maximum spawner stack size
 
-  # Maximum number of mobs to spawn for loot/exp (must be > min-mobs)
-  max-mobs: 4
+  # Advanced Features
+  allow-exp-mending: true     # Repair items using stored experience
+  allow-toggle-equipment-drops: true
+  allow-grief: false          # Prevent explosions destroying spawners
+  activate-on-place: true     # Immediate spawner activation
 
-  # Required player proximity (in blocks) for spawner to be active generating loot/exp
-  range: 16
-
-  # Base spawn delay in ticks (default: 600 ticks = 30 seconds)
-  delay: 600
-
-  # Maximum amount of exp points that can be stored in one spawner
-  max-stored-exp: 1000
-
-  # Maximum number of spawner that can be stacked in one spawner
-  max-stack-size: 1000
-
-  # Allow players to repair items with mending using stored exp
-  allow-exp-mending: true
-
-  # Allow toggling of equipment items drop on spawned mobs
-  allow-toggle-equipment-items: true
-
-  # Allow entities like creepers and tnt to explode activated spawners
-  allow-grief: false
-
-  # Allow spawners to be activated immediately when placed
-  activate-on-place: true
-
-# ===================
-# Breaking Settings
-# ===================
-
+# ===============================================================
+#                   Spawner Breaking Mechanics
+# ===============================================================
 spawner-break:
-  # Enable/disable spawner breaking functionality
   enabled: true
 
-  # Tools that can break spawners
+  # Permitted Breaking Tools
   required-tools:
-#    - WOODEN_PICKAXE # Uncomment to enable
-    - STONE_PICKAXE
     - IRON_PICKAXE
     - GOLDEN_PICKAXE
     - DIAMOND_PICKAXE
     - NETHERITE_PICKAXE
 
-  # Durability cost when breaking a spawner
+  # Breaking Penalties
   durability-loss-per-spawner: 1
 
   # Silk Touch Requirements
   silk-touch:
-    # Whether Silk Touch is needed to break spawners
     required: true
-    # Required Silk Touch enchantment level
     level: 1
 
-  # Stack Drop Settings
+  # Dropping Configurations
   drop-stack:
-    # Maximum stack size that will drop as a single item
-    # If stack size is smaller, entire stack will drop
-    amount: 64
+    amount: 64  # Maximum dropped items per break
 
-# ===================
-# Hopper Settings (Experimental) Not recommended for large servers
-# ===================
+# ===============================================================
+#                     Economic Integration
+# ===============================================================
 
-# Hopper settings for transferring items from spawner storage to other containers
+# Available options: disabled, EconomyShopGUI, EconomyShopGUI-Premium
+# Supported currencies: ITEM, LEVELS, EXP, VAULT, PLAYER_POINTS
+shop-integration: EconomyShopGUI
+
+tax:
+  enabled: true
+  rate: 10.0  # Percentage tax on sales
+
+# ===============================================================
+#                  Hopper Mechanics (Experimental)
+# ===============================================================
+# Not recommended for large servers
 hopper:
-  # Enable/disable hopper transfer functionality
   enabled: false
-
-  # Maximum number of items transferred per hopper
   items-per-transfer: 1
-
-  # Time for checking hoppers for item transfer (in ticks)
   check-interval: 20
 
-# ===================
-# Performance Settings
-# ===================
-
+# ===============================================================
+#                   Performance Optimizations
+# ===============================================================
 performance:
-  # Batch processing size for mob loot/exp drops
-  # Lower values = more random but higher resource usage
-  # Higher values = more consistent but lower resource usage
-  # If you experience lag, try increasing this value
+  # Batch Processing for Mob Drops
+  # Higher values = more consistent, lower resource usage
   batch-size: 3
 
-# ===================
-# Update Settings
-# ===================
-
+# ===============================================================
+#                     Plugin Update Checker
+# ===============================================================
 update-checker:
-  # Enable automatic update checking
   enabled: true
-
-  # Time between update checks (in hours not ticks)
-  check-interval: 24
-
-  # Whether to notify server operators about updates when found
-  notify-ops: true
-
-  # Whether to notify operators when they join the server
-  notify-on-join: true
+  check-interval: 24          # Hours between update checks
+  notify-ops: true            # Alert server operators
+  notify-on-join: true        # Notify on server entry (for players have update permission)

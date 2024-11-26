@@ -21,45 +21,62 @@ import me.nighter.smartSpawner.SmartSpawner;
 
 public class EconomyShopGUI {
     private final SmartSpawner plugin;
-    private double taxPercentage;
 
     public EconomyShopGUI(SmartSpawner plugin) {
         this.plugin = plugin;
-        this.taxPercentage = plugin.getConfigManager().getTaxPercentage();
+    }
+
+    private Map<EcoType, Double> applyTax(Map<EcoType, Double> originalPrices) {
+        double taxPercentage = plugin.getConfigManager().getTaxPercentage();
+        Map<EcoType, Double> taxedPrices = new HashMap<>();
+        for (Map.Entry<EcoType, Double> entry : originalPrices.entrySet()) {
+            double originalPrice = entry.getValue();
+            double taxAmount = originalPrice * (taxPercentage / 100.0);
+            double afterTaxPrice = originalPrice - taxAmount;
+            taxedPrices.put(entry.getKey(), afterTaxPrice);
+        }
+        return taxedPrices;
     }
 
     public boolean sellAllItems(Player player, SpawnerData spawner) {
+        // Retrieve the virtual inventory from the spawner
         VirtualInventory virtualInv = spawner.getVirtualInventory();
         Map<Integer, ItemStack> items = virtualInv.getAllItems();
 
+        // Check if inventory is empty
         if (items.isEmpty()) {
             plugin.getLanguageManager().sendMessage(player, "messages.no-items");
             return false;
         }
 
+        // Initialize variables for tracking sale process
         int totalAmount = 0;
         boolean foundSellableItem = false;
         Map<ShopItem, Integer> soldItems = new HashMap<>();
         Map<EcoType, Double> prices = new HashMap<>();
 
-        // First pass: Calculate amounts and prices
+        // First pass: Scan through inventory to calculate sellable items
         for (Map.Entry<Integer, ItemStack> entry : items.entrySet()) {
             ItemStack item = entry.getValue();
             if (item != null && item.getType() != Material.AIR) {
+                // Get shop item information
                 ShopItem shopItem = EconomyShopGUIHook.getShopItem(player, item);
                 if (shopItem == null) continue;
 
+                // Check if item is sellable
                 if (EconomyShopGUIHook.isSellAble(shopItem)) {
                     foundSellableItem = true;
 
-                    // Check sell limit
+                    // Check sell limits and restrictions
+                    // Verify if player can sell the entire item stack
                     int limit = getSellLimit(shopItem, player.getUniqueId(), item.getAmount());
                     if (limit == -1) continue;
 
-                    // Check max sell per transaction
+                    // Additional check for max sell per transaction
                     limit = getMaxSell(shopItem, limit, soldItems.getOrDefault(shopItem, 0));
                     if (limit == -1) continue;
 
+                    // Calculate selling price for the item
                     calculateSellPrice(prices, shopItem, player, item, limit, totalAmount);
                     totalAmount += limit;
                     soldItems.put(shopItem, soldItems.getOrDefault(shopItem, 0) + limit);
@@ -67,32 +84,50 @@ public class EconomyShopGUI {
             }
         }
 
+        // If no sellable items were found
         if (!foundSellableItem) {
             plugin.getLanguageManager().sendMessage(player, "messages.no-sellable-items");
             return false;
         }
 
+        // Process selling if items are available
         if (totalAmount > 0) {
-            // Synchronize access to prevent concurrent modifications
+            // Check tax configuration
+            double taxPercentage = plugin.getConfigManager().getTaxPercentage();
+
+            // Original prices before tax
+            Map<EcoType, Double> preTaxPrices = new HashMap<>(prices);
+            // Prices after tax calculation
+            Map<EcoType, Double> afterTaxPrices = prices;
+
+            // Apply tax if enabled
+            if (taxPercentage > 0) {
+                afterTaxPrices = applyTax(prices);
+            }
+
+            // Thread-safe inventory modification
             synchronized (virtualInv) {
-                // Second pass: Actually remove items and update inventory
+                // Remove sold items from virtual inventory
                 for (Map.Entry<ShopItem, Integer> soldEntry : soldItems.entrySet()) {
                     ShopItem shopItem = soldEntry.getKey();
                     int remainingToRemove = soldEntry.getValue();
 
-                    // Iterate through inventory slots
+                    // Iterate through inventory to remove items
                     for (Map.Entry<Integer, ItemStack> invEntry : new HashMap<>(items).entrySet()) {
                         if (remainingToRemove <= 0) break;
 
                         int slot = invEntry.getKey();
                         ItemStack item = invEntry.getValue();
 
+                        // Verify and remove matching items
                         if (item != null && item.getType() != Material.AIR) {
                             ShopItem currentShopItem = EconomyShopGUIHook.getShopItem(player, item);
                             if (currentShopItem != null && currentShopItem.equals(shopItem)) {
+                                // Calculate amount to remove
                                 int amountToRemove = Math.min(remainingToRemove, item.getAmount());
                                 remainingToRemove -= amountToRemove;
 
+                                // Update inventory slot
                                 if (amountToRemove >= item.getAmount()) {
                                     virtualInv.setItem(slot, null);
                                 } else {
@@ -106,28 +141,41 @@ public class EconomyShopGUI {
                 }
             }
 
-            // Update stock limits and dynamic pricing
+            // Update shop statistics asynchronously
             updateShopStats(soldItems, player.getUniqueId());
 
-            // Give money to player
-            for (Map.Entry<EcoType, Double> entry : prices.entrySet()) {
+            // Deposit money/resources to player
+            for (Map.Entry<EcoType, Double> entry : afterTaxPrices.entrySet()) {
                 if (isClaimableCurrency(entry.getKey())) {
                     EconomyShopGUIHook.getEcon(entry.getKey()).depositBalance(player, entry.getValue());
                 }
             }
 
-            // Send success message
-            StringBuilder sb = new StringBuilder();
-            prices.forEach((type, value) -> {
-                if (!sb.isEmpty()) sb.append(", ");
-                sb.append(formatMonetaryValue(value, type));
+            // Prepare price string for messaging
+            StringBuilder priceBuilder = new StringBuilder();
+            afterTaxPrices.forEach((type, value) -> {
+                if (priceBuilder.length() > 0) priceBuilder.append(", ");
+                priceBuilder.append(formatMonetaryValue(value, type));
             });
-            plugin.getLanguageManager().sendMessage(player, "messages.sell-all",
-                    "%amount%", String.valueOf(totalAmount),
-                    "%price%", sb.toString());
+
+            // Send appropriate sell message based on tax status
+            if (taxPercentage > 0) {
+                // Message with tax information
+                plugin.getLanguageManager().sendMessage(player, "messages.sell-all-tax",
+                        "%amount%", String.valueOf(totalAmount),
+                        "%price%", priceBuilder.toString(),
+                        "%tax%", String.format("%.2f", taxPercentage));
+            } else {
+                // Standard sell message without tax
+                plugin.getLanguageManager().sendMessage(player, "messages.sell-all",
+                        "%amount%", String.valueOf(totalAmount),
+                        "%price%", priceBuilder.toString());
+            }
+
             return true;
         }
 
+        // Fallback message if no items could be sold
         plugin.getLanguageManager().sendMessage(player, "messages.no-sellable-items");
         return false;
     }
