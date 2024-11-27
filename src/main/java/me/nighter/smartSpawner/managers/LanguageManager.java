@@ -225,7 +225,7 @@ public class LanguageManager {
         put("no-permission.message", "&cYou do not have permission to do that!");
         put("no-permission.prefix", "true");
         put("no-permission.type", "CHAT");
-        put("no-permission.sound", "villager.no");
+        put("no-permission.sound", "block.note_block.pling");
 
         //---------------------------------------------------
         // Spawner List GUI (Command)

@@ -164,6 +164,7 @@ public class SpawnerManager {
                 spawnerData.set(path + ".minMobs", spawner.getMinMobs());
                 spawnerData.set(path + ".maxMobs", spawner.getMaxMobs());
                 spawnerData.set(path + ".stackSize", spawner.getStackSize());
+                spawnerData.set(path + ".allowEquipmentItems", spawner.isAllowEquipmentItems());
 
                 // Save virtual inventory
                 VirtualInventory virtualInv = spawner.getVirtualInventory();
@@ -233,6 +234,7 @@ public class SpawnerManager {
                 spawner.setMinMobs(spawnerData.getInt(path + ".minMobs"));
                 spawner.setMaxMobs(spawnerData.getInt(path + ".maxMobs"));
                 spawner.setStackSize(spawnerData.getInt(path + ".stackSize"));
+                spawner.setAllowEquipmentItems(spawnerData.getBoolean(path + ".allowEquipmentItems"));
 
                 // Load virtual inventory
                 int invSize = spawnerData.getInt(path + ".virtualInventory.size", spawner.getMaxSpawnerLootSlots());
@@ -327,6 +329,7 @@ public class SpawnerManager {
             spawnerData.set(path + ".minMobs", spawner.getMinMobs());
             spawnerData.set(path + ".maxMobs", spawner.getMaxMobs());
             spawnerData.set(path + ".stackSize", spawner.getStackSize());
+            spawnerData.set(path + ".allowEquipmentItems", spawner.isAllowEquipmentItems());
 
             // Lưu virtual inventory nếu có
             VirtualInventory virtualInv = spawner.getVirtualInventory();

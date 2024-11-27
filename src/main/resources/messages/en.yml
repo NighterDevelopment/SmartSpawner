@@ -461,7 +461,7 @@ no-permission:
   message: "&cYou do not have permission to do that!"
   prefix: true
   type: CHAT
-  sound: villager.no
+  sound: block.note_block.pling
 
 update:
   title: "[Smart Spawner] Update Available!"

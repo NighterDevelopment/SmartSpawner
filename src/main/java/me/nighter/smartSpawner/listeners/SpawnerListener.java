@@ -98,20 +98,6 @@ public class SpawnerListener implements Listener {
         return spawner;
     }
 
-    // Helper method to handle null entity type
-    private void handleNullEntityType(SpawnerData spawner, Block block, Player player) {
-        EntityType defaultType = configManager.getDefaultEntityType();
-        spawner.setEntityType(defaultType);
-
-        CreatureSpawner creatureSpawner = (CreatureSpawner) block.getState();
-        creatureSpawner.setSpawnedType(defaultType);
-        creatureSpawner.update();
-
-        spawnerManager.saveSpawnerData();
-        languageManager.sendMessage(player, "messages.activate_default",
-                "%type%", languageManager.getFormattedMobName(defaultType));
-    }
-
     @EventHandler
     public void onSpawnerClick(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
@@ -136,7 +122,7 @@ public class SpawnerListener implements Listener {
                 return;
             }
         }
-//        configManager.debug(isBedrockPlayer(player) ? "Bedrock player detected" : "Java player detected");
+       // configManager.debug(isBedrockPlayer(player) ? "Bedrock player detected" : "Java player detected");
 
         event.setCancelled(true);
         // Direct O(1) lookup instead of iteration
@@ -145,11 +131,16 @@ public class SpawnerListener implements Listener {
         // Handle new spawner creation if it doesn't exist
         if (spawner == null) {
             spawner = createNewSpawner(block, player);
-            if (spawner == null) return; // Creation failed
         } else {
             // Handle existing spawner with null entityType
             if (spawner.getEntityType() == null) {
-                handleNullEntityType(spawner, block, player);
+                CreatureSpawner cs = (CreatureSpawner) block.getState();
+                EntityType entityType = cs.getSpawnedType();
+                if (entityType == null || entityType == EntityType.UNKNOWN) {
+                    entityType = configManager.getDefaultEntityType();
+                }
+                spawner.setEntityType(entityType);
+                spawnerManager.saveSingleSpawner(spawner.getSpawnerId());
             }
         }
 
@@ -804,48 +795,48 @@ public class SpawnerListener implements Listener {
     }
 
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
+    public void onWorldSelectionClick(InventoryClickEvent event) {
+        if (!(event.getInventory().getHolder() instanceof SpawnerListCommand.WorldSelectionHolder)) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
+
         if (!player.hasPermission("smartspawner.list")) {
             languageManager.sendMessage(player, "no-permission");
             return;
         }
-        Inventory inv = event.getInventory();
-
-        // Handle World Selection Menu
-        if (inv.getHolder() instanceof SpawnerListCommand.WorldSelectionHolder) {
-            event.setCancelled(true);
-
-            if (event.getCurrentItem() == null) return;
-
-            switch (event.getSlot()) {
-                case 11 -> listCommand.openSpawnerListGUI(player, "world", 1);
-                case 13 -> listCommand.openSpawnerListGUI(player, "world_nether", 1);
-                case 15 -> listCommand.openSpawnerListGUI(player, "world_the_end", 1);
-            }
+        event.setCancelled(true);
+        if (event.getCurrentItem() == null) return;
+        switch (event.getSlot()) {
+            case 11 -> listCommand.openSpawnerListGUI(player, "world", 1);
+            case 13 -> listCommand.openSpawnerListGUI(player, "world_nether", 1);
+            case 15 -> listCommand.openSpawnerListGUI(player, "world_the_end", 1);
         }
+    }
 
-        // Handle Spawner List Menu
-        else if (inv.getHolder() instanceof SpawnerListCommand.SpawnerListHolder holder) {
-            event.setCancelled(true);
+    @EventHandler
+    public void onSpawnerListClick(InventoryClickEvent event) {
+        if (!(event.getInventory().getHolder() instanceof SpawnerListCommand.SpawnerListHolder holder)) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
 
-            if (event.getCurrentItem() == null) return;
+        if (!player.hasPermission("smartspawner.list")) {
+            languageManager.sendMessage(player, "no-permission");
+            return;
+        }
+        event.setCancelled(true);
+        if (event.getCurrentItem() == null) return;
 
-            // Navigation handling
-            if (event.getSlot() == 45 && holder.getCurrentPage() > 1) {
-                listCommand.openSpawnerListGUI(player, holder.getWorldName(), holder.getCurrentPage() - 1);
-            }
-            else if (event.getSlot() == 53 && holder.getCurrentPage() < holder.getTotalPages()) {
-                listCommand.openSpawnerListGUI(player, holder.getWorldName(), holder.getCurrentPage() + 1);
-            }
-            // Back button
-            else if (event.getSlot() == 49) {
-                listCommand.openWorldSelectionGUI(player);
-            }
-            // Spawner click handling
-            else if (SPAWNER_MATERIALS.contains(event.getCurrentItem().getType())) {
-                handleSpawnerClick(event);
-            }
+        // Navigation handling
+        if (event.getSlot() == 45 && holder.getCurrentPage() > 1) {
+            listCommand.openSpawnerListGUI(player, holder.getWorldName(), holder.getCurrentPage() - 1);
+        } else if (event.getSlot() == 53 && holder.getCurrentPage() < holder.getTotalPages()) {
+            listCommand.openSpawnerListGUI(player, holder.getWorldName(), holder.getCurrentPage() + 1);
+        }
+        // Back button
+        else if (event.getSlot() == 49) {
+            listCommand.openWorldSelectionGUI(player);
+        }
+        // Spawner click handling
+        else if (SPAWNER_MATERIALS.contains(event.getCurrentItem().getType())) {
+            handleSpawnerClick(event);
         }
     }
 

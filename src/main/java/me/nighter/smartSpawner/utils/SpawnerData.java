@@ -55,6 +55,22 @@ public class SpawnerData {
         this.virtualInventory = new VirtualInventory(maxSpawnerLootSlots);
     }
 
+    public SpawnerData(String id, Location location, SmartSpawner plugin) {
+        this.plugin = plugin;
+        this.spawnerId = id;
+        this.spawnerLocation = location;
+        this.spawnerExp = 0;
+        this.spawnerActive = true;
+        this.spawnerStop = true;
+        this.stackSize = 1;
+        this.maxSpawnerLootSlots = 45;
+        this.allowEquipmentItems = true;
+        this.configManager = plugin.getConfigManager();
+        this.languageManager = plugin.getLanguageManager();
+        loadConfigValues();
+        this.virtualInventory = new VirtualInventory(maxSpawnerLootSlots);
+    }
+
     public VirtualInventory getVirtualInventory() {
         return virtualInventory;
     }
