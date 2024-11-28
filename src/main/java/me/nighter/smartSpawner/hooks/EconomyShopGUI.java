@@ -4,6 +4,8 @@ import me.gypopo.economyshopgui.api.EconomyShopGUIHook;
 import me.gypopo.economyshopgui.api.prices.AdvancedSellPrice;
 import me.gypopo.economyshopgui.objects.ShopItem;
 import me.gypopo.economyshopgui.util.EcoType;
+import me.nighter.smartSpawner.managers.ConfigManager;
+import me.nighter.smartSpawner.managers.LanguageManager;
 import me.nighter.smartSpawner.utils.SpawnerData;
 import me.nighter.smartSpawner.utils.VirtualInventory;
 import org.bukkit.Material;
@@ -21,9 +23,13 @@ import me.nighter.smartSpawner.SmartSpawner;
 
 public class EconomyShopGUI {
     private final SmartSpawner plugin;
+    private final LanguageManager languageManager;
+    private final ConfigManager configManager;
 
     public EconomyShopGUI(SmartSpawner plugin) {
         this.plugin = plugin;
+        this.languageManager = plugin.getLanguageManager();
+        this.configManager = plugin.getConfigManager();
     }
 
     private Map<EcoType, Double> applyTax(Map<EcoType, Double> originalPrices) {
@@ -252,9 +258,14 @@ public class EconomyShopGUI {
             String formattedAmount;
             switch (ecoType.getType()) {
                 case VAULT:
-                    formattedAmount = df.format(value);
-                    return formattedAmount;
-
+                    if(configManager.getFormatedPrice()) {
+                        formattedAmount = languageManager.formatNumber((long) value);
+                        return formattedAmount;
+                    }
+                    else {
+                        formattedAmount = df.format(value);
+                        return formattedAmount;
+                    }
                 case ITEM:
                     // For items, we might want to show whole numbers if the value is integer
                     if (value == (int)value) {

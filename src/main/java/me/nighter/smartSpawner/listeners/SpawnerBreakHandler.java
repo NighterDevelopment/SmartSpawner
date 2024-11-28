@@ -267,9 +267,9 @@ public class SpawnerBreakHandler implements Listener {
         if (meta != null) {
             if (entityType != null && entityType != EntityType.UNKNOWN) {
                 // Set display name
-                 String entityTypeName = languageManager.getFormattedMobName(entityType);
-                 String displayName = languageManager.getMessage("spawner-name","%entity%",entityTypeName);
-                 meta.setDisplayName(displayName);
+                String entityTypeName = languageManager.getFormattedMobName(entityType);
+                String displayName = languageManager.getMessage("spawner-name","%entity%",entityTypeName);
+                meta.setDisplayName(displayName);
 
                 // Store entity type in item NBT
                 BlockStateMeta blockMeta = (BlockStateMeta) meta;
@@ -281,7 +281,7 @@ public class SpawnerBreakHandler implements Listener {
 //                List<String> lore = new ArrayList<>();
 //                lore.add(ChatColor.GRAY + "Entity: " + StringUtils.capitalize(entityName));
 //                meta.setLore(lore);
-                
+
             }
             spawner.setItemMeta(meta);
         }
@@ -351,9 +351,8 @@ public class SpawnerBreakHandler implements Listener {
         String newSpawnerId = UUID.randomUUID().toString().substring(0, 8);
 
         // Create new spawner with specific entity type
-        SpawnerData spawner = new SpawnerData(newSpawnerId, block.getLocation(), plugin);
+        SpawnerData spawner = new SpawnerData(newSpawnerId, block.getLocation(), entityType, plugin);
         spawner.setSpawnerActive(true);
-        spawner.setEntityType(entityType);
 
         // Add to manager and save
         spawnerManager.addSpawner(newSpawnerId, spawner);

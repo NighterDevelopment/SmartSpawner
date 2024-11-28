@@ -1,4 +1,4 @@
-## Smart Spawner - GUI Spawner Plugin ✨ v1.1.5
+## Smart Spawner - GUI Spawner Plugin ✨ v1.1.6
 For the full plugin and additional resources, please visit the SpigotMC page: [Smart Spawner GUI Plugin](https://www.spigotmc.org/resources/smart-spawner-gui-spawner-plugin%E2%9C%A8-1-21-1-21-3-%EF%B8%8F.120743/)
 
 ### 🛠️ Supported Minecraft Versions

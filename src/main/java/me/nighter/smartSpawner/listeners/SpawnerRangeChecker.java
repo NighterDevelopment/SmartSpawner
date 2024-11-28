@@ -103,6 +103,7 @@ public class SpawnerRangeChecker implements Listener {
         stopSpawnerTask(spawner);
 
         // Start new task
+        spawner.setLastSpawnTime(System.currentTimeMillis() + spawner.getSpawnDelay());
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (!spawner.getSpawnerStop()) {
                 spawnerManager.spawnLoot(spawner);

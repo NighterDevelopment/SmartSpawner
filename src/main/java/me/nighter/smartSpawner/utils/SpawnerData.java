@@ -55,22 +55,6 @@ public class SpawnerData {
         this.virtualInventory = new VirtualInventory(maxSpawnerLootSlots);
     }
 
-    public SpawnerData(String id, Location location, SmartSpawner plugin) {
-        this.plugin = plugin;
-        this.spawnerId = id;
-        this.spawnerLocation = location;
-        this.spawnerExp = 0;
-        this.spawnerActive = true;
-        this.spawnerStop = true;
-        this.stackSize = 1;
-        this.maxSpawnerLootSlots = 45;
-        this.allowEquipmentItems = true;
-        this.configManager = plugin.getConfigManager();
-        this.languageManager = plugin.getLanguageManager();
-        loadConfigValues();
-        this.virtualInventory = new VirtualInventory(maxSpawnerLootSlots);
-    }
-
     public VirtualInventory getVirtualInventory() {
         return virtualInventory;
     }
@@ -135,8 +119,6 @@ public class SpawnerData {
             logger.warning("Invalid range value. Setting to default: 16");
             this.spawnerRange = 16;
         }
-
-        this.lastSpawnTime = System.currentTimeMillis() + (long) spawnDelay;
     }
 
     public int getStackSize() {
@@ -206,6 +188,7 @@ public class SpawnerData {
                 // Cập nhật stackSize và tạo inventory mới
                 this.stackSize = stackSize;
                 loadConfigValues();
+                this.lastSpawnTime = System.currentTimeMillis() + (long) this.spawnDelay;
                 this.virtualInventory = new VirtualInventory(this.maxSpawnerLootSlots);
                 this.virtualInventory.setItems(safeInventory);
 
@@ -213,6 +196,7 @@ public class SpawnerData {
                 // Nếu không có items bị ảnh hưởng, cập nhật bình thường
                 this.stackSize = stackSize;
                 loadConfigValues();
+                this.lastSpawnTime = System.currentTimeMillis() + (long) this.spawnDelay;
                 this.virtualInventory = new VirtualInventory(this.maxSpawnerLootSlots);
                 this.virtualInventory.setItems(oldInventory);
             }
@@ -283,6 +267,7 @@ public class SpawnerData {
                 // Cập nhật stackSize và tạo inventory mới
                 this.stackSize = stackSize;
                 loadConfigValues();
+                this.lastSpawnTime = System.currentTimeMillis() + (long) this.spawnDelay;
                 this.virtualInventory = new VirtualInventory(this.maxSpawnerLootSlots);
                 this.virtualInventory.setItems(safeInventory);
 
@@ -290,6 +275,7 @@ public class SpawnerData {
                 // Nếu không có items bị ảnh hưởng, cập nhật bình thường
                 this.stackSize = stackSize;
                 loadConfigValues();
+                this.lastSpawnTime = System.currentTimeMillis() + (long) this.spawnDelay;
                 this.virtualInventory = new VirtualInventory(this.maxSpawnerLootSlots);
                 this.virtualInventory.setItems(oldInventory);
             }

@@ -186,6 +186,7 @@ public class ConfigManager {
 
         // Cache shop config
         configCache.put("shop-integration", config.getString("shop-integration"));
+        configCache.put("formated-price", config.getString("formated-price"));
         configCache.put("tax.enabled", config.getBoolean("tax.enabled"));
         configCache.put("tax.rate", config.getDouble("tax.rate"));
 
@@ -476,6 +477,14 @@ public class ConfigManager {
         String shopType = (String) configCache.computeIfAbsent("shop-integration",
                 key -> config.getString(key, "EconomyShopGUI"));
         return ShopType.fromString(shopType);
+    }
+
+    public boolean getFormatedPrice() {
+        return (boolean) configCache.computeIfAbsent("formated-price", key -> {
+            boolean defaultValue = true;
+            setDefaultIfNotExists(key, defaultValue);
+            return config.getBoolean(key, defaultValue);
+        });
     }
 
     public boolean isTaxEnabled() {
