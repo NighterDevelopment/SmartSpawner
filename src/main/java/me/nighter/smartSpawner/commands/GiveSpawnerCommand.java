@@ -4,6 +4,7 @@ import me.nighter.smartSpawner.SmartSpawner;
 import me.nighter.smartSpawner.managers.LanguageManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
@@ -46,8 +47,8 @@ public class GiveSpawnerCommand {
             return true;
         }
 
-        // Kiểm tra số lượng tham số (hiện tại cần 4 tham số: give, player, mobtype, amount)
-        if (args.length != 4) {
+        // Kiểm tra số lượng tham số (hiện tại cần 3 hoặc 4 tham số: give, player, mobtype, [amount])
+        if (args.length < 3 || args.length > 4) {
             sender.sendMessage(languageManager.getMessageWithPrefix("command.give.usage"));
             return true;
         }
@@ -66,21 +67,23 @@ public class GiveSpawnerCommand {
         }
 
         // Xử lý số lượng
-        int amount;
-        try {
-            amount = Integer.parseInt(args[3]);
-            if (amount <= 0) {
+        int amount = 1;
+        if (args.length == 4) {
+            try {
+                amount = Integer.parseInt(args[3]);
+                if (amount <= 0) {
+                    sender.sendMessage(languageManager.getMessageWithPrefix("command.give.invalid-amount"));
+                    return true;
+                }
+                if (amount > MAX_AMOUNT) {
+                    sender.sendMessage(languageManager.getMessageWithPrefix("command.give.amount-too-large",
+                            "%max%", String.valueOf(MAX_AMOUNT)));
+                    return true;
+                }
+            } catch (NumberFormatException e) {
                 sender.sendMessage(languageManager.getMessageWithPrefix("command.give.invalid-amount"));
                 return true;
             }
-            if (amount > MAX_AMOUNT) {
-                sender.sendMessage(languageManager.getMessageWithPrefix("command.give.amount-too-large",
-                        "%max%", String.valueOf(MAX_AMOUNT)));
-                return true;
-            }
-        } catch (NumberFormatException e) {
-            sender.sendMessage(languageManager.getMessageWithPrefix("command.give.invalid-amount"));
-            return true;
         }
 
         try {
@@ -98,6 +101,7 @@ public class GiveSpawnerCommand {
                     target.getWorld().dropItemNaturally(target.getLocation(), leftover);
                 }
                 target.sendMessage(languageManager.getMessageWithPrefix("command.give.inventory-full"));
+                target.playSound(target.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
                 sender.sendMessage(languageManager.getMessageWithPrefix("command.give.spawner-given-dropped",
                         "%player%", target.getName(),
                         "%entity%", entityName,
@@ -106,6 +110,7 @@ public class GiveSpawnerCommand {
                 target.sendMessage(languageManager.getMessageWithPrefix("command.give.spawner-received",
                         "%amount%", String.valueOf(amount),
                         "%entity%", entityName));
+                target.playSound(target.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 sender.sendMessage(languageManager.getMessageWithPrefix("command.give.spawner-given",
                         "%player%", target.getName(),
                         "%entity%", entityName,
@@ -115,6 +120,84 @@ public class GiveSpawnerCommand {
             return true;
         } catch (IllegalArgumentException e) {
             sender.sendMessage(languageManager.getMessageWithPrefix("command.give.invalid-mob-type"));
+            plugin.getLogger().warning("Error creating spawner: " + e.getMessage());
+            return true;
+        }
+    }
+
+    // For console
+    public boolean executeCommand(String[] args) {
+        if (args.length < 3 || args.length > 4) {
+            plugin.getLogger().info(languageManager.getConsoleMessage("command.give.usage"));
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            plugin.getLogger().info(languageManager.getConsoleMessage("command.give.player-not-found"));
+            return true;
+        }
+
+        String mobType = args[2].toUpperCase();
+        if (!supportedMobs.contains(mobType)) {
+            plugin.getLogger().info(languageManager.getConsoleMessage("command.give.invalid-mob-type"));
+            return true;
+        }
+
+        // Xử lý số lượng
+        int amount = 1;
+        if (args.length == 4) {
+            try {
+                amount = Integer.parseInt(args[3]);
+                if (amount <= 0) {
+                    plugin.getLogger().info(languageManager.getConsoleMessage("command.give.invalid-amount"));
+                    return true;
+                }
+                if (amount > MAX_AMOUNT) {
+                    plugin.getLogger().info(languageManager.getConsoleMessage("command.give.amount-too-large",
+                            "%max%", String.valueOf(MAX_AMOUNT)));
+                    return true;
+                }
+            } catch (NumberFormatException e) {
+                plugin.getLogger().info(languageManager.getConsoleMessage("command.give.invalid-amount"));
+                return true;
+            }
+        }
+
+        try {
+            EntityType entityType = EntityType.valueOf(mobType);
+            ItemStack spawner = createSpawnerItem(entityType);
+            spawner.setAmount(amount);
+            String entityName = languageManager.getLocalizedMobName(entityType);
+
+            // Kiểm tra không gian trong inventory
+            HashMap<Integer, ItemStack> leftoverItems = target.getInventory().addItem(spawner);
+
+            if (!leftoverItems.isEmpty()) {
+                // Nếu inventory đầy, thả những item còn lại xuống đất
+                for (ItemStack leftover : leftoverItems.values()) {
+                    target.getWorld().dropItemNaturally(target.getLocation(), leftover);
+                }
+                target.sendMessage(languageManager.getMessageWithPrefix("command.give.inventory-full"));
+                target.playSound(target.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+                plugin.getLogger().info(languageManager.getConsoleMessage("command.give.spawner-given-dropped",
+                        "%player%", target.getName(),
+                        "%entity%", entityName,
+                        "%amount%", String.valueOf(amount)));
+            } else {
+                target.sendMessage(languageManager.getMessageWithPrefix("command.give.spawner-received",
+                        "%amount%", String.valueOf(amount),
+                        "%entity%", entityName));
+                target.playSound(target.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+                plugin.getLogger().info(languageManager.getConsoleMessage("command.give.spawner-given",
+                        "%player%", target.getName(),
+                        "%entity%", entityName,
+                        "%amount%", String.valueOf(amount)));
+            }
+
+            return true;
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().info(languageManager.getConsoleMessage("command.give.invalid-mob-type"));
             plugin.getLogger().warning("Error creating spawner: " + e.getMessage());
             return true;
         }

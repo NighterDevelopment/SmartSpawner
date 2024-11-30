@@ -1,10 +1,7 @@
 package me.nighter.smartSpawner.commands;
 
 import me.nighter.smartSpawner.SmartSpawner;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -30,6 +27,10 @@ public class SmartSpawnerCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             sender.sendMessage(plugin.getLanguageManager().getMessageWithPrefix("command.usage"));
             return true;
+        }
+
+        if(sender instanceof ConsoleCommandSender && args[0].equalsIgnoreCase("give")) {
+            return giveCommand.executeCommand(args);
         }
 
         if (!(sender instanceof Player)) {

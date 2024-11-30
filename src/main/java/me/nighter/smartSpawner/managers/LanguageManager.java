@@ -443,6 +443,105 @@ public class LanguageManager {
         return message;
     }
 
+    public String getConsoleMessage(String path) {
+        String cachedMessage = messageCache.get(path + "_" + currentLanguage.getCode());
+        if (cachedMessage != null) {
+            return applyColorToConsole(cachedMessage);  // Chuyển đổi màu nếu đã có trong cache
+        }
+
+        String message = messages.getString(path);
+        if (message == null && currentLanguage != SupportedLanguage.ENGLISH) {
+            message = languageMessages.get(SupportedLanguage.ENGLISH.getCode()).getString(path);
+        }
+
+        message = message == null ? "Message not found: " + path : applyColorToConsole(message);
+        messageCache.put(path + "_" + currentLanguage.getCode(), message);
+        return message;
+    }
+
+    // get console message from path with replacements
+    public String getConsoleMessage(String path, String... replacements) {
+        String message = getConsoleMessage(path);
+        StringBuilder cacheKey = new StringBuilder(path);
+        for (String replacement : replacements) {
+            cacheKey.append(replacement);
+        }
+
+        String cachedMessage = messageCache.get(cacheKey.toString());
+        if (cachedMessage != null) {
+            return applyColorToConsole(cachedMessage);
+        }
+
+        for (int i = 0; i < replacements.length; i += 2) {
+            if (i + 1 < replacements.length) {
+                message = message.replace(replacements[i], replacements[i + 1]);
+            }
+        }
+
+        messageCache.put(cacheKey.toString(), message);
+        return message;
+    }
+
+    // get console message from path with replacements map
+    public String getConsoleMessage(String path, Map<String, String> replacements) {
+        String message = getConsoleMessage(path);
+
+        // Create cache key from path and all replacements
+        StringBuilder cacheKey = new StringBuilder(path);
+        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+            cacheKey.append(entry.getKey()).append(entry.getValue());
+        }
+
+        String cachedMessage = messageCache.get(cacheKey.toString());
+        if (cachedMessage != null) {
+            return applyColorToConsole(cachedMessage);  // Chuyển đổi màu nếu đã có trong cache
+        }
+
+        // Apply all replacements
+        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+            message = message.replace(entry.getKey(), entry.getValue());
+        }
+
+        messageCache.put(cacheKey.toString(), message);
+        return message;
+    }
+
+    private String applyColorToConsole(String message) {
+        // Remove hex color codes (e.g., &#FFFFFF)
+        // This regular expression removes all hex color codes like &#RRGGBB
+        message = message.replaceAll("&#[0-9a-fA-F]{6}", "");
+
+        // Replace Minecraft color codes (e.g., &a, &c, etc.) with ANSI color codes for console
+        message = message.replaceAll("(?i)&0", "\u001B[30m"); // &0 - black
+        message = message.replaceAll("(?i)&1", "\u001B[34m"); // &1 - blue
+        message = message.replaceAll("(?i)&2", "\u001B[32m"); // &2 - green
+        message = message.replaceAll("(?i)&3", "\u001B[36m"); // &3 - cyan
+        message = message.replaceAll("(?i)&4", "\u001B[31m"); // &4 - red
+        message = message.replaceAll("(?i)&5", "\u001B[35m"); // &5 - purple
+        message = message.replaceAll("(?i)&6", "\u001B[33m"); // &6 - yellow
+        message = message.replaceAll("(?i)&7", "\u001B[37m"); // &7 - white
+        message = message.replaceAll("(?i)&8", "\u001B[90m"); // &8 - gray
+        message = message.replaceAll("(?i)&9", "\u001B[94m"); // &9 - light blue
+        message = message.replaceAll("(?i)&a", "\u001B[32m"); // &a - light green
+        message = message.replaceAll("(?i)&b", "\u001B[96m"); // &b - light cyan
+        message = message.replaceAll("(?i)&c", "\u001B[91m"); // &c - light red
+        message = message.replaceAll("(?i)&d", "\u001B[95m"); // &d - pink
+        message = message.replaceAll("(?i)&e", "\u001B[93m"); // &e - light yellow
+        message = message.replaceAll("(?i)&f", "\u001B[97m"); // &f - bright white
+
+        // Replace Minecraft text effects (e.g., &k, &l, &n, &o, &r) with corresponding ANSI codes
+        message = message.replaceAll("(?i)&k", "\u001B[8m");  // &k - obfuscated (text scramble)
+        message = message.replaceAll("(?i)&l", "\u001B[1m");  // &l - bold
+        message = message.replaceAll("(?i)&m", "\u001B[9m");  // &m - strikethrough
+        message = message.replaceAll("(?i)&n", "\u001B[4m");  // &n - underline
+        message = message.replaceAll("(?i)&o", "\u001B[3m");  // &o - italic
+        message = message.replaceAll("(?i)&r", "\u001B[0m");  // &r - reset all effects (reset to default)
+
+        // Append reset color to ensure the console defaults back to normal after this message
+        return message + "\u001B[0m";
+    }
+
+
     public String getMessageWithPrefix(String path) {
         String cacheKey = "prefix_" + path + "_" + currentLanguage;
         String cachedMessage = messageCache.get(cacheKey);

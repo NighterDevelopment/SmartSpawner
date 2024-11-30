@@ -321,15 +321,30 @@ public class SpawnerBreakHandler implements Listener {
                 if (configManager.getActivateOnPlace()) {
                     createNewSpawnerWithType(block, player, placedEntityType);
                 } else {
-                    languageManager.sendMessage(player, "messages.entity-spawner-placed");
+                    EntityType finalPlacedEntityType = placedEntityType;
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        placedSpawner.setSpawnedType(finalPlacedEntityType);
+                        placedSpawner.update();
+                        languageManager.sendMessage(player, "messages.entity-spawner-placed");
+                    }, 2L);
                 }
-            }, 3L);
+            }, 2L);
         } else {
             // Handle spawner activation with item meta entity type
             if (configManager.getActivateOnPlace()) {
-                createNewSpawnerWithType(block, player, storedEntityType);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    CreatureSpawner placedSpawner = (CreatureSpawner) block.getState();
+                    placedSpawner.setSpawnedType(storedEntityType);
+                    placedSpawner.update();
+                    createNewSpawnerWithType(block, player, storedEntityType);
+                }, 2L);
             } else {
-                languageManager.sendMessage(player, "messages.entity-spawner-placed");
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    CreatureSpawner placedSpawner = (CreatureSpawner) block.getState();
+                    placedSpawner.setSpawnedType(storedEntityType);
+                    placedSpawner.update();
+                    languageManager.sendMessage(player, "messages.entity-spawner-placed");
+                }, 2L);
             }
         }
 
