@@ -2,7 +2,7 @@ name: SmartSpawner
 version: '${version}'
 main: me.nighter.smartSpawner.SmartSpawner
 api-version: '1.20'
-authors: [Nighter, Samarth Sharma]
+authors: [Nighter, Samarth Sharma, maiminhdung]
 softdepend:
   - EconomyShopGUI
   - EconomyShopGUI-Premium

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'me.nighter'
-version = '1.1.7'
+version = '1.1.8'
 
 repositories {
     mavenCentral()
@@ -63,7 +63,6 @@ processResources {
 def minecraftVersion = "1.20+"
 
 jar {
-    destinationDirectory = file('C:\\Users\\ADMIN\\OneDrive\\Desktop\\TestServer\\plugins\\')
     archiveBaseName.set("SmartSpawner")
     archiveVersion.set("${version}-MC-${minecraftVersion}")
 }
