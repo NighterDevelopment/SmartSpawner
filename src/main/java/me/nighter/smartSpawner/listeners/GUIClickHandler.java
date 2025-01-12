@@ -118,15 +118,18 @@ public class GUIClickHandler implements Listener {
         SpawnerLootManager lootManager = new SpawnerLootManager(plugin);
         String title = languageManager.getGuiTitle("gui-title.loot-menu");
         Inventory pageInventory = lootManager.createLootInventory(spawner, title, page);
-
-        if (refresh) {
-            player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_DIAMOND
-                    , 1.2f, 1.2f);
-        } else {
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f); // UI_BUTTON_CLICK
-        }
+        
+        // Play appropriate sound
+        // Cleanup some code
+        Sound sound = refresh ? Sound.ITEM_ARMOR_EQUIP_DIAMOND : Sound.UI_BUTTON_CLICK;
+        float volume = refresh ? 1.2f : 1.0f;
+        float pitch = refresh ? 1.2f : 1.0f;
+        player.playSound(player.getLocation(), sound, volume, pitch);
+    
+        // Open the inventory
         player.openInventory(pageInventory);
     }
+
 
     private void openSpawnerMenu(Player player, SpawnerData spawner) {
         String entityName = languageManager.getFormattedMobName(spawner.getEntityType());

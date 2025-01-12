@@ -67,11 +67,13 @@ public class SpawnerRangeChecker implements Listener {
             for (int dz = -chunkRadius; dz <= chunkRadius; dz++) {
                 // Chỉ kiểm tra chunk đã được load
                 if (world.isChunkLoaded(baseX + dx, baseZ + dz)) {
-                    // Lấy tất cả entity trong chunk
-                    for (Entity entity : world.getChunkAt(baseX + dx, baseZ + dz).getEntities()) {
+                    // Lấy tất cả entity trong vùng radius
+                    // Sử dụng getNearbyEntities thay vì getEntities sẽ trả về các entity trong vùng radius (tính theo block)
+                    // Cái này sẽ giúp giảm bớt các phép toán không cần thiết
+                    Collection<Entity> nearbyEntities = world.getNearbyEntities(spawnerLoc, range, range, range);
+                    for (Entity entity : nearbyEntities) {
                         // Kiểm tra nếu là player và trong range
-                        if (entity instanceof Player &&
-                                entity.getLocation().distanceSquared(spawnerLoc) <= rangeSquared) {
+                        if (entity instanceof Player && entity.getLocation().distanceSquared(spawnerLoc) <= rangeSquared) {
                             playerFound = true;
                             break chunkCheck; // Thoát khỏi tất cả vòng lặp khi tìm thấy player
                         }

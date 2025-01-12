@@ -132,25 +132,25 @@ public class SpawnerManager {
 
     public void saveSpawnerData() {
         try {
-            // Clear old data
-            for (String key : spawnerData.getKeys(false)) {
-                spawnerData.set(key, null);
+            // Clear old data only if necessary
+            if (!spawners.isEmpty()) {
+                spawnerData.getKeys(false).forEach(key -> spawnerData.set(key, null));
             }
-
+    
             // Save each spawner
             for (Map.Entry<String, SpawnerData> entry : spawners.entrySet()) {
                 String spawnerId = entry.getKey();
                 SpawnerData spawner = entry.getValue();
                 Location loc = spawner.getSpawnerLocation();
-
+    
                 String path = "spawners." + spawnerId;
-
+    
                 // Save location
                 spawnerData.set(path + ".world", loc.getWorld().getName());
                 spawnerData.set(path + ".x", loc.getBlockX());
                 spawnerData.set(path + ".y", loc.getBlockY());
                 spawnerData.set(path + ".z", loc.getBlockZ());
-
+    
                 // Save basic properties
                 spawnerData.set(path + ".entityType", spawner.getEntityType().name());
                 spawnerData.set(path + ".spawnerExp", spawner.getSpawnerExp());
@@ -165,21 +165,20 @@ public class SpawnerManager {
                 spawnerData.set(path + ".maxMobs", spawner.getMaxMobs());
                 spawnerData.set(path + ".stackSize", spawner.getStackSize());
                 spawnerData.set(path + ".allowEquipmentItems", spawner.isAllowEquipmentItems());
-
+    
                 // Save virtual inventory
                 VirtualInventory virtualInv = spawner.getVirtualInventory();
                 if (virtualInv != null) {
-                    List<String> serializedItems = new ArrayList<>();
-
-                    // Iterate through all slots up to the inventory size
+                    List<String> serializedItems = new ArrayList<>(virtualInv.getSize());
+    
+                    // Batch serialize items
                     for (int slot = 0; slot < virtualInv.getSize(); slot++) {
-                        ItemStack item = virtualInv.getItem(slot);
+                    ItemStack item = virtualInv.getItem(slot);
                         if (item != null) {
-                            String serialized = slot + ":" + ItemStackSerializer.itemStackToJson(item);
-                            serializedItems.add(serialized);
+                            serializedItems.add(slot + ":" + ItemStackSerializer.itemStackToJson(item));
                         }
                     }
-
+    
                     spawnerData.set(path + ".virtualInventory.size", virtualInv.getSize());
                     spawnerData.set(path + ".virtualInventory.items", serializedItems);
                 }
