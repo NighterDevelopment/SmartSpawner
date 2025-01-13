@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 
 public class SpawnerManager {
     private final SmartSpawner plugin;
@@ -132,26 +133,20 @@ public class SpawnerManager {
 
     public void saveSpawnerData() {
         try {
-            // Clear old data only if necessary
-            if (!spawners.isEmpty()) {
-                spawnerData.getKeys(false).forEach(key -> spawnerData.set(key, null));
-            }
-    
-            // Save each spawner
+            // Delete existing spawner data if necessary
+            spawnerData.getKeys(false).forEach(key -> spawnerData.set(key, null));
+
             for (Map.Entry<String, SpawnerData> entry : spawners.entrySet()) {
                 String spawnerId = entry.getKey();
                 SpawnerData spawner = entry.getValue();
                 Location loc = spawner.getSpawnerLocation();
-    
                 String path = "spawners." + spawnerId;
-    
-                // Save location
+
+                // Save spawner properties
                 spawnerData.set(path + ".world", loc.getWorld().getName());
                 spawnerData.set(path + ".x", loc.getBlockX());
                 spawnerData.set(path + ".y", loc.getBlockY());
                 spawnerData.set(path + ".z", loc.getBlockZ());
-    
-                // Save basic properties
                 spawnerData.set(path + ".entityType", spawner.getEntityType().name());
                 spawnerData.set(path + ".spawnerExp", spawner.getSpawnerExp());
                 spawnerData.set(path + ".spawnerActive", spawner.getSpawnerActive());
@@ -165,20 +160,17 @@ public class SpawnerManager {
                 spawnerData.set(path + ".maxMobs", spawner.getMaxMobs());
                 spawnerData.set(path + ".stackSize", spawner.getStackSize());
                 spawnerData.set(path + ".allowEquipmentItems", spawner.isAllowEquipmentItems());
-    
-                // Save virtual inventory
+
                 VirtualInventory virtualInv = spawner.getVirtualInventory();
                 if (virtualInv != null) {
-                    List<String> serializedItems = new ArrayList<>(virtualInv.getSize());
-    
-                    // Batch serialize items
-                    for (int slot = 0; slot < virtualInv.getSize(); slot++) {
-                        ItemStack item = virtualInv.getItem(slot);
-                        if (item != null) {
-                            serializedItems.add(slot + ":" + ItemStackSerializer.itemStackToJson(item));
-                        }
-                    }
-    
+                    List<String> serializedItems = IntStream.range(0, virtualInv.getSize())
+                            .mapToObj(slot -> {
+                                ItemStack item = virtualInv.getItem(slot);
+                                return item != null ? slot + ":" + ItemStackSerializer.itemStackToJson(item) : null;
+                            })
+                            .filter(Objects::nonNull)
+                            .toList();
+
                     spawnerData.set(path + ".virtualInventory.size", virtualInv.getSize());
                     spawnerData.set(path + ".virtualInventory.items", serializedItems);
                 }
@@ -192,17 +184,20 @@ public class SpawnerManager {
     }
 
     public void loadSpawnerData() {
+        // Clear existing spawner data and location index
         spawners.clear();
         locationIndex.clear();
 
+        // Get the spawners section from the configuration
         ConfigurationSection spawnersSection = spawnerData.getConfigurationSection("spawners");
         if (spawnersSection == null) return;
 
+        // Iterate through each spawner ID in the configuration
         for (String spawnerId : spawnersSection.getKeys(false)) {
             try {
                 String path = "spawners." + spawnerId;
 
-                // Load location
+                // Load the world name and get the World object
                 String worldName = spawnerData.getString(path + ".world");
                 World world = Bukkit.getWorld(worldName);
                 if (world == null) {
@@ -210,18 +205,21 @@ public class SpawnerManager {
                     continue;
                 }
 
-                Location location = new Location(world,
+                // Load the spawner's location
+                Location location = new Location(
+                        world,
                         spawnerData.getInt(path + ".x"),
                         spawnerData.getInt(path + ".y"),
-                        spawnerData.getInt(path + ".z"));
+                        spawnerData.getInt(path + ".z")
+                );
 
-                // Load entity type
+                // Load the entity type for the spawner
                 EntityType entityType = EntityType.valueOf(spawnerData.getString(path + ".entityType"));
 
-                // Create new spawner
+                // Create a new SpawnerData instance
                 SpawnerData spawner = new SpawnerData(spawnerId, location, entityType, plugin);
 
-                // Load basic properties
+                // Load basic spawner properties
                 spawner.setSpawnerExp(spawnerData.getInt(path + ".spawnerExp"));
                 spawner.setSpawnerActive(spawnerData.getBoolean(path + ".spawnerActive"));
                 spawner.setSpawnerRange(spawnerData.getInt(path + ".spawnerRange"));
@@ -239,6 +237,7 @@ public class SpawnerManager {
                 int invSize = spawnerData.getInt(path + ".virtualInventory.size", spawner.getMaxSpawnerLootSlots());
                 VirtualInventory virtualInv = new VirtualInventory(invSize);
 
+                // Deserialize and load items into the virtual inventory
                 List<String> serializedItems = spawnerData.getStringList(path + ".virtualInventory.items");
                 if (serializedItems != null) {
                     for (String serialized : serializedItems) {
@@ -249,23 +248,27 @@ public class SpawnerManager {
                                 ItemStack item = ItemStackSerializer.itemStackFromJson(parts[1]);
                                 virtualInv.setItem(slot, item);
                             }
-                        } catch (Exception e) {
+                        } catch (NumberFormatException e) {
+                            plugin.getLogger().warning("Invalid slot number for spawner " + spawnerId + ": " + e.getMessage());
+                        } catch (IllegalArgumentException e) {
                             plugin.getLogger().warning("Failed to load item for spawner " + spawnerId + ": " + e.getMessage());
                         }
                     }
                 }
                 spawner.setVirtualInventory(virtualInv);
 
-                // Add to maps
+                // Add the spawner to the maps
                 spawners.put(spawnerId, spawner);
                 locationIndex.put(new LocationKey(spawner.getSpawnerLocation()), spawner);
 
             } catch (Exception e) {
+                // Log any errors that occur while loading a spawner
                 plugin.getLogger().severe("Error loading spawner " + spawnerId);
                 e.printStackTrace();
             }
         }
 
+        // Log the total number of spawners loaded
         plugin.getLogger().info("Loaded " + spawners.size() + " spawners from spawners_data.yml");
     }
 

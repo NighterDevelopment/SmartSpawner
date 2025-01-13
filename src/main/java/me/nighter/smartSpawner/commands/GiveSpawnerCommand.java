@@ -31,7 +31,7 @@ public class GiveSpawnerCommand {
 
         // Initialize supported mobs list
         this.supportedMobs = Arrays.asList(
-                "BLAZE", "BOGGED", "BREEZE", "CAVE_SPIDER", "CHICKEN", "COW", "CREEPER",
+                "BLAZE", "CAVE_SPIDER", "CHICKEN", "COW", "CREEPER",
                 "DROWNED", "ENDERMAN", "EVOKER", "GHAST", "GLOW_SQUID", "GUARDIAN",
                 "HOGLIN", "HUSK", "IRON_GOLEM", "MAGMA_CUBE", "MOOSHROOM", "PIG",
                 "PIGLIN", "PIGLIN_BRUTE", "PILLAGER", "PUFFERFISH", "RABBIT", "RAVAGER",
