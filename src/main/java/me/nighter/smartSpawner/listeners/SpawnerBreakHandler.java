@@ -1,6 +1,7 @@
 package me.nighter.smartSpawner.listeners;
 
 import me.nighter.smartSpawner.SmartSpawner;
+import me.nighter.smartSpawner.hooks.WorldGuardAPI;
 import me.nighter.smartSpawner.utils.SpawnerData;
 import me.nighter.smartSpawner.managers.SpawnerManager;
 import me.nighter.smartSpawner.managers.ConfigManager;
@@ -8,6 +9,7 @@ import me.nighter.smartSpawner.managers.LanguageManager;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
@@ -47,12 +49,21 @@ public class SpawnerBreakHandler implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onSpawnerBreak(BlockBreakEvent event) {
-        if (event.getBlock().getType() != Material.SPAWNER) {
-            return;
-        }
 
         final Player player = event.getPlayer();
         final Block block = event.getBlock();
+        final Location location = event.getBlock().getLocation();
+
+        if (event.getBlock().getType() != Material.SPAWNER) {
+                return;
+        }
+
+        // Check WorldGuard restrictions
+        if (SmartSpawner.hasWorldGuard)
+            if (!WorldGuardAPI.canPlayerBreakBlockInRegion(player.getUniqueId(), location)) {
+                event.setCancelled(true);
+                return;
+        }
 
         // Cache config values
         final boolean isEnabled = configManager.isSpawnerBreakEnabled();
@@ -267,9 +278,9 @@ public class SpawnerBreakHandler implements Listener {
         if (meta != null) {
             if (entityType != null && entityType != EntityType.UNKNOWN) {
                 // Set display name
-                String entityTypeName = languageManager.getFormattedMobName(entityType);
-                String displayName = languageManager.getMessage("spawner-name","%entity%",entityTypeName);
-                meta.setDisplayName(displayName);
+                 String entityTypeName = languageManager.getFormattedMobName(entityType);
+                 String displayName = languageManager.getMessage("spawner-name","%entity%",entityTypeName);
+                 meta.setDisplayName(displayName);
 
                 // Store entity type in item NBT
                 BlockStateMeta blockMeta = (BlockStateMeta) meta;
@@ -281,7 +292,7 @@ public class SpawnerBreakHandler implements Listener {
 //                List<String> lore = new ArrayList<>();
 //                lore.add(ChatColor.GRAY + "Entity: " + StringUtils.capitalize(entityName));
 //                meta.setLore(lore);
-
+                
             }
             spawner.setItemMeta(meta);
         }
@@ -291,24 +302,45 @@ public class SpawnerBreakHandler implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent event) {
+
+        Player player = event.getPlayer();
+        ItemStack item = event.getItemInHand();
+        ItemMeta meta = item.getItemMeta();
+        Location location = event.getBlock().getLocation();
+    
+        // Check WorldGuard restrictions
+        if (SmartSpawner.hasWorldGuard)
+            if (!WorldGuardAPI.canPlayerBreakBlockInRegion(player.getUniqueId(), location)) {
+                event.setCancelled(true);
+                return;
+        }
+
         Block block = event.getBlock();
         if (block.getType() != Material.SPAWNER) {
             return;
         }
-        Player player = event.getPlayer();
-        ItemStack item = event.getItemInHand();
-        ItemMeta meta = item.getItemMeta();
-        BlockStateMeta blockMeta = (BlockStateMeta) meta;
+
+        // Check if the item has BlockStateMeta
+        if (!(meta instanceof BlockStateMeta)) {
+            // Handle non-spawner items or log an error
+            event.setCancelled(true);
+            languageManager.sendMessage(player, "messages.invalid-spawner-item");
+            return;
+        }
 
         // Get entity type from item meta
+        BlockStateMeta blockMeta = (BlockStateMeta) meta;
         CreatureSpawner storedState = (CreatureSpawner) blockMeta.getBlockState();
         EntityType storedEntityType = storedState.getSpawnedType();
 
         // Get entity type from nbt tag
         if (storedEntityType == null) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                CreatureSpawner placedSpawner = (CreatureSpawner) block.getState();
-                EntityType placedEntityType = placedSpawner.getSpawnedType();
+                // Added checks to ensure that the BlockState is an instance of CreatureSpawner before casting.
+                BlockState blockState = block.getState();
+                if (blockState instanceof CreatureSpawner) {
+                    CreatureSpawner placedSpawner = (CreatureSpawner) blockState;
+                    EntityType placedEntityType = placedSpawner.getSpawnedType();
 
                 // Handle default entity type
                 if ((placedEntityType == null || placedEntityType == EntityType.UNKNOWN)) {
@@ -326,24 +358,33 @@ public class SpawnerBreakHandler implements Listener {
                         placedSpawner.setSpawnedType(finalPlacedEntityType);
                         placedSpawner.update();
                         languageManager.sendMessage(player, "messages.entity-spawner-placed");
-                    }, 2L);
+                        }, 2L);
+                    }
                 }
             }, 2L);
         } else {
             // Handle spawner activation with item meta entity type
             if (configManager.getActivateOnPlace()) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    CreatureSpawner placedSpawner = (CreatureSpawner) block.getState();
-                    placedSpawner.setSpawnedType(storedEntityType);
-                    placedSpawner.update();
-                    createNewSpawnerWithType(block, player, storedEntityType);
+                    //Added checks to ensure that the BlockState is an instance of CreatureSpawner before casting.
+                    BlockState blockState = block.getState();
+                    if (blockState instanceof CreatureSpawner) {
+                        CreatureSpawner placedSpawner = (CreatureSpawner) blockState;
+                        placedSpawner.setSpawnedType(storedEntityType);
+                        placedSpawner.update();
+                        createNewSpawnerWithType(block, player, storedEntityType);
+                    }
                 }, 2L);
             } else {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    CreatureSpawner placedSpawner = (CreatureSpawner) block.getState();
-                    placedSpawner.setSpawnedType(storedEntityType);
-                    placedSpawner.update();
-                    languageManager.sendMessage(player, "messages.entity-spawner-placed");
+                    //Added checks to ensure that the BlockState is an instance of CreatureSpawner before casting.
+                    BlockState blockState = block.getState();
+                    if (blockState instanceof CreatureSpawner) {
+                        CreatureSpawner placedSpawner = (CreatureSpawner) blockState;
+                        placedSpawner.setSpawnedType(storedEntityType);
+                        placedSpawner.update();
+                        languageManager.sendMessage(player, "messages.entity-spawner-placed");
+                    }
                 }, 2L);
             }
         }
@@ -359,8 +400,8 @@ public class SpawnerBreakHandler implements Listener {
         }
 
         // Debug message
-        configManager.debug("Player " + player.getName() + " placed " + storedEntityType + " spawner at " + block.getLocation());
-    }
+            configManager.debug("Player " + player.getName() + " placed " + storedEntityType + " spawner at " + block.getLocation());
+        }
 
     private void createNewSpawnerWithType(Block block, Player player, EntityType entityType) {
         String newSpawnerId = UUID.randomUUID().toString().substring(0, 8);

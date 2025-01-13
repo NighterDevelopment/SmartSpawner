@@ -1,6 +1,7 @@
 package me.nighter.smartSpawner.managers;
 
 import me.nighter.smartSpawner.SmartSpawner;
+import me.nighter.smartSpawner.hooks.WorldGuardAPI;
 import me.nighter.smartSpawner.utils.SpawnerData;
 import org.bukkit.*;
 import org.bukkit.block.CreatureSpawner;
@@ -22,10 +23,20 @@ public class SpawnerStackHandler {
     }
 
     public boolean handleSpawnerStack(Player player, SpawnerData targetSpawner, ItemStack itemInHand, boolean stackAll) {
+
+        // Check if player is holding a spawner
         if (itemInHand.getType() != Material.SPAWNER) {
             return false;
         }
 
+        // Check WorldGuard restrictions
+        Location location = targetSpawner.getSpawnerLocation();
+        if (SmartSpawner.hasWorldGuard)
+            if (!WorldGuardAPI.canPlayerInteractInRegion(player, location)) {
+                return false;
+        }
+
+        // Check if player has permission to stack spawners
         if (!player.hasPermission("smartspawner.stack")) {
             languageManager.sendMessage(player, "no-permission");
             return false;

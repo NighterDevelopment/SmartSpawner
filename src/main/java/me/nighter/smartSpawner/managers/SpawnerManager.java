@@ -173,7 +173,7 @@ public class SpawnerManager {
     
                     // Batch serialize items
                     for (int slot = 0; slot < virtualInv.getSize(); slot++) {
-                    ItemStack item = virtualInv.getItem(slot);
+                        ItemStack item = virtualInv.getItem(slot);
                         if (item != null) {
                             serializedItems.add(slot + ":" + ItemStackSerializer.itemStackToJson(item));
                         }

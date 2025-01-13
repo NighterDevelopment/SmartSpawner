@@ -24,9 +24,10 @@ import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import me.nighter.smartSpawner.holders.SpawnerStackerHolder;
+import me.nighter.smartSpawner.hooks.WorldGuardAPI;
+
 import org.geysermc.floodgate.api.FloodgateApi;
 
-import java.util.UUID;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,7 +123,7 @@ public class SpawnerListener implements Listener {
                 return;
             }
         }
-       // configManager.debug(isBedrockPlayer(player) ? "Bedrock player detected" : "Java player detected");
+        //configManager.debug(isBedrockPlayer(player) ? "Bedrock player detected" : "Java player detected");
 
         event.setCancelled(true);
         // Direct O(1) lookup instead of iteration
@@ -157,9 +158,7 @@ public class SpawnerListener implements Listener {
                 boolean success = stackHandler.handleSpawnerStack(player, spawner, itemInHand, true);
                 if (success) {
                     spawnerManager.saveSingleSpawner(spawner.getSpawnerId());
-                    // Play stack sound
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                    // Show particles
                     block.getWorld().spawnParticle(Particle.VILLAGER_HAPPY,
                             block.getLocation().add(0.5, 0.5, 0.5),
                             10, 0.3, 0.3, 0.3, 0);
@@ -176,6 +175,14 @@ public class SpawnerListener implements Listener {
     }
 
     private void openSpawnerMenu(Player player, SpawnerData spawner, boolean refresh) {
+        
+        if (SmartSpawner.hasWorldGuard) {
+            Location location = spawner.getSpawnerLocation();
+            if (!WorldGuardAPI.canPlayerInteractInRegion(player, location)) {
+                return;
+            }
+        }
+
         String entityName = languageManager.getFormattedMobName(spawner.getEntityType());
         String title;
         if (spawner.getStackSize() >1){
@@ -280,8 +287,8 @@ public class SpawnerListener implements Listener {
                 break;
 
             case PLAYER_HEAD, SPAWNER, ZOMBIE_HEAD, SKELETON_SKULL, WITHER_SKELETON_SKULL, CREEPER_HEAD, PIGLIN_HEAD:
-                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 handleSpawnerInfoClick(player, spawner);
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 break;
             case EXPERIENCE_BOTTLE:
                 handleExpBottleClick(player, spawner);
@@ -394,6 +401,8 @@ public class SpawnerListener implements Listener {
         // Return to main menu if spawner is clicked
         if (clicked.getType() == Material.SPAWNER) {
             openSpawnerMenu(player, spawner, true);
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK
+                    , 1.0f, 1.0f);
             return;
         }
 
