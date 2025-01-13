@@ -36,8 +36,8 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
     compileOnly("org.geysermc.floodgate:api:2.2.3-SNAPSHOT")
-    compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.13-SNAPSHOT")
-    compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.10-SNAPSHOT")
+    compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.9-SNAPSHOT")
+    compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.1-SNAPSHOT")
     implementation 'net.kyori:adventure-api:4.14.0'
     implementation 'net.kyori:adventure-text-minimessage:4.14.0'
     implementation 'com.github.Gypopo:EconomyShopGUI-API:1.7.2'
