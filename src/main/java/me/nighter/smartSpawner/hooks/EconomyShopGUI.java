@@ -44,45 +44,37 @@ public class EconomyShopGUI {
         return taxedPrices;
     }
 
-    public boolean sellAllItems(Player player, SpawnerData spawner) {
-        // Retrieve the virtual inventory from the spawner
+    public synchronized boolean sellAllItems(Player player, SpawnerData spawner) {
         VirtualInventory virtualInv = spawner.getVirtualInventory();
         Map<Integer, ItemStack> items = virtualInv.getAllItems();
 
-        // Check if inventory is empty
+        // Prevent processing if inventory is empty
         if (items.isEmpty()) {
             plugin.getLanguageManager().sendMessage(player, "messages.no-items");
             return false;
         }
 
-        // Initialize variables for tracking sale process
         int totalAmount = 0;
         boolean foundSellableItem = false;
         Map<ShopItem, Integer> soldItems = new HashMap<>();
         Map<EcoType, Double> prices = new HashMap<>();
 
-        // First pass: Scan through inventory to calculate sellable items
-        for (Map.Entry<Integer, ItemStack> entry : items.entrySet()) {
-            ItemStack item = entry.getValue();
-            if (item != null && item.getType() != Material.AIR) {
-                // Get shop item information
-                ShopItem shopItem = EconomyShopGUIHook.getShopItem(player, item);
-                if (shopItem == null) continue;
+        // First pass: Calculate sellable items
+        synchronized (virtualInv) {
+            for (Map.Entry<Integer, ItemStack> entry : items.entrySet()) {
+                ItemStack item = entry.getValue();
+                if (item != null && item.getType() != Material.AIR) {
+                    ShopItem shopItem = EconomyShopGUIHook.getShopItem(player, item);
+                    if (shopItem == null || !EconomyShopGUIHook.isSellAble(shopItem)) continue;
 
-                // Check if item is sellable
-                if (EconomyShopGUIHook.isSellAble(shopItem)) {
                     foundSellableItem = true;
 
-                    // Check sell limits and restrictions
-                    // Verify if player can sell the entire item stack
                     int limit = getSellLimit(shopItem, player.getUniqueId(), item.getAmount());
                     if (limit == -1) continue;
 
-                    // Additional check for max sell per transaction
                     limit = getMaxSell(shopItem, limit, soldItems.getOrDefault(shopItem, 0));
                     if (limit == -1) continue;
 
-                    // Calculate selling price for the item
                     calculateSellPrice(prices, shopItem, player, item, limit, totalAmount);
                     totalAmount += limit;
                     soldItems.put(shopItem, soldItems.getOrDefault(shopItem, 0) + limit);
@@ -90,50 +82,36 @@ public class EconomyShopGUI {
             }
         }
 
-        // If no sellable items were found
         if (!foundSellableItem) {
             plugin.getLanguageManager().sendMessage(player, "messages.no-sellable-items");
             return false;
         }
 
-        // Process selling if items are available
         if (totalAmount > 0) {
-            // Check tax configuration
             double taxPercentage = plugin.getConfigManager().getTaxPercentage();
-
-            // Original prices before tax
-            Map<EcoType, Double> preTaxPrices = new HashMap<>(prices);
-            // Prices after tax calculation
             Map<EcoType, Double> afterTaxPrices = prices;
 
-            // Apply tax if enabled
             if (taxPercentage > 0) {
                 afterTaxPrices = applyTax(prices);
             }
 
-            // Thread-safe inventory modification
             synchronized (virtualInv) {
-                // Remove sold items from virtual inventory
                 for (Map.Entry<ShopItem, Integer> soldEntry : soldItems.entrySet()) {
                     ShopItem shopItem = soldEntry.getKey();
                     int remainingToRemove = soldEntry.getValue();
 
-                    // Iterate through inventory to remove items
                     for (Map.Entry<Integer, ItemStack> invEntry : new HashMap<>(items).entrySet()) {
                         if (remainingToRemove <= 0) break;
 
                         int slot = invEntry.getKey();
                         ItemStack item = invEntry.getValue();
 
-                        // Verify and remove matching items
                         if (item != null && item.getType() != Material.AIR) {
                             ShopItem currentShopItem = EconomyShopGUIHook.getShopItem(player, item);
                             if (currentShopItem != null && currentShopItem.equals(shopItem)) {
-                                // Calculate amount to remove
                                 int amountToRemove = Math.min(remainingToRemove, item.getAmount());
                                 remainingToRemove -= amountToRemove;
 
-                                // Update inventory slot
                                 if (amountToRemove >= item.getAmount()) {
                                     virtualInv.setItem(slot, null);
                                 } else {
@@ -147,44 +125,37 @@ public class EconomyShopGUI {
                 }
             }
 
-            // Update shop statistics asynchronously
             updateShopStats(soldItems, player.getUniqueId());
 
-            // Deposit money/resources to player
             for (Map.Entry<EcoType, Double> entry : afterTaxPrices.entrySet()) {
                 if (isClaimableCurrency(entry.getKey())) {
                     EconomyShopGUIHook.getEcon(entry.getKey()).depositBalance(player, entry.getValue());
                 }
             }
 
-            // Prepare price string for messaging
             StringBuilder priceBuilder = new StringBuilder();
             afterTaxPrices.forEach((type, value) -> {
                 if (priceBuilder.length() > 0) priceBuilder.append(", ");
                 priceBuilder.append(formatMonetaryValue(value, type));
             });
 
-            // Send appropriate sell message based on tax status
             if (taxPercentage > 0) {
-                // Message with tax information
                 plugin.getLanguageManager().sendMessage(player, "messages.sell-all-tax",
                         "%amount%", String.valueOf(totalAmount),
                         "%price%", priceBuilder.toString(),
                         "%tax%", String.format("%.2f", taxPercentage));
             } else {
-                // Standard sell message without tax
                 plugin.getLanguageManager().sendMessage(player, "messages.sell-all",
                         "%amount%", String.valueOf(totalAmount),
                         "%price%", priceBuilder.toString());
             }
-
             return true;
         }
 
-        // Fallback message if no items could be sold
         plugin.getLanguageManager().sendMessage(player, "messages.no-sellable-items");
         return false;
     }
+
 
     private int getSellLimit(ShopItem shopItem, UUID playerUUID, int amount) {
         if (shopItem.getLimitedSellMode() != 0) {

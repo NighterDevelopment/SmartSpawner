@@ -22,7 +22,6 @@ public class SpawnerHeadManager {
     static {
         // Khởi tạo texture map
         TEXTURE_MAP.put(EntityType.BLAZE, "737623f79f7eb4f3f80da65b652cc44b2148eea41f9ffe2e86a23bdf49ab77b1");
-        TEXTURE_MAP.put(EntityType.BREEZE, "a275728af7e6a29c88125b675a39d88ae9919bb61fdc200337fed6ab0c49d65c");
         TEXTURE_MAP.put(EntityType.CAVE_SPIDER, "eccc4a32d45d74e8b14ef1ffd55cd5f381a06d4999081d52eaea12e13293e209");
         TEXTURE_MAP.put(EntityType.CHICKEN, "4e8f3ea46735ad0c106c549ccb6cd489c97a41e73d092497ee424becd9dfd29c");
         TEXTURE_MAP.put(EntityType.COW, "b667c0e107be79d7679bfe89bbc57c6bf198ecb529a3295fcfdfd2f24408dca3");
