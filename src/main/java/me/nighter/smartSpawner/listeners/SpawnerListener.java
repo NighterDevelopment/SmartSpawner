@@ -1,11 +1,14 @@
 package me.nighter.smartSpawner.listeners;
 
 import me.nighter.smartSpawner.*;
-import me.nighter.smartSpawner.commands.SpawnerListCommand;
-import me.nighter.smartSpawner.holders.PagedSpawnerLootHolder;
-import me.nighter.smartSpawner.holders.SpawnerMenuHolder;
-import me.nighter.smartSpawner.managers.*;
 import me.nighter.smartSpawner.utils.*;
+import me.nighter.smartSpawner.managers.*;
+import me.nighter.smartSpawner.hooks.WorldGuardAPI;
+import me.nighter.smartSpawner.holders.SpawnerMenuHolder;
+import me.nighter.smartSpawner.commands.SpawnerListCommand;
+import me.nighter.smartSpawner.holders.SpawnerStackerHolder;
+import me.nighter.smartSpawner.holders.PagedSpawnerLootHolder;
+
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
@@ -23,9 +26,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import me.nighter.smartSpawner.holders.SpawnerStackerHolder;
-import me.nighter.smartSpawner.hooks.WorldGuardAPI;
-
 import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.*;
@@ -745,6 +745,7 @@ public class SpawnerListener implements Listener {
         plugin.getSpawnerLootManager().saveItems(spawner, event.getInventory());
         plugin.getSpawnerManager().saveSpawnerData();
     }
+
 
     /**
      * Get entity type from spawn egg material

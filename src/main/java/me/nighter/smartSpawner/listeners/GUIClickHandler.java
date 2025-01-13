@@ -8,6 +8,7 @@ import me.nighter.smartSpawner.managers.SpawnerLootManager;
 import me.nighter.smartSpawner.holders.PagedSpawnerLootHolder;
 import me.nighter.smartSpawner.utils.SpawnerData;
 import me.nighter.smartSpawner.holders.SpawnerMenuHolder;
+import me.nighter.smartSpawner.hooks.WorldGuardAPI;
 import me.nighter.smartSpawner.utils.VirtualInventory;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -21,6 +22,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.Location;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -239,6 +241,14 @@ public class GUIClickHandler implements Listener {
     //---------------------------------------------------
 
     private void openSpawnerMenu(Player player, SpawnerData spawner) {
+
+        if (SmartSpawner.hasWorldGuard) {
+            Location location = spawner.getSpawnerLocation();
+            if (!WorldGuardAPI.canPlayerInteractInRegion(player, location)) {
+                return;
+            }
+        }
+
         String entityName = languageManager.getFormattedMobName(spawner.getEntityType());
         String title;
         if (spawner.getStackSize() >1){
