@@ -16,7 +16,7 @@ dependencies {
     implementation 'com.github.IncrediblePlugins:LandsAPI:7.10.13'
 
     // Adventure API
-    implementation 'net.kyori:adventure-api:4.19.0'
+    implementation 'net.kyori:adventure-api:4.20.0'
     implementation 'net.kyori:adventure-text-minimessage:4.19.0'
 
     // Lombok
