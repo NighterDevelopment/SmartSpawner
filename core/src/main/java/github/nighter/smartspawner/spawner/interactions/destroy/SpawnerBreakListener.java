@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.spawner.interactions.destroy;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.api.events.SpawnerPlayerBreakEvent;
 import github.nighter.smartspawner.extras.HopperHandler;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.hooks.protections.CheckBreakBlock;
@@ -98,7 +99,12 @@ public class SpawnerBreakListener implements Listener {
             languageManager.sendMessage(player, "no-permission");
             return;
         }
-
+        SpawnerPlayerBreakEvent e = new SpawnerPlayerBreakEvent(player, block.getLocation(), 1);
+        Bukkit.getPluginManager().callEvent(e);
+        if(e.isCancelled()) {
+            event.setCancelled(true);
+            return;
+        }
         // Handle spawner based on type
         if (spawner != null) {
             handleSpawnerBreak(block, spawner, player);

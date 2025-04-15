@@ -1,9 +1,12 @@
 package github.nighter.smartspawner.spawner.interactions.destroy;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.api.events.SpawnerBreakEvent;
+import github.nighter.smartspawner.api.events.SpawnerExplodeEvent;
 import github.nighter.smartspawner.config.ConfigManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
@@ -40,6 +43,8 @@ public class SpawnerExplosionListener implements Listener {
                         plugin.getSpawnerGuiViewManager().closeAllViewersInventory(spawnerData);
                     } else {
                         String spawnerId = spawnerData.getSpawnerId();
+                        SpawnerExplodeEvent e = new SpawnerExplodeEvent(event.getEntity(), spawnerData.getSpawnerLocation(), 1);
+                        Bukkit.getPluginManager().callEvent(e);
                         spawnerManager.removeSpawner(spawnerId);
                         plugin.getRangeChecker().stopSpawnerTask(spawnerData);
                         plugin.getConfigManager().debug("Spawner " + spawnerId + " has been exploded.");

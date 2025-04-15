@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.spawner.interactions.place;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.api.events.SpawnerPlaceEvent;
 import github.nighter.smartspawner.extras.HopperHandler;
 import github.nighter.smartspawner.nms.ParticleWrapper;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
@@ -8,6 +9,7 @@ import github.nighter.smartspawner.spawner.properties.SpawnerManager;
 import github.nighter.smartspawner.config.ConfigManager;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.Scheduler;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -83,6 +85,14 @@ public class SpawnerPlaceListener implements Listener {
         if (blockMeta.hasBlockState() && blockMeta.getBlockState() instanceof CreatureSpawner) {
             CreatureSpawner storedState = (CreatureSpawner) blockMeta.getBlockState();
             storedEntityType = storedState.getSpawnedType();
+        }
+
+        SpawnerPlaceEvent e = new SpawnerPlaceEvent(player, block.getLocation(), 1);
+        Bukkit.getPluginManager().callEvent(e);
+        //TODO: Check if this can be optimized moving it
+        if(e.isCancelled()) {
+            event.setCancelled(true);
+            return;
         }
 
         // Handle spawner initialization asynchronously
