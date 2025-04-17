@@ -74,7 +74,7 @@ public class SpawnerStackEvent extends Event implements Cancellable {
         return handlers;
     }
 
-    public @NotNull HandlerList getHandlerList() {
+    public static @NotNull HandlerList getHandlerList() {
         return handlers;
     }
 
