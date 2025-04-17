@@ -36,19 +36,21 @@ public class SpawnerExplosionListener implements Listener {
                 SpawnerData spawnerData = this.spawnerManager.getSpawnerByLocation(block.getLocation());
 
                 if (spawnerData != null) {
+                    SpawnerExplodeEvent e;
                     if (!configManager.getBoolean("allow-grief")) {
+                        e = new SpawnerExplodeEvent(event.getEntity(), spawnerData.getSpawnerLocation(), 1, false);
                         // Add the spawner block to the list of blocks to remove
                         blocksToRemove.add(block);
                         // Close all viewers of the spawner
                         plugin.getSpawnerGuiViewManager().closeAllViewersInventory(spawnerData);
                     } else {
                         String spawnerId = spawnerData.getSpawnerId();
-                        SpawnerExplodeEvent e = new SpawnerExplodeEvent(event.getEntity(), spawnerData.getSpawnerLocation(), 1);
-                        Bukkit.getPluginManager().callEvent(e);
+                        e = new SpawnerExplodeEvent(event.getEntity(), spawnerData.getSpawnerLocation(), 1, true);
                         spawnerManager.removeSpawner(spawnerId);
                         plugin.getRangeChecker().stopSpawnerTask(spawnerData);
                         plugin.getConfigManager().debug("Spawner " + spawnerId + " has been exploded.");
                     }
+                    Bukkit.getPluginManager().callEvent(e);
                 } else {
                     // If no spawner data is found, we still want the spawner block to be destroyed
                     // So don't add it to the blocksToRemove list

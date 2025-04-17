@@ -14,6 +14,7 @@ public class SpawnerStackEvent extends Event implements Cancellable {
     private final Player player;
     private Location location;
     private int oldQuantity, newQuantity;
+    private final StackSource source;
     private boolean cancelled = false;
 
     private static final HandlerList handlers = new HandlerList();
@@ -26,11 +27,16 @@ public class SpawnerStackEvent extends Event implements Cancellable {
      * @param oldQuantity The old quantity of the spawner.
      * @param newQuantity The new quantity of the spawner
      */
-    public SpawnerStackEvent(Player player, Location location, int oldQuantity, int newQuantity) {
+    public SpawnerStackEvent(Player player, Location location, int oldQuantity, int newQuantity, StackSource source) {
         this.player = player;
         this.location = location;
         this.oldQuantity = oldQuantity;
         this.newQuantity = newQuantity;
+        this.source = source;
+    }
+
+    public SpawnerStackEvent(Player player, Location location, int oldQuantity, int newQuantity) {
+        this(player, location, oldQuantity, newQuantity, StackSource.PLACE);
     }
 
     public Player getPlayer() {
@@ -49,6 +55,10 @@ public class SpawnerStackEvent extends Event implements Cancellable {
         return newQuantity;
     }
 
+    public StackSource getSource() {
+        return source;
+    }
+
     @Override
     public boolean isCancelled() {
         return cancelled;
@@ -63,4 +73,13 @@ public class SpawnerStackEvent extends Event implements Cancellable {
     public @NotNull HandlerList getHandlers() {
         return handlers;
     }
+
+    public @NotNull HandlerList getHandlerList() {
+        return handlers;
+    }
+
+    public enum StackSource {
+        PLACE, GUI;
+    }
 }
+

@@ -99,7 +99,8 @@ public class SpawnerBreakListener implements Listener {
             languageManager.sendMessage(player, "no-permission");
             return;
         }
-        SpawnerPlayerBreakEvent e = new SpawnerPlayerBreakEvent(player, block.getLocation(), 1);
+        int i = spawner.getStackSize() - 1 > 0 ? spawner.getStackSize() - 1 : 1;
+        SpawnerPlayerBreakEvent e = new SpawnerPlayerBreakEvent(player, block.getLocation(), i);
         Bukkit.getPluginManager().callEvent(e);
         if(e.isCancelled()) {
             event.setCancelled(true);

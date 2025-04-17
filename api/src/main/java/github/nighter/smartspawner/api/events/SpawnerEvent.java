@@ -47,4 +47,8 @@ public abstract class SpawnerEvent extends Event {
     public @NotNull HandlerList getHandlers() {
         return handlers;
     }
+
+    public @NotNull HandlerList getHandlerList() {
+        return handlers;
+    }
 }
