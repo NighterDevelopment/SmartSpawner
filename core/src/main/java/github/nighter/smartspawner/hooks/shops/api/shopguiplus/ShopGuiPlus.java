@@ -21,185 +21,132 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
+/**
+ * ShopGuiPlus integration for selling items from a spawner's virtual inventory asynchronously using Bukkit's scheduler.
+ */
 public class ShopGuiPlus implements IShopIntegration {
     private final SmartSpawner plugin;
     private final LanguageManager languageManager;
     private final MessageService messageService;
     private final boolean isLoggingEnabled;
-
-    // Transaction timeout
+    private final boolean isTaxEnabled;
+    private final double taxPercentage;
     private static final long TRANSACTION_TIMEOUT_MS = 5000; // 5 seconds timeout
-
-    // Thread pool for async operations
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
-    private final Map<UUID, CompletableFuture<Boolean>> pendingSales = new ConcurrentHashMap<>();
+    private final Set<UUID> pendingSales = ConcurrentHashMap.newKeySet();
 
     public ShopGuiPlus(SmartSpawner plugin) {
         this.plugin = plugin;
         this.languageManager = plugin.getLanguageManager();
         this.messageService = plugin.getMessageService();
         this.isLoggingEnabled = plugin.getConfig().getBoolean("log_transactions.enabled", true);
+        this.isTaxEnabled = plugin.getConfig().getBoolean("tax.enabled", false);
+        this.taxPercentage = plugin.getConfig().getDouble("tax.percentage", 10.0);
     }
 
     @Override
     public boolean sellAllItems(Player player, SpawnerData spawner) {
-        // Check if shop system is enabled
         if (!isEnabled()) {
-            return false;
-        }
-
-        // Prevent multiple concurrent sales for the same player
-        if (pendingSales.containsKey(player.getUniqueId())) {
             messageService.sendMessage(player, "shop.transaction_in_progress");
             return false;
         }
 
-        // Get lock with timeout
+        if (pendingSales.contains(player.getUniqueId())) {
+            messageService.sendMessage(player, "shop.transaction_in_progress");
+            return false;
+        }
+
         ReentrantLock lock = spawner.getLock();
         if (!lock.tryLock()) {
             messageService.sendMessage(player, "shop.transaction_in_progress");
             return false;
         }
 
-        try {
-            // Start async sale process
-            CompletableFuture<Boolean> saleFuture = CompletableFuture.supplyAsync(() ->
-                    processSaleAsync(player, spawner), executorService);
-
-            pendingSales.put(player.getUniqueId(), saleFuture);
-
-            // Handle completion
-            saleFuture.whenComplete((success, error) -> {
-                pendingSales.remove(player.getUniqueId());
-                lock.unlock();
-
-                if (error != null) {
-                    plugin.getLogger().log(Level.SEVERE, "Error processing sale", error);
-                    plugin.getServer().getScheduler().runTask(plugin, () ->
-                            messageService.sendMessage(player, "shop.sale_failed"));
-                }
-            });
-
-            // Wait for a very short time to get immediate result if possible
-            try {
-                Boolean result = saleFuture.get(100, TimeUnit.MILLISECONDS);
-                return result != null && result;
-            } catch (TimeoutException e) {
-                // Sale is still processing, return true to keep inventory open
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
-        } catch (Exception e) {
-            lock.unlock();
-            plugin.getLogger().log(Level.SEVERE, "Error initiating sale", e);
-            return false;
-        }
+        pendingSales.add(player.getUniqueId());
+        processSaleAsync(player, spawner, lock);
+        return true; // Sale is processing, keep inventory open
     }
 
-    private boolean processSaleAsync(Player player, SpawnerData spawner) {
+    private void processSaleAsync(Player player, SpawnerData spawner, ReentrantLock lock) {
         VirtualInventory virtualInv = spawner.getVirtualInventory();
         Map<VirtualInventory.ItemSignature, Long> items = virtualInv.getConsolidatedItems();
 
         if (items.isEmpty()) {
-            plugin.getServer().getScheduler().runTask(plugin, () ->
-                    messageService.sendMessage(player, "shop.no_items"));
-            return false;
-        }
-
-        // Calculate prices and prepare items by economy type
-        SaleCalculationResult calculation = calculateSalePrices(player, items);
-        if (!calculation.isValid()) {
-            plugin.getServer().getScheduler().runTask(plugin, () ->
-                    messageService.sendMessage(player, "shop.no_sellable_items"));
-            return false;
-        }
-
-        // Pre-remove items to improve UX
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
-            virtualInv.removeItems(calculation.getItemsToRemove());
-            Scheduler.runTask(() -> plugin.getSpawnerGuiViewManager().updateSpawnerMenuViewers(spawner));
-        });
-
-        try {
-            // Process transactions for each economy type
-            CompletableFuture<Boolean> transactionFuture = new CompletableFuture<>();
-
-            plugin.getServer().getScheduler().runTask(plugin, () -> {
-                boolean success = processTransactions(player, calculation);
-                transactionFuture.complete(success);
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                messageService.sendMessage(player, "shop.no_items");
+                pendingSales.remove(player.getUniqueId());
+                lock.unlock();
             });
+            return;
+        }
 
-            boolean success = transactionFuture.get(TRANSACTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            SaleCalculationResult calculation = calculateSalePrices(player, items);
+            if (!calculation.isValid()) {
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    messageService.sendMessage(player, "shop.no_sellable_items");
+                    pendingSales.remove(player.getUniqueId());
+                    lock.unlock();
+                });
+                return;
+            }
 
-            if (!success) {
-                // Restore items if payment fails
-                plugin.getServer().getScheduler().runTask(plugin, () -> {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                virtualInv.removeItems(calculation.getItemsToRemove());
+                Scheduler.runTask(() -> plugin.getSpawnerGuiViewManager().updateSpawnerMenuViewers(spawner));
+
+                boolean success = processTransactions(player, calculation);
+                if (!success) {
                     virtualInv.addItems(calculation.getItemsToRemove());
                     messageService.sendMessage(player, "shop.sale_failed");
                     Scheduler.runTask(() -> plugin.getSpawnerGuiViewManager().updateSpawnerMenuViewers(spawner));
-                });
-                return false;
-            }
+                    pendingSales.remove(player.getUniqueId());
+                    lock.unlock();
+                    return;
+                }
 
-            // Log sales asynchronously
-            if (isLoggingEnabled) {
-                logSalesAsync(calculation, player.getName());
-            }
+                if (isLoggingEnabled) {
+                    logSalesAsync(calculation, player.getName());
+                }
 
-            // Send success message
-            double taxPercentage = plugin.getConfig().getDouble("tax.percentage", 10.0);
-            plugin.getServer().getScheduler().runTask(plugin, () ->
-                    sendSuccessMessage(player, calculation.getTotalAmount(), calculation.getTotalPrice(), taxPercentage));
-
-            return true;
-
-        } catch (Exception e) {
-            // Restore items on timeout/error
-            plugin.getServer().getScheduler().runTask(plugin, () -> {
-                virtualInv.addItems(calculation.getItemsToRemove());
-                Scheduler.runTask(() -> plugin.getSpawnerGuiViewManager().updateSpawnerMenuViewers(spawner));
+                sendSuccessMessage(player, calculation.getTotalAmount(), calculation.getTotalPrice());
+                pendingSales.remove(player.getUniqueId());
+                lock.unlock();
             });
-            return false;
-        }
+        });
     }
 
     private boolean processTransactions(Player player, SaleCalculationResult calculation) {
-        double taxPercentage = plugin.getConfig().getDouble("tax.percentage", 10.0);
-
         for (Map.Entry<EconomyType, Double> entry : calculation.getPricesByEconomy().entrySet()) {
             EconomyType economyType = entry.getKey();
             double totalPrice = entry.getValue();
-            double finalPrice = calculateNetAmount(totalPrice, taxPercentage);
+            double finalPrice = calculateNetAmount(totalPrice);
 
             try {
-                EconomyProvider economyProvider = ShopGuiPlusApi.getPlugin().getEconomyManager()
-                        .getEconomyProvider(economyType);
+                EconomyProvider economyProvider = ShopGuiPlusApi.getPlugin()
+                    .getEconomyManager()
+                    .getEconomyProvider(economyType);
 
                 if (economyProvider == null) {
-                    plugin.getLogger().severe("No economy provider found for type: " + economyType);
+                    plugin.getLogger().severe("No economy provider for type: " + economyType);
                     return false;
                 }
 
+                // Economy deposits must be on main thread
                 economyProvider.deposit(player, finalPrice);
             } catch (Exception e) {
-                plugin.getLogger().severe("Error processing transaction for economy " +
-                        economyType + ": " + e.getMessage());
+                plugin.getLogger().severe("Error processing transaction for economy " + economyType + ": " + e.getMessage());
                 return false;
             }
         }
         return true;
     }
 
-    private double calculateNetAmount(double grossAmount, double taxPercentage) {
-        if (plugin.getConfig().getBoolean("tax.enabled", false)) {
-            return grossAmount * (1 - taxPercentage / 100.0);
-        }
-        return grossAmount;
+    private double calculateNetAmount(double grossAmount) {
+        return isTaxEnabled ? grossAmount * (1 - taxPercentage / 100.0) : grossAmount;
     }
 
     private void logSalesAsync(SaleCalculationResult calculation, String playerName) {
@@ -207,26 +154,22 @@ public class ShopGuiPlus implements IShopIntegration {
             for (Map.Entry<String, SaleInfo> entry : calculation.getItemSales().entrySet()) {
                 SaleInfo saleInfo = entry.getValue();
                 SaleLogger.getInstance().logSale(
-                        playerName,
-                        entry.getKey(),
-                        saleInfo.getAmount(),
-                        saleInfo.getPrice(),
-                        saleInfo.getEconomyType().name()
+                    playerName,
+                    entry.getKey(),
+                    saleInfo.getAmount(),
+                    saleInfo.getPrice(),
+                    saleInfo.getEconomyType().name()
                 );
             }
         });
     }
 
-    private String formatMonetaryValue(double value) {
-        return formatPrice(value, true);
-    }
-
-    private void sendSuccessMessage(Player player, int totalAmount, double totalPrice, double taxPercentage) {
+    private void sendSuccessMessage(Player player, int totalAmount, double totalPrice) {
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("amount", String.valueOf(languageManager.formatNumber(totalAmount)));
         placeholders.put("price", formatMonetaryValue(totalPrice));
 
-        if (plugin.getConfig().getBoolean("tax.enabled", false)) {
+        if (isTaxEnabled) {
             double grossPrice = totalPrice / (1 - taxPercentage / 100.0);
             placeholders.put("gross", formatMonetaryValue(grossPrice));
             placeholders.put("tax", String.format("%.2f", taxPercentage));
@@ -234,6 +177,10 @@ public class ShopGuiPlus implements IShopIntegration {
         } else {
             messageService.sendMessage(player, "shop.sell_all", placeholders);
         }
+    }
+
+    private String formatMonetaryValue(double value) {
+        return String.format("%.2f", value);
     }
 
     private SaleCalculationResult calculateSalePrices(Player player, Map<VirtualInventory.ItemSignature, Long> items) {
@@ -264,7 +211,6 @@ public class ShopGuiPlus implements IShopIntegration {
             pricesByEconomy.merge(economyType, totalItemPrice, Double::sum);
             totalAmount += removeAmount;
 
-            // Store sale info for logging
             String itemName = template.getType().name();
             itemSales.put(itemName, new SaleInfo(removeAmount, totalItemPrice, economyType));
         }
@@ -273,23 +219,17 @@ public class ShopGuiPlus implements IShopIntegration {
     }
 
     private EconomyType getEconomyType(ItemStack material) {
-        EconomyType economyType = ShopGuiPlusApi.getItemStackShop(material).getEconomyType();
-        if(economyType != null) {
-            return economyType;
-        }
-
-        EconomyManager economyManager = ShopGuiPlusApi.getPlugin().getEconomyManager();
-        EconomyProvider defaultEconomyProvider = economyManager.getDefaultEconomyProvider();
-        if(defaultEconomyProvider != null) {
-            String defaultEconomyTypeName = defaultEconomyProvider.getName().toUpperCase(Locale.US);
-            try {
-                return EconomyType.valueOf(defaultEconomyTypeName);
-            } catch(IllegalArgumentException ex) {
-                return EconomyType.CUSTOM;
-            }
-        }
-
-        return EconomyType.CUSTOM;
+        return Optional.ofNullable(ShopGuiPlusApi.getItemStackShop(material))
+            .map(shop -> Optional.ofNullable(shop.getEconomyType()).orElse(EconomyType.CUSTOM))
+            .orElseGet(() -> Optional.ofNullable(ShopGuiPlusApi.getPlugin().getEconomyManager().getDefaultEconomyProvider())
+                .map(provider -> {
+                    try {
+                        return EconomyType.valueOf(provider.getName().toUpperCase(Locale.US));
+                    } catch (IllegalArgumentException e) {
+                        return EconomyType.CUSTOM;
+                    }
+                })
+                .orElse(EconomyType.CUSTOM));
     }
 
     @Override
@@ -309,11 +249,8 @@ public class ShopGuiPlus implements IShopIntegration {
         private final Map<String, SaleInfo> itemSales;
         private final boolean valid;
 
-        public SaleCalculationResult(Map<EconomyType, Double> pricesByEconomy,
-                                     int totalAmount,
-                                     List<ItemStack> itemsToRemove,
-                                     Map<String, SaleInfo> itemSales,
-                                     boolean valid) {
+        public SaleCalculationResult(Map<EconomyType, Double> pricesByEconomy, int totalAmount,
+                                    List<ItemStack> itemsToRemove, Map<String, SaleInfo> itemSales, boolean valid) {
             this.pricesByEconomy = pricesByEconomy;
             this.totalAmount = totalAmount;
             this.itemsToRemove = itemsToRemove;
