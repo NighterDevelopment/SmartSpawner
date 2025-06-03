@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class EntityLootRegistry {
     private final JavaPlugin plugin;
-    private final FileConfiguration lootConfig;
+    private FileConfiguration lootConfig;
     private final Map<String, EntityLootConfig> entityLootConfigs;
     private final ItemPriceManager priceManager;
     private final Map<Material, Double> cachedPrices;
@@ -118,6 +118,7 @@ public class EntityLootRegistry {
     public void reload() {
         entityLootConfigs.clear();
         cachedPrices.clear();
+        this.lootConfig = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), "mob_drops.yml"));
         loadConfigurations();
     }
 }

@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.SpawnerSpawnEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.server.PluginEnableEvent;
 
 public class GlobalEventHandlers implements Listener {
     private final SmartSpawner plugin;
@@ -91,5 +92,20 @@ public class GlobalEventHandlers implements Listener {
             }
         }
         return false;
+    }
+
+    @EventHandler
+    public void onPluginEnable(PluginEnableEvent event) {
+
+        if (plugin.getShopIntegrationManager().hasShopIntegration()) {
+            return;
+        }
+        String pluginName = event.getPlugin().getName();
+        // Support EconomyShopGUI for double integration
+        if (pluginName.equalsIgnoreCase("EconomyShopGUI") ||
+                pluginName.equalsIgnoreCase("EconomyShopGUI-Premium")) {
+            Scheduler.runTaskLater(() -> plugin.getShopIntegrationManager().reload(),
+                    20L); // Run after 1 second to ensure the plugin is fully loaded
+        }
     }
 }

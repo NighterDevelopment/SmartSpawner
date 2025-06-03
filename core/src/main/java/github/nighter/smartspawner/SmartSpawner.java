@@ -18,6 +18,7 @@ import github.nighter.smartspawner.economy.CustomEconomyManager;
 import github.nighter.smartspawner.economy.ItemPriceManager;
 import github.nighter.smartspawner.extras.HopperHandler;
 import github.nighter.smartspawner.hooks.protections.api.Lands;
+import github.nighter.smartspawner.hooks.protections.api.SuperiorSkyblock2;
 import github.nighter.smartspawner.hooks.shops.IShopIntegration;
 import github.nighter.smartspawner.hooks.shops.SaleLogger;
 import github.nighter.smartspawner.hooks.shops.ShopIntegrationManager;
@@ -351,7 +352,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
 
         hasGriefPrevention = checkPlugin("GriefPrevention", () -> {
             Plugin griefPlugin = Bukkit.getPluginManager().getPlugin("GriefPrevention");
-            return griefPlugin != null && griefPlugin instanceof GriefPrevention;
+            return griefPlugin instanceof GriefPrevention;
         }, true);
 
         hasLands = checkPlugin("Lands", () -> {
@@ -372,8 +373,15 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
             }
         }, true);
 
-        hasSuperiorSkyblock2 = checkPlugin("SuperiorSkyblock2", () ->
-                Bukkit.getPluginManager().getPlugin("SuperiorSkyblock2") != null, true);
+        hasSuperiorSkyblock2 = checkPlugin("SuperiorSkyblock2", () -> {
+            Plugin superiorSkyblock2 = Bukkit.getPluginManager().getPlugin("SuperiorSkyblock2");
+            if(superiorSkyblock2 != null) {
+                SuperiorSkyblock2 ssb2 = new SuperiorSkyblock2();
+                Bukkit.getPluginManager().registerEvents(ssb2, this);
+                return true;
+            }
+            return false;
+        }, true);
 
         hasBentoBox = checkPlugin("BentoBox", () -> {
             Plugin bentoPlugin = Bukkit.getPluginManager().getPlugin("BentoBox");

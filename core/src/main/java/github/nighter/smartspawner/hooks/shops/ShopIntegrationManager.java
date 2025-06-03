@@ -147,33 +147,12 @@ public class ShopIntegrationManager {
             isShopGUIPlusEnabled = pluginName.equals("ShopGUIPlus");
             isUsingCustomPrices = false;
             plugin.getLogger().info(pluginName + " integration enabled successfully!");
-
-            // Display EconomyShopGUI compatibility warning
-            if (pluginName.equals("EconomyShopGUI") || pluginName.equals("EconomyShopGUI-Premium")) {
-                displayEconomyShopGUIWarning();
-            }
         } catch (Exception e) {
             plugin.getLogger().warning("Failed to setup " + pluginName + " integration: " + e.getMessage());
             hasShopIntegration = false;
             isShopGUIPlusEnabled = false;
             isUsingCustomPrices = false;
         }
-    }
-
-    private void displayEconomyShopGUIWarning() {
-        plugin.getLogger().warning("==============================================================");
-        plugin.getLogger().warning(" IMPORTANT CONFIGURATION NOTICE FOR ECONOMYSHOPGUI USERS");
-        plugin.getLogger().warning("==============================================================");
-        plugin.getLogger().warning("If you're using SmartSpawner integrated with EconomyShopGUI,");
-        plugin.getLogger().warning("please make sure to update your EconomyShopGUI configuration:");
-        plugin.getLogger().warning("");
-        plugin.getLogger().warning("At the bottom of the EconomyShopGUI config.yml file, set:");
-        plugin.getLogger().warning("enable-spawnerbreak: false");
-        plugin.getLogger().warning("");
-        plugin.getLogger().warning("This resolves a critical issue where players may lose their");
-        plugin.getLogger().warning("spawners when mining them due to conflicts between");
-        plugin.getLogger().warning("EconomyShopGUI and SmartSpawner modify spawner's behavior.");
-        plugin.getLogger().warning("==============================================================");
     }
 
     public IShopIntegration getShopIntegration() {

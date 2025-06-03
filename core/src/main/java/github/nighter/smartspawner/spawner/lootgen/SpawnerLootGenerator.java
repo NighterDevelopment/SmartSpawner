@@ -27,13 +27,11 @@ public class SpawnerLootGenerator {
     private final SpawnerGuiViewManager spawnerGuiViewManager;
     private final SpawnerManager spawnerManager;
     private final Random random;
-    private final EntityLootRegistry lootRegistry;
 
     public SpawnerLootGenerator(SmartSpawner plugin) {
         this.plugin = plugin;
         this.spawnerGuiViewManager = plugin.getSpawnerGuiViewManager();
         this.spawnerManager = plugin.getSpawnerManager();
-        this.lootRegistry = plugin.getEntityLootRegistry();
         this.random = new Random();
     }
 

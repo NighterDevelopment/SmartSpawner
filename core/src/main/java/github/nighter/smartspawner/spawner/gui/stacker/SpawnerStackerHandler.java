@@ -34,8 +34,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class SpawnerStackerHandler implements Listener {
     private final SmartSpawner plugin;
@@ -51,7 +49,6 @@ public class SpawnerStackerHandler implements Listener {
     private static final float SOUND_PITCH = 1.0f;
 
     // GUI slots & operation constants
-    private static final Pattern SPAWNER_NAME_PATTERN = Pattern.compile("§9§l([A-Za-z]+(?: [A-Za-z]+)?) §rSpawner");
     private static final int[] DECREASE_SLOTS = {9, 10, 11};
     private static final int[] INCREASE_SLOTS = {17, 16, 15};
     private static final int SPAWNER_INFO_SLOT = 13;
@@ -477,7 +474,7 @@ public class SpawnerStackerHandler implements Listener {
             // Skip vanilla spawners
             if (SpawnerTypeChecker.isVanillaSpawner(item)) continue;
 
-            Optional<EntityType> itemType = getSpawnerEntityType(item);
+            Optional<EntityType> itemType = getSpawnerEntityTypeCached(item);
             if (itemType.isPresent()) {
                 if (itemType.get() == requiredType) {
                     count += item.getAmount();
@@ -491,7 +488,7 @@ public class SpawnerStackerHandler implements Listener {
         return new InventoryScanResult(count, hasDifferentType, spawnerSlots);
     }
 
-    private Optional<EntityType> getSpawnerEntityType(ItemStack item) {
+    private Optional<EntityType> getSpawnerEntityTypeCached(ItemStack item) {
         if (item == null || item.getType() != Material.SPAWNER) {
             return Optional.empty();
         }
@@ -503,11 +500,30 @@ public class SpawnerStackerHandler implements Listener {
         }
 
         // Extract type from metadata
-        Optional<EntityType> result = plugin.getSpawnerStackHandler().getEntityTypeFromItem(item);
+        Optional<EntityType> result = getEntityTypeFromItem(item);
 
         // Cache the result
         entityTypeCache.put(item, result);
         return result;
+    }
+
+    public Optional<EntityType> getEntityTypeFromItem(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return Optional.empty();
+        }
+
+        // Get entity type from block state (most reliable method)
+        if (meta instanceof BlockStateMeta blockMeta) {
+            if (blockMeta.hasBlockState() && blockMeta.getBlockState() instanceof CreatureSpawner handSpawner) {
+                EntityType entityType = handSpawner.getSpawnedType();
+                if (entityType != null) {
+                    return Optional.of(entityType);
+                }
+            }
+        }
+
+        return Optional.empty();
     }
 
     private void removeValidSpawnersFromInventory(Player player, EntityType requiredType, int amountToRemove, List<SpawnerSlot> spawnerSlots) {
@@ -521,7 +537,7 @@ public class SpawnerStackerHandler implements Listener {
             // Verify item is still valid
             if (item == null || item.getType() != Material.SPAWNER) continue;
 
-            Optional<EntityType> spawnerType = getSpawnerEntityType(item);
+            Optional<EntityType> spawnerType = getSpawnerEntityTypeCached(item);
             if (spawnerType.isPresent() && spawnerType.get() == requiredType) {
                 int itemAmount = item.getAmount();
                 if (itemAmount <= remainingToRemove) {
@@ -550,7 +566,7 @@ public class SpawnerStackerHandler implements Listener {
                 continue;
             }
 
-            Optional<EntityType> itemEntityType = getSpawnerEntityType(item);
+            Optional<EntityType> itemEntityType = getSpawnerEntityTypeCached(item);
             if (itemEntityType.isEmpty() || itemEntityType.get() != entityType) continue;
 
             int currentAmount = item.getAmount();

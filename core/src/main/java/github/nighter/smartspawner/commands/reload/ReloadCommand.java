@@ -2,6 +2,7 @@ package github.nighter.smartspawner.commands.reload;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.spawner.gui.synchronization.ItemUpdater;
+import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -58,6 +59,7 @@ public class ReloadCommand implements CommandExecutor, TabCompleter {
             // Reload components in dependency order
             plugin.setUpHopperHandler();
             plugin.getEntityLootRegistry().reload();
+            reloadSpawnerLootConfigs();
             plugin.getLanguageManager().reloadLanguages();
 
             // Reload factory AFTER its dependencies (loot registry, language manager)
@@ -87,6 +89,18 @@ public class ReloadCommand implements CommandExecutor, TabCompleter {
         plugin.getLogger().info("Language cache statistics:");
         for (Map.Entry<String, Object> entry : stats.entrySet()) {
             plugin.getLogger().info("  " + entry.getKey() + ": " + entry.getValue());
+        }
+    }
+
+    private void reloadSpawnerLootConfigs() {
+        List<SpawnerData> allSpawners = plugin.getSpawnerManager().getAllSpawners();
+        for (SpawnerData spawner : allSpawners) {
+            try {
+                spawner.reloadLootConfig();
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to reload loot config for spawner " +
+                        spawner.getSpawnerId() + ": " + e.getMessage());
+            }
         }
     }
 

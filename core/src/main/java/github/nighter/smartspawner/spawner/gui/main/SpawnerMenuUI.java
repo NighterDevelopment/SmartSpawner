@@ -142,9 +142,6 @@ public class SpawnerMenuUI {
         return chestItem;
     }
 
-    /**
-     * Builds the loot items text section efficiently using cached values where possible
-     */
     private String buildLootItemsText(EntityType entityType, Map<VirtualInventory.ItemSignature, Long> storedItems) {
         // Create material-to-amount map for quick lookups
         Map<Material, Long> materialAmountMap = new HashMap<>();
@@ -364,9 +361,6 @@ public class SpawnerMenuUI {
         return expItem;
     }
 
-    /**
-     * Calculate percentage using integer division - simplified version
-     */
     private int calculatePercentage(long current, long maximum) {
         return maximum > 0 ? (int) ((double) current / maximum * 100) : 0;
     }

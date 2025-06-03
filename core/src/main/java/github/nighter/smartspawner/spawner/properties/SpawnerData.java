@@ -306,4 +306,8 @@ public class SpawnerData {
     public int getEntityExperienceValue() {
         return lootConfig != null ? lootConfig.getExperience() : 0;
     }
+
+    public void reloadLootConfig() {
+        this.lootConfig = lootRegistry.getLootConfig(entityType);
+    }
 }

@@ -50,18 +50,6 @@ public class SpawnerPlaceListener implements Listener {
         this.hopperHandler = plugin.getHopperHandler();
     }
 
-    /**
-     * Handles spawner placement events, managing entity type inheritance
-     * and activation behavior.
-     *
-     * @param event The block place event
-     */
-    /**
-     * Handles spawner placement events, managing entity type inheritance
-     * and activation behavior.
-     *
-     * @param event The block place event
-     */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent event) {
         Block block = event.getBlock();
@@ -93,9 +81,6 @@ public class SpawnerPlaceListener implements Listener {
             storedEntityType = ((CreatureSpawner) blockMeta.getBlockState()).getSpawnedType();
         }
 
-        // Instead, schedule a task to get the entity type from the placed spawner
-        boolean needsDeferredEntityTypeResolution = storedEntityType == null || storedEntityType == EntityType.UNKNOWN;
-
         if(SpawnerPlaceEvent.getHandlerList().getRegisteredListeners().length != 0) {
             SpawnerPlaceEvent e = new SpawnerPlaceEvent(player, block.getLocation(), 1);
             Bukkit.getPluginManager().callEvent(e);
@@ -105,35 +90,7 @@ public class SpawnerPlaceListener implements Listener {
             }
         }
 
-        plugin.debug("Player: " + player.getName() + " placed spawner, isOp: " + player.isOp() +
-                ", isVanillaSpawner: " + isVanillaSpawner + ", entityType: " +
-                (needsDeferredEntityTypeResolution ? "unknown (will resolve after placement)" : storedEntityType));
-
-        // Handle spawner setup
-        if (needsDeferredEntityTypeResolution) {
-            // Use a slightly longer delay to ensure the block is fully placed and initialized
-            Scheduler.runLocationTaskLater(block.getLocation(), () -> {
-                if (block.getType() != Material.SPAWNER) {
-                    plugin.debug("Block is no longer a spawner, aborting setup");
-                    return;
-                }
-
-                CreatureSpawner placedSpawner = (CreatureSpawner) block.getState();
-                EntityType resolvedEntityType = placedSpawner.getSpawnedType();
-
-                if (resolvedEntityType == null || resolvedEntityType == EntityType.UNKNOWN) {
-                    plugin.debug("Failed to resolve entity type from placed spawner, using default");
-                    return;
-                    // resolvedEntityType = EntityType.PIG; // Default fallback entity
-                }
-
-                plugin.debug("Resolved entity type from placed spawner: " + resolvedEntityType);
-                handleSpawnerSetup(block, player, resolvedEntityType, isVanillaSpawner);
-            }, 3L); // Wait 3 ticks (longer than the original 2 ticks) to ensure spawner is fully initialized
-        } else {
-            // Original flow for known entity types
-            handleSpawnerSetup(block, player, storedEntityType, isVanillaSpawner);
-        }
+        handleSpawnerSetup(block, player, storedEntityType, isVanillaSpawner);
     }
 
     private void handleSpawnerSetup(Block block, Player player, EntityType entityType, boolean isVanillaSpawner) {
@@ -226,14 +183,10 @@ public class SpawnerPlaceListener implements Listener {
 
     private void setupHopperIntegration(Block block) {
         Scheduler.runLocationTask(block.getLocation(), () -> {
-            plugin.debug("Checking for hopper integration...");
             Block blockBelow = block.getRelative(BlockFace.DOWN);
             if (blockBelow.getType() == Material.HOPPER && hopperHandler != null) {
                 hopperHandler.startHopperTask(blockBelow.getLocation(), block.getLocation());
-                plugin.debug("Hopper integration started for block: " + block.getLocation());
             }
-            plugin.debug("Block below type: " + blockBelow.getType());
-            plugin.debug("hopperHandler: " + (hopperHandler != null ? "exists" : "null"));
         });
     }
 }

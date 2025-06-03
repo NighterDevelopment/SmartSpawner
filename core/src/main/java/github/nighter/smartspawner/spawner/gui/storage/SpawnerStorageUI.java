@@ -288,8 +288,8 @@ public class SpawnerStorageUI {
         placeholders.put("used_slots", formattedUsedSlots);
         placeholders.put("percent_storage", String.valueOf(percentStorage));
 
-        String name = plugin.getLanguageManager().getGuiItemName("shop_page_indicator.name", placeholders);
-        List<String> lore = plugin.getLanguageManager().getGuiItemLoreAsList("shop_page_indicator.lore", placeholders);
+        String name = languageManager.getGuiItemName("shop_page_indicator.name", placeholders);
+        List<String> lore = languageManager.getGuiItemLoreAsList("shop_page_indicator.lore", placeholders);
 
         return createButton(Material.GOLD_INGOT, name, lore);
     }

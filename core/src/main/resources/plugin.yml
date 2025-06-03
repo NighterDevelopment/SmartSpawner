@@ -4,6 +4,7 @@ main: github.nighter.smartspawner.SmartSpawner
 api-version: '1.20'
 authors: [ https://github.com/ptthanh02/Smart-Spawner/graphs/contributors ]
 folia-supported: true
+loadbefore: [SuperiorSkyblock2]
 softdepend:
   # Shop Plugins
   - EconomyShopGUI
@@ -23,9 +24,6 @@ softdepend:
   - Towny
   - SimpleClaimSystem
   - RedProtect
-
-  # Skyblock/Island Plugins
-  - SuperiorSkyblock2
 
   # World Management Plugins
   - Multiverse-Core
