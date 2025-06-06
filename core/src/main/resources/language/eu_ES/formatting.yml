@@ -112,6 +112,6 @@ mob_names:
 # Euskeraz ikusteko, kopiatu hurrengo testua config.yml-ko hologram sekzioan:
 #
 # text:
-# - '[&#f8f8ff%stack_size%] &#7b68ee%ᴇɴᴛɪᴛʏ%ʀᴇɴ ɢᴇɴᴇʀᴀɡᴀɪʟᴜᴀ'
+# - '[&#f8f8ff%stack_size%] &#7b68ee%ᴇɴᴛɪᴛʏ%ʀᴇɴ ꜱᴏʀᴛᴢᴀɪʟᴇᴀ'
 # - '&#ab7afd• &#e6e6faᴇsᴘᴇʀɪᴇɴᴛzɪᴀ: &#37eb9a%current_exp%&#f8f8ff/&#37eb9a%max_exp%'
 # - '&#ab7afd• &#e6e6faᴏʙᴊᴇᴋᴛᴜᴀᴋ: &#37eb9a%used_slots%&#f8f8ff/&#37eb9a%max_slots%'

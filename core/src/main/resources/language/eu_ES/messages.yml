@@ -266,11 +266,11 @@ command_give_inventory_full:
   sound: block.note_block.pling
 
 command_give_spawner_received:
-  message: '&#37eb9a&#f8f8ff%amount% %ᴇɴᴛɪᴛʏ% &#37eb9aꜱᴏʀᴛᴢᴀɪʟᴇ%plural% ʜᴀʀᴛᴜ ᴅɪᴛᴜᴢᴜ'
+  message: '&#37eb9a&#f8f8ff%amount% %ᴇɴᴛɪᴛʏ%-ʀᴇɴ &#37eb9aꜱᴏʀᴛᴢᴀɪʟᴇ(ᴀᴋ) ʜᴀʀᴛᴜ ᴅɪᴛᴜᴢᴜ'
   sound: entity.experience_orb.pickup
 
 command_give_spawner_given:
-  message: '&#37eb9a&#f8f8ff%amount% %ᴇɴᴛɪᴛʏ% &#37eb9aꜱᴏʀᴛᴢᴀɪʟᴇ%plural% &#f8f8ff%player% &#37eb9aᴊᴏᴋᴀʟᴀʀɪᴀʀɪ ᴇᴍᴀɴ'
+  message: '&#37eb9a&#f8f8ff%amount% %ᴇɴᴛɪᴛʏ%-ʀᴇɴ &#37eb9aꜱᴏʀᴛᴢᴀɪʟᴇ(ᴀᴋ) &#f8f8ff%player% &#37eb9aᴊᴏᴋᴀʟᴀʀɪᴀʀɪ ᴇᴍᴀɴ'
   sound: entity.experience_orb.pickup
 
 # Hologram command messages

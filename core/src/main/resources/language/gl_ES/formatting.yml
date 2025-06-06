@@ -106,49 +106,6 @@ mob_names:
   ZOMBIFIED_PIGLIN: Piglin zombificado
 
 # ---------------------------------------------------
-#                 Drop Display Names
-# ---------------------------------------------------
-# Defines how item drops are displayed
-# ---------------------------------------------------
-drop_names:
-  ARROW: Frecha
-  BEEF: Carne de vaca
-  BLAZE_POWDER: Pó de blaze
-  BLAZE_ROD: Vara de blaze
-  BONE: Óso
-  BOW: Arco
-  CHICKEN: Galiña
-  COOKED_BEEF: Carne de vaca cociñada
-  COOKED_CHICKEN: Galiña cociñada
-  COOKED_MUTTON: Carneiro cociñado
-  COOKED_PORKCHOP: Costeleta de porco cociñada
-  COOKED_RABBIT: Coello cociñado
-  CROSSBOW: Ballesta
-  DIAMOND: Diamante
-  EMERALD: Esmeralda
-  ENDER_PEARL: Perla de ender
-  FEATHER: Pluma
-  GOLD_INGOT: Lingote de ouro
-  GOLD_NUGGET: Pepita de ouro
-  GUNPOWDER: Pólvora
-  IRON_INGOT: Lingote de ferro
-  LEATHER: Coiro
-  MUTTON: Carneiro
-  PORKCHOP: Costeleta de porco
-  PRISMARINE_CRYSTALS: Cristais de prismarina  
-  PRISMARINE_SHARD: Fragmento de prismarina
-  RABBIT_FOOT: Pata de coello
-  RABBIT_HIDE: Pel de coello
-  RAW_BEEF: Carne de vaca crúa
-  RAW_CHICKEN: Galiña crúa
-  ROTTEN_FLESH: Carne podrida
-  SLIME_BALL: Bola de slime
-  SPIDER_EYE: Ollo de araña
-  STRING: Corda
-  TRIDENT: Tridente
-  WOOL: Lá
-
-# ---------------------------------------------------
 #                 Texto de Hologramas (Galego)
 # ---------------------------------------------------
 # NOTA: Os hologramas configúranse no ficheiro config.yml.  

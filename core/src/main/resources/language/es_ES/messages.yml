@@ -140,7 +140,7 @@ invalid_egg:
   sound: entity.enderman.teleport
 
 entity_changed:
-  action_bar: '&#37eb9aᴄᴀᴍʙɪᴀᴅᴏ ᴄᴏɴ éxɪᴛᴏ ᴀ ɢᴇɴᴇʀᴀᴅᴏʀ ᴅᴇ &#f8f8ff%ᴇɴᴛɪᴅᴀᴅ%'
+  action_bar: '&#37eb9aᴄᴀᴍʙɪᴀᴅᴏ ᴄᴏɴ éxɪᴛᴏ ᴀ ɢᴇɴᴇʀᴀᴅᴏʀ ᴅᴇ &#f8f8ff%ᴇɴᴛɪᴛʏ%'
   sound: entity.player.levelup
 
 # ------------------------------------------------------

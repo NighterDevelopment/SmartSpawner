@@ -84,10 +84,6 @@ take_all_items:
   action_bar: '&#37eb9aᴄᴏʟʟɪᴅᴏꜱ &#f8f8ff%amount% &#37eb9aᴏʙxᴇᴄᴛᴏꜱ ᴅᴏ xᴇʀᴀᴅᴏʀ'
   sound: entity.item.pickup
 
-inventory_full_items_dropped:
-  message: '&#f0c857¡ɪɴᴠᴇɴᴛᴀʀɪᴏ ᴄʜᴇᴏ! &#e6e6faᴀʟɢúɴꜱ ᴏʙxᴇᴄᴛᴏꜱ ꜰᴏʀᴏɴ ᴛɪʀᴀᴅᴏꜱ ᴀᴏ ꜱᴏʟᴏ.'
-  sound: block.note_block.pling
-
 # ------------------------------------------------------
 #         Spawner - Stacker GUI Interaction
 # ------------------------------------------------------
@@ -101,6 +97,10 @@ spawner_cannot_remove_last:
 
 spawner_insufficient_quantity:
   action_bar: '&#ff5252xᴇʀᴀᴅᴏʀᴇꜱ ɪɴꜱᴜꜰɪᴄɪᴇɴᴛᴇꜱ: &#f8f8ff%amountAvailable%&#ff5252/&#f8f8ff%amountChange%'
+  sound: block.note_block.pling
+
+inventory_full_items_dropped:
+  message: '&#f0c857¡ɪɴᴠᴇɴᴛᴀʀɪᴏ ᴄʜᴇᴏ! &#e6e6faᴀʟɢúɴꜱ ᴏʙxᴇᴄᴛᴏꜱ ꜰᴏʀᴏɴ ᴛɪʀᴀᴅᴏꜱ ᴀᴏ ꜱᴏʟᴏ.'
   sound: block.note_block.pling
 
 # ------------------------------------------------------
@@ -141,7 +141,7 @@ invalid_egg:
   sound: entity.enderman.teleport
 
 entity_changed:
-  action_bar: '&#37eb9aᴄᴀᴍʙɪᴀᴅᴏ ᴄᴏɴ éxɪᴛᴏ ᴀ xᴇʀᴀᴅᴏʀ ᴅᴇ &#f8f8ff%ᴇɴᴛɪᴅᴀᴅ%'
+  action_bar: '&#37eb9aᴄᴀᴍʙɪᴀᴅᴏ ᴄᴏɴ éxɪᴛᴏ ᴀ xᴇʀᴀᴅᴏʀ ᴅᴇ &#f8f8ff%ᴇɴᴛɪᴛʏ%'
   sound: entity.player.levelup
 
 # ------------------------------------------------------
@@ -281,4 +281,3 @@ command_hologram_enabled:
 
 command_hologram_disabled:
   message: '&#f8f8ffʜᴏʟᴏɢʀᴀᴍᴀꜱ &#e05252ᴅᴇꜱᴀᴄᴛɪᴠᴀᴅᴏꜱ &#f8f8ffᴘᴀʀᴀ ᴛᴏᴅᴏꜱ ᴏꜱ xᴇʀᴀᴅᴏʀᴇꜱ'
-  sound: block.note_block.bass
