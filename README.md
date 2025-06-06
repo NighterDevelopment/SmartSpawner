@@ -65,13 +65,18 @@
 
 ## Localization
 
-| Language | Locale Code | Contributor | Status |
-|----------|-------------|-------------|--------|
-| English | `en_US` | Core language | Latest |
-| Vietnamese | `vi_VN` | [maiminhdung](https://github.com/maiminhdung), [ptthanh02](https://github.com/ptthanh02) | Latest |
-| Italian | `it_IT` | [RV_SkeLe](https://github.com/RVSkeLe) | Latest |
-| Turkish | `tr_TR` | [@berkkorkmaz](https://discord.com/users/berkkorkmaz) | Latest |
-| Chinese Simplified | `zh_CN` | [SnowCutieOwO](https://github.com/SnowCutieOwO) | v1.2.3 |
+| Language           | Locale Code | Contributor                       | Status |
+|--------------------|-------------|---------------------------------|--------|
+| English            | `en_US`     | Core language                   | Latest |
+| Vietnamese         | `vi_VN`     | [maiminhdung](https://github.com/maiminhdung), [ptthanh02](https://github.com/ptthanh02) | Latest |
+| Italian            | `it_IT`     | [RV_SkeLe](https://github.com/RVSkeLe) | Latest |
+| Turkish            | `tr_TR`     | [@berkkorkmaz](https://discord.com/users/berkkorkmaz) | Latest |
+| Chinese Simplified  | `zh_CN`     | [SnowCutieOwO](https://github.com/SnowCutieOwO) | v1.2.3 |
+| Catalan            | `ca_ES`     | [Jaie55](https://github.com/Jaie55) | Latest |
+| Basque (Euskera)   | `eu_ES`     | [Jaie55](https://github.com/Jaie55) | Latest |
+| Spanish            | `es_ES`     | [Jaie55](https://github.com/Jaie55) | Latest |
+| Galician           | `gl_ES`     | [Jaie55](https://github.com/Jaie55) | Latest |
+
 
 ## API
 
