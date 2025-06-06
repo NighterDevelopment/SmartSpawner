@@ -1,0 +1,177 @@
+# Language file version - Do not modify this value
+language_version: 1.3.5
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+#   ███████╗███╗   ███╗ █████╗ ██████╗ ████████╗███████╗██████╗  █████╗ ██╗    ██╗███╗   ██╗███████╗██████╗
+#   ██╔════╝████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔══██╗██╔══██╗██║    ██║████╗  ██║██╔════╝██╔══██╗
+#   ███████╗██╔████╔██║███████║██████╔╝   ██║   ███████╗██████╔╝███████║██║ █╗ ██║██╔██╗ ██║█████╗  ██████╔╝
+#   ╚════██║██║╚██╔╝██║██╔══██║██╔══██╗   ██║   ╚════██║██╔═══╝ ██╔══██║██║███╗██║██║╚██╗██║██╔══╝  ██╔══██╗
+#   ███████║██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   ███████║██║     ██║  ██║╚███╔███╔╝██║ ╚████║███████╗██║  ██║
+#   ╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+#
+#   NOTA: Els marcadors de posició en versaletes (ᴇxᴇᴍᴘʟᴇ) seran convertits
+#   automàticament a versaletes al joc. Els marcadors numèrics com %amount% o
+#   %chance% roman tal com són perquè no es veuen afectats per les versaletes.
+
+custom_item:
+  # Aparença dels objectes generadors intel·ligents a l'inventari i tooltips
+  spawner:
+    name: '&#a782ecɢᴇɴᴇʀᴀᴅᴏʀ ᴅᴇ %ᴇɴᴛɪᴛʏ%'
+    loot_items: '  &#e6e6fa•  %amount% %ɪᴛᴇᴍ_ɴᴀᴍᴇ% &#b19cd9(%chance%%)'
+    loot_items_empty: '  &#e6e6fa•  ᴄᴀᴘ'
+    lore:
+    - ''
+    - '&#9370db◈ &#8a2be2ᴅᴇᴛᴀʟʟꜱ:'
+    - '  &#e6e6fa•  ᴇxᴘᴇʀɪèɴᴄɪᴀ ᴀᴛᴏʀɢᴀᴅᴀ: &#b19cd9%exp%'
+    - ''
+    - '&#9370db◈ &#8a2be2ᴏʙᴊᴇᴄᴛᴇꜱ:'
+    - '%loot_items%'
+    - ''
+  
+  # Aparença dels objectes generadors vainilla a l'inventari i tooltips
+  # Marcadors de posició disponibles: %entity%, %ᴇɴᴛɪᴛʏ%
+  # Suprimiu aquesta secció si no voleu utilitzar nom i lore personalitzats per als generadors vainilla
+  vanilla_spawner:
+    name: ''
+
+# Noms d'objectes
+item:
+  # Aquests noms s'utilitzen quan es mostren les caigudes potencials als tooltips dels generadors
+  # Per a suport multilingüe, substituïu amb els noms corresponents del vostre idioma
+
+    # Caigudes d'animals i peixos
+  LEATHER:
+    name: Cuir
+  STRING:
+    name: Fil
+  FEATHER:
+    name: Ploma
+  CHICKEN:
+    name: Pollastre cru
+  COD:
+    name: Bacallà cru
+  SALMON:
+    name: Salmó cru
+  BEEF:
+    name: Carn de vaca crua
+  PORKCHOP:
+    name: Costella de porc crua
+  MUTTON:
+    name: Carn d'ovella crua
+  RABBIT:
+    name: Conill cru
+  WHITE_WOOL:
+    name: Llana blanca
+  RABBIT_HIDE:
+    name: Pell de conill
+  RABBIT_FOOT:
+    name: Pota de conill
+  PUFFERFISH:
+    name: Peix globus
+  TROPICAL_FISH:
+    name: Peix tropical
+  
+  # Caigudes de criatures hostils
+  BONE:
+    name: Os
+  BONE_MEAL:
+    name: Pols d'os
+  ARROW:
+    name: Fletxa
+  SPIDER_EYE:
+    name: Ull d'aranya
+  GUNPOWDER:
+    name: Pólvora
+  ROTTEN_FLESH:
+    name: Carn podrida
+  ENDER_PEARL:
+    name: Perla d'ender
+  GHAST_TEAR:
+    name: Llàgrima de ghast
+  MAGMA_CREAM:
+    name: Crema de magma
+  PHANTOM_MEMBRANE:
+    name: Membrana de fantasma
+  SHULKER_SHELL:
+    name: Closca de shulker
+  SLIME_BALL:
+    name: Bola de llot
+  BLAZE_ROD:
+    name: Vara de blaze
+  BREEZE_ROD:
+    name: Vara de brisa
+  WITHER_SKELETON_SKULL:
+    name: Crani d'esquelet wither
+  
+  # Armes i eines
+  BOW:
+    name: Arc
+  CROSSBOW:
+    name: Ballesta
+  GOLDEN_SWORD:
+    name: Espasa d'or
+  GOLDEN_AXE:
+    name: Destral d'or
+  STONE_SWORD:
+    name: Espasa de pedra
+  IRON_AXE:
+    name: Destral de ferro
+  TRIDENT:
+    name: Trident
+  TIPPED_ARROW:
+    name: Fletxa amb efecte
+  TOTEM_OF_UNDYING:
+    name: Tòtem de la immortalitat
+  SADDLE:
+    name: Sella
+  
+  # Materials i recursos
+  COPPER_INGOT:
+    name: Lingot de coure
+  PRISMARINE_SHARD:
+    name: Fragment de prismarina
+  PRISMARINE_CRYSTALS:
+    name: Cristalls de prismarina
+  WET_SPONGE:
+    name: Esponja mullada
+  EMERALD:
+    name: Maragda
+  IRON_INGOT:
+    name: Lingot de ferro
+  GOLD_NUGGET:
+    name: Pepita d'or
+  GOLD_INGOT:
+    name: Lingot d'or
+  REDSTONE:
+    name: Pols de redstone
+  GLOWSTONE_DUST:
+    name: Pols de pedra lluminosa
+  COAL:
+    name: Carbó
+  
+  # Objectes diversos
+  GLOW_INK_SAC:
+    name: Sac de tinta lluminosa
+  INK_SAC:
+    name: Sac de tinta
+  CARROT:
+    name: Pastanaga
+  POTATO:
+    name: Patata
+  POPPY:
+    name: Rosella
+  SNOWBALL:
+    name: Bola de neu
+  SEAGRASS:
+    name: Herba marina
+  SUGAR:
+    name: Sucre
+  GLASS_BOTTLE:
+    name: Ampolla de vidre
+  STICK:
+    name: Pal
+  SCULK_CATALYST:
+    name: Catalitzador de sculk
+  TIDE_ARMOR_TRIM_SMITHING_TEMPLATE:
+    name: Plantilla de forja

@@ -1,0 +1,117 @@
+# Language file version - Do not modify this value
+language_version: 1.3.5
+
+# ---------------------------------------------------
+#                 Number Formatting
+# ---------------------------------------------------
+# Controls how large numbers are displayed in-game
+# ---------------------------------------------------
+format_number:
+  thousand: '%s%K' # Example: 5000 → 5K
+  million: '%s%M' # Example: 2000000 → 2M
+  billion: '%s%B' # Example: 1500000000 → 1.5B
+  trillion: '%s%T' # Example: 1000000000000 → 1T
+  default: '%s%' # Fallback format when no other rule matches
+
+# ---------------------------------------------------
+#                 Mob Display Names
+# ---------------------------------------------------
+# Defines how mob names appear in spawner GUIs, items, holograms and messages
+# ---------------------------------------------------
+mob_names:
+  # Passive Mobs
+  # -------------------------
+  ALLAY: Allay
+  ARMADILLO: Armadillo
+  AXOLOTL: Ajolote
+  BAT: Murciélago
+  BEE: Abeja
+  CAMEL: Camello
+  CAT: Gato
+  CHICKEN: Pollo
+  COD: Bacalao
+  COW: Vaca
+  DOLPHIN: Delfín
+  DONKEY: Burro
+  FOX: Zorro
+  FROG: Rana
+  GLOW_SQUID: Calamar luminoso
+  GOAT: Cabra
+  HORSE: Caballo
+  IRON_GOLEM: Gólem de hierro
+  LLAMA: Llama
+  MOOSHROOM: Vacaseta
+  MUSHROOM_COW: Vacaseta # Fallback for 1.20 version compatibility
+  MULE: Mula
+  OCELOT: Ocelote
+  PANDA: Panda
+  PARROT: Loro
+  PIG: Cerdo
+  POLAR_BEAR: Oso polar
+  PUFFERFISH: Pez globo
+  RABBIT: Conejo
+  SALMON: Salmón
+  SHEEP: Oveja
+  SNIFFER: Husmeador
+  SNOW_GOLEM: Gólem de nieve
+  SNOWMAN: Gólem de nieve # Fallback for 1.20 version compatibility
+  SQUID: Calamar
+  STRIDER: Deambulante
+  TADPOLE: Renacuajo
+  TRADER_LLAMA: Llama comerciante
+  TROPICAL_FISH: Pez tropical
+  TURTLE: Tortuga
+  VILLAGER: Aldeano
+  WANDERING_TRADER: Comerciante ambulante
+  WOLF: Lobo
+  
+  # Hostile Mobs
+  # -------------------------
+  BLAZE: Blaze
+  BOGGED: Enfangado
+  BREEZE: Brisa
+  CAVE_SPIDER: Araña de cueva
+  CREEPER: Creeper
+  DROWNED: Ahogado
+  ELDER_GUARDIAN: Guardián anciano
+  ENDERMAN: Enderman
+  ENDERMITE: Endermite
+  EVOKER: Invocador
+  GHAST: Ghast
+  GUARDIAN: Guardián
+  HOGLIN: Hoglin
+  HUSK: Momia
+  MAGMA_CUBE: Cubo de magma
+  PHANTOM: Fantasma
+  PIGLIN: Piglin
+  PIGLIN_BRUTE: Piglin bruto
+  PILLAGER: Saqueador
+  RAVAGER: Devastador
+  SHULKER: Shulker
+  SILVERFISH: Lepisma
+  SKELETON: Esqueleto
+  SKELETON_HORSE: Caballo esqueleto
+  SLIME: Slime
+  SPIDER: Araña
+  STRAY: Errante
+  VEX: Vex
+  VINDICATOR: Vindicador
+  WARDEN: Guardián
+  WITCH: Bruja
+  WITHER_SKELETON: Esqueleto del wither
+  ZOGLIN: Zoglin
+  ZOMBIE: Zombi
+  ZOMBIE_HORSE: Caballo zombi
+  ZOMBIE_VILLAGER: Aldeano zombi
+  ZOMBIFIED_PIGLIN: Piglin zombificado
+
+# ---------------------------------------------------
+#                 Texto de Hologramas (Español)
+# ---------------------------------------------------
+# NOTA: Los hologramas se configuran en el archivo config.yml.
+# Para verlos en español, copia el siguiente texto en la sección hologram de config.yml:
+#
+# text:
+# - '[&#f8f8ff%stack_size%] &#7b68eeɢᴇɴᴇʀᴀᴅᴏʀ ᴅᴇ %ᴇɴᴛɪᴛʏ%'
+# - '&#ab7afd• &#e6e6faᴇxᴘᴇʀɪᴇɴᴄɪᴀ: &#37eb9a%current_exp%&#f8f8ff/&#37eb9a%max_exp%'
+# - '&#ab7afd• &#e6e6faᴏʙᴊᴇᴛᴏꜱ: &#37eb9a%used_slots%&#f8f8ff/&#37eb9a%max_slots%'

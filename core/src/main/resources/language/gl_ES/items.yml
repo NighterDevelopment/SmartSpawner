@@ -1,0 +1,177 @@
+# Language file version - Do not modify this value
+language_version: 1.3.5
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+#   ███████╗███╗   ███╗ █████╗ ██████╗ ████████╗███████╗██████╗  █████╗ ██╗    ██╗███╗   ██╗███████╗██████╗
+#   ██╔════╝████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔══██╗██╔══██╗██║    ██║████╗  ██║██╔════╝██╔══██╗
+#   ███████╗██╔████╔██║███████║██████╔╝   ██║   ███████╗██████╔╝███████║██║ █╗ ██║██╔██╗ ██║█████╗  ██████╔╝
+#   ╚════██║██║╚██╔╝██║██╔══██║██╔══██╗   ██║   ╚════██║██╔═══╝ ██╔══██║██║███╗██║██║╚██╗██║██╔══╝  ██╔══██╗
+#   ███████║██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   ███████║██║     ██║  ██║╚███╔███╔╝██║ ╚████║███████╗██║  ██║
+#   ╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+#
+#   NOTE: Text placeholders in small caps (ᴇxᴀᴍᴘʟᴇ) will be automatically
+#   converted to small caps in-game. Numeric placeholders like %amount% or
+#   %chance% will remain as-is because they are not affected by the small caps.
+
+custom_item:
+  # Appearance of smart spawner items in inventory and tooltips
+  spawner:
+    name: '&#a782ecxᴇʀᴀᴅᴏʀ ᴅᴇ %ᴇɴᴛɪᴛʏ%'
+    loot_items: '  &#e6e6fa•  %amount% %ɪᴛᴇᴍ_ɴᴀᴍᴇ% &#b19cd9(%chance%%)'
+    loot_items_empty: '  &#e6e6fa•  ɴɪɴɢúɴ'
+    lore:
+    - ''
+    - '&#9370db◈ &#8a2be2ᴅᴇᴛᴀʟʟᴇꜱ:'
+    - '  &#e6e6fa•  ᴇxᴘᴇʀɪᴇɴᴄɪᴀ ᴏᴛᴏʀɢᴀᴅᴀ: &#b19cd9%exp%'
+    - ''
+    - '&#9370db◈ &#8a2be2ᴏʙxᴇᴄᴛᴏꜱ:'
+    - '%loot_items%'
+    - ''
+  
+  # Appearance of vanilla spawner items in inventory and tooltips
+  # Available placeholders: %entity%, %ᴇɴᴛɪᴛʏ%
+  # Delete this section if you don't want to use custom vanilla spawners name and lore
+  vanilla_spawner:
+    name: ''
+
+# Item display names
+item:
+  # These names are used when displaying potential drops in spawner tooltips
+  # For multilingual support, replace with corresponding names from your language
+
+    # Animal & Fish Drops
+  LEATHER:
+    name: Coiro
+  STRING:
+    name: Fío
+  FEATHER:
+    name: Pluma
+  CHICKEN:
+    name: Galiña crúa
+  COD:
+    name: Bacallau crú
+  SALMON:
+    name: Salmón crú
+  BEEF:
+    name: Carne de vaca crúa
+  PORKCHOP:
+    name: Costeleta de porco crúa
+  MUTTON:
+    name: Carneiro crú
+  RABBIT:
+    name: Coello crú
+  WHITE_WOOL:
+    name: Lá branca
+  RABBIT_HIDE:
+    name: Pel de coello
+  RABBIT_FOOT:
+    name: Pata de coello
+  PUFFERFISH:
+    name: Peixe globo
+  TROPICAL_FISH:
+    name: Peixe tropical
+  
+  # Hostile Mob Drops
+  BONE:
+    name: Óso
+  BONE_MEAL:
+    name: Fariña de óso
+  ARROW:
+    name: Frecha
+  SPIDER_EYE:
+    name: Ollo de araña
+  GUNPOWDER:
+    name: Pólvora
+  ROTTEN_FLESH:
+    name: Carne podrida
+  ENDER_PEARL:
+    name: Perla de ender
+  GHAST_TEAR:
+    name: Bágoa de ghast
+  MAGMA_CREAM:
+    name: Crema de magma
+  PHANTOM_MEMBRANE:
+    name: Membrana de fantasma
+  SHULKER_SHELL:
+    name: Carapaza de shulker
+  SLIME_BALL:
+    name: Bola de slime
+  BLAZE_ROD:
+    name: Vara de blaze
+  BREEZE_ROD:
+    name: Vara de brisa
+  WITHER_SKELETON_SKULL:
+    name: Caveira de esqueleto do wither
+  
+  # Weapons & Tools
+  BOW:
+    name: Arco
+  CROSSBOW:
+    name: Ballesta
+  GOLDEN_SWORD:
+    name: Espada de ouro
+  GOLDEN_AXE:
+    name: Machada de ouro
+  STONE_SWORD:
+    name: Espada de pedra
+  IRON_AXE:
+    name: Machada de ferro
+  TRIDENT:
+    name: Tridente
+  TIPPED_ARROW:
+    name: Frecha con efecto
+  TOTEM_OF_UNDYING:
+    name: Tótem da inmortalidade
+  SADDLE:
+    name: Sela
+  
+  # Materials & Resources
+  COPPER_INGOT:
+    name: Lingote de cobre
+  PRISMARINE_SHARD:
+    name: Fragmento de prismarina
+  PRISMARINE_CRYSTALS:
+    name: Cristais de prismarina
+  WET_SPONGE:
+    name: Esponxa mollada
+  EMERALD:
+    name: Esmeralda
+  IRON_INGOT:
+    name: Lingote de ferro
+  GOLD_NUGGET:
+    name: Pepita de ouro
+  GOLD_INGOT:
+    name: Lingote de ouro
+  REDSTONE:
+    name: Pó de redstone
+  GLOWSTONE_DUST:
+    name: Pó de pedra luminosa
+  COAL:
+    name: Carbón
+  
+  # Miscellaneous Items
+  GLOW_INK_SAC:
+    name: Saco de tinta luminosa
+  INK_SAC:
+    name: Saco de tinta
+  CARROT:
+    name: Cenoria
+  POTATO:
+    name: Pataca
+  POPPY:
+    name: Papoula
+  SNOWBALL:
+    name: Bola de neve
+  SEAGRASS:
+    name: Herba mariña
+  SUGAR:
+    name: Azucre
+  GLASS_BOTTLE:
+    name: Botella de cristal
+  STICK:
+    name: Pau
+  SCULK_CATALYST:
+    name: Catalizador de sculk
+  TIDE_ARMOR_TRIM_SMITHING_TEMPLATE:
+    name: Molde de ferrería

@@ -1,0 +1,160 @@
+# Language file version - Do not modify this value
+language_version: 1.3.5
+
+# ---------------------------------------------------
+#                 Number Formatting
+# ---------------------------------------------------
+# Controls how large numbers are displayed in-game
+# ---------------------------------------------------
+format_number:
+  thousand: '%s%K' # Example: 5000 → 5K
+  million: '%s%M' # Example: 2000000 → 2M
+  billion: '%s%B' # Example: 1500000000 → 1.5B
+  trillion: '%s%T' # Example: 1000000000000 → 1T
+  default: '%s%' # Fallback format when no other rule matches
+
+# ---------------------------------------------------
+#                 Mob Display Names
+# ---------------------------------------------------
+# Defines how mob names appear in spawner GUIs, items, holograms and messages
+# ---------------------------------------------------
+mob_names:
+  # Passive Mobs
+  # -------------------------
+  ALLAY: Allay
+  ARMADILLO: Armadillo
+  AXOLOTL: Axolote
+  BAT: Morcego
+  BEE: Abella
+  CAMEL: Camelo
+  CAT: Gato
+  CHICKEN: Galiña
+  COD: Bacallau
+  COW: Vaca
+  DOLPHIN: Golfiño
+  DONKEY: Burro
+  FOX: Raposo
+  FROG: Sapo
+  GLOW_SQUID: Lura luminosa
+  GOAT: Cabra
+  HORSE: Cabalo
+  IRON_GOLEM: Gólem de ferro
+  LLAMA: Llama
+  MOOSHROOM: Vacaseta
+  MUSHROOM_COW: Vacaseta # Fallback for 1.20 version compatibility
+  MULE: Mula
+  OCELOT: Ocelote
+  PANDA: Panda
+  PARROT: Papagaio
+  PIG: Porco
+  POLAR_BEAR: Oso polar
+  PUFFERFISH: Peixe globo
+  RABBIT: Coello
+  SALMON: Salmón
+  SHEEP: Ovella
+  SNIFFER: Farejador
+  SNOW_GOLEM: Gólem de neve
+  SNOWMAN: Gólem de neve # Fallback for 1.20 version compatibility
+  SQUID: Lura
+  STRIDER: Camiñante
+  TADPOLE: Sapoliño
+  TRADER_LLAMA: Llama comerciante
+  TROPICAL_FISH: Peixe tropical
+  TURTLE: Tartaruga
+  VILLAGER: Aldeán
+  WANDERING_TRADER: Comerciante ambulante
+  WOLF: Lobo
+  
+  # Hostile Mobs
+  # -------------------------
+  BLAZE: Blaze
+  BOGGED: Atolado
+  BREEZE: Brisa
+  CAVE_SPIDER: Araña de cova
+  CREEPER: Creeper
+  DROWNED: Afogado
+  ELDER_GUARDIAN: Guardián ancián
+  ENDERMAN: Enderman
+  ENDERMITE: Endermite
+  EVOKER: Invocador
+  GHAST: Ghast
+  GUARDIAN: Guardián
+  HOGLIN: Hoglin
+  HUSK: Momia
+  MAGMA_CUBE: Cubo de magma
+  PHANTOM: Fantasma
+  PIGLIN: Piglin
+  PIGLIN_BRUTE: Piglin bruto
+  PILLAGER: Saqueador
+  RAVAGER: Devastador
+  SHULKER: Shulker
+  SILVERFISH: Peixe de prata
+  SKELETON: Esqueleto
+  SKELETON_HORSE: Cabalo esqueleto
+  SLIME: Slime
+  SPIDER: Araña
+  STRAY: Errante
+  VEX: Vex
+  VINDICATOR: Vindicador
+  WARDEN: Gardián
+  WITCH: Bruxa
+  WITHER_SKELETON: Esqueleto do wither
+  ZOGLIN: Zoglin
+  ZOMBIE: Zombi
+  ZOMBIE_HORSE: Cabalo zombi
+  ZOMBIE_VILLAGER: Aldeán zombi
+  ZOMBIFIED_PIGLIN: Piglin zombificado
+
+# ---------------------------------------------------
+#                 Drop Display Names
+# ---------------------------------------------------
+# Defines how item drops are displayed
+# ---------------------------------------------------
+drop_names:
+  ARROW: Frecha
+  BEEF: Carne de vaca
+  BLAZE_POWDER: Pó de blaze
+  BLAZE_ROD: Vara de blaze
+  BONE: Óso
+  BOW: Arco
+  CHICKEN: Galiña
+  COOKED_BEEF: Carne de vaca cociñada
+  COOKED_CHICKEN: Galiña cociñada
+  COOKED_MUTTON: Carneiro cociñado
+  COOKED_PORKCHOP: Costeleta de porco cociñada
+  COOKED_RABBIT: Coello cociñado
+  CROSSBOW: Ballesta
+  DIAMOND: Diamante
+  EMERALD: Esmeralda
+  ENDER_PEARL: Perla de ender
+  FEATHER: Pluma
+  GOLD_INGOT: Lingote de ouro
+  GOLD_NUGGET: Pepita de ouro
+  GUNPOWDER: Pólvora
+  IRON_INGOT: Lingote de ferro
+  LEATHER: Coiro
+  MUTTON: Carneiro
+  PORKCHOP: Costeleta de porco
+  PRISMARINE_CRYSTALS: Cristais de prismarina  
+  PRISMARINE_SHARD: Fragmento de prismarina
+  RABBIT_FOOT: Pata de coello
+  RABBIT_HIDE: Pel de coello
+  RAW_BEEF: Carne de vaca crúa
+  RAW_CHICKEN: Galiña crúa
+  ROTTEN_FLESH: Carne podrida
+  SLIME_BALL: Bola de slime
+  SPIDER_EYE: Ollo de araña
+  STRING: Corda
+  TRIDENT: Tridente
+  WOOL: Lá
+
+# ---------------------------------------------------
+#                 Texto de Hologramas (Galego)
+# ---------------------------------------------------
+# NOTA: Os hologramas configúranse no ficheiro config.yml.  
+# Para velos en galego, copia o seguinte texto na sección hologram de config.yml:
+#
+# text:
+# - '[&#f8f8ff%stack_size%] &#7b68eeXᴇʀᴀᴅᴏʀ ᴅᴇ %ᴇɴᴛɪᴛʏ%'
+# - '&#ab7afd• &#e6e6faᴇxᴘᴇʀɪᴇɴᴄɪᴀ: &#37eb9a%current_exp%&#f8f8ff/&#37eb9a%max_exp%'
+# - '&#ab7afd• &#e6e6faᴏʙxᴇᴄᴛᴏꜱ: &#37eb9a%used_slots%&#f8f8ff/&#37eb9a%max_slots%'

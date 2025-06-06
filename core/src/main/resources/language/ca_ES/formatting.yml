@@ -1,0 +1,117 @@
+# Language file version - Do not modify this value
+language_version: 1.3.5
+
+# ---------------------------------------------------
+#                 Number Formatting
+# ---------------------------------------------------
+# Controls how large numbers are displayed in-game
+# ---------------------------------------------------
+format_number:
+  thousand: '%s%K' # Example: 5000 → 5K
+  million: '%s%M' # Example: 2000000 → 2M
+  billion: '%s%B' # Example: 1500000000 → 1.5B
+  trillion: '%s%T' # Example: 1000000000000 → 1T
+  default: '%s%' # Fallback format when no other rule matches
+
+# ---------------------------------------------------
+#                 Mob Display Names
+# ---------------------------------------------------
+# Defines how mob names appear in spawner GUIs, items, holograms and messages
+# ---------------------------------------------------
+mob_names:
+  # Passive Mobs
+  # -------------------------
+  ALLAY: Allay
+  ARMADILLO: Armadillo
+  AXOLOTL: Axolotl
+  BAT: Rat penat
+  BEE: Abella
+  CAMEL: Camell
+  CAT: Gat
+  CHICKEN: Gallina
+  COD: Bacallà
+  COW: Vaca
+  DOLPHIN: Dofí
+  DONKEY: Burro
+  FOX: Guilla
+  FROG: Granota
+  GLOW_SQUID: Calamar lluminós
+  GOAT: Cabra
+  HORSE: Cavall
+  IRON_GOLEM: Gòlem de ferro
+  LLAMA: Llama
+  MOOSHROOM: Vaca xampinyó
+  MUSHROOM_COW: Vaca xampinyó # Fallback for 1.20 version compatibility
+  MULE: Mul
+  OCELOT: Ocelot
+  PANDA: Panda
+  PARROT: Lloro
+  PIG: Porc
+  POLAR_BEAR: Ós polar
+  PUFFERFISH: Peix globus
+  RABBIT: Conill
+  SALMON: Salmó
+  SHEEP: Ovella
+  SNIFFER: Ensumador
+  SNOW_GOLEM: Gòlem de neu
+  SNOWMAN: Gòlem de neu # Fallback for 1.20 version compatibility
+  SQUID: Calamar
+  STRIDER: Caminant
+  TADPOLE: Cap gros
+  TRADER_LLAMA: Llama comerciant
+  TROPICAL_FISH: Peix tropical
+  TURTLE: Tortuga
+  VILLAGER: Vilatà
+  WANDERING_TRADER: Comerciant errant
+  WOLF: Llop
+  
+  # Hostile Mobs
+  # -------------------------
+  BLAZE: Blaze
+  BOGGED: Enfangat
+  BREEZE: Brisa
+  CAVE_SPIDER: Aranya de cova
+  CREEPER: Creeper
+  DROWNED: Ofegat
+  ELDER_GUARDIAN: Guardià ancià
+  ENDERMAN: Enderman
+  ENDERMITE: Endermite
+  EVOKER: Evocador
+  GHAST: Ghast
+  GUARDIAN: Guardià
+  HOGLIN: Hoglin
+  HUSK: Zombi del desert
+  MAGMA_CUBE: Cub de magma
+  PHANTOM: Fantasma
+  PIGLIN: Piglin
+  PIGLIN_BRUTE: Piglin brut
+  PILLAGER: Saquejador
+  RAVAGER: Devastador
+  SHULKER: Shulker
+  SILVERFISH: Peix d'argent
+  SKELETON: Esquelet
+  SKELETON_HORSE: Cavall esquelètic
+  SLIME: Slime
+  SPIDER: Aranya
+  STRAY: Errant
+  VEX: Vex
+  VINDICATOR: Vindicador
+  WARDEN: Guardià de presó
+  WITCH: Bruixa
+  WITHER_SKELETON: Esquelet wither
+  ZOGLIN: Zoglin
+  ZOMBIE: Zombi
+  ZOMBIE_HORSE: Cavall zombi
+  ZOMBIE_VILLAGER: Vilatà zombi
+  ZOMBIFIED_PIGLIN: Piglin zombificat
+
+# ---------------------------------------------------
+#                 Text d'Hologrames (Català)
+# ---------------------------------------------------
+# NOTA: Els hologrames es configuren al fitxer config.yml.
+# Per veure'ls en català, copia el següent text a la secció hologram de config.yml:
+#
+# text:
+# - '[&#f8f8ff%stack_size%] &#7b68eeɢᴇɴᴇʀᴀᴅᴏʀ ᴅᴇ %ᴇɴᴛɪᴛʏ%'
+# - '&#ab7afd• &#e6e6faᴇxᴘᴇʀɪèɴᴄɪᴀ: &#37eb9a%current_exp%&#f8f8ff/&#37eb9a%max_exp%'
+# - '&#ab7afd• &#e6e6faᴏʙᴊᴇᴄᴛᴇs: &#37eb9a%used_slots%&#f8f8ff/&#37eb9a%max_slots%'

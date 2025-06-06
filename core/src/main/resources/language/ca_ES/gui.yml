@@ -1,0 +1,352 @@
+# Language file version - Do not modify this value
+language_version: 1.3.5
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+#   ███████╗███╗   ███╗ █████╗ ██████╗ ████████╗███████╗██████╗  █████╗ ██╗    ██╗███╗   ██╗███████╗██████╗
+#   ██╔════╝████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔══██╗██╔══██╗██║    ██║████╗  ██║██╔════╝██╔══██╗
+#   ███████╗██╔████╔██║███████║██████╔╝   ██║   ███████╗██████╔╝███████║██║ █╗ ██║██╔██╗ ██║█████╗  ██████╔╝
+#   ╚════██║██║╚██╔╝██║██╔══██║██╔══██╗   ██║   ╚════██║██╔═══╝ ██╔══██║██║███╗██║██║╚██╗██║██╔══╝  ██╔══██╗
+#   ███████║██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   ███████║██║     ██║  ██║╚███╔███╔╝██║ ╚████║███████╗██║  ██║
+#   ╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+#
+#   DESCRIPCIÓ:
+#   Aquest fitxer conté la configuració d'idioma de la interfície gràfica per al plugin Spawner.
+#   Defineix l'aparença i el comportament de diversos elements de la GUI, incloent
+#   botons, noms d'objectes i descripció (lore). Les configuracions estan organitzades en seccions
+#   per a diferents components de la GUI, com ara la GUI principal, la GUI d'apilament de generadors,
+#   la GUI d'emmagatzematge de generadors i les GUIs de comandes de llista.
+
+# ---------------------------------------------------
+#                  GUI Principal
+# ---------------------------------------------------
+gui_title_main:
+  single_spawner: 'ɢᴇɴᴇʀᴀᴅᴏʀ ᴅᴇ %ᴇɴᴛɪᴛʏ%'
+  stacked_spawner: '%amount% ɢᴇɴᴇʀᴀᴅᴏʀꜱ ᴅᴇ %ᴇɴᴛɪᴛʏ%'
+
+# Configuració d'objecte d'emmagatzematge de generador
+
+spawner_storage_item:
+  # Marcadors de posició disponibles per al nom:
+  # %max_slots% - Nombre màxim d'espais a l'emmagatzematge (formatat amb comes)
+  # %current_items% - Nombre actual d'objectes a l'emmagatzematge
+  # %percent_storage% - Percentatge d'emmagatzematge utilitzat (0-100)
+  # %entity% - El tipus d'entitat del generador (capitalització normal)
+  # %ᴇɴᴛɪᴛʏ% - El tipus d'entitat del generador (versaletes)
+  name: '&#fce96aᴇᴍᴍᴀɢᴀᴛᴢᴇᴍᴀᴛɢᴇ'
+  
+  # Marcadors de posició disponibles per a totes les línies de lore:
+  # %max_slots% - Nombre màxim d'espais a l'emmagatzematge (formatat amb comes)
+  # %current_items% - Nombre actual d'objectes a l'emmagatzematge
+  # %percent_storage% - Percentatge d'emmagatzematge utilitzat (0-100)
+  # %loot_items% - La llista completa formatada d'objectes de botí
+  # %entity% - El tipus d'entitat del generador (capitalització normal)
+  # %ᴇɴᴛɪᴛʏ% - El tipus d'entitat del generador (versaletes)
+  lore:
+  - ''
+  - '&#d9b50c◈ &#fce96aᴇꜱᴛᴀᴅíꜱᴛɪᴄᴜᴇꜱ:'
+  - '  &#f8f8ff•  ᴇꜱᴘᴀɪꜱ: &#f9cf51%current_items%&#d9b50c/&#f9cf51%max_slots%'
+  - '  &#f8f8ff•  ᴇᴍᴍᴀɢᴀᴛᴢᴇᴍᴀᴛ: &#f9cf51%percent_storage%%'
+  - ''
+  - '&#d9b50c⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴏʙʀɪʀ ʟ\'ᴇᴍᴍᴀɢᴀᴛᴢᴇᴍ'
+  # Podeu afegir una línia opcional per mostrar tots els objectes de botí:
+  # - '%loot_items%'
+
+    # Això defineix com es mostrarà cada objecte de botí quan s'utilitzi %loot_items%
+  # Marcadors de posició disponibles per a cada objecte de botí:
+  # %item_name% - El nom de l'objecte (capitalització normal)
+  # %ɪᴛᴇᴍ_ɴᴀᴍᴇ% - El nom de l'objecte en format versaletes
+  # %amount% - Nombre d'objectes (formatat amb comes)
+  # %raw_amount% - Nombre d'objectes (sense formatació)
+  # %chance% - La probabilitat que aquest objecte caigui (amb símbol %, p. ex. "8.5%")
+  loot_items: '  &#f8f8ff• &#f9cf51%raw_amount% &#f8f8ff%ɪᴛᴇᴍ_ɴᴀᴍᴇ%'
+  loot_items_empty: '&#e6e6faᴄᴀᴘ ᴏʙᴊᴇᴄᴛᴇ'
+
+
+# Configuració d'objecte d'informació del generador
+# Marcadors de posició disponibles:
+#
+# Informació d'entitat:
+# %entity%           - Nom d'entitat formatat (p. ex., "Zombie")
+# %ᴇɴᴛɪᴛʏ%           - Nom d'entitat en versaletes (p. ex., "ᴢᴏᴍʙɪᴇ")
+# %entity_type%      - Tipus d'entitat en brut (p. ex., "ZOMBIE")
+#
+# Informació d'apilament:
+# %stack_size%       - Nombre de generadors apilats en aquesta ubicació
+#
+# Configuració del generador:
+# %range%            - Rang de generació en blocs
+# %delay%            - Retard de generació en segons
+# %delay_raw%        - Retard de generació en brut en ticks
+# %min_mobs%         - Nombre mínim de criatures a generar
+# %max_mobs%         - Nombre màxim de criatures a generar
+#
+# Informació d'emmagatzematge:
+# %current_items%    - Nombre actual d'objectes emmagatzemats
+# %max_items%        - Capacitat màxima d'emmagatzematge per a objectes
+# %percent_storage%  - Ús de l'emmagatzematge com a percentatge enter (p. ex., "87")
+# %formatted_storage% - Ús de l'emmagatzematge com a percentatge formatat amb decimal (p. ex., "87.5")
+#
+# Informació d'experiència:
+# %current_exp%      - Experiència actual emmagatzemada (formatada amb comes)
+# %max_exp%          - Capacitat màxima d'experiència (formatada amb comes)
+# %raw_current_exp%  - Nombre d'experiència actual en brut
+# %raw_max_exp%      - Nombre d'experiència màxima en brut
+# %percent_exp%      - Emmagatzematge d'experiència com a percentatge enter
+# %formatted_exp%    - Emmagatzematge d'experiència com a percentatge formatat amb decimal (p. ex., "42.7")
+spawner_info_item:
+  name: '&#ab7afdɢᴇɴᴇʀᴀᴅᴏʀ ᴅᴇ %ᴇɴᴛɪᴛʏ%'
+  lore:
+  - ''
+  - '&#7b68ee◈ &#8a2be2ɪɴꜰᴏʀᴍᴀᴄɪó:'
+  - '  &#e6e6fa•  ᴘɪʟᴀ: &#c2a8fc%stack_size%'
+  - '  &#e6e6fa•  ᴀʟᴄᴀɴᴄᴇ: &#c2a8fc%range%&#e6e6fa ʙʟᴏᴄꜱ'
+  - '  &#e6e6fa•  ᴄʀɪᴀᴛᴜʀᴇꜱ: &#c2a8fc%min_mobs%&#e6e6fa - &#c2a8fc%max_mobs%'
+  - '  &#e6e6fa•  ɪɴᴛᴇʀᴠᴀʟ: &#c2a8fc%delay%&#e6e6faꜱ'
+  - '  &#e6e6fa•  ꜱᴇɢüᴇɴᴛ ɢᴇɴᴇʀᴀᴄɪó: &#c2a8fc'
+  - ''
+  - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴅʀᴇᴛ ᴘᴇʀ ᴏʙʀɪʀ &#ab7afdʟ\'ᴀᴘɪʟᴀᴅᴏʀ ᴅᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+  - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴇꜱᴄ̧ᴜᴇʀʀᴇ ᴘᴇʀ&#f0c857 ᴠᴇɴᴅʀᴇ ᴏʙᴊᴇᴄᴛᴇꜱ &#ab7afd& &#37eb9aʀᴇᴄᴏʟʟɪʀ xᴘ'
+  # Versió utilitzada quan la integració de botiga està desactivada o el jugador no té permís
+  lore_no_shop:
+  - ''
+  - '&#7b68ee◈ &#8a2be2ɪɴꜰᴏʀᴍᴀᴄɪó:'
+  - '  &#e6e6fa•  ᴘɪʟᴀ: &#c2a8fc%stack_size%'
+  - '  &#e6e6fa•  ᴀʟᴄᴀɴᴄᴇ: &#c2a8fc%range%&#e6e6fa ʙʟᴏᴄꜱ'
+  - '  &#e6e6fa•  ᴄʀɪᴀᴛᴜʀᴇꜱ: &#c2a8fc%min_mobs%&#e6e6fa - &#c2a8fc%max_mobs%'
+  - '  &#e6e6fa•  ɪɴᴛᴇʀᴠᴀʟ: &#c2a8fc%delay%&#e6e6faꜱ'
+  - '  &#e6e6fa•  ꜱᴇɢüᴇɴᴛ ɢᴇɴᴇʀᴀᴄɪó: &#c2a8fc'
+  - ''
+  - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴏʙʀɪʀ &#ab7afdʟ\'ᴀᴘɪʟᴀᴅᴏʀ ᴅᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+  lore_change: '  &#f8f8ff•  ꜱᴇɢüᴇɴᴛ ɢᴇɴᴇʀᴀᴄɪó: &#c2a8fc'
+  lore_full: '&#ff5252¡ᴇᴍᴍᴀɢᴀᴛᴢᴇᴍ ɪ xᴘ ᴘʟᴇɴꜱ!'
+  lore_inactive: '&#ff3333¡ɢᴇɴᴇʀᴀᴅᴏʀ ɪɴᴀᴄᴛɪᴜ!'
+
+exp_info_item:
+  name: '&#37eb9aᴇxᴘᴇʀɪèɴᴄɪᴀ: &#f8f8ff%current_exp%'
+  lore:
+  - ''
+  - '&#2cc483◈ &#48e89bᴇꜱᴛᴀᴅíꜱᴛɪᴄᴜᴇꜱ:'
+  - '  &#f8f8ff•  ᴀᴄᴛᴜᴀʟ: &#37eb9a%current_exp%&#2cc483/&#37eb9a%max_exp% &#2cc483xᴘ'
+  - '  &#f8f8ff•  ᴇᴍᴍᴀɢᴀᴛᴢᴇᴍᴀᴅᴀ: &#37eb9a%percent_exp%% &#2cc483xᴘ'
+  - ''
+  - '&#2cc483⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ʀᴇᴄᴏʟʟɪʀ ʟ\'xᴘ'
+
+# ---------------------------------------------------
+#              GUI d'apilador de generadors
+# ---------------------------------------------------
+gui_title_stacker: ᴀᴘɪʟᴀᴅᴏʀ ᴅᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ
+
+button_spawner:
+  name: '&#ab7afdɢᴇɴᴇʀᴀᴅᴏʀ ᴅᴇ %ᴇɴᴛɪᴛʏ%'
+  lore:
+  - ''
+  - '&#7b68ee◈ &#a885fcɪɴꜰᴏʀᴍᴀᴄɪó ᴅᴇ ʟᴀ ᴘɪʟᴀ:'
+  - '  &#f8f8ff•  ᴀᴄᴛᴜᴀʟ: &#c2a8fc%stack_size%'
+  - '  &#f8f8ff•  ᴍàxɪᴍ: &#c2a8fc%max_stack_size%'
+  - ''
+  - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴛᴏʀɴᴀʀ ᴀʟ ᴍᴇɴú ᴅᴇʟ ɢᴇɴᴇʀᴀᴅᴏʀ'
+
+button_remove:
+  name: '&#ff5252-ᴛʀᴇᴜʀᴇ %amount%'
+  lore:
+  - ''
+  - '&#e63939◈ &#ff7070ᴀᴄᴄɪó:'
+  - '  &#f8f8ff•  ᴛʀᴇᴜʀᴇ: &#ff5252%amount% &#e63939ɢᴇɴᴇʀᴀᴅᴏʀ(ꜱ)'
+  - '  &#f8f8ff•  ᴀᴄᴛᴜᴀʟ: &#ff5252%stack_size%'
+  - ''
+  - '&#e63939⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴛʀᴇᴜʀᴇ ᴅᴇ ʟᴀ ᴘɪʟᴀ'
+
+button_add:
+  name: '&#37eb9a+ᴀꜰᴇɢɪʀ %amount%'
+  lore:
+  - ''
+  - '&#2cc483◈ &#48e89bᴀᴄᴄɪó:'
+  - '  &#f8f8ff•  ᴀꜰᴇɢɪʀ: &#37eb9a%amount% &#2cc483ɢᴇɴᴇʀᴀᴅᴏʀ(ꜱ)'
+  - '  &#f8f8ff•  ᴀᴄᴛᴜᴀʟ: &#37eb9a%stack_size%'
+  - ''
+  - '&#2cc483⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴀꜰᴇɢɪʀ ᴀ ʟᴀ ᴘɪʟᴀ'
+
+# ---------------------------------------------------
+#             GUI d'emmagatzematge del generador
+# ---------------------------------------------------
+gui_title_storage: ᴇᴍᴍᴀɢᴀᴛᴢᴇᴍ ᴅᴇʟ ɢᴇɴᴇʀᴀᴅᴏʀ
+
+navigation_button_previous:
+  name: '&#37eb9aᴘàɢɪɴᴀ ᴀɴᴛᴇʀɪᴏʀ'
+  lore:
+  - '&#2cc483⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴀɴᴀʀ ᴀ ʟᴀ ᴘàɢɪɴᴀ &#37eb9a%target_page%'
+
+navigation_button_next:
+  name: '&#37eb9aꜱᴇɢüᴇɴᴛ ᴘàɢɪɴᴀ'
+  lore:
+  - '&#2cc483⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴀɴᴀʀ ᴀ ʟᴀ ᴘàɢɪɴᴀ &#37eb9a%target_page%'
+
+shop_page_indicator:
+  name: '&#f0c857ᴠᴇɴᴅʀᴇ ᴛᴏᴛꜱ ᴇʟꜱ ᴏʙᴊᴇᴄᴛᴇꜱ'
+  lore:
+  - ''
+  - '&#d4a012◈ &#f8cb45ᴇᴍᴍᴀɢᴀᴛᴢᴇᴍ:'
+  - '  &#f8f8ff•  ᴇꜱᴘᴀɪꜱ: &#f0c857%used_slots%&#d4a012/&#f0c857%max_slots%'
+  - '  &#f8f8ff•  ᴇᴍᴍᴀɢᴀᴛᴢᴇᴍᴀᴛ: &#f0c857%percent_storage%%'
+  - ''
+  - '&#d4a012⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴠᴇɴᴅʀᴇ ᴛᴏᴛꜱ ᴇʟꜱ ᴏʙᴊᴇᴄᴛᴇꜱ'
+
+return_button:
+  name: '&#ff5252ᴛᴏʀɴᴀʀ ᴀʟ ᴍᴇɴú ᴘʀɪɴᴄɪᴘᴀʟ'
+
+take_all_button:
+  name: '&#37eb9aʀᴇᴄᴏʟʟɪʀ ᴛᴏᴛꜱ ᴇʟꜱ ᴏʙᴊᴇᴄᴛᴇꜱ'
+
+item_filter_button:
+  name: '&#7b68eeꜰɪʟᴛʀᴀʀ ᴏʙᴊᴇᴄᴛᴇꜱ'
+  lore:
+  - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴄᴏɴꜰɪɢᴜʀᴀʀ'
+
+discard_all_button:
+  name: '&#ff5252ᴅᴇꜱᴄᴀʀᴛᴀʀ ᴛᴏᴛꜱ ᴇʟꜱ ᴏʙᴊᴇᴄᴛᴇꜱ'
+  lore:
+  - '&#e63939⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ &#ff5252ᴇʟɪᴍɪɴᴀʀ&#f8f8ff ᴛᴏᴛꜱ ᴇʟꜱ ᴏʙᴊᴇᴄᴛᴇꜱ'
+
+# ---------------------------------------------------
+#             GUI de configuració de filtre
+# ---------------------------------------------------
+gui_title_filter_config: ꜰɪʟᴛʀᴇ ᴅ'ᴏʙᴊᴇᴄᴛᴇꜱ
+
+filter_divider:
+  name: '&#7b68eeꜰɪʟᴛʀᴀʀ ᴏʙᴊᴇᴄᴛᴇꜱ'
+  lore:
+  - ''
+  - '&#f8f8ff⋮ ᴄᴏꜱᴛᴀᴛ ᴇꜱᴄ̧ᴜᴇʀʀᴇ: &#37eb9aᴏʙᴊᴇᴄᴛᴇꜱ ᴘᴇʀᴍᴇꜱᴏꜱ'
+  - '&#f8f8ff⋮ ᴄᴏꜱᴛᴀᴛ ᴅʀᴇᴛ: &#ff5252ᴏʙᴊᴇᴄᴛᴇꜱ ʙʟᴏᴄᴀᴛꜱ'
+  - ''
+  - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴛᴏʀɴᴀʀ ᴀ ʟ\'ᴇᴍᴍᴀɢᴀᴛᴢᴇᴍ'
+
+filter_item_allowed:
+  name: '&#37eb9a%item_name%'
+  lore:
+  - '&#f8f8ffᴇꜱᴛᴀᴛ: &#37eb9aᴘᴇʀᴍèꜱ &#f8f8ff- ᴄʟɪᴄ ᴘᴇʀ ʙʟᴏᴄᴀʀ'
+
+filter_item_blocked:
+  name: '&#ff5252%item_name%'
+  lore:
+  - '&#f8f8ffᴇꜱᴛᴀᴛ: &#ff5252ʙʟᴏᴄᴀᴛ &#f8f8ff- ᴄʟɪᴄ ᴘᴇʀ ᴘᴇʀᴍᴇᴛʀᴇ'
+
+# ---------------------------------------------------
+#                GUIs de comandes de llista
+# ---------------------------------------------------
+# GUI de selecció de món
+gui_title_world_selection: ꜱᴇʟᴇᴄᴄɪᴏɴᴀʀ ᴍóɴ
+
+world_buttons:
+  overworld:
+    name: '&#37eb9aᴍóɴ ᴘʀɪɴᴄɪᴘᴀʟ'
+    lore:
+    - ''
+    - '&#2cc483◈ &#48e89bɢᴇɴᴇʀᴀᴅᴏʀꜱ:'
+    - '  &#f8f8ff•  ᴛᴏᴛᴀʟ: &#37eb9a%total%'
+    - '  &#f8f8ff•  ᴀᴘɪʟᴀᴛꜱ: &#37eb9a%total_stacked%'
+    - ''
+    - '&#2cc483⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴠᴇᴜʀᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+  nether:
+    name: '&#ff5252ɪɴꜰʀᴀᴍóɴ'
+    lore:
+    - ''
+    - '&#e63939◈ &#ff7070ɢᴇɴᴇʀᴀᴅᴏʀꜱ:'
+    - '  &#f8f8ff•  ᴛᴏᴛᴀʟ: &#ff5252%total%'
+    - '  &#f8f8ff•  ᴀᴘɪʟᴀᴛꜱ: &#ff5252%total_stacked%'
+    - ''
+    - '&#e63939⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴠᴇᴜʀᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+  end:
+    name: '&#d8c5ffᴇʟ ꜰɪɴᴀʟ'
+    lore:
+    - ''
+    - '&#7b68ee◈ &#a885fcɢᴇɴᴇʀᴀᴅᴏʀꜱ:'
+    - '  &#f8f8ff•  ᴛᴏᴛᴀʟ: &#c2a8fc%total%'
+    - '  &#f8f8ff•  ᴀᴘɪʟᴀᴛꜱ: &#c2a8fc%total_stacked%'
+    - ''
+    - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴠᴇᴜʀᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+  custom_overworld:
+    name: '&#37eb9a%world_name%'
+    lore:
+    - ''
+    - '&#2cc483◈ &#48e89bɢᴇɴᴇʀᴀᴅᴏʀꜱ:'
+    - '  &#f8f8ff•  ᴛᴏᴛᴀʟ: &#37eb9a%total%'
+    - '  &#f8f8ff•  ᴀᴘɪʟᴀᴛꜱ: &#37eb9a%total_stacked%'
+    - ''
+    - '&#2cc483⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴠᴇᴜʀᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+  custom_nether:
+    name: '&#ff5252%world_name%'
+    lore:
+    - ''
+    - '&#e63939◈ &#ff7070ɢᴇɴᴇʀᴀᴅᴏʀꜱ:'
+    - '  &#f8f8ff•  ᴛᴏᴛᴀʟ: &#ff5252%total%'
+    - '  &#f8f8ff•  ᴀᴘɪʟᴀᴛꜱ: &#ff5252%total_stacked%'
+    - ''
+    - '&#e63939⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴠᴇᴜʀᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+  custom_end:
+    name: '&#d8c5ff%world_name%'
+    lore:
+    - ''
+    - '&#7b68ee◈ &#a885fcɢᴇɴᴇʀᴀᴅᴏʀꜱ:'
+    - '  &#f8f8ff•  ᴛᴏᴛᴀʟ: &#c2a8fc%total%'
+    - '  &#f8f8ff•  ᴀᴘɪʟᴀᴛꜱ: &#c2a8fc%total_stacked%'
+    - ''
+    - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴠᴇᴜʀᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+  custom_default:
+    name: '&#ab7afd%world_name%'
+    lore:
+    - ''
+    - '&#7b68ee◈ &#a885fcɢᴇɴᴇʀᴀᴅᴏʀꜱ:'
+    - '  &#f8f8ff•  ᴛᴏᴛᴀʟ: &#c2a8fc%total%'
+    - '  &#f8f8ff•  ᴀᴘɪʟᴀᴛꜱ: &#c2a8fc%total_stacked%'
+    - ''
+    - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴠᴇᴜʀᴇ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+
+# GUI de llista de generadors
+gui_title_spawner_list: '%world% - [%current%/%total%]'
+
+filter:
+  button:
+    name: '&#37eb9aꜰɪʟᴛʀᴀʀ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+    lore:
+    - '%all_color% • ᴛᴏᴛꜱ'
+    - '%active_color% • ᴀᴄᴛɪᴜꜱ'
+    - '%inactive_color% • ɪɴᴀᴄᴛɪᴜꜱ'
+  all:
+    color: '&#37eb9a'
+  active:
+    color: '&a'
+  inactive:
+    color: '&#ff5252'
+
+sort:
+  button:
+    name: '&#37eb9aᴏʀᴅᴇɴᴀʀ ɢᴇɴᴇʀᴀᴅᴏʀꜱ'
+    lore:
+    - '%default_color% • ᴘᴇʀ ᴅᴇꜰᴇᴄᴛᴇ (ɪᴅ)'
+    - '%stack_size_asc_color% • ᴍɪᴅᴀ ᴅᴇ ᴘɪʟᴀ (↑)'
+    - '%stack_size_desc_color% • ᴍɪᴅᴀ ᴅᴇ ᴘɪʟᴀ (↓)'
+  default:
+    color: '&#37eb9a'
+  stack_size_asc:
+    color: '&#37eb9a'
+  stack_size_desc:
+    color: '&#37eb9a'
+
+spawner_item_list:
+  name: '&#ab7afdɢᴇɴᴇʀᴀᴅᴏʀ #%id%'
+  lore:
+  - '&#7b68ee⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯'
+  - '&#7b68ee◈ &#a885fcᴅᴇᴛᴀʟʟꜱ:'
+  - '  &#f8f8ff•  ᴄʀɪᴀᴛᴜʀᴀ: &#c2a8fc%entity%'
+  - '  &#f8f8ff•  ᴘɪʟᴀ: &#c2a8fc%size%'
+  - '  &#f8f8ff•  ᴇꜱᴛᴀᴛ: %status_color%%status_text%'
+  - '  &#f8f8ff•  ᴜʙɪᴄᴀᴄɪó: &#c2a8fcx: %x%, ʏ: %y%, ᴢ: %z%'
+  - '&#7b68ee⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯'
+  - '&#7b68ee⊳ &#f8f8ffᴄʟɪᴄ ᴘᴇʀ ᴛᴇʟᴇᴛʀᴀɴꜱᴘᴏʀᴛᴀʀ-ꜱᴇ ᴀʟ ɢᴇɴᴇʀᴀᴅᴏʀ'
+
+navigation:
+  previous_page: '&#37eb9aᴘàɢɪɴᴀ ᴀɴᴛᴇʀɪᴏʀ'
+  next_page: '&#37eb9aꜱᴇɢüᴇɴᴛ ᴘàɢɪɴᴀ'
+  back: '&#ff5252ᴛᴏʀɴᴀʀ ᴀ ꜱᴇʟᴇᴄᴄɪó ᴅᴇ ᴍóɴ'

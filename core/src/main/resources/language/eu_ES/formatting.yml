@@ -1,0 +1,117 @@
+# Language file version - Do not modify this value
+language_version: 1.3.5
+
+# ---------------------------------------------------
+#                 Number Formatting
+# ---------------------------------------------------
+# Controls how large numbers are displayed in-game
+# ---------------------------------------------------
+format_number:
+  thousand: '%s%K' # Example: 5000 → 5K
+  million: '%s%M' # Example: 2000000 → 2M
+  billion: '%s%B' # Example: 1500000000 → 1.5B
+  trillion: '%s%T' # Example: 1000000000000 → 1T
+  default: '%s%' # Fallback format when no other rule matches
+
+# ---------------------------------------------------
+#                 Mob Display Names
+# ---------------------------------------------------
+# Defines how mob names appear in spawner GUIs, items, holograms and messages
+# ---------------------------------------------------
+mob_names:
+  # Passive Mobs
+  # -------------------------
+  ALLAY: Allay
+  ARMADILLO: Armadilloa
+  AXOLOTL: Axolotea
+  BAT: Saguzarra
+  BEE: Erlea
+  CAMEL: Kamelua
+  CAT: Katua
+  CHICKEN: Oiloa
+  COD: Bakailaoa
+  COW: Behia
+  DOLPHIN: Izurdea
+  DONKEY: Astoa
+  FOX: Azeria
+  FROG: Igela
+  GLOW_SQUID: Txibia argitsuak
+  GOAT: Ahuntza
+  HORSE: Zaldia
+  IRON_GOLEM: Burdinazko golema
+  LLAMA: Llama
+  MOOSHROOM: Onddozko behia
+  MUSHROOM_COW: Onddozko behia # Fallback for 1.20 version compatibility
+  MULE: Mandoa
+  OCELOT: Ozelotea
+  PANDA: Panda
+  PARROT: Papagaioa
+  PIG: Txerria
+  POLAR_BEAR: Hartz polarra
+  PUFFERFISH: Pufer arraina
+  RABBIT: Untxia
+  SALMON: Izokin-arraina
+  SHEEP: Ardia
+  SNIFFER: Usaintzailea
+  SNOW_GOLEM: Elur golema
+  SNOWMAN: Elur golema # Fallback for 1.20 version compatibility
+  SQUID: Txibia
+  STRIDER: Ibiltzailea
+  TADPOLE: Zapatxoa
+  TRADER_LLAMA: Merkatari llama
+  TROPICAL_FISH: Arrain tropikala
+  TURTLE: Dortoka
+  VILLAGER: Herritarra
+  WANDERING_TRADER: Merkatari ibiltaria
+  WOLF: Otsoa
+  
+  # Hostile Mobs
+  # -------------------------
+  BLAZE: Blaze
+  BOGGED: Lokatzekoa
+  BREEZE: Haize-a
+  CAVE_SPIDER: Kobazuloko armiarma
+  CREEPER: Creeper
+  DROWNED: Itoa
+  ELDER_GUARDIAN: Zaindari zaharra
+  ENDERMAN: Enderman
+  ENDERMITE: Endermite
+  EVOKER: Deiatzailea
+  GHAST: Ghast
+  GUARDIAN: Zaindaria
+  HOGLIN: Hoglin
+  HUSK: Momia
+  MAGMA_CUBE: Magma-kuboa
+  PHANTOM: Fantasma
+  PIGLIN: Piglin
+  PIGLIN_BRUTE: Piglin oldarkorra
+  PILLAGER: Lapurra
+  RAVAGER: Suntsitzailea
+  SHULKER: Shulker
+  SILVERFISH: Zilarrezko arraina
+  SKELETON: Hezurra
+  SKELETON_HORSE: Hezurrezko zaldia
+  SLIME: Slime
+  SPIDER: Armiarma
+  STRAY: Galdurikoa
+  VEX: Vex
+  VINDICATOR: Mendekatzailea
+  WARDEN: Zaindaria
+  WITCH: Sorgina
+  WITHER_SKELETON: Wither hezurra
+  ZOGLIN: Zoglin
+  ZOMBIE: Zombia
+  ZOMBIE_HORSE: Zombie zaldia
+  ZOMBIE_VILLAGER: Zombie herritarra
+  ZOMBIFIED_PIGLIN: Zombie piglin
+
+# ---------------------------------------------------
+#                 Hologramaren Testua (Euskera)
+# ---------------------------------------------------
+# OHARRA: Hologramak config.yml fitxategian konfiguratzen dira.
+# Euskeraz ikusteko, kopiatu hurrengo testua config.yml-ko hologram sekzioan:
+#
+# text:
+# - '[&#f8f8ff%stack_size%] &#7b68ee%ᴇɴᴛɪᴛʏ%ʀᴇɴ ɢᴇɴᴇʀᴀɡᴀɪʟᴜᴀ'
+# - '&#ab7afd• &#e6e6faᴇsᴘᴇʀɪᴇɴᴛzɪᴀ: &#37eb9a%current_exp%&#f8f8ff/&#37eb9a%max_exp%'
+# - '&#ab7afd• &#e6e6faᴏʙᴊᴇᴋᴛᴜᴀᴋ: &#37eb9a%used_slots%&#f8f8ff/&#37eb9a%max_slots%'
