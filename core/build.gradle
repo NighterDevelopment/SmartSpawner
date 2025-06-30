@@ -13,7 +13,7 @@ dependencies {
     compileOnly 'su.nightexpress.coinsengine:CoinsEngine:2.4.2'
     compileOnly 'com.github.Gypopo:EconomyShopGUI-API:1.8.0'
     compileOnly 'world.bentobox:bentobox:3.3.5-SNAPSHOT'
-    compileOnly 'su.nightexpress.excellentshop:Core:4.17.1'
+    compileOnly 'su.nightexpress.excellentshop:Core:4.17.4'
     compileOnly("io.github.fabiozumbi12.RedProtect:RedProtect-Core:8.1.2") { exclude(group: "*") }
     compileOnly("io.github.fabiozumbi12.RedProtect:RedProtect-Spigot:8.1.2") { exclude(group: "*") }
     implementation 'com.github.maiminhdung:zShop-API:9cb1b3e140'
