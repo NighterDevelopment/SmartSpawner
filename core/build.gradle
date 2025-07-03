@@ -20,7 +20,7 @@ dependencies {
     implementation 'com.github.GriefPrevention:GriefPrevention:17.0.0'
     implementation 'com.github.IncrediblePlugins:LandsAPI:7.10.13'
     implementation 'com.github.Xyness:SimpleClaimSystem:1.12.3.2'
-    compileOnly 'dev.aurelium:auraskills-api-bukkit:2.3.3'
+    compileOnly 'dev.aurelium:auraskills-api-bukkit:2.3.4'
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.38")
     annotationProcessor("org.projectlombok:lombok:1.18.38")
