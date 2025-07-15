@@ -175,21 +175,32 @@ public class SpawnerLootGenerator {
                         maxSlots.set(spawner.getMaxSpawnerLootSlots());
                         usedSlots.set(spawner.getVirtualInventory().getUsedSlots());
 
-                        // Process items if there are any to add and inventory isn't completely full
-                        if (!loot.getItems().isEmpty() && usedSlots.get() < maxSlots.get()) {
-                            List<ItemStack> itemsToAdd = new ArrayList<>(loot.getItems());
-
-                            // Get exact calculation of slots with the new items
-                            int totalRequiredSlots = calculateRequiredSlots(itemsToAdd, spawner.getVirtualInventory());
-
-                            // If we'll exceed the limit, limit the items we're adding
-                            if (totalRequiredSlots > maxSlots.get()) {
-                                itemsToAdd = limitItemsToAvailableSlots(itemsToAdd, spawner);
-                            }
-
-                            if (!itemsToAdd.isEmpty()) {
-                                spawner.getVirtualInventory().addItems(itemsToAdd);
+                        // Check if items should be dropped to ground instead of stored
+                        boolean autoDropToGround = spawner.getAutoDropItemsToGround();
+                        boolean disableStorage = spawner.getDisableStorage();
+                        
+                        // Process items based on configuration
+                        if (!loot.getItems().isEmpty()) {
+                            if (autoDropToGround || disableStorage) {
+                                // Drop items directly to ground
+                                dropItemsToGround(loot.getItems(), spawner.getSpawnerLocation());
                                 changed = true;
+                            } else if (usedSlots.get() < maxSlots.get()) {
+                                // Original behavior: store in inventory
+                                List<ItemStack> itemsToAdd = new ArrayList<>(loot.getItems());
+
+                                // Get exact calculation of slots with the new items
+                                int totalRequiredSlots = calculateRequiredSlots(itemsToAdd, spawner.getVirtualInventory());
+
+                                // If we'll exceed the limit, limit the items we're adding
+                                if (totalRequiredSlots > maxSlots.get()) {
+                                    itemsToAdd = limitItemsToAvailableSlots(itemsToAdd, spawner);
+                                }
+
+                                if (!itemsToAdd.isEmpty()) {
+                                    spawner.getVirtualInventory().addItems(itemsToAdd);
+                                    changed = true;
+                                }
                             }
                         }
 
@@ -326,6 +337,31 @@ public class SpawnerLootGenerator {
 
         if (plugin.getConfig().getBoolean("hologram.enabled", false)) {
             spawner.updateHologramData();
+        }
+    }
+
+    /**
+     * Drop items directly to the ground at the spawner location
+     * @param items The items to drop
+     * @param location The location where items should be dropped
+     */
+    private void dropItemsToGround(List<ItemStack> items, Location location) {
+        World world = location.getWorld();
+        if (world == null) {
+            return;
+        }
+        
+        // Drop each item at the spawner location with slight random offset
+        for (ItemStack item : items) {
+            if (item != null && item.getAmount() > 0) {
+                // Add small random offset to prevent items from stacking in exact same spot
+                Location dropLocation = location.clone().add(
+                    (random.nextDouble() - 0.5) * 0.5, // X offset: -0.25 to +0.25
+                    0.5, // Y offset: slightly above spawner
+                    (random.nextDouble() - 0.5) * 0.5  // Z offset: -0.25 to +0.25
+                );
+                world.dropItemNaturally(dropLocation, item);
+            }
         }
     }
 }

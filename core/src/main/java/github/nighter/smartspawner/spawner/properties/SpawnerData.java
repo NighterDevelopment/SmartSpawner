@@ -348,4 +348,20 @@ public class SpawnerData {
     public void markLastSellAsProcessed() {
         this.lastSellProcessed = true;
     }
+
+    /**
+     * Check if items should be automatically dropped to the ground instead of stored
+     * @return true if auto drop to ground is enabled
+     */
+    public boolean getAutoDropItemsToGround() {
+        return plugin.getConfig().getBoolean("spawner_properties.default.auto_drop_items_to_ground", false);
+    }
+
+    /**
+     * Check if the storage system is completely disabled
+     * @return true if storage is disabled
+     */
+    public boolean getDisableStorage() {
+        return plugin.getConfig().getBoolean("spawner_properties.default.disable_storage", false);
+    }
 }

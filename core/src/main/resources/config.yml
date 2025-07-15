@@ -41,6 +41,10 @@ spawner_properties:
     # Behavior Settings - Controls special spawner functionality
     allow_exp_mending: true   # Allow spawners to repair items with stored XP
     protect_from_explosions: true   # Protect spawner blocks from explosion
+    
+    # Item Drop Behavior - Controls how spawner loot is handled
+    auto_drop_items_to_ground: false  # Drop items directly to ground instead of storing in GUI
+    disable_storage: false            # Completely disable the storage system
 
 #---------------------------------------------------
 #           Spawner Breaking Mechanics
@@ -197,6 +201,15 @@ particle:
   spawner_stack: true           # Show effects when spawners are stacked
   spawner_activate: true        # Show effects when spawner activates
   spawner_generate_loot: true   # Show effects when items are generated
+
+#---------------------------------------------------
+#              GUI Display Configuration
+#---------------------------------------------------
+# Controls what elements are shown in the spawner GUI
+gui_display:
+  show_storage: true      # Show storage inventory slot in main GUI
+  show_xp: true          # Show experience information in GUI
+  show_spawner_name: true # Show spawner name and details in GUI
 
 #---------------------------------------------------
 #                 Data Management

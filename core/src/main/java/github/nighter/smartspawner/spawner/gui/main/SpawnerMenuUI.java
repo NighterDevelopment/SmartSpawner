@@ -51,9 +51,24 @@ public class SpawnerMenuUI {
 
         // Populate menu items - create all items before opening to avoid multiple inventory updates
         ItemStack[] items = new ItemStack[INVENTORY_SIZE];
-        items[CHEST_SLOT] = createLootStorageItem(spawner);
-        items[SPAWNER_INFO_SLOT] = createSpawnerInfoItem(player, spawner);
-        items[EXP_SLOT] = createExpItem(spawner);
+        
+        // Check GUI display configuration
+        boolean showStorage = plugin.getConfig().getBoolean("gui_display.show_storage", true);
+        boolean showXp = plugin.getConfig().getBoolean("gui_display.show_xp", true);
+        boolean showSpawnerName = plugin.getConfig().getBoolean("gui_display.show_spawner_name", true);
+        
+        // Only show storage if enabled in config and storage is not disabled
+        if (showStorage && !spawner.getDisableStorage()) {
+            items[CHEST_SLOT] = createLootStorageItem(spawner);
+        }
+        
+        if (showSpawnerName) {
+            items[SPAWNER_INFO_SLOT] = createSpawnerInfoItem(player, spawner);
+        }
+        
+        if (showXp) {
+            items[EXP_SLOT] = createExpItem(spawner);
+        }
 
         // Set all items at once instead of one by one
         for (int i = 0; i < items.length; i++) {

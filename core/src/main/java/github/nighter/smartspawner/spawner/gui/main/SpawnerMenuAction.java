@@ -96,7 +96,10 @@ public class SpawnerMenuAction implements Listener {
         Material itemType = clickedItem.getType();
 
         if (itemType == Material.CHEST) {
-            handleChestClick(player, spawner);
+            // Check if storage is disabled before handling chest click
+            if (!spawner.getDisableStorage()) {
+                handleChestClick(player, spawner);
+            }
         } else if (SPAWNER_INFO_MATERIALS.contains(itemType)) {
             handleSpawnerInfoClick(player, spawner, event.getClick());
         } else if (itemType == Material.EXPERIENCE_BOTTLE) {
