@@ -4,6 +4,8 @@ import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.hooks.economy.shops.providers.ShopProvider;
 import lombok.RequiredArgsConstructor;
 import net.brcdev.shopgui.ShopGuiPlusApi;
+import net.brcdev.shopgui.event.ShopGUIPlusPostEnableEvent;
+import net.brcdev.shopgui.event.ShopsPostLoadEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -46,5 +48,11 @@ public class ShopGuiPlusProvider implements ShopProvider {
             plugin.debug("Error getting sell price for " + material + " from ShopGUIPlus: " + e.getMessage());
             return 0.0;
         }
+    }
+
+    @Override
+    public void unregister() {
+        ShopGUIPlusPostEnableEvent.getHandlerList().unregister(plugin);
+        ShopsPostLoadEvent.getHandlerList().unregister(plugin);
     }
 }

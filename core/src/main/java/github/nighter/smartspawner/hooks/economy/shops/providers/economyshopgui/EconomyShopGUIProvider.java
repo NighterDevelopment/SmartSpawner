@@ -4,6 +4,7 @@ import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.hooks.economy.shops.providers.ShopProvider;
 import lombok.RequiredArgsConstructor;
 import me.gypopo.economyshopgui.api.EconomyShopGUIHook;
+import me.gypopo.economyshopgui.api.events.ShopItemsLoadEvent;
 import me.gypopo.economyshopgui.objects.ShopItem;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -66,5 +67,10 @@ public class EconomyShopGUIProvider implements ShopProvider {
             plugin.debug("Error getting sell price for " + material + " from EconomyShopGUI: " + e.getMessage());
             return 0.0;
         }
+    }
+
+    @Override
+    public void unregister() {
+        ShopItemsLoadEvent.getHandlerList().unregister(plugin);
     }
 }

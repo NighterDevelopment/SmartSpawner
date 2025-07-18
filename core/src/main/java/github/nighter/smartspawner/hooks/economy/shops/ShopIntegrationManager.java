@@ -3,7 +3,6 @@ package github.nighter.smartspawner.hooks.economy.shops;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.hooks.economy.shops.providers.ShopProvider;
 import github.nighter.smartspawner.hooks.economy.shops.providers.economyshopgui.EconomyShopGUIProvider;
-import github.nighter.smartspawner.hooks.economy.shops.providers.economyshopgui.PluginCompatibilityHandler;
 import github.nighter.smartspawner.hooks.economy.shops.providers.excellentshop.ExcellentShopProvider;
 import github.nighter.smartspawner.hooks.economy.shops.providers.shopguiplus.ShopGuiPlusProvider;
 import github.nighter.smartspawner.hooks.economy.shops.providers.shopguiplus.SpawnerHook;
@@ -173,10 +172,7 @@ public class ShopIntegrationManager {
 
     public void cleanup() {
         availableProviders.clear();
+        activeProvider.unregister();
         activeProvider = null;
-        if (spawnerHook != null) {
-            spawnerHook.unregister();
-            spawnerHook = null;
-        }
     }
 }

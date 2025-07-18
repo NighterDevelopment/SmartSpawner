@@ -9,4 +9,6 @@ public interface ShopProvider {
     boolean isAvailable();
 
     double getSellPrice(Material material);
+
+    default void unregister() {}
 }
