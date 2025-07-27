@@ -4,6 +4,9 @@ Welcome to the comprehensive documentation for SmartSpawner, the advanced GUI-ba
 
 ## 📚 Documentation Sections
 
+### 🧭 Quick Navigation
+- [🧭 **Navigation Guide**](Navigation.md) - Wiki navigation and search help
+
 ### Getting Started
 - [🏠 **Home**](Home.md) - Plugin overview and features
 - [⚙️ **Installation Guide**](Installation.md) - Setup instructions and requirements

@@ -1,0 +1,10 @@
+theme: jekyll-theme-cayman
+title: SmartSpawner Wiki
+description: Comprehensive documentation for the SmartSpawner Minecraft plugin
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - README.md
