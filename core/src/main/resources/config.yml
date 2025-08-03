@@ -89,6 +89,8 @@ natural_spawner:
   # If false, natural spawners will drop vanilla spawner items
   convert_to_smart_spawner: false
 
+  drop_spawner: true
+
   # Whether natural spawners will spawn mobs
   spawn_mobs: true
 
