@@ -150,7 +150,7 @@ public class SpawnerBreakListener implements Listener {
             if (directToInventory) {
                 giveSpawnersToPlayer(player, 1, spawnerItem);
                 player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
-            } else {
+            } else if (plugin.getConfig().getBoolean("natural_spawner.drop_spawner", true)) {
                 world.dropItemNaturally(location.toCenterLocation(), spawnerItem);
             }
 
