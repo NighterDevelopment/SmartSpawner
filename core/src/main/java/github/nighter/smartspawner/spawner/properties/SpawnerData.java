@@ -211,7 +211,7 @@ public class SpawnerData {
         this.stackSize = newStackSize;
         loadConfigurationValues();
         this.spawnerExp = Math.min(this.spawnerExp, this.maxStoredExp);
-        this.lastSpawnTime = System.currentTimeMillis() + this.spawnDelay;
+        this.lastSpawnTime = System.currentTimeMillis();
         this.virtualInventory = newInventory;
 
         updateHologramData();
