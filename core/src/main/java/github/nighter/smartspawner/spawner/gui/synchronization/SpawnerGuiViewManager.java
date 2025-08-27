@@ -1086,7 +1086,7 @@ public class SpawnerGuiViewManager implements Listener {
         return line;
     }
 
-    private long calculateTimeUntilNextSpawn(SpawnerData spawner) {
+    public long calculateTimeUntilNextSpawn(SpawnerData spawner) {
         // Cache spawn delay calculation outside of lock
         long cachedDelay = spawner.getCachedSpawnDelay();
         if (cachedDelay == 0) {
@@ -1157,7 +1157,7 @@ public class SpawnerGuiViewManager implements Listener {
         return timeUntilNextSpawn;
     }
 
-    private String formatTime(long milliseconds) {
+    public String formatTime(long milliseconds) {
         if (milliseconds <= 0) {
             return "00:00";
         }
@@ -1165,6 +1165,27 @@ public class SpawnerGuiViewManager implements Listener {
         long minutes = seconds / 60;
         seconds = seconds % 60;
         return String.format("%02d:%02d", minutes, seconds);
+    }
+
+    /**
+     * Calculate and format the timer display for a spawner, including special states.
+     * This method handles the same logic as the timer updates but for initial item creation.
+     * 
+     * @param spawner The spawner data to calculate the timer for
+     * @return The formatted timer display string (e.g., "01:30", "Inactive", "Full")
+     */
+    public String calculateTimerDisplay(SpawnerData spawner) {
+        // Calculate time until next spawn
+        long timeUntilNextSpawn = calculateTimeUntilNextSpawn(spawner);
+        
+        // Check if spawner is at capacity and override display message
+        if (spawner.getIsAtCapacity()) {
+            return cachedFullText;
+        } else if (timeUntilNextSpawn == -1) {
+            return cachedInactiveText;
+        } else {
+            return formatTime(timeUntilNextSpawn);
+        }
     }
 
     private void updateChestItem(Inventory inventory, SpawnerData spawner) {

@@ -300,6 +300,11 @@ public class SpawnerMenuUI {
         placeholders.put("raw_max_exp", String.valueOf(maxExp));
         placeholders.put("formatted_exp", formattedPercentExp);
 
+        // Timer information - always calculate this to ensure %time% placeholder is available
+        // This ensures GUI layouts work consistently regardless of timer update settings
+        String timerDisplay = plugin.getSpawnerGuiViewManager().calculateTimerDisplay(spawner);
+        placeholders.put("time", timerDisplay);
+
         // Set display name with the specified placeholders
         spawnerMeta.setDisplayName(languageManager.getGuiItemName("spawner_info_item.name", placeholders));
 
