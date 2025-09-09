@@ -186,6 +186,10 @@ sale_failed:
   message: "&#ff5252ꜰᴀɪʟᴇᴅ ᴛᴏ ꜱᴇʟʟ ɪᴛᴇᴍꜱ! ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ."
   sound: entity.item.break
 
+sell_failed_items_changed:
+  message: "&#ff5252ꜱᴀʟᴇ ꜰᴀɪʟᴇᴅ - ɪᴛᴇᴍꜱ ᴡᴇʀᴇ ᴍᴏᴅɪꜰɪᴇᴅ ᴅᴜʀɪɴɢ ꜱᴀʟᴇ! ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ."
+  sound: entity.item.break
+
 no_items:
   message: "&#ff5252ɴᴏ ɪᴛᴇᴍꜱ ᴛᴏ ꜱᴇʟʟ"
   sound: block.note_block.pling

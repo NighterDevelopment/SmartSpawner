@@ -89,6 +89,12 @@ public class SpawnerSellManager {
                 return;
             }
 
+            // Validate that we can still remove the calculated items before depositing money
+            if (!virtualInv.canRemoveItems(sellResult.getItemsToRemove())) {
+                messageService.sendMessage(player, "sell_failed_items_changed");
+                return;
+            }
+
             // Perform the actual sale
             double amount = sellResult.getTotalValue();
             if(SpawnerSellEvent.getHandlerList().getRegisteredListeners().length != 0) {
@@ -105,8 +111,15 @@ public class SpawnerSellManager {
                 return;
             }
 
-            // Remove sold items from virtual inventory
-            virtualInv.removeItems(sellResult.getItemsToRemove());
+            // Remove sold items from virtual inventory - this should succeed since we validated above
+            boolean removalSuccess = virtualInv.removeItems(sellResult.getItemsToRemove());
+            if (!removalSuccess) {
+                // This should not happen since we validated above, but handle it defensively
+                // Attempt to refund the money
+                plugin.getItemPriceManager().withdraw(amount, player);
+                messageService.sendMessage(player, "sell_failed_items_changed");
+                return;
+            }
 
             // Update spawner state
             spawner.updateHologramData();

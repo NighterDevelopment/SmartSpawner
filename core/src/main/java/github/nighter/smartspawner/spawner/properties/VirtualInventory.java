@@ -198,6 +198,32 @@ public class VirtualInventory {
         return true;
     }
 
+    // Check if items can be removed without actually removing them
+    public boolean canRemoveItems(List<ItemStack> items) {
+        if (items.isEmpty()) return true;
+
+        Map<ItemSignature, Long> toRemove = new HashMap<>();
+
+        // Calculate total amounts to remove in a single pass
+        for (ItemStack item : items) {
+            if (item == null || item.getAmount() <= 0) continue;
+            ItemSignature sig = new ItemSignature(item);
+            toRemove.merge(sig, (long) item.getAmount(), Long::sum);
+        }
+
+        if (toRemove.isEmpty()) return true;
+
+        // Verify we have enough of each item
+        for (Map.Entry<ItemSignature, Long> entry : toRemove.entrySet()) {
+            Long currentAmount = consolidatedItems.getOrDefault(entry.getKey(), 0L);
+            if (currentAmount < entry.getValue()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // Optimized getDisplayInventory method
     public Map<Integer, ItemStack> getDisplayInventory() {
         // Return cached result if available
