@@ -1,6 +1,8 @@
 package github.nighter.smartspawner.api.events;
 
+import lombok.Getter;
 import org.bukkit.Location;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
@@ -11,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public class SpawnerPlaceEvent extends SpawnerEvent implements Cancellable {
     private final Player player;
+    @Getter
+    private final EntityType entityType;
     private boolean cancelled = false;
 
     private static final HandlerList handlers = new HandlerList();
@@ -22,9 +26,10 @@ public class SpawnerPlaceEvent extends SpawnerEvent implements Cancellable {
      * @param location       The location of the spawner placed.
      * @param quantity       The quantity of the spawner placed.
      */
-    public SpawnerPlaceEvent(Player player, Location location, int quantity) {
+    public SpawnerPlaceEvent(Player player, Location location, EntityType entityType, int quantity) {
         super(location, quantity);
         this.player = player;
+        this.entityType = entityType;
     }
 
     /**

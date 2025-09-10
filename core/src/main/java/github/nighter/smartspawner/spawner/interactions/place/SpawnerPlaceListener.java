@@ -115,7 +115,7 @@ public class SpawnerPlaceListener implements Listener {
         }
 
         if(SpawnerPlaceEvent.getHandlerList().getRegisteredListeners().length != 0) {
-            SpawnerPlaceEvent e = new SpawnerPlaceEvent(player, block.getLocation(), stackSize);
+            SpawnerPlaceEvent e = new SpawnerPlaceEvent(player, block.getLocation(), storedEntityType, stackSize);
             Bukkit.getPluginManager().callEvent(e);
             if (e.isCancelled()) {
                 event.setCancelled(true);
