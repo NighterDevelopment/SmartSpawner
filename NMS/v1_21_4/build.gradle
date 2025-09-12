@@ -7,5 +7,5 @@ group 'NMS:v1_21_4'
 dependencies {
     implementation project(':core')
     implementation project(':api')
-    compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT'
 }

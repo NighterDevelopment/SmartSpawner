@@ -1,7 +1,7 @@
 dependencies {
     api project(':api')
 
-    compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT'
     // Hook plugins
     compileOnly 'org.geysermc.floodgate:api:2.2.4-SNAPSHOT'
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.13-SNAPSHOT'
