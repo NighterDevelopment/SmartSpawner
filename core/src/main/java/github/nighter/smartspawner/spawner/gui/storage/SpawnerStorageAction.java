@@ -687,7 +687,12 @@ public class SpawnerStorageAction implements Listener {
 
         GuiButton button = layout.getButton(buttonType);
         if (button != null && button.hasSound()) {
-            player.playSound(player.getLocation(), button.getSound(), 1.0f, 1.0f);
+            try {
+                player.playSound(player.getLocation(), button.getSound(), 1.0f, 1.0f);
+            } catch (Exception e) {
+                // Log and continue gracefully if sound playback fails
+                plugin.getLogger().warning("Failed to play sound for button '" + buttonType + "': " + e.getMessage());
+            }
         }
     }
 

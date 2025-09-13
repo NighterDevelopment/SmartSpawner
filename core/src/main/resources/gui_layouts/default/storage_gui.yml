@@ -1,3 +1,6 @@
+# GUI Layout version - Do not modify this value
+gui_version: "1.0.0"
+
 # Default Storage GUI Layout Configuration
 # Slot positions: 1-9 corresponds to inventory slots 46-54 (bottom row)
 # Valid materials can be found at: https://jd.papermc.io/paper/1.21.8/org/bukkit/Material.html
