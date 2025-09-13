@@ -61,27 +61,21 @@ exp_collected_with_mending:
 # ------------------------------------------------------
 inventory_full:
   message: "&#ff5252ɪɴᴠᴇɴᴛᴏʀʏ ꜰᴜʟʟ!"
-  sound: block.note_block.pling
 
 no_items_to_discard:
   message: "&#ff5252ɴᴏ ɪᴛᴇᴍꜱ ᴛᴏ ᴅɪꜱᴄᴀʀᴅ"
-  sound: block.note_block.pling
 
 discard_all_success:
   action_bar: "&#ff5252ᴅɪꜱᴄᴀʀᴅᴇᴅ &#f8f8ff%amount% &#ff5252ɪᴛᴇᴍꜱ"
-  sound: entity.generic.burn
 
 no_items_to_take:
   message: "&#ff5252ɴᴏ ɪᴛᴇᴍꜱ ᴛᴏ ᴛᴀᴋᴇ"
-  sound: block.note_block.pling
 
 take_all_items:
   action_bar: "&#37eb9aᴛᴏᴏᴋ &#f8f8ff%amount% &#37eb9aɪᴛᴇᴍꜱ ꜰʀᴏᴍ ꜱᴘᴀᴡɴᴇʀ"
-  sound: entity.item.pickup
 
 no_items_to_drop:
   message: "&#ff5252ɴᴏ ɪᴛᴇᴍꜱ ᴛᴏ ᴅʀᴏᴘ"
-  sound: block.note_block.pling
 
 # ------------------------------------------------------
 #         Spawner - Stacker GUI Interaction

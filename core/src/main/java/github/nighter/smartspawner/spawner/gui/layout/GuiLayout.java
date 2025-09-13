@@ -10,7 +10,14 @@ public class GuiLayout {
     private final Map<Integer, String> slotToButtonType = new HashMap<>();
 
     public void addButton(String buttonType, GuiButton button) {
-        // Remove old button if it exists
+        // Check if slot is already occupied by another button
+        String existingButtonType = slotToButtonType.get(button.getSlot());
+        if (existingButtonType != null && !existingButtonType.equals(buttonType)) {
+            // Remove the existing button to replace it with the new one
+            buttons.remove(existingButtonType);
+        }
+
+        // Remove old button if this buttonType already exists in a different slot
         GuiButton oldButton = buttons.get(buttonType);
         if (oldButton != null) {
             slotToButtonType.remove(oldButton.getSlot());

@@ -1,6 +1,7 @@
 # DonutSMP Storage GUI Layout Configuration
 # Slot positions: 1-9 corresponds to inventory slots 46-54 (bottom row)
-# Valid materials can be found at: https://jd.papermc.io/paper/1.21.6/org/bukkit/Material.html
+# Valid materials can be found at: https://jd.papermc.io/paper/1.21.8/org/bukkit/Material.html
+# Valid sounds can be found at: https://jd.papermc.io/paper/1.21.8/org/bukkit/Sound.html
 
 buttons:
   # Return to main menu button
@@ -8,33 +9,43 @@ buttons:
     slot: 1
     material: BARRIER
     enabled: true
+    sound: UI_BUTTON_CLICK
+    conditions:
+      shopIntegration: false
 
   # Previous page navigation button
   previous_page:
     slot: 4
     material: ARROW
     enabled: true
+    sound: UI_BUTTON_CLICK
 
   # Take all items button
   take_all:
     slot: 5
     material: SPECTRAL_ARROW
     enabled: true
+    sound: ENTITY_ITEM_PICKUP
 
   # Next page navigation button
   next_page:
     slot: 6
     material: ARROW
     enabled: true
+    sound: UI_BUTTON_CLICK
 
   drop_page:
     slot: 8
     material: DROPPER
     enabled: true
+    sound: UI_BUTTON_CLICK
 
-  # Shop/sell indicator button (requires sell integration)
-  shop_indicator:
+  # Sell button (requires shop integration)
+  sell:
     slot: 9
     material: GOLD_INGOT
     enabled: true
+    sound: ENTITY_EXPERIENCE_ORB_PICKUP
+    conditions:
+      shopIntegration: true
 

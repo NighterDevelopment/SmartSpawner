@@ -1,6 +1,7 @@
 # Default Storage GUI Layout Configuration
 # Slot positions: 1-9 corresponds to inventory slots 46-54 (bottom row)
 # Valid materials can be found at: https://jd.papermc.io/paper/1.21.8/org/bukkit/Material.html
+# Valid sounds can be found at: https://jd.papermc.io/paper/1.21.8/org/bukkit/Sound.html
 
 buttons:
 
@@ -9,44 +10,56 @@ buttons:
     slot: 1
     material: SPECTRAL_ARROW
     enabled: true
+    sound: UI_BUTTON_CLICK
 
   # Discard all items button
   discard_all:
     slot: 3
     material: CAULDRON
     enabled: true
+    sound: ENTITY_GENERIC_BURN
 
   # Item filter configuration button
   item_filter:
     slot: 4
     material: HOPPER
     enabled: true
+    sound: UI_BUTTON_CLICK
 
   # Return to main menu button
   return:
     slot: 5
     material: RED_STAINED_GLASS_PANE
     enabled: true
+    sound: UI_BUTTON_CLICK
+    conditions:
+      shopIntegration: false
+
+  # Sell button (requires shop integration)
+  sell:
+    slot: 5
+    material: GOLD_INGOT
+    enabled: true
+    sound: ENTITY_EXPERIENCE_ORB_PICKUP
+    conditions:
+      shopIntegration: true
 
   # Take all items button
   take_all:
     slot: 6
     material: CHEST
     enabled: true
+    sound: ENTITY_ITEM_PICKUP
 
   drop_page:
     slot: 7
     material: DROPPER
     enabled: true
-
-  # Shop/sell indicator button (requires sell integration)
-  shop_indicator:
-    slot: 8
-    material: GOLD_INGOT
-    enabled: true
+    sound: UI_BUTTON_CLICK
 
   # Next page navigation button
   next_page:
     slot: 9
     material: SPECTRAL_ARROW
     enabled: true
+    sound: UI_BUTTON_CLICK

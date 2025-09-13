@@ -155,7 +155,8 @@ public class SpawnerStorageAction implements Listener {
                 break;
             case "previous_page":
                 if (holder.getCurrentPage() > 1) {
-                    updatePageContent(player, spawner, holder.getCurrentPage() - 1, inventory, true);
+                    playButtonSound(player, buttonType);
+                    updatePageContent(player, spawner, holder.getCurrentPage() - 1, inventory, false);
                 }
                 break;
             case "take_all":
@@ -163,13 +164,15 @@ public class SpawnerStorageAction implements Listener {
                 break;
             case "next_page":
                 if (holder.getCurrentPage() < holder.getTotalPages()) {
-                    updatePageContent(player, spawner, holder.getCurrentPage() + 1, inventory, true);
+                    playButtonSound(player, buttonType);
+                    updatePageContent(player, spawner, holder.getCurrentPage() + 1, inventory, false);
                 }
                 break;
             case "drop_page":
                 handleDropPageItems(player, spawner, inventory);
                 break;
             case "shop_indicator":
+            case "sell":
                 if (plugin.hasSellIntegration()) {
                     if (!player.hasPermission("smartspawner.sellall")) {
                         messageService.sendMessage(player, "no_permission");
@@ -178,7 +181,7 @@ public class SpawnerStorageAction implements Listener {
                     if (isClickTooFrequent(player)) {
                         return;
                     }
-                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                    playButtonSound(player, buttonType);
                     spawnerSellManager.sellAllItems(player, spawner);
                 }
                 break;
@@ -313,7 +316,7 @@ public class SpawnerStorageAction implements Listener {
         }
 
         updatePageContent(player, spawner, holder.getCurrentPage(), inventory, false);
-        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 0.8f);
+        playButtonSound(player, "drop_page");
     }
 
     private void dropItemsInDirection(Player player, List<ItemStack> items) {
@@ -357,6 +360,7 @@ public class SpawnerStorageAction implements Listener {
         if (isClickTooFrequent(player)) {
             return;
         }
+        playButtonSound(player, "item_filter");
         filterConfigUI.openFilterConfigGUI(player, spawner);
     }
 
@@ -417,9 +421,8 @@ public class SpawnerStorageAction implements Listener {
 
         updateInventoryTitle(player, inventory, spawner, newPage, totalPages);
 
-        if (uiClickSound) {
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-        }
+        // Note: Sound is now handled by playButtonSound in the calling method
+        // This method no longer plays sounds directly
     }
 
     private int calculateTotalPages(SpawnerData spawner) {
@@ -452,7 +455,7 @@ public class SpawnerStorageAction implements Listener {
     }
 
     private void openMainMenu(Player player, SpawnerData spawner) {
-        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+        playButtonSound(player, "return");
         if (spawner.isInteracted()){
             spawnerManager.markSpawnerModified(spawner.getSpawnerId());
             spawner.clearInteracted();
@@ -512,6 +515,7 @@ public class SpawnerStorageAction implements Listener {
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("amount", languageManager.formatNumber(totalItems));
         messageService.sendMessage(player, "discard_all_success", placeholders);
+        playButtonSound(player, "discard_all");
         if (!spawner.isInteracted()) {
             spawner.markInteracted();
         }
@@ -668,6 +672,22 @@ public class SpawnerStorageAction implements Listener {
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("amount", String.valueOf(result.totalMoved));
             messageService.sendMessage(player, "take_all_items", placeholders);
+            playButtonSound(player, "take_all");
+        }
+    }
+
+    /**
+     * Plays the configured sound for a specific button type
+     */
+    private void playButtonSound(Player player, String buttonType) {
+        GuiLayout layout = guiLayoutConfig.getCurrentLayout();
+        if (layout == null) {
+            return;
+        }
+
+        GuiButton button = layout.getButton(buttonType);
+        if (button != null && button.hasSound()) {
+            player.playSound(player.getLocation(), button.getSound(), 1.0f, 1.0f);
         }
     }
 

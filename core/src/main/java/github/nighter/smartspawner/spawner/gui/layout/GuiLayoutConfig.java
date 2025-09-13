@@ -1,11 +1,16 @@
 package github.nighter.smartspawner.spawner.gui.layout;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.updates.GuiLayoutUpdater;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class GuiLayoutConfig {
@@ -18,12 +23,14 @@ public class GuiLayoutConfig {
 
     private final SmartSpawner plugin;
     private final File layoutsDir;
+    private final GuiLayoutUpdater guiLayoutUpdater;
     private String currentLayout;
     private GuiLayout currentGuiLayout;
 
     public GuiLayoutConfig(SmartSpawner plugin) {
         this.plugin = plugin;
         this.layoutsDir = new File(plugin.getDataFolder(), GUI_LAYOUTS_DIR);
+        this.guiLayoutUpdater = new GuiLayoutUpdater(plugin);
         loadLayout();
     }
 
@@ -38,6 +45,9 @@ public class GuiLayoutConfig {
             layoutsDir.mkdirs();
         }
         autoSaveLayoutFiles();
+        
+        // Update GUI layouts using the new updater system
+        guiLayoutUpdater.checkAndUpdateGuiLayouts();
     }
 
     private void autoSaveLayoutFiles() {
@@ -128,8 +138,16 @@ public class GuiLayoutConfig {
             return false;
         }
 
+        // Check conditions first
+        Map<String, Object> conditions = loadConditions(config, path);
+        if (!evaluateConditions(conditions)) {
+            plugin.debug("Button '" + buttonKey + "' skipped due to failed conditions: " + conditions);
+            return false;
+        }
+
         int slot = config.getInt(path + ".slot", -1);
         String materialName = config.getString(path + ".material", "STONE");
+        String soundName = config.getString(path + ".sound", null);
 
         if (!isValidSlot(slot)) {
             plugin.getLogger().warning(String.format(
@@ -139,11 +157,54 @@ public class GuiLayoutConfig {
         }
 
         Material material = parseMaterial(materialName, buttonKey);
+        Sound sound = parseSound(soundName, buttonKey);
         int actualSlot = SLOT_OFFSET + slot;
 
-        GuiButton button = new GuiButton(buttonKey, actualSlot, material, true);
+        GuiButton button = new GuiButton(buttonKey, actualSlot, material, true, sound, conditions);
         layout.addButton(buttonKey, button);
         return true;
+    }
+
+    private Map<String, Object> loadConditions(FileConfiguration config, String path) {
+        Map<String, Object> conditions = new HashMap<>();
+        ConfigurationSection conditionsSection = config.getConfigurationSection(path + ".conditions");
+        if (conditionsSection != null) {
+            for (String key : conditionsSection.getKeys(false)) {
+                conditions.put(key, conditionsSection.get(key));
+            }
+        }
+        return conditions;
+    }
+
+    private boolean evaluateConditions(Map<String, Object> conditions) {
+        if (conditions.isEmpty()) {
+            return true; // No conditions means always show
+        }
+
+        for (Map.Entry<String, Object> condition : conditions.entrySet()) {
+            String conditionKey = condition.getKey();
+            Object expectedValue = condition.getValue();
+
+            if (!evaluateCondition(conditionKey, expectedValue)) {
+                return false; // If any condition fails, don't show button
+            }
+        }
+
+        return true; // All conditions passed
+    }
+
+    private boolean evaluateCondition(String conditionKey, Object expectedValue) {
+        switch (conditionKey.toLowerCase()) {
+            case "shopintegration":
+                // Check if shop integration is enabled in the plugin
+                boolean shopEnabled = plugin.getConfig().getBoolean("custom_economy.shop_integration.enabled", false);
+                return shopEnabled == (Boolean) expectedValue;
+            
+            // Add more condition types here as needed
+            default:
+                plugin.getLogger().warning("Unknown condition type: " + conditionKey);
+                return true; // Unknown conditions default to true to avoid breaking configs
+        }
     }
 
     private boolean isValidSlot(int slot) {
@@ -158,6 +219,21 @@ public class GuiLayoutConfig {
                     "Invalid material %s for button %s. Using STONE instead.",
                     materialName, buttonKey));
             return Material.STONE;
+        }
+    }
+
+    private Sound parseSound(String soundName, String buttonKey) {
+        if (soundName == null || soundName.trim().isEmpty()) {
+            return null; // No sound specified
+        }
+
+        try {
+            return Sound.valueOf(soundName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning(String.format(
+                    "Invalid sound %s for button %s. No sound will be played.",
+                    soundName, buttonKey));
+            return null;
         }
     }
 
