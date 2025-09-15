@@ -96,6 +96,12 @@ public class SpawnerStackHandler {
             return false;
         }
 
+        // Validate spawner integrity before allowing stacking operations
+        if (plugin.getSpawnerManager().isGhostSpawner(targetSpawner)) {
+            messageService.sendMessage(player, "spawner_invalid");
+            return false;
+        }
+
         Location location = targetSpawner.getSpawnerLocation();
         if (!hasStackPermissions(player, location)) {
             return false;

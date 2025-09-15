@@ -93,6 +93,12 @@ public class AdminStackerHandler implements Listener {
             return;
         }
 
+        // Validate spawner integrity before allowing admin operations
+        if (spawnerManager.isGhostSpawner(spawner)) {
+            messageService.sendMessage(player, "spawner_invalid");
+            return;
+        }
+
         int newStackSize = spawner.getStackSize() + change;
         
         // Ensure stack size is within valid bounds
