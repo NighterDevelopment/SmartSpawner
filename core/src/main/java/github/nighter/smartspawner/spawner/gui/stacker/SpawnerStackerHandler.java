@@ -271,12 +271,7 @@ public class SpawnerStackerHandler implements Listener {
             return;
         }
 
-        // Additional validation to prevent duplication exploits via saved GUI state manipulation
-        if (plugin.getSpawnerManager().isInconsistentSpawner(spawner)) {
-            messageService.sendMessage(player, "spawner_invalid");
-            plugin.debug("Blocked spawner stack decrease due to inconsistent spawner data: " + spawner.getSpawnerId());
-            return;
-        }
+
 
         int currentSize = spawner.getStackSize();
 
@@ -310,9 +305,6 @@ public class SpawnerStackerHandler implements Listener {
         spawner.setStackSize(targetSize);
         giveSpawnersToPlayer(player, actualChange, spawner.getEntityType());
 
-        // Clear interaction flag after successful operation to avoid false positives in validation
-        spawner.clearInteracted();
-
         // Play sound
         player.playSound(player.getLocation(), STACK_SOUND, SOUND_VOLUME, SOUND_PITCH);
     }
@@ -324,12 +316,7 @@ public class SpawnerStackerHandler implements Listener {
             return;
         }
 
-        // Additional validation to prevent duplication exploits via saved GUI state manipulation
-        if (plugin.getSpawnerManager().isInconsistentSpawner(spawner)) {
-            messageService.sendMessage(player, "spawner_invalid");
-            plugin.debug("Blocked spawner stack increase due to inconsistent spawner data: " + spawner.getSpawnerId());
-            return;
-        }
+
 
         int currentSize = spawner.getStackSize();
         int maxStackSize = spawner.getMaxStackSize();
@@ -388,9 +375,6 @@ public class SpawnerStackerHandler implements Listener {
 
         removeValidSpawnersFromInventory(player, requiredType, actualChange, scanResult.spawnerSlots);
         spawner.setStackSize(currentSize + actualChange);
-
-        // Clear interaction flag after successful operation to avoid false positives in validation
-        spawner.clearInteracted();
 
         // Notify if max stack reached
         if (actualChange < changeAmount) {

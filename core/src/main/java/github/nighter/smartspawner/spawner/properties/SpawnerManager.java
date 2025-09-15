@@ -362,77 +362,7 @@ public class SpawnerManager {
         return loc.getBlock().getType() != Material.SPAWNER;
     }
 
-    /**
-     * Checks if a spawner data has logical inconsistencies that suggest manipulation
-     * This is used to prevent duplication exploits where saved GUI state doesn't match physical spawner
-     */
-    public boolean isInconsistentSpawner(SpawnerData spawner) {
-        if (spawner == null) return true;
 
-        // If already confirmed as ghost, it's definitely inconsistent
-        if (confirmedGhostSpawners.contains(spawner.getSpawnerId())) {
-            return true;
-        }
-
-        Location loc = spawner.getSpawnerLocation();
-        if (loc == null || loc.getWorld() == null) return true;
-
-        // Only check loaded chunks
-        if (!loc.getChunk().isLoaded()) {
-            return false; // Can't confirm, assume valid
-        }
-
-        // Check if physical spawner exists
-        if (loc.getBlock().getType() != Material.SPAWNER) {
-            return true;
-        }
-
-        // Enhanced validation for duplication exploit prevention:
-        // The exploit works by:
-        // 1. Having 3 stacked spawners (stackSize = 3)
-        // 2. Saving GUI state with cheat client
-        // 3. Mining spawner (gets 3 spawners back)
-        // 4. Placing 1 spawner back (should create NEW SpawnerData with stackSize = 1)
-        // 5. Loading old GUI state (tries to use OLD SpawnerData with stackSize = 3)
-        //
-        // We detect this by checking if:
-        // - spawner claims stackSize > 1
-        // - spawner was recently placed/interacted with (indicating new placement)
-        // - no corresponding stacking operation occurred (no recent legitimate stack increase)
-
-        if (spawner.getStackSize() > 1) {
-            // Get timing information
-            long lastSpawnTime = spawner.getLastSpawnTime();
-            long currentTime = System.currentTimeMillis();
-            long timeSinceCreation = currentTime - lastSpawnTime;
-            
-            // If spawner claims stack > 1 but was created very recently (< 5 seconds)
-            // this suggests it was just placed as a single spawner but data claims higher stack
-            if (timeSinceCreation < 5000) { // 5 seconds
-                // Additional check: if player recently interacted AND the spawner is very new,
-                // this is the classic exploit pattern
-                if (spawner.getLastInteractedPlayer() != null && spawner.isInteracted()) {
-                    plugin.debug("Detected potential spawner manipulation: " + spawner.getSpawnerId() + 
-                               " claims stack size " + spawner.getStackSize() + 
-                               " but was created " + timeSinceCreation + "ms ago");
-                    return true;
-                }
-            }
-            
-            // Additional heuristic: if spawner has stack > 1 but was marked as interacted very recently
-            // after its creation, and the creation time suggests single placement, flag it
-            if (timeSinceCreation < 30000 && spawner.isInteracted()) { // 30 seconds
-                // Check if this looks like a single spawner placement followed by GUI manipulation
-                // This is conservative - only flag if very recent and clear pattern
-                if (timeSinceCreation < 2000) { // Very recent (2 seconds)
-                    plugin.debug("Detected suspicious spawner access pattern: " + spawner.getSpawnerId());
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
 
     public void removeGhostSpawner(String spawnerId) {
         SpawnerData spawner = spawners.get(spawnerId);

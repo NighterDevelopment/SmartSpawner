@@ -41,12 +41,7 @@ public class SpawnerStackerUI {
             return;
         }
 
-        // Additional validation to prevent duplication exploits
-        if (plugin.getSpawnerManager().isInconsistentSpawner(spawner)) {
-            // Spawner data is inconsistent, likely due to manipulation
-            plugin.debug("Blocked stacker GUI access due to inconsistent spawner data: " + spawner.getSpawnerId());
-            return;
-        }
+
 
         String title = languageManager.getGuiTitle("gui_title_stacker");
         Inventory gui = Bukkit.createInventory(new SpawnerStackerHolder(spawner), GUI_SIZE, title);
