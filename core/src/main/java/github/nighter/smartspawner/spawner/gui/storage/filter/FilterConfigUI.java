@@ -99,6 +99,14 @@ public class FilterConfigUI implements Listener {
             return;
         }
 
+        // Additional validation to prevent duplication exploits via saved GUI state manipulation
+        if (plugin.getSpawnerManager().isInconsistentSpawner(spawner)) {
+            // Spawner data is inconsistent, likely due to manipulation
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.5f);
+            plugin.debug("Blocked filter GUI access due to inconsistent spawner data: " + spawner.getSpawnerId());
+            return;
+        }
+
         // Create a new inventory with title from language manager
         String title = languageManager.getGuiTitle("gui_title_filter_config");
         Inventory filterInventory = Bukkit.createInventory(
@@ -237,6 +245,15 @@ public class FilterConfigUI implements Listener {
             player.closeInventory();
             return;
         }
+
+        // Additional validation to prevent duplication exploits via saved GUI state manipulation
+        if (plugin.getSpawnerManager().isInconsistentSpawner(spawner)) {
+            // Spawner data is inconsistent, likely due to manipulation
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.5f);
+            player.closeInventory();
+            plugin.debug("Blocked filter GUI action due to inconsistent spawner data: " + spawner.getSpawnerId());
+            return;
+        }
         
         int slot = event.getRawSlot();
 
@@ -269,6 +286,15 @@ public class FilterConfigUI implements Listener {
             // Spawner no longer exists, close the inventory and prevent navigation
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.5f);
             player.closeInventory();
+            return;
+        }
+
+        // Additional validation to prevent duplication exploits via saved GUI state manipulation
+        if (plugin.getSpawnerManager().isInconsistentSpawner(spawner)) {
+            // Spawner data is inconsistent, likely due to manipulation
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.5f);
+            player.closeInventory();
+            plugin.debug("Blocked filter GUI navigation due to inconsistent spawner data: " + spawner.getSpawnerId());
             return;
         }
 
