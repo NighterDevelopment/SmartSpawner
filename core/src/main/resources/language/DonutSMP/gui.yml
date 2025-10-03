@@ -338,3 +338,24 @@ bedrock:
       stacker: Manage Stack
       sell_and_exp: Sell Items & Collect EXP
       sell: Sell Items
+
+    # Spawner Info (displayed below buttons in Bedrock UI)
+    # Available placeholders: see en_US/gui.yml for complete list
+    # IMPORTANT: Only use Bedrock-compatible color codes (§0-§9, §a-§f, §g)
+    spawner_info:
+      - ''
+      - '§9◈ §fInformation:'
+      - '  §7• Stack: §9%stack_size%'
+      - '  §7• Range: §9%range% §7blocks'
+      - '  §7• Mobs: §9%min_mobs% §7- §9%max_mobs%'
+      - '  §7• Delay: §9%delay% §7s'
+      - ''
+      - '§9◈ §fStorage:'
+      - '  §7• Items: §9%current_items% §7/ §9%max_items%'
+      - '  §7• Storage: §9%formatted_storage%% §7full'
+      - ''
+      - '§9◈ §fExperience:'
+      - '  §7• Current: §a%current_exp% §7/ §a%max_exp% §axp'
+      - '  §7• Stored: §a%formatted_exp%% §7xp'
+      - ''
+      - '§a◈ §fSellable Value: §a+$%total_sell_price%'

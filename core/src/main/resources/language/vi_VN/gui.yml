@@ -387,3 +387,24 @@ bedrock:
       stacker: Stack Spawner
       sell_and_exp: Bán Vật Phẩm & Nhận Kinh Nghiệm
       sell: Bán Vật Phẩm
+
+    # Thông tin Spawner (hiển thị bên dưới các nút trong giao diện Bedrock)
+    # Placeholder có sẵn: xem en_US/gui.yml để biết danh sách đầy đủ
+    # QUAN TRỌNG: Chỉ sử dụng mã màu tương thích với Bedrock (§0-§9, §a-§f, §g)
+    spawner_info:
+      - ''
+      - '§9◈ §fThông tin:'
+      - '  §7• Stack: §9%stack_size%'
+      - '  §7• Phạm vi: §9%range% §7khối'
+      - '  §7• Quái: §9%min_mobs% §7- §9%max_mobs%'
+      - '  §7• Trễ: §9%delay% §7s'
+      - ''
+      - '§9◈ §fKho lưu trữ:'
+      - '  §7• Vật phẩm: §9%current_items% §7/ §9%max_items%'
+      - '  §7• Kho: §9%formatted_storage%% §7đầy'
+      - ''
+      - '§9◈ §fKinh nghiệm:'
+      - '  §7• Hiện tại: §a%current_exp% §7/ §a%max_exp% §aXP'
+      - '  §7• Đã lưu: §a%formatted_exp%% §7XP'
+      - ''
+      - '§a◈ §fGiá trị bán: §a+$%total_sell_price%'

@@ -420,3 +420,24 @@ bedrock:
       stacker: Stack verwalten
       sell_and_exp: Verkaufen & EXP einsammeln
       sell: Verkaufen
+
+    # Spawner-Informationen (wird unter den Buttons in der Bedrock-UI angezeigt)
+    # Verfügbare Platzhalter: siehe en_US/gui.yml für vollständige Liste
+    # WICHTIG: Nur Bedrock-kompatible Farbcodes verwenden (§0-§9, §a-§f, §g)
+    spawner_info:
+      - ''
+      - '§9◈ §fInformationen:'
+      - '  §7• Stack: §9%stack_size%'
+      - '  §7• Reichweite: §9%range% §7Blöcke'
+      - '  §7• Mobs: §9%min_mobs% §7- §9%max_mobs%'
+      - '  §7• Verzögerung: §9%delay% §7s'
+      - ''
+      - '§9◈ §fLager:'
+      - '  §7• Items: §9%current_items% §7/ §9%max_items%'
+      - '  §7• Lager: §9%formatted_storage%% §7voll'
+      - ''
+      - '§9◈ §fErfahrung:'
+      - '  §7• Aktuell: §a%current_exp% §7/ §a%max_exp% §aXP'
+      - '  §7• Gespeichert: §a%formatted_exp%% §7XP'
+      - ''
+      - '§a◈ §fVerkaufswert: §a+$%total_sell_price%'

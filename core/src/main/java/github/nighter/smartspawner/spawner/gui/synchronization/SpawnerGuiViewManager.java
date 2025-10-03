@@ -861,6 +861,9 @@ public class SpawnerGuiViewManager implements Listener {
         if (plugin.getSpawnerMenuUI() != null) {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(spawner.getSpawnerId());
         }
+        if (plugin.getSpawnerMenuFormUI() != null) {
+            plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(spawner.getSpawnerId());
+        }
 
         int viewerCount = viewers.size();
         if (viewerCount > 10) {

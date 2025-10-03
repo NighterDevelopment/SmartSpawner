@@ -150,6 +150,9 @@ public class SpawnerData {
         if (plugin.getSpawnerMenuUI() != null) {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(this.spawnerId);
         }
+        if (plugin.getSpawnerMenuFormUI() != null) {
+            plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(this.spawnerId);
+        }
     }
 
     private void calculateStackBasedValues() {
@@ -219,6 +222,9 @@ public class SpawnerData {
         if (plugin.getSpawnerMenuUI() != null) {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(this.spawnerId);
         }
+        if (plugin.getSpawnerMenuFormUI() != null) {
+            plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(this.spawnerId);
+        }
     }
 
     private void recreateVirtualInventory() {
@@ -255,6 +261,9 @@ public class SpawnerData {
         // Invalidate GUI cache when experience changes
         if (plugin.getSpawnerMenuUI() != null) {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(this.spawnerId);
+        }
+        if (plugin.getSpawnerMenuFormUI() != null) {
+            plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(this.spawnerId);
         }
     }
 

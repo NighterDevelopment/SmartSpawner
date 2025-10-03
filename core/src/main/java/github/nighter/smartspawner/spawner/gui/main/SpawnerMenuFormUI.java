@@ -4,6 +4,7 @@ import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
+import github.nighter.smartspawner.spawner.properties.VirtualInventory;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayout;
 import github.nighter.smartspawner.spawner.gui.layout.GuiButton;
@@ -15,9 +16,15 @@ import org.geysermc.floodgate.api.FloodgateApi;
 import java.util.*;
 
 public class SpawnerMenuFormUI {
+    private static final int TICKS_PER_SECOND = 20;
+    
     private final SmartSpawner plugin;
     private final LanguageManager languageManager;
     private final MessageService messageService;
+
+    // Form cache to avoid rebuilding forms every time
+    private final Map<String, CachedForm> formCache = new HashMap<>();
+    private static final long CACHE_EXPIRY_TIME_MS = 30000; // 30 seconds
 
     // Action to button info mapping
     private static final Map<String, ActionButtonInfo> ACTION_BUTTON_CONFIG = new HashMap<>();
@@ -55,12 +62,17 @@ public class SpawnerMenuFormUI {
         this.messageService = plugin.getMessageService();
     }
 
+    public void clearCache() {
+        formCache.clear();
+    }
+
+    public void invalidateSpawnerCache(String spawnerId) {
+        formCache.entrySet().removeIf(entry -> entry.getKey().startsWith(spawnerId + "|"));
+    }
+
     public void openSpawnerForm(Player player, SpawnerData spawner) {
         String entityName = languageManager.getFormattedMobName(spawner.getEntityType());
-        Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("ᴇɴᴛɪᴛʏ", entityName);
-        placeholders.put("entity", entityName);
-        placeholders.put("amount", String.valueOf(spawner.getStackSize()));
+        Map<String, String> placeholders = createPlaceholders(player, spawner);
 
         String title;
         if (spawner.getStackSize() > 1) {
@@ -77,8 +89,23 @@ public class SpawnerMenuFormUI {
             return;
         }
 
+        // Create cache key based on spawner state
+        String cacheKey = spawner.getSpawnerId() + "|" + spawner.getStackSize() + "|" + 
+                          spawner.getSpawnerExp() + "|" + spawner.getVirtualInventory().getUsedSlots();
+        
+        // Check cache first
+        CachedForm cachedForm = formCache.get(cacheKey);
+        if (cachedForm != null && !cachedForm.isExpired() && cachedForm.buttons.equals(availableButtons)) {
+            FloodgateApi.getInstance().getPlayer(player.getUniqueId()).sendForm(cachedForm.form);
+            return;
+        }
+
+        // Generate spawner info content
+        String spawnerInfo = createSpawnerInfoContent(player, spawner, placeholders);
+
         SimpleForm.Builder formBuilder = SimpleForm.builder()
-                .title(title);
+                .title(title)
+                .content(spawnerInfo);
 
         for (ButtonInfo buttonInfo : availableButtons) {
             formBuilder.button(buttonInfo.text, FormImage.Type.URL, buttonInfo.imageUrl);
@@ -116,6 +143,10 @@ public class SpawnerMenuFormUI {
                     }
                 })
                 .build();
+        
+        // Cache the form
+        formCache.put(cacheKey, new CachedForm(form, availableButtons));
+        
         FloodgateApi.getInstance().getPlayer(player.getUniqueId()).sendForm(form);
     }
 
@@ -219,6 +250,168 @@ public class SpawnerMenuFormUI {
         plugin.getSpawnerMenuAction().handleExpBottleClick(player, spawner, false);
     }
 
+    private Map<String, String> createPlaceholders(Player player, SpawnerData spawner) {
+        String entityName = languageManager.getFormattedMobName(spawner.getEntityType());
+        String entityNameSmallCaps = languageManager.getSmallCaps(entityName);
+        
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("ᴇɴᴛɪᴛʏ", entityNameSmallCaps);
+        placeholders.put("entity", entityName);
+        placeholders.put("amount", String.valueOf(spawner.getStackSize()));
+        placeholders.put("entity_type", spawner.getEntityType().toString());
+        
+        // Stack information
+        placeholders.put("stack_size", String.valueOf(spawner.getStackSize()));
+        
+        // Spawner settings
+        placeholders.put("range", String.valueOf(spawner.getSpawnerRange()));
+        long delaySeconds = spawner.getSpawnDelay() / TICKS_PER_SECOND;
+        placeholders.put("delay", String.valueOf(delaySeconds));
+        placeholders.put("delay_raw", String.valueOf(spawner.getSpawnDelay()));
+        placeholders.put("min_mobs", String.valueOf(spawner.getMinMobs()));
+        placeholders.put("max_mobs", String.valueOf(spawner.getMaxMobs()));
+        
+        // Storage information
+        VirtualInventory virtualInventory = spawner.getVirtualInventory();
+        int currentItems = virtualInventory.getUsedSlots();
+        int maxSlots = spawner.getMaxSpawnerLootSlots();
+        double percentStorageDecimal = maxSlots > 0 ? ((double) currentItems / maxSlots) * 100 : 0;
+        String formattedPercentStorage = String.format("%.1f", percentStorageDecimal);
+        
+        placeholders.put("current_items", String.valueOf(currentItems));
+        placeholders.put("max_items", languageManager.formatNumber(maxSlots));
+        placeholders.put("formatted_storage", formattedPercentStorage);
+        
+        // Experience information
+        long currentExp = spawner.getSpawnerExp();
+        long maxExp = spawner.getMaxStoredExp();
+        double percentExpDecimal = maxExp > 0 ? ((double) currentExp / maxExp) * 100 : 0;
+        String formattedPercentExp = String.format("%.1f", percentExpDecimal);
+        
+        String formattedCurrentExp = languageManager.formatNumber(currentExp);
+        String formattedMaxExp = languageManager.formatNumber(maxExp);
+        
+        placeholders.put("current_exp", formattedCurrentExp);
+        placeholders.put("max_exp", formattedMaxExp);
+        placeholders.put("raw_current_exp", String.valueOf(currentExp));
+        placeholders.put("raw_max_exp", String.valueOf(maxExp));
+        placeholders.put("formatted_exp", formattedPercentExp);
+        
+        // Total sell price information
+        double totalSellPrice = spawner.getAccumulatedSellValue();
+        placeholders.put("total_sell_price", languageManager.formatNumber(totalSellPrice));
+        
+        return placeholders;
+    }
+
+    private String createSpawnerInfoContent(Player player, SpawnerData spawner, Map<String, String> placeholders) {
+        // Get the info lines from config
+        List<String> infoLines = languageManager.getGuiItemLoreAsList("bedrock.main_gui.spawner_info", placeholders);
+        
+        if (infoLines == null || infoLines.isEmpty()) {
+            return ""; // Return empty string if no config
+        }
+        
+        // Convert to Bedrock-compatible color codes and join with newlines
+        StringBuilder content = new StringBuilder();
+        for (String line : infoLines) {
+            String bedrockLine = convertToBedrockColors(line);
+            content.append(bedrockLine).append("\n");
+        }
+        
+        // Remove trailing newline
+        if (content.length() > 0) {
+            content.setLength(content.length() - 1);
+        }
+        
+        return content.toString();
+    }
+
+    /**
+     * Converts hex and standard color codes to Bedrock-compatible color codes (§0-§9, §a-§f, §g)
+     */
+    private String convertToBedrockColors(String text) {
+        if (text == null) return "";
+        
+        // First apply placeholders and convert hex colors to standard Bukkit colors
+        String result = text;
+        
+        // Convert hex patterns like &#RRGGBB to approximate Bedrock colors
+        result = result.replaceAll("&#([A-Fa-f0-9]{6})", "");  // Remove hex colors for now, will use closest match
+        
+        // Map common hex colors to Bedrock equivalents
+        result = mapHexToBedrockColors(result, text);
+        
+        // Convert & color codes to § for Bedrock
+        result = result.replace("&0", "§0");
+        result = result.replace("&1", "§1");
+        result = result.replace("&2", "§2");
+        result = result.replace("&3", "§3");
+        result = result.replace("&4", "§4");
+        result = result.replace("&5", "§5");
+        result = result.replace("&6", "§6");
+        result = result.replace("&7", "§7");
+        result = result.replace("&8", "§8");
+        result = result.replace("&9", "§9");
+        result = result.replace("&a", "§a");
+        result = result.replace("&b", "§b");
+        result = result.replace("&c", "§c");
+        result = result.replace("&d", "§d");
+        result = result.replace("&e", "§e");
+        result = result.replace("&f", "§f");
+        result = result.replace("&g", "§g");
+        
+        return result;
+    }
+
+    /**
+     * Maps hex color codes to the closest Bedrock color code
+     */
+    private String mapHexToBedrockColors(String result, String original) {
+        // Common color mappings from hex to Bedrock
+        Map<String, String> colorMap = new HashMap<>();
+        
+        // Grays and blacks
+        colorMap.put("545454", "§8");  // Dark Gray
+        colorMap.put("bdc3c7", "§7");  // Gray
+        colorMap.put("ecf0f1", "§f");  // White
+        colorMap.put("f8f8ff", "§f");  // White
+        
+        // Blues
+        colorMap.put("3498db", "§9");  // Blue
+        
+        // Greens
+        colorMap.put("2ecc71", "§a");  // Green
+        colorMap.put("37eb9a", "§a");  // Green
+        colorMap.put("2cc483", "§a");  // Green
+        colorMap.put("48e89b", "§a");  // Green
+        colorMap.put("00F986", "§a");  // Green
+        
+        // Reds
+        colorMap.put("e67e22", "§6");  // Gold
+        colorMap.put("ff5252", "§c");  // Red
+        colorMap.put("e63939", "§4");  // Dark Red
+        colorMap.put("ff7070", "§c");  // Red
+        
+        // Purples
+        colorMap.put("d8c5ff", "§d");  // Light Purple
+        colorMap.put("7b68ee", "§5");  // Dark Purple
+        colorMap.put("a885fc", "§d");  // Light Purple
+        colorMap.put("c2a8fc", "§d");  // Light Purple
+        colorMap.put("ab7afd", "§d");  // Light Purple
+        
+        // Oranges and golds
+        colorMap.put("EF6C00", "§6");  // Gold
+        colorMap.put("607D8B", "§8");  // Dark Gray
+        
+        for (Map.Entry<String, String> entry : colorMap.entrySet()) {
+            result = result.replace("&#" + entry.getKey(), entry.getValue());
+            result = result.replace("&#" + entry.getKey().toLowerCase(), entry.getValue());
+        }
+        
+        return result;
+    }
+
     private static class ButtonInfo {
         final String action;
         final String text;
@@ -238,6 +431,22 @@ public class SpawnerMenuFormUI {
         ActionButtonInfo(String langKey, String imageUrl) {
             this.langKey = langKey;
             this.imageUrl = imageUrl;
+        }
+    }
+
+    private static class CachedForm {
+        final SimpleForm form;
+        final List<ButtonInfo> buttons;
+        final long timestamp;
+
+        CachedForm(SimpleForm form, List<ButtonInfo> buttons) {
+            this.form = form;
+            this.buttons = buttons;
+            this.timestamp = System.currentTimeMillis();
+        }
+
+        boolean isExpired() {
+            return System.currentTimeMillis() - timestamp > CACHE_EXPIRY_TIME_MS;
         }
     }
 }
