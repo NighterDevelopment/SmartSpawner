@@ -25,6 +25,7 @@ import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuAction;
 import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuUI;
 import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuFormUI;
 import github.nighter.smartspawner.spawner.gui.stacker.SpawnerStackerHandler;
+import github.nighter.smartspawner.spawner.gui.stacker.SpawnerStackerFormUI;
 import github.nighter.smartspawner.spawner.gui.storage.filter.FilterConfigUI;
 import github.nighter.smartspawner.spawner.gui.synchronization.SpawnerGuiViewManager;
 import github.nighter.smartspawner.spawner.gui.stacker.SpawnerStackerUI;
@@ -89,6 +90,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     private SpawnerStorageUI spawnerStorageUI;
     private FilterConfigUI filterConfigUI;
     private SpawnerStackerUI spawnerStackerUI;
+    private SpawnerStackerFormUI spawnerStackerFormUI;
 
     // Core handlers
     private SpawnEggHandler spawnEggHandler;
@@ -250,13 +252,16 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
             && integrationManager.getFloodgateHook().isEnabled()) {
             try {
                 this.spawnerMenuFormUI = new SpawnerMenuFormUI(this);
+                this.spawnerStackerFormUI = new SpawnerStackerFormUI(this, spawnerStackerHandler);
                 getLogger().info("FormUI components initialized successfully for Bedrock player support");
             } catch (NoClassDefFoundError | Exception e) {
                 getLogger().warning("Failed to initialize FormUI components: " + e.getMessage());
                 this.spawnerMenuFormUI = null;
+                this.spawnerStackerFormUI = null;
             }
         } else {
             this.spawnerMenuFormUI = null;
+            this.spawnerStackerFormUI = null;
             debug("FormUI components not initialized - Floodgate integration not available");
         }
     }

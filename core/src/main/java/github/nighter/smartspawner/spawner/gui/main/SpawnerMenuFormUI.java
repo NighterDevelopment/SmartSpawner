@@ -100,15 +100,17 @@ public class SpawnerMenuFormUI {
             return;
         }
 
-        // Generate spawner info content
-        String spawnerInfo = createSpawnerInfoContent(player, spawner, placeholders);
-
         SimpleForm.Builder formBuilder = SimpleForm.builder()
-                .title(title)
-                .content(spawnerInfo);
+                .title(title);
 
         for (ButtonInfo buttonInfo : availableButtons) {
             formBuilder.button(buttonInfo.text, FormImage.Type.URL, buttonInfo.imageUrl);
+        }
+
+        // Add spawner info as the last button (below action buttons)
+        String spawnerInfo = createSpawnerInfoContent(player, spawner, placeholders);
+        if (!spawnerInfo.isEmpty()) {
+            formBuilder.button(spawnerInfo, FormImage.Type.URL, "https://i.imgur.com/8JlZJGT.png"); // Info icon
         }
 
         SimpleForm form = formBuilder
@@ -140,6 +142,9 @@ public class SpawnerMenuFormUI {
                                     break;
                             }
                         });
+                    } else {
+                        // Info button clicked - reopen the same form
+                        Scheduler.runTask(() -> openSpawnerForm(player, spawner));
                     }
                 })
                 .build();
@@ -226,7 +231,21 @@ public class SpawnerMenuFormUI {
             messageService.sendMessage(player, "no_permission");
             return;
         }
-        plugin.getSpawnerStackerUI().openStackerGui(player, spawner);
+        
+        // Check if player is Bedrock and use form UI if available
+        if (isBedrockPlayer(player) && plugin.getSpawnerStackerFormUI() != null) {
+            plugin.getSpawnerStackerFormUI().openStackerForm(player, spawner);
+        } else {
+            plugin.getSpawnerStackerUI().openStackerGui(player, spawner);
+        }
+    }
+
+    private boolean isBedrockPlayer(Player player) {
+        if (plugin.getIntegrationManager() == null || 
+            plugin.getIntegrationManager().getFloodgateHook() == null) {
+            return false;
+        }
+        return plugin.getIntegrationManager().getFloodgateHook().isBedrockPlayer(player);
     }
 
     private void handleSellInventory(Player player, SpawnerData spawner) {

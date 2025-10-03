@@ -359,3 +359,19 @@ bedrock:
       - '  §7• Stored: §a%formatted_exp%% §7xp'
       - ''
       - '§a◈ §fSellable Value: §a+$%total_sell_price%'
+
+  # Spawner Stacker GUI (Bedrock Form)
+  stacker_gui:
+    title: '§8Spawner Stacker'
+    
+    button_decrease: '§c- %amount% Spawner%plural%'
+    button_increase: '§a+ %amount% Spawner%plural%'
+    button_back: '§7← Back to Main Menu'
+    
+    info_text:
+      - '§9◈ §fStack Information:'
+      - '  §7• Current: §9%stack_size%'
+      - '  §7• Maximum: §9%max_stack_size%'
+      - '  §7• Entity: §9%entity%'
+      - ''
+      - '§7(Tap to refresh)'

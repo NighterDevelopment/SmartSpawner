@@ -274,7 +274,7 @@ public class SpawnerStackerHandler implements Listener {
         }
     }
 
-    private void handleStackDecrease(Player player, SpawnerData spawner, int removeAmount) {
+    public void handleStackDecrease(Player player, SpawnerData spawner, int removeAmount) {
         // Check if the spawner block still exists to prevent ghost spawner duplication
         if (plugin.getSpawnerManager().isGhostSpawner(spawner)) {
             messageService.sendMessage(player, "spawner_invalid");
@@ -317,7 +317,7 @@ public class SpawnerStackerHandler implements Listener {
         player.playSound(player.getLocation(), STACK_SOUND, SOUND_VOLUME, SOUND_PITCH);
     }
 
-    private void handleStackIncrease(Player player, SpawnerData spawner, int changeAmount) {
+    public void handleStackIncrease(Player player, SpawnerData spawner, int changeAmount) {
         int currentSize = spawner.getStackSize();
         int maxStackSize = spawner.getMaxStackSize();
 

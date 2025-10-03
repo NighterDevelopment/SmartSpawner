@@ -408,3 +408,19 @@ bedrock:
       - '  §7• Đã lưu: §a%formatted_exp%% §7XP'
       - ''
       - '§a◈ §fGiá trị bán: §a+$%total_sell_price%'
+
+  # Spawner Stacker GUI (Bedrock Form)
+  stacker_gui:
+    title: '§8Spawner Stacker'
+    
+    button_decrease: '§c- %amount% Spawner%plural%'
+    button_increase: '§a+ %amount% Spawner%plural%'
+    button_back: '§7← Quay lại Menu Chính'
+    
+    info_text:
+      - '§9◈ §fThông tin Stack:'
+      - '  §7• Hiện tại: §9%stack_size%'
+      - '  §7• Tối đa: §9%max_stack_size%'
+      - '  §7• Entity: §9%entity%'
+      - ''
+      - '§7(Chạm để làm mới)'
