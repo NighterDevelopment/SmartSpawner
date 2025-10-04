@@ -615,7 +615,7 @@ public class SpawnerData implements Spawner {
     @Nullable
     @Override
     public EntityType getSpawnedType() {
-        return null;
+        return this.entityType;
     }
 
     /**
@@ -626,7 +626,9 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public void setSpawnedType(@Nullable EntityType creatureType) {
-
+        if (creatureType != null) {
+            setEntityType(creatureType);
+        }
     }
 
     /**
@@ -638,7 +640,8 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public int getDelay() {
-        return 0;
+        // Convert milliseconds to ticks (1 tick = 50ms)
+        return (int) (this.spawnDelay / 50L);
     }
 
     /**
@@ -651,7 +654,8 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public void setDelay(int delay) {
-
+        // Convert ticks to milliseconds (1 tick = 50ms)
+        this.spawnDelay = delay * 50L;
     }
 
     /**
@@ -668,7 +672,7 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public int getRequiredPlayerRange() {
-        return 0;
+        return this.spawnerRange != null ? this.spawnerRange : 16;
     }
 
     /**
@@ -683,7 +687,7 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public void setRequiredPlayerRange(int requiredPlayerRange) {
-
+        this.spawnerRange = requiredPlayerRange;
     }
 
     /**
@@ -702,7 +706,9 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public int getSpawnRange() {
-        return 0;
+        // This spawner is virtual and doesn't actually spawn entities in the world,
+        // so we return a default value. The actual spawning is handled by loot generation.
+        return 4;
     }
 
     /**
@@ -714,7 +720,9 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public void setSpawnRange(int spawnRange) {
-
+        // This spawner is virtual and doesn't actually spawn entities in the world.
+        // Spawn range setting is not applicable to virtual spawners.
+        // This is a no-op implementation to satisfy the Spawner interface.
     }
 
     /**
@@ -935,7 +943,10 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public boolean isActivated() {
-        return false;
+        // spawnerStop == true means no players in range (stopped)
+        // spawnerStop == false means players in range (activated)
+        // So isActivated is the inverse of spawnerStop
+        return !this.spawnerStop;
     }
 
     /**
@@ -943,7 +954,8 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public void resetTimer() {
-
+        // Reset the timer to current time, which will restart the delay countdown
+        this.lastSpawnTime = System.currentTimeMillis();
     }
 
     /**
@@ -958,6 +970,58 @@ public class SpawnerData implements Spawner {
      */
     @Override
     public void setSpawnedItem(@NotNull ItemStack itemStack) {
-
+        // Virtual spawner doesn't spawn items directly, no-op
     }
+
+    // ==================== Additional Helper Methods ====================
+    // These methods provide convenience access and maintain compatibility
+    // with existing code while using the Spawner interface internally
+
+    /**
+     * Legacy method - use getRequiredPlayerRange() instead.
+     * @deprecated Use {@link #getRequiredPlayerRange()} for Bukkit compatibility
+     */
+    @Deprecated
+    public Integer getSpawnerRange() {
+        return getRequiredPlayerRange();
+    }
+
+    /**
+     * Legacy method - use setRequiredPlayerRange() instead.
+     * @deprecated Use {@link #setRequiredPlayerRange(int)} for Bukkit compatibility
+     */
+    @Deprecated
+    public void setSpawnerRange(Integer range) {
+        if (range != null) {
+            setRequiredPlayerRange(range);
+        }
+    }
+
+    /**
+     * Check if the spawner is stopped (no players in range).
+     * This is the inverse of isActivated().
+     * @return true if spawner is stopped (no players in range)
+     */
+    public Boolean getSpawnerStop() {
+        return !isActivated();
+    }
+
+    /**
+     * Set the spawner stopped state.
+     * This is the inverse of the activated state.
+     * @param stopped true to stop the spawner (no players in range)
+     */
+    public void setSpawnerStop(Boolean stopped) {
+        this.spawnerStop = stopped;
+    }
+
+    /**
+     * Get the spawn delay in milliseconds (internal format).
+     * For ticks, use getDelay().
+     * @return spawn delay in milliseconds
+     */
+    public long getSpawnDelay() {
+        return this.spawnDelay;
+    }
+}
 }

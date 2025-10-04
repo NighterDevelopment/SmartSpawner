@@ -50,11 +50,12 @@ public class SpawnerRangeChecker {
         // Schedule the actual entity checking in the correct region
         Scheduler.runLocationTask(spawnerLoc, () -> {
             boolean playerFound = isPlayerInRange(spawner, spawnerLoc, world);
-            boolean shouldStop = !playerFound;
+            boolean shouldBeActivated = playerFound;
 
-            if (spawner.getSpawnerStop() != shouldStop) {
-                spawner.setSpawnerStop(shouldStop);
-                handleSpawnerStateChange(spawner, shouldStop);
+            // Check if activation state needs to change
+            if (spawner.isActivated() != shouldBeActivated) {
+                spawner.setSpawnerStop(!shouldBeActivated);
+                handleSpawnerStateChange(spawner, !shouldBeActivated);
             }
         });
     }
@@ -65,16 +66,17 @@ public class SpawnerRangeChecker {
         if (world == null) return;
 
         boolean playerFound = isPlayerInRange(spawner, spawnerLoc, world);
-        boolean shouldStop = !playerFound;
+        boolean shouldBeActivated = playerFound;
 
-        if (spawner.getSpawnerStop() != shouldStop) {
-            spawner.setSpawnerStop(shouldStop);
-            handleSpawnerStateChange(spawner, shouldStop);
+        // Check if activation state needs to change
+        if (spawner.isActivated() != shouldBeActivated) {
+            spawner.setSpawnerStop(!shouldBeActivated);
+            handleSpawnerStateChange(spawner, !shouldBeActivated);
         }
     }
 
     private boolean isPlayerInRange(SpawnerData spawner, Location spawnerLoc, World world) {
-        int range = spawner.getSpawnerRange();
+        int range = spawner.getRequiredPlayerRange();
         double rangeSquared = range * range;
 
         // In Folia, we're now running this in the correct region thread,
@@ -129,7 +131,7 @@ public class SpawnerRangeChecker {
         spawner.setLastSpawnTime(currentTime);
         
         Scheduler.Task task = Scheduler.runTaskTimer(() -> {
-            if (!spawner.getSpawnerStop()) {
+            if (spawner.isActivated()) {
                 spawnerLootGenerator.spawnLootToSpawner(spawner);
             }
         }, spawner.getSpawnDelay(), spawner.getSpawnDelay()); // Start after one delay period
