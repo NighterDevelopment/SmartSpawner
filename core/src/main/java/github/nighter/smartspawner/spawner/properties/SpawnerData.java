@@ -24,6 +24,69 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+/**
+ * SpawnerData represents a VIRTUAL spawner with enhanced functionality.
+ * 
+ * <h2>Virtual Spawner vs Block-Based Spawner</h2>
+ * <p>
+ * This class implements {@link org.bukkit.spawner.Spawner} but represents a <b>virtual</b> spawner,
+ * not the physical spawner block itself. Key differences:
+ * </p>
+ * 
+ * <h3>Virtual Spawner (SpawnerData):</h3>
+ * <ul>
+ *   <li>Stores data independently from the physical block</li>
+ *   <li>Generates loot items instead of spawning entities</li>
+ *   <li>Supports stackable spawners (multiple spawners in one block)</li>
+ *   <li>Has virtual inventory for loot storage</li>
+ *   <li>Can be enhanced with experience, upgrades, and custom features</li>
+ * </ul>
+ * 
+ * <h3>Block-Based Spawner (org.bukkit.spawner.Spawner):</h3>
+ * <ul>
+ *   <li>Data tied directly to the spawner block</li>
+ *   <li>Spawns actual entities in the world</li>
+ *   <li>One spawner per block</li>
+ *   <li>Standard Minecraft spawner behavior</li>
+ * </ul>
+ * 
+ * <h2>Spawner Interface Implementation</h2>
+ * <p>
+ * While this class implements {@link org.bukkit.spawner.Spawner} for API compatibility,
+ * some methods have special behavior for virtual spawners:
+ * </p>
+ * <ul>
+ *   <li>{@link #getSpawnRange()} - Returns default value, not used for loot generation</li>
+ *   <li>{@link #setSpawnRange(int)} - No-op, spawn range not applicable to virtual spawners</li>
+ *   <li>{@link #getDelay()} - Returns spawn delay in ticks (converted from internal milliseconds)</li>
+ *   <li>{@link #getRequiredPlayerRange()} - Distance required for activation (formerly spawnerRange)</li>
+ *   <li>{@link #isActivated()} - True when players are in range (inverse of spawnerStop)</li>
+ * </ul>
+ * 
+ * <h2>Activation System</h2>
+ * <p>
+ * Spawner activation is managed by {@link github.nighter.smartspawner.spawner.lootgen.SpawnerRangeChecker}:
+ * </p>
+ * <ul>
+ *   <li>Checks if players are within {@link #getRequiredPlayerRange()}</li>
+ *   <li>Sets activation state via {@link #isActivated()}</li>
+ *   <li>When activated, loot generation tasks are started</li>
+ *   <li>When deactivated, tasks are stopped to save resources</li>
+ * </ul>
+ * 
+ * <h2>Migration Notes</h2>
+ * <p>
+ * For backward compatibility, deprecated methods are provided:
+ * </p>
+ * <ul>
+ *   <li>{@code getSpawnerRange()} → use {@link #getRequiredPlayerRange()}</li>
+ *   <li>{@code getSpawnerStop()} → use {@code !isActivated()}</li>
+ * </ul>
+ * 
+ * @see org.bukkit.spawner.Spawner
+ * @see github.nighter.smartspawner.spawner.lootgen.SpawnerRangeChecker
+ * @see github.nighter.smartspawner.spawner.lootgen.SpawnerLootGenerator
+ */
 public class SpawnerData implements Spawner {
     @Getter
     private final SmartSpawner plugin;
