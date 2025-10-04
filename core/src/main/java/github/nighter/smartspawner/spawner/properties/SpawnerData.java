@@ -1087,4 +1087,3 @@ public class SpawnerData implements Spawner {
         return this.spawnDelay;
     }
 }
-}
