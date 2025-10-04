@@ -62,6 +62,32 @@ spawner.getRequiredPlayerRange()  // Bukkit standard
 spawner.isActivated()             // Bukkit standard
 ```
 
+### Syncing Between Block and Virtual Spawner
+
+When a spawner is placed, data can be extracted from the CreatureSpawner block:
+
+```java
+// Create virtual spawner
+SpawnerData spawner = new SpawnerData(id, location, entityType, plugin);
+
+// Sync data from the physical block
+if (blockState instanceof CreatureSpawner creatureSpawner) {
+    spawner.syncFromBlock(creatureSpawner);
+}
+```
+
+This extracts information like:
+- Entity type
+- Spawn delay
+- Required player range
+
+The reverse is also possible with `applyToBlock()`:
+
+```java
+// Apply virtual spawner data to the physical block
+spawner.applyToBlock(creatureSpawner);
+```
+
 ### Backward Compatibility
 
 Deprecated wrapper methods maintain compatibility with existing code:
@@ -200,6 +226,15 @@ If you're updating code to use the refactored API:
    long delayMs = spawner.getSpawnDelay();
    ```
 
+4. **Sync data from spawner blocks:**
+   ```java
+   // Extract data from CreatureSpawner block
+   spawner.syncFromBlock(creatureSpawner);
+   
+   // Apply data to CreatureSpawner block
+   spawner.applyToBlock(creatureSpawner);
+   ```
+
 ### For Server Administrators
 
 No changes needed! The refactor maintains full backward compatibility with existing configurations and saved data.
@@ -212,6 +247,7 @@ No changes needed! The refactor maintains full backward compatibility with exist
 4. **Maintainability**: Clean separation of concerns
 5. **Thread Safety**: Folia-compatible with proper scheduling
 6. **Extensibility**: Easy to add new features and integrations
+7. **Block Integration**: Can sync data between virtual and physical spawners
 
 ## Future Considerations
 

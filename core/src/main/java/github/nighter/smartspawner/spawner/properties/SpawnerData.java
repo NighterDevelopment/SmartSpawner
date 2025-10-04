@@ -1086,4 +1086,79 @@ public class SpawnerData implements Spawner {
     public long getSpawnDelay() {
         return this.spawnDelay;
     }
+
+    /**
+     * Syncs data from a physical CreatureSpawner block to this virtual SpawnerData.
+     * This method extracts relevant information from the spawner block and applies it
+     * to the virtual spawner, bridging the gap between Bukkit's block-based spawner
+     * and our virtual spawner system.
+     * 
+     * <p>Note: This is a one-way sync FROM the block TO SpawnerData. The virtual spawner
+     * maintains its own state independently after initial sync.</p>
+     * 
+     * @param blockSpawner The CreatureSpawner block to sync from
+     * @throws IllegalArgumentException if blockSpawner is null
+     */
+    public void syncFromBlock(@NotNull org.bukkit.block.CreatureSpawner blockSpawner) {
+        if (blockSpawner == null) {
+            throw new IllegalArgumentException("Block spawner cannot be null");
+        }
+
+        // Sync entity type
+        EntityType blockEntityType = blockSpawner.getSpawnedType();
+        if (blockEntityType != null && blockEntityType != EntityType.UNKNOWN) {
+            setSpawnedType(blockEntityType);
+        }
+
+        // Sync delay (convert from ticks to milliseconds)
+        int delayTicks = blockSpawner.getDelay();
+        if (delayTicks > 0) {
+            setDelay(delayTicks);
+        }
+
+        // Sync required player range
+        int range = blockSpawner.getRequiredPlayerRange();
+        if (range > 0) {
+            setRequiredPlayerRange(range);
+        }
+
+        // Note: isActivated() is managed by SpawnerRangeChecker, not synced from block
+        // The block's activation state is transient, while our virtual spawner
+        // has its own activation monitoring system
+
+        plugin.debug("Synced virtual spawner " + spawnerId + " from block spawner");
+    }
+
+    /**
+     * Applies this virtual spawner's data to a physical CreatureSpawner block.
+     * This is the reverse of syncFromBlock() - it pushes our virtual spawner's
+     * configuration to the physical block.
+     * 
+     * <p>This is useful when you need to update the visual representation of the
+     * spawner block to match the virtual spawner's current state.</p>
+     * 
+     * @param blockSpawner The CreatureSpawner block to apply data to
+     * @throws IllegalArgumentException if blockSpawner is null
+     */
+    public void applyToBlock(@NotNull org.bukkit.block.CreatureSpawner blockSpawner) {
+        if (blockSpawner == null) {
+            throw new IllegalArgumentException("Block spawner cannot be null");
+        }
+
+        // Apply entity type
+        if (this.entityType != null && this.entityType != EntityType.UNKNOWN) {
+            blockSpawner.setSpawnedType(this.entityType);
+        }
+
+        // Apply delay (our internal format to block's tick format)
+        blockSpawner.setDelay(getDelay());
+
+        // Apply required player range
+        blockSpawner.setRequiredPlayerRange(getRequiredPlayerRange());
+
+        // Update the block
+        blockSpawner.update(true, false);
+
+        plugin.debug("Applied virtual spawner " + spawnerId + " data to block spawner");
+    }
 }
