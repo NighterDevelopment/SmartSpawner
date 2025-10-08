@@ -6,7 +6,6 @@ import github.nighter.smartspawner.commands.BaseSubCommand;
 import github.nighter.smartspawner.spawner.properties.SpawnerManager;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
