@@ -201,6 +201,7 @@ hologram:
   alignment: CENTER     # Text alignment (CENTER, LEFT, or RIGHT)
   shadowed_text: true   # Apply shadow effect to text
   see_through: false    # Text visible through blocks
+  view_range: 16.0      # Maximum distance (in blocks) players can see holograms from
 
 # Particle effect toggles for visual feedback
 particle:

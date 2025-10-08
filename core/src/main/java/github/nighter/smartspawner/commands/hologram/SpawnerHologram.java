@@ -18,6 +18,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Optimized hologram implementation using TextDisplay entities
+ * Performance improvements:
+ * - Cached text rendering to avoid redundant string operations
+ * - Reduced entity thread operations
+ * - Optimized update checks
+ */
 public class SpawnerHologram {
     private final SmartSpawner plugin;
     private final LanguageManager languageManager;
@@ -31,6 +38,9 @@ public class SpawnerHologram {
     private int maxSlots;
     private static final String HOLOGRAM_IDENTIFIER = "SmartSpawner-Holo";
     private final String uniqueIdentifier;
+    
+    // Cached text to avoid redundant updates
+    private String cachedText = null;
 
     private static final Vector3f SCALE = new Vector3f(1.0f, 1.0f, 1.0f);
     private static final Vector3f TRANSLATION = new Vector3f(0.0f, 0.0f, 0.0f);
@@ -78,7 +88,11 @@ public class SpawnerHologram {
                         plugin.getLogger().warning("Invalid hologram alignment in config: " + alignmentStr + ". Using CENTER as default.");
                     }
                     td.setAlignment(alignment);
-                    td.setViewRange(16.0f);
+                    
+                    // Optimize: Reduce view range for better performance (only show to nearby players)
+                    float viewRange = (float) plugin.getConfig().getDouble("hologram.view_range", 16.0);
+                    td.setViewRange(viewRange);
+                    
                     td.setShadowed(plugin.getConfig().getBoolean("hologram.shadowed_text", true));
                     td.setDefaultBackground(false);
                     td.setTransformation(new Transformation(TRANSLATION, ROTATION, SCALE, ROTATION));
@@ -89,6 +103,8 @@ public class SpawnerHologram {
                 });
 
                 textDisplay.set(display);
+                // Clear cache to force update
+                cachedText = null;
                 updateText();
             } catch (Exception e) {
                 plugin.getLogger().severe("Error creating hologram: " + e.getMessage());
@@ -100,8 +116,6 @@ public class SpawnerHologram {
     public void updateText() {
         TextDisplay display = textDisplay.get();
         if (display == null || entityType == null) return;
-
-        // Don't check isValid() here as it needs to be on the entity thread
 
         // Prepare the text content outside of the entity thread
         String entityTypeName = languageManager.getFormattedMobName(entityType);
@@ -126,6 +140,13 @@ public class SpawnerHologram {
         // Apply color codes
         final String finalText = ColorUtil.translateHexColorCodes(hologramText);
 
+        // Performance optimization: Only update if text has changed
+        if (finalText.equals(cachedText)) {
+            return; // Text hasn't changed, skip update
+        }
+        
+        cachedText = finalText;
+
         // Schedule the entity update on the entity's thread
         Scheduler.runEntityTask(display, () -> {
             if (display.isValid()) {
@@ -140,6 +161,8 @@ public class SpawnerHologram {
         if (display == null || !display.isValid()) {
             // If hologram doesn't exist or is invalid, recreate it
             createHologram();
+            // Get the newly created display
+            display = textDisplay.get();
         }
 
         // Update data values
@@ -150,7 +173,7 @@ public class SpawnerHologram {
         this.currentItems = currentItems;
         this.maxSlots = maxSlots;
 
-        // Update the text display
+        // Update the text display (will skip if text hasn't changed due to caching)
         updateText();
     }
 
@@ -161,6 +184,8 @@ public class SpawnerHologram {
             Scheduler.runEntityTask(display, display::remove);
             textDisplay.set(null);
         }
+        // Clear cache
+        cachedText = null;
     }
 
     public void cleanupExistingHologram() {

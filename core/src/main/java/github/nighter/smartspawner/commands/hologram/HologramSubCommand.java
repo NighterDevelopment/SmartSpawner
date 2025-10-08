@@ -7,7 +7,11 @@ import github.nighter.smartspawner.spawner.properties.SpawnerManager;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jspecify.annotations.NullMarked;
+
+import java.io.File;
+import java.io.IOException;
 
 @NullMarked
 public class HologramSubCommand extends BaseSubCommand {
@@ -41,12 +45,17 @@ public class HologramSubCommand extends BaseSubCommand {
             // Toggle hologram state
             boolean newValue = !plugin.getConfig().getBoolean("hologram.enabled");
 
-            // Get main config and set new value
-            FileConfiguration mainConfig = plugin.getConfig();
-            mainConfig.set("hologram.enabled", newValue);
-
-            // Save configs and reload
-            plugin.saveConfig();
+            // Load config file directly to avoid data loss
+            File configFile = new File(plugin.getDataFolder(), "config.yml");
+            FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+            
+            // Set new value
+            config.set("hologram.enabled", newValue);
+            
+            // Save the config file
+            config.save(configFile);
+            
+            // Reload plugin config to reflect changes
             plugin.reloadConfig();
 
             // Update all holograms
@@ -57,6 +66,10 @@ public class HologramSubCommand extends BaseSubCommand {
             plugin.getMessageService().sendMessage(sender, messageKey);
 
             return 1;
+        } catch (IOException e) {
+            plugin.getLogger().severe("Error saving config: " + e.getMessage());
+            sendError(sender, "An error occurred while saving the configuration");
+            return 0;
         } catch (Exception e) {
             plugin.getLogger().severe("Error toggling holograms: " + e.getMessage());
             sendError(sender, "An error occurred while toggling holograms");
