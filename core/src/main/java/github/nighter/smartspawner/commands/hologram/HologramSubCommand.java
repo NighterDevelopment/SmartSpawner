@@ -41,13 +41,11 @@ public class HologramSubCommand extends BaseSubCommand {
             // Toggle hologram state
             boolean newValue = !plugin.getConfig().getBoolean("hologram.enabled");
 
-            // Get main config and set new value
-            FileConfiguration mainConfig = plugin.getConfig();
-            mainConfig.set("hologram.enabled", newValue);
+            // Set new value in config
+            plugin.getConfig().set("hologram.enabled", newValue);
 
-            // Save configs and reload
+            // Save the config (this only saves the current config, it doesn't create a new one)
             plugin.saveConfig();
-            plugin.reloadConfig();
 
             // Update all holograms
             spawnerManager.refreshAllHolograms();

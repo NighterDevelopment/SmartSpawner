@@ -127,6 +127,12 @@ dependencies:
       required: false
       join-classpath: true
 
+    # Hologram Plugins
+    HologramLib:
+      load: BEFORE
+      required: false
+      join-classpath: true
+
     # Drops Plugins
     MythicMobs:
       load: BEFORE

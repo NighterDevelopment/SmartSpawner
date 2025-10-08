@@ -21,7 +21,13 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SpawnerHologram {
     private final SmartSpawner plugin;
     private final LanguageManager languageManager;
+    
+    // TextDisplay fallback (used when HologramLib is not available)
     private final AtomicReference<TextDisplay> textDisplay = new AtomicReference<>(null);
+    
+    // HologramLib hologram (used when HologramLib is available)
+    private Object hologramLibHologram;
+    
     private final Location spawnerLocation;
     private int stackSize;
     private EntityType entityType;
@@ -57,6 +63,78 @@ public class SpawnerHologram {
         // Clean up any existing hologram for this spawner first
         cleanupExistingHologram();
 
+        // Try to use HologramLib first, fall back to TextDisplay if not available
+        if (plugin.getIntegrationManager().getHologramLibHook() != null && 
+            plugin.getIntegrationManager().getHologramLibHook().isEnabled()) {
+            createHologramLibHologram();
+        } else {
+            createTextDisplayHologram();
+        }
+    }
+
+    private void createHologramLibHologram() {
+        try {
+            double offsetX = plugin.getConfig().getDouble("hologram.offset_x", 0.5);
+            double offsetY = plugin.getConfig().getDouble("hologram.offset_y", 0.5);
+            double offsetZ = plugin.getConfig().getDouble("hologram.offset_z", 0.5);
+
+            Location holoLoc = spawnerLocation.clone().add(offsetX, offsetY, offsetZ);
+
+            // Get configuration values
+            String alignmentStr = plugin.getConfig().getString("hologram.alignment", "CENTER");
+            boolean shadowed = plugin.getConfig().getBoolean("hologram.shadowed_text", true);
+            boolean seeThrough = plugin.getConfig().getBoolean("hologram.see_through", false);
+
+            // Use reflection to create HologramLib hologram
+            Class<?> textHologramClass = Class.forName("me.hsgamer.hologramlib.spigot.hologram.TextHologram");
+            Object hologram = textHologramClass.getConstructor(String.class)
+                    .newInstance(uniqueIdentifier);
+
+            // Set text (will be updated later with actual data)
+            textHologramClass.getMethod("setText", String.class)
+                    .invoke(hologram, "Loading...");
+
+            // Set see through blocks
+            textHologramClass.getMethod("setSeeThroughBlocks", boolean.class)
+                    .invoke(hologram, seeThrough);
+
+            // Set billboard
+            Class<?> billboardClass = Class.forName("org.bukkit.entity.Display$Billboard");
+            Object centerBillboard = billboardClass.getField("CENTER").get(null);
+            textHologramClass.getMethod("setBillboard", billboardClass)
+                    .invoke(hologram, centerBillboard);
+
+            // Set shadow
+            textHologramClass.getMethod("setShadow", boolean.class)
+                    .invoke(hologram, shadowed);
+
+            // Set alignment
+            try {
+                Class<?> alignmentClass = Class.forName("org.bukkit.entity.TextDisplay$TextAlignment");
+                Object alignment = alignmentClass.getField(alignmentStr.toUpperCase()).get(null);
+                textHologramClass.getMethod("setAlignment", alignmentClass)
+                        .invoke(hologram, alignment);
+            } catch (Exception e) {
+                // Use default alignment if invalid
+                plugin.getLogger().warning("Invalid hologram alignment in config: " + alignmentStr + ". Using CENTER as default.");
+            }
+
+            // Spawn the hologram
+            Object manager = plugin.getIntegrationManager().getHologramLibHook().getHologramManager();
+            manager.getClass().getMethod("spawn", Object.class, Location.class)
+                    .invoke(manager, hologram, holoLoc);
+
+            this.hologramLibHologram = hologram;
+            updateText();
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error creating HologramLib hologram: " + e.getMessage());
+            e.printStackTrace();
+            // Fall back to TextDisplay
+            createTextDisplayHologram();
+        }
+    }
+
+    private void createTextDisplayHologram() {
         double offsetX = plugin.getConfig().getDouble("hologram.offset_x", 0.5);
         double offsetY = plugin.getConfig().getDouble("hologram.offset_y", 0.5);
         double offsetZ = plugin.getConfig().getDouble("hologram.offset_z", 0.5);
@@ -98,12 +176,25 @@ public class SpawnerHologram {
     }
 
     public void updateText() {
-        TextDisplay display = textDisplay.get();
-        if (display == null || entityType == null) return;
+        // Prepare the text content
+        String hologramText = prepareHologramText();
+        if (hologramText == null) return;
 
-        // Don't check isValid() here as it needs to be on the entity thread
+        // Apply color codes
+        final String finalText = ColorUtil.translateHexColorCodes(hologramText);
 
-        // Prepare the text content outside of the entity thread
+        // Update based on which system is being used
+        if (hologramLibHologram != null) {
+            updateHologramLibText(finalText);
+        } else {
+            updateTextDisplayText(finalText);
+        }
+    }
+
+    private String prepareHologramText() {
+        if (entityType == null) return null;
+
+        // Prepare the text content
         String entityTypeName = languageManager.getFormattedMobName(entityType);
 
         // Create replacements map
@@ -123,22 +214,51 @@ public class SpawnerHologram {
             hologramText = hologramText.replace(entry.getKey(), entry.getValue());
         }
 
-        // Apply color codes
-        final String finalText = ColorUtil.translateHexColorCodes(hologramText);
+        return hologramText;
+    }
+
+    private void updateHologramLibText(String text) {
+        try {
+            hologramLibHologram.getClass().getMethod("setText", String.class)
+                    .invoke(hologramLibHologram, text);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error updating HologramLib text: " + e.getMessage());
+        }
+    }
+
+    private void updateTextDisplayText(String text) {
+        TextDisplay display = textDisplay.get();
+        if (display == null) return;
 
         // Schedule the entity update on the entity's thread
         Scheduler.runEntityTask(display, () -> {
             if (display.isValid()) {
-                display.setText(finalText);
+                display.setText(text);
             }
         });
     }
 
     public void updateData(int stackSize, EntityType entityType, int currentExp, int maxExp, int currentItems, int maxSlots) {
         // First, ensure we have a valid hologram
-        TextDisplay display = textDisplay.get();
-        if (display == null || !display.isValid()) {
-            // If hologram doesn't exist or is invalid, recreate it
+        boolean needsRecreate = false;
+        
+        if (hologramLibHologram != null) {
+            // HologramLib is being used, check if it's still valid
+            try {
+                // HologramLib holograms don't have a simple validity check, assume valid if not null
+                needsRecreate = false;
+            } catch (Exception e) {
+                needsRecreate = true;
+            }
+        } else {
+            // TextDisplay is being used
+            TextDisplay display = textDisplay.get();
+            if (display == null || !display.isValid()) {
+                needsRecreate = true;
+            }
+        }
+        
+        if (needsRecreate) {
             createHologram();
         }
 
@@ -155,6 +275,19 @@ public class SpawnerHologram {
     }
 
     public void remove() {
+        // Remove HologramLib hologram if it exists
+        if (hologramLibHologram != null) {
+            try {
+                Object manager = plugin.getIntegrationManager().getHologramLibHook().getHologramManager();
+                manager.getClass().getMethod("remove", Object.class)
+                        .invoke(manager, hologramLibHologram);
+                hologramLibHologram = null;
+            } catch (Exception e) {
+                plugin.getLogger().severe("Error removing HologramLib hologram: " + e.getMessage());
+            }
+        }
+        
+        // Remove TextDisplay hologram if it exists
         TextDisplay display = textDisplay.get();
         if (display != null && display.isValid()) {
             // Run on the entity's thread
@@ -165,6 +298,18 @@ public class SpawnerHologram {
 
     public void cleanupExistingHologram() {
         if (spawnerLocation == null || spawnerLocation.getWorld() == null) return;
+
+        // Remove HologramLib hologram if it exists
+        if (hologramLibHologram != null) {
+            try {
+                Object manager = plugin.getIntegrationManager().getHologramLibHook().getHologramManager();
+                manager.getClass().getMethod("remove", Object.class)
+                        .invoke(manager, hologramLibHologram);
+                hologramLibHologram = null;
+            } catch (Exception e) {
+                plugin.getLogger().severe("Error cleaning up HologramLib hologram: " + e.getMessage());
+            }
+        }
 
         // First, check if our tracked hologram is still valid
         TextDisplay display = textDisplay.get();

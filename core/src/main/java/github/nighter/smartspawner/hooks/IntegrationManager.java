@@ -39,10 +39,12 @@ public class IntegrationManager {
     // Integration plugin flags
     private boolean hasAuraSkills = false;
     private boolean hasFloodgate = false;
+    private boolean hasHologramLib = false;
 
     // Integration instances
     public AuraSkillsIntegration auraSkillsIntegration;
     public FloodgateHook floodgateHook;
+    public github.nighter.smartspawner.hooks.hologram.HologramLibHook hologramLibHook;
 
     public IntegrationManager(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -169,6 +171,11 @@ public class IntegrationManager {
                 this.floodgateHook = null;
                 return false;
             }
+        }, true);
+
+        hasHologramLib = checkPlugin("HologramLib", () -> {
+            this.hologramLibHook = new github.nighter.smartspawner.hooks.hologram.HologramLibHook(plugin);
+            return this.hologramLibHook.initialize();
         }, true);
     }
 
