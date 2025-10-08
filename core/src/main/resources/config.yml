@@ -179,6 +179,12 @@ bedrock_support:
 hologram:
   enabled: false        # Show floating text above spawners
 
+  # Hologram backend (auto, hologramlib, textdisplay)
+  # - auto: Use HologramLib if available, otherwise use TextDisplay
+  # - hologramlib: Force use HologramLib (requires HologramLib plugin)
+  # - textdisplay: Force use Minecraft's native TextDisplay entities
+  backend: auto
+
   # Hologram Text Display (supports color codes)
   # Available placeholders:
   # %entity% - Type of mob

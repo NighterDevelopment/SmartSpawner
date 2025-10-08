@@ -41,6 +41,9 @@ softdepend:
   # RPG/Skill Plugins
   - AuraSkills
 
+  # Hologram Plugins
+  - HologramLib
+
   #Drops Plugins
   - MythicMobs
 

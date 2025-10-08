@@ -63,9 +63,32 @@ public class SpawnerHologram {
         // Clean up any existing hologram for this spawner first
         cleanupExistingHologram();
 
-        // Try to use HologramLib first, fall back to TextDisplay if not available
-        if (plugin.getIntegrationManager().getHologramLibHook() != null && 
-            plugin.getIntegrationManager().getHologramLibHook().isEnabled()) {
+        // Get backend preference from config
+        String backend = plugin.getConfig().getString("hologram.backend", "auto").toLowerCase();
+        
+        boolean useHologramLib = false;
+        boolean hologramLibAvailable = plugin.getIntegrationManager().getHologramLibHook() != null && 
+                                      plugin.getIntegrationManager().getHologramLibHook().isEnabled();
+
+        switch (backend) {
+            case "hologramlib":
+                if (hologramLibAvailable) {
+                    useHologramLib = true;
+                } else {
+                    plugin.getLogger().warning("HologramLib backend requested but not available, falling back to TextDisplay");
+                    useHologramLib = false;
+                }
+                break;
+            case "textdisplay":
+                useHologramLib = false;
+                break;
+            case "auto":
+            default:
+                useHologramLib = hologramLibAvailable;
+                break;
+        }
+
+        if (useHologramLib) {
             createHologramLibHologram();
         } else {
             createTextDisplayHologram();
