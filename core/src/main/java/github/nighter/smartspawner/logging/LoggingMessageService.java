@@ -27,8 +27,17 @@ public class LoggingMessageService {
         String key = "logging.events." + eventType.name();
         
         try {
+            // Check if language manager is available
+            if (languageManager == null || languageManager.getCachedDefaultLocaleData() == null) {
+                return eventType.getDescription();
+            }
+            
             // Try to get from language manager's default locale
             ConfigurationSection messages = languageManager.getCachedDefaultLocaleData().messages();
+            if (messages == null) {
+                return eventType.getDescription();
+            }
+            
             String description = messages.getString(key);
             
             if (description != null && !description.isEmpty()) {
@@ -49,7 +58,16 @@ public class LoggingMessageService {
         String key = "logging.discord_embeds." + eventType.name();
         
         try {
+            // Check if language manager is available
+            if (languageManager == null || languageManager.getCachedDefaultLocaleData() == null) {
+                return getDefaultEmbedConfig();
+            }
+            
             ConfigurationSection messages = languageManager.getCachedDefaultLocaleData().messages();
+            if (messages == null) {
+                return getDefaultEmbedConfig();
+            }
+            
             ConfigurationSection embedSection = messages.getConfigurationSection(key);
             
             if (embedSection != null) {
@@ -79,6 +97,10 @@ public class LoggingMessageService {
         }
         
         // Return default config
+        return getDefaultEmbedConfig();
+    }
+    
+    private DiscordEmbedConfig getDefaultEmbedConfig() {
         return new DiscordEmbedConfig("{description}", "{description}", 0x5865F2, new HashMap<>());
     }
 

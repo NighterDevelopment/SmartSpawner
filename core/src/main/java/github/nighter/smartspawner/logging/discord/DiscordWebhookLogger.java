@@ -2,6 +2,7 @@ package github.nighter.smartspawner.logging.discord;
 
 import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.logging.LoggingMessageService;
 import github.nighter.smartspawner.logging.SpawnerLogEntry;
 
 import java.io.IOException;
@@ -26,18 +27,20 @@ public class DiscordWebhookLogger {
     private final AtomicLong lastWebhookTime;
     private final AtomicLong webhooksSentThisMinute;
     private Scheduler.Task webhookTask;
+    private final LoggingMessageService loggingMessageService;
     
     // Discord rate limits: 30 requests per minute per webhook
     private static final int MAX_REQUESTS_PER_MINUTE = 25; // Leave some buffer
     private static final long MINUTE_IN_MILLIS = 60000;
     
-    public DiscordWebhookLogger(SmartSpawner plugin, DiscordWebhookConfig config) {
+    public DiscordWebhookLogger(SmartSpawner plugin, DiscordWebhookConfig config, LoggingMessageService loggingMessageService) {
         this.plugin = plugin;
         this.config = config;
         this.webhookQueue = new ConcurrentLinkedQueue<>();
         this.isShuttingDown = new AtomicBoolean(false);
         this.lastWebhookTime = new AtomicLong(System.currentTimeMillis());
         this.webhooksSentThisMinute = new AtomicLong(0);
+        this.loggingMessageService = loggingMessageService;
         
         if (config.isEnabled()) {
             startWebhookTask();
@@ -103,7 +106,7 @@ public class DiscordWebhookLogger {
         
         try {
             // Build the embed
-            DiscordEmbed embed = DiscordEmbedBuilder.buildEmbed(entry, config, plugin);
+            DiscordEmbed embed = DiscordEmbedBuilder.buildEmbed(entry, config, plugin, loggingMessageService);
             String jsonPayload = embed.toJson();
             
             // Send async HTTP request

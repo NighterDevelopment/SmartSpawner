@@ -18,15 +18,15 @@ public class DiscordEmbedBuilder {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss")
             .withZone(ZoneId.systemDefault());
 
-    public static DiscordEmbed buildEmbed(SpawnerLogEntry entry, DiscordWebhookConfig config, SmartSpawner plugin) {
+    public static DiscordEmbed buildEmbed(SpawnerLogEntry entry, DiscordWebhookConfig config, SmartSpawner plugin, LoggingMessageService loggingMessageService) {
         DiscordEmbed embed = new DiscordEmbed();
         
-        // Get logging message service for localized descriptions
-        LoggingMessageService loggingMessageService = new LoggingMessageService(plugin);
-        String localizedDescription = loggingMessageService.getEventDescription(entry.getEventType());
+        // Get logging message service for localized descriptions (use provided or create new)
+        LoggingMessageService msgService = loggingMessageService != null ? loggingMessageService : new LoggingMessageService(plugin);
+        String localizedDescription = msgService.getEventDescription(entry.getEventType());
         
         // Get embed configuration from language files
-        LoggingMessageService.DiscordEmbedConfig embedConfig = loggingMessageService.getDiscordEmbedConfig(entry.getEventType());
+        LoggingMessageService.DiscordEmbedConfig embedConfig = msgService.getDiscordEmbedConfig(entry.getEventType());
 
         // Set color from language file or fallback to config
         int color = embedConfig.getColor();

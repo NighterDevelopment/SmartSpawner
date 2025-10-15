@@ -51,7 +51,7 @@ public class SpawnerActionLogger {
         // Initialize Discord webhook logger
         DiscordWebhookConfig discordConfig = new DiscordWebhookConfig(plugin);
         if (discordConfig.isEnabled()) {
-            this.discordLogger = new DiscordWebhookLogger(plugin, discordConfig);
+            this.discordLogger = new DiscordWebhookLogger(plugin, discordConfig, loggingMessageService);
         }
     }
     

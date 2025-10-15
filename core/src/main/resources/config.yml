@@ -236,6 +236,15 @@ ghost_spawners:
 #---------------------------------------------------
 # Comprehensive logging system for tracking spawner interactions and events
 # Provides audit trail and debugging capabilities with minimal performance impact
+#
+# MULTI-LANGUAGE SUPPORT:
+# - Event descriptions can be customized in language files (language/{locale}/messages.yml)
+# - Look for the "logging.events" section in messages.yml to customize event descriptions
+# - Discord embed configurations (title, description, color, fields) can also be customized
+#   in language files under "logging.discord_embeds" section
+# - Use {newline} placeholder for line breaks in messages
+# - Available placeholders: {player}, {location}, {world}, {x}, {y}, {z}, {entity}, {time}, 
+#   {description}, {event_type}, and event-specific metadata fields
 logging:
   # Enable/disable the logging system
   enabled: true
@@ -326,6 +335,9 @@ logging:
       - COMMAND_EXECUTE_RCON
 
     # Discord Embed Configuration
+    # NOTE: For multi-language support, embed configurations (title, description, color, fields)
+    # can now be customized in language files under logging.discord_embeds section.
+    # Settings here will be used as fallback if not found in language files.
     embed:
       # Embed title (supports placeholders)
       title: "{description}"

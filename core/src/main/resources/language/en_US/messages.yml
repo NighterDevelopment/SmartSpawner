@@ -278,9 +278,23 @@ spawner_management:
 # ------------------------------------------------------
 #             Spawner Logging Messages
 # ------------------------------------------------------
-# These messages are used for logging spawner events
-# Placeholders: {player}, {location}, {world}, {x}, {y}, {z}, {entity}, {time}, and metadata fields
-# Use {newline} for line breaks in messages
+# These messages are used for logging spawner events to files and console
+# 
+# CUSTOMIZATION GUIDE:
+# - Each event type has a customizable description
+# - Descriptions support color codes (&#RRGGBB or &c style)
+# - Placeholders available in logging context:
+#   {player} - Player who triggered the event
+#   {location} - Full location (world + coordinates)
+#   {world}, {x}, {y}, {z} - Individual location components
+#   {entity} - Entity type (for spawner-related events)
+#   {time} - Event timestamp
+#   Event-specific metadata fields (varies by event type)
+#
+# EXAMPLES:
+#   SPAWNER_PLACE: "Spawner placed by {player} at {location}"
+#   SPAWNER_BREAK: "Spawner broken by {player}"
+#
 logging:
   events:
     SPAWNER_PLACE: "Spawner placed"
@@ -305,7 +319,24 @@ logging:
     SPAWNER_EGG_CHANGE: "Spawner entity type changed"
 
   # Discord embed configurations for each event type
-  # Supports all placeholders from logging events
+  # Supports all placeholders: {player}, {location}, {world}, {x}, {y}, {z}, {entity}, {time}, {description}, {event_type}
+  # And all metadata fields specific to each event
+  # Use {newline} for line breaks in description or field values
+  # 
+  # Example with custom fields:
+  # SPAWNER_PLACE:
+  #   title: "🟢 Spawner Placed"
+  #   description: "A spawner was placed{newline}Player: {player}{newline}Location: {location}"
+  #   color: "57F287"
+  #   fields:
+  #     location_field:
+  #       name: "📍 Location"
+  #       value: "{world} ({x}, {y}, {z})"
+  #       inline: true
+  #     entity_field:
+  #       name: "🐾 Entity Type"
+  #       value: "{entity}"
+  #       inline: true
   discord_embeds:
     SPAWNER_PLACE:
       title: "{description}"
