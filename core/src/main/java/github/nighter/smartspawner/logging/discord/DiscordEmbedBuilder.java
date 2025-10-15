@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.logging.discord;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.logging.LoggingMessageService;
 import github.nighter.smartspawner.logging.SpawnerLogEntry;
 import org.bukkit.Location;
 
@@ -19,20 +20,31 @@ public class DiscordEmbedBuilder {
 
     public static DiscordEmbed buildEmbed(SpawnerLogEntry entry, DiscordWebhookConfig config, SmartSpawner plugin) {
         DiscordEmbed embed = new DiscordEmbed();
+        
+        // Get logging message service for localized descriptions
+        LoggingMessageService loggingMessageService = new LoggingMessageService(plugin);
+        String localizedDescription = loggingMessageService.getEventDescription(entry.getEventType());
+        
+        // Get embed configuration from language files
+        LoggingMessageService.DiscordEmbedConfig embedConfig = loggingMessageService.getDiscordEmbedConfig(entry.getEventType());
 
-        // Set color based on specific event type
-        embed.setColor(config.getColorForEvent(entry.getEventType()));
+        // Set color from language file or fallback to config
+        int color = embedConfig.getColor();
+        if (color == 0x5865F2) { // If it's the default, try config
+            color = config.getColorForEvent(entry.getEventType());
+        }
+        embed.setColor(color);
 
         // Build placeholders
-        Map<String, String> placeholders = buildPlaceholders(entry);
+        Map<String, String> placeholders = buildPlaceholders(entry, localizedDescription);
 
-        // Set compact title with icon
+        // Set compact title with icon - use language file config or fallback to config
         String eventIcon = getEventIcon(entry.getEventType());
-        String title = eventIcon + " " + replacePlaceholders(config.getEmbedTitle(), placeholders);
+        String title = eventIcon + " " + replacePlaceholders(embedConfig.getTitle(), placeholders);
         embed.setTitle(title);
 
-        // Set compact description
-        String description = buildCompactDescription(entry, placeholders, config);
+        // Set compact description - use language file config
+        String description = buildCompactDescription(entry, placeholders, embedConfig.getDescription());
         embed.setDescription(description);
 
         // Set footer
@@ -49,6 +61,14 @@ public class DiscordEmbedBuilder {
 
         // Add only important metadata as inline fields
         addCompactFields(embed, entry);
+        
+        // Add custom fields from language file if any
+        for (Map.Entry<String, LoggingMessageService.DiscordEmbedField> fieldEntry : embedConfig.getFields().entrySet()) {
+            LoggingMessageService.DiscordEmbedField field = fieldEntry.getValue();
+            String fieldName = replacePlaceholders(field.getName(), placeholders);
+            String fieldValue = replacePlaceholders(field.getValue(), placeholders);
+            embed.addField(fieldName, fieldValue, field.isInline());
+        }
 
         // Add custom fields from config (if any)
         for (DiscordWebhookConfig.EmbedField customField : config.getCustomFields()) {
@@ -60,22 +80,23 @@ public class DiscordEmbedBuilder {
         return embed;
     }
 
-    private static String buildCompactDescription(SpawnerLogEntry entry, Map<String, String> placeholders, DiscordWebhookConfig config) {
+    private static String buildCompactDescription(SpawnerLogEntry entry, Map<String, String> placeholders, String descriptionTemplate) {
         StringBuilder desc = new StringBuilder();
 
-        // Main description
-        String mainDesc = replacePlaceholders(config.getEmbedDescription(), placeholders);
+        // Main description from template
+        String mainDesc = replacePlaceholders(descriptionTemplate, placeholders);
         desc.append(mainDesc);
 
         // Player info (if exists)
         if (entry.getPlayerName() != null) {
-            desc.append("👤 `").append(entry.getPlayerName()).append("`");
+            desc.append("\n👤 `").append(entry.getPlayerName()).append("`");
         }
 
         // Location info (compact format)
         if (entry.getLocation() != null) {
             Location loc = entry.getLocation();
             if (entry.getPlayerName() != null) desc.append(" • ");
+            else desc.append("\n");
             desc.append("📍 `").append(loc.getWorld().getName())
                     .append(" (").append(loc.getBlockX())
                     .append(", ").append(loc.getBlockY())
@@ -132,10 +153,10 @@ public class DiscordEmbedBuilder {
         return "`" + str + "`";
     }
 
-    private static Map<String, String> buildPlaceholders(SpawnerLogEntry entry) {
+    private static Map<String, String> buildPlaceholders(SpawnerLogEntry entry, String localizedDescription) {
         Map<String, String> placeholders = new HashMap<>();
 
-        placeholders.put("description", entry.getEventType().getDescription());
+        placeholders.put("description", localizedDescription);
         placeholders.put("event_type", entry.getEventType().name());
         placeholders.put("time", FORMATTER.format(Instant.ofEpochMilli(System.currentTimeMillis())));
 
@@ -176,6 +197,10 @@ public class DiscordEmbedBuilder {
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
             result = result.replace("{" + entry.getKey() + "}", entry.getValue());
         }
+        
+        // Replace {newline} with actual newline
+        result = result.replace("{newline}", "\n");
+        
         return result;
     }
 

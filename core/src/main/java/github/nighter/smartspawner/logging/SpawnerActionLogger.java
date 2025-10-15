@@ -30,6 +30,7 @@ public class SpawnerActionLogger {
     private final AtomicBoolean isShuttingDown;
     private Scheduler.Task logTask;
     private DiscordWebhookLogger discordLogger;
+    private LoggingMessageService loggingMessageService;
     
     private File currentLogFile;
     private static final ThreadLocal<SimpleDateFormat> dateFormat = 
@@ -40,6 +41,7 @@ public class SpawnerActionLogger {
         this.config = config;
         this.logQueue = new ConcurrentLinkedQueue<>();
         this.isShuttingDown = new AtomicBoolean(false);
+        this.loggingMessageService = new LoggingMessageService(plugin);
         
         if (plugin.getConfig().getBoolean("enabled", true)) {
             setupLogDirectory();
@@ -61,8 +63,11 @@ public class SpawnerActionLogger {
             return;
         }
         
+        // Get localized description
+        String description = loggingMessageService.getEventDescription(entry.getEventType());
+        
         if (config.isConsoleOutput()) {
-            plugin.getLogger().info("[SpawnerLog] " + entry.toReadableString());
+            plugin.getLogger().info("[SpawnerLog] " + entry.toReadableString(description));
         }
         
         // Always use async logging
@@ -145,7 +150,9 @@ public class SpawnerActionLogger {
         
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(currentLogFile, true))) {
             for (SpawnerLogEntry entry : entries) {
-                String logLine = config.isJsonFormat() ? entry.toJson() : entry.toReadableString();
+                // Get localized description
+                String description = loggingMessageService.getEventDescription(entry.getEventType());
+                String logLine = config.isJsonFormat() ? entry.toJson(description) : entry.toReadableString(description);
                 writer.write(logLine);
                 writer.newLine();
             }

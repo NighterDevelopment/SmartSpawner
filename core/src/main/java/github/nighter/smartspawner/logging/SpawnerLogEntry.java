@@ -67,11 +67,19 @@ public class SpawnerLogEntry {
      * Converts the log entry to a JSON string for structured logging.
      */
     public String toJson() {
+        return toJson(null);
+    }
+    
+    /**
+     * Converts the log entry to a JSON string with custom description.
+     */
+    public String toJson(String customDescription) {
         StringBuilder json = new StringBuilder("{");
         json.append("\"timestamp\":\"").append(FORMATTER.format(Instant.ofEpochMilli(timestamp))).append("\",");
         json.append("\"timestamp_ms\":").append(timestamp).append(",");
         json.append("\"event_type\":\"").append(eventType.name()).append("\",");
-        json.append("\"description\":\"").append(eventType.getDescription()).append("\"");
+        String description = customDescription != null ? customDescription : eventType.getDescription();
+        json.append("\"description\":\"").append(description).append("\"");
         
         if (playerName != null) {
             json.append(",\"player\":\"").append(escapeJson(playerName)).append("\"");
@@ -116,9 +124,17 @@ public class SpawnerLogEntry {
      * Converts the log entry to a human-readable string.
      */
     public String toReadableString() {
+        return toReadableString(null);
+    }
+    
+    /**
+     * Converts the log entry to a human-readable string with custom description.
+     */
+    public String toReadableString(String customDescription) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(FORMATTER.format(Instant.ofEpochMilli(timestamp))).append("] ");
-        sb.append(eventType.getDescription());
+        String description = customDescription != null ? customDescription : eventType.getDescription();
+        sb.append(description);
         
         if (playerName != null) {
             sb.append(" | Player: ").append(playerName);

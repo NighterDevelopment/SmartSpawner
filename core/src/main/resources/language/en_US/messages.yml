@@ -274,3 +274,155 @@ spawner_management:
   removed:
     message: "&#e6e6faꜱᴘᴀᴡɴᴇʀ &#ff5252ʀᴇᴍᴏᴠᴇᴅ &#e6e6faꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ!"
     sound: entity.item.break
+
+# ------------------------------------------------------
+#             Spawner Logging Messages
+# ------------------------------------------------------
+# These messages are used for logging spawner events
+# Placeholders: {player}, {location}, {world}, {x}, {y}, {z}, {entity}, {time}, and metadata fields
+# Use {newline} for line breaks in messages
+logging:
+  events:
+    SPAWNER_PLACE: "Spawner placed"
+    SPAWNER_BREAK: "Spawner broken"
+    SPAWNER_EXPLODE: "Spawner destroyed by explosion"
+    SPAWNER_STACK_HAND: "Spawner stacked by hand"
+    SPAWNER_STACK_GUI: "Spawner stacked via GUI"
+    SPAWNER_DESTACK_GUI: "Spawner destacked via GUI"
+    SPAWNER_GUI_OPEN: "Spawner GUI opened"
+    SPAWNER_STORAGE_OPEN: "Storage GUI opened"
+    SPAWNER_STACKER_OPEN: "Stacker GUI opened"
+    SPAWNER_EXP_CLAIM: "Experience claimed"
+    SPAWNER_SELL_ALL: "Items sold"
+    SPAWNER_ITEM_TAKE_ALL: "All items taken from storage"
+    SPAWNER_ITEM_DROP: "Item dropped from storage"
+    SPAWNER_ITEMS_SORT: "Items sorted in storage"
+    SPAWNER_ITEM_FILTER: "Item filter toggled"
+    SPAWNER_DROP_PAGE_ITEMS: "Page items dropped"
+    COMMAND_EXECUTE_PLAYER: "Command executed by player"
+    COMMAND_EXECUTE_CONSOLE: "Command executed by console"
+    COMMAND_EXECUTE_RCON: "Command executed by RCON"
+    SPAWNER_EGG_CHANGE: "Spawner entity type changed"
+
+  # Discord embed configurations for each event type
+  # Supports all placeholders from logging events
+  discord_embeds:
+    SPAWNER_PLACE:
+      title: "{description}"
+      description: "{description}"
+      color: "57F287"
+      fields: []
+    
+    SPAWNER_BREAK:
+      title: "{description}"
+      description: "{description}"
+      color: "ED4245"
+      fields: []
+    
+    SPAWNER_EXPLODE:
+      title: "{description}"
+      description: "{description}"
+      color: "FF6B6B"
+      fields: []
+    
+    SPAWNER_STACK_HAND:
+      title: "{description}"
+      description: "{description}"
+      color: "FEE75C"
+      fields: []
+    
+    SPAWNER_STACK_GUI:
+      title: "{description}"
+      description: "{description}"
+      color: "F1C40F"
+      fields: []
+    
+    SPAWNER_DESTACK_GUI:
+      title: "{description}"
+      description: "{description}"
+      color: "E67E22"
+      fields: []
+    
+    SPAWNER_GUI_OPEN:
+      title: "{description}"
+      description: "{description}"
+      color: "9B59B6"
+      fields: []
+    
+    SPAWNER_STORAGE_OPEN:
+      title: "{description}"
+      description: "{description}"
+      color: "8E44AD"
+      fields: []
+    
+    SPAWNER_STACKER_OPEN:
+      title: "{description}"
+      description: "{description}"
+      color: "BB8FCE"
+      fields: []
+    
+    SPAWNER_EXP_CLAIM:
+      title: "{description}"
+      description: "{description}"
+      color: "2ECC71"
+      fields: []
+    
+    SPAWNER_SELL_ALL:
+      title: "{description}"
+      description: "{description}"
+      color: "27AE60"
+      fields: []
+    
+    SPAWNER_ITEM_TAKE_ALL:
+      title: "{description}"
+      description: "{description}"
+      color: "1ABC9C"
+      fields: []
+    
+    SPAWNER_ITEM_DROP:
+      title: "{description}"
+      description: "{description}"
+      color: "16A085"
+      fields: []
+    
+    SPAWNER_ITEMS_SORT:
+      title: "{description}"
+      description: "{description}"
+      color: "48C9B0"
+      fields: []
+    
+    SPAWNER_ITEM_FILTER:
+      title: "{description}"
+      description: "{description}"
+      color: "45B7AF"
+      fields: []
+    
+    SPAWNER_DROP_PAGE_ITEMS:
+      title: "{description}"
+      description: "{description}"
+      color: "138D75"
+      fields: []
+    
+    COMMAND_EXECUTE_PLAYER:
+      title: "{description}"
+      description: "{description}"
+      color: "5865F2"
+      fields: []
+    
+    COMMAND_EXECUTE_CONSOLE:
+      title: "{description}"
+      description: "{description}"
+      color: "3B5998"
+      fields: []
+    
+    COMMAND_EXECUTE_RCON:
+      title: "{description}"
+      description: "{description}"
+      color: "7289DA"
+      fields: []
+    
+    SPAWNER_EGG_CHANGE:
+      title: "{description}"
+      description: "{description}"
+      color: "E91E63"
+      fields: []
