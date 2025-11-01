@@ -89,6 +89,8 @@ public class SpawnerLootGenerator {
         }
 
         try {
+            final long currentTime = System.currentTimeMillis();
+            
             boolean dataLockAcquired = false;
             try {
                 dataLockAcquired = spawner.getDataLock().tryLock(50, java.util.concurrent.TimeUnit.MILLISECONDS);
@@ -98,10 +100,17 @@ public class SpawnerLootGenerator {
             }
             
             if (!dataLockAcquired) {
+                boolean resetLockAcquired = spawner.getDataLock().tryLock();
+                if (resetLockAcquired) {
+                    try {
+                        spawner.setLastSpawnTime(currentTime);
+                    } finally {
+                        spawner.getDataLock().unlock();
+                    }
+                }
                 return;
             }
             
-            final long currentTime = System.currentTimeMillis();
             final long spawnTime;
             final int minMobs;
             final int maxMobs;
