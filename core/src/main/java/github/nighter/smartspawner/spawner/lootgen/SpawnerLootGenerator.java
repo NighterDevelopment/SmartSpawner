@@ -105,19 +105,8 @@ public class SpawnerLootGenerator {
 
         try {
             // Acquire dataLock to safely read spawn timing and configuration values
-            // Use tryLock with short timeout to avoid blocking
-            boolean dataLockAcquired = false;
-            try {
-                dataLockAcquired = spawner.getDataLock().tryLock(50, java.util.concurrent.TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            }
-            
-            if (!dataLockAcquired) {
-                // dataLock is held (likely stack size change), skip this cycle
-                return;
-            }
+            // Wait for the lock instead of skipping to ensure spawn cycles continue even during stack updates
+            spawner.getDataLock().lock();
             
             // Declare variables outside the try block so they're accessible in the async lambda
             final long currentTime = System.currentTimeMillis();
@@ -175,11 +164,8 @@ public class SpawnerLootGenerator {
                     // Re-acquire the lock for the update phase
                     // This ensures the spawner hasn't been modified (like stack size changes)
                     // between our async calculations and now
-                    boolean updateLockAcquired = spawner.getLootGenerationLock().tryLock();
-                    if (!updateLockAcquired) {
-                        // Lock is held, stack size is changing, skip this update
-                        return;
-                    }
+                    // Wait for the lock instead of skipping to ensure loot is applied
+                    spawner.getLootGenerationLock().lock();
 
                     try {
                         // Modified approach: Handle items and exp separately
