@@ -105,8 +105,19 @@ public class SpawnerLootGenerator {
 
         try {
             // Acquire dataLock to safely read spawn timing and configuration values
-            // Wait for the lock instead of skipping to ensure spawn cycles continue even during stack updates
-            spawner.getDataLock().lock();
+            // Use longer timeout to wait for stack updates while maintaining timer sync
+            boolean dataLockAcquired = false;
+            try {
+                dataLockAcquired = spawner.getDataLock().tryLock(500, java.util.concurrent.TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            
+            if (!dataLockAcquired) {
+                // dataLock still held after timeout, skip this cycle to avoid blocking
+                return;
+            }
             
             // Declare variables outside the try block so they're accessible in the async lambda
             final long currentTime = System.currentTimeMillis();
@@ -164,8 +175,19 @@ public class SpawnerLootGenerator {
                     // Re-acquire the lock for the update phase
                     // This ensures the spawner hasn't been modified (like stack size changes)
                     // between our async calculations and now
-                    // Wait for the lock instead of skipping to ensure loot is applied
-                    spawner.getLootGenerationLock().lock();
+                    // Use longer timeout to wait for concurrent operations while avoiding indefinite blocking
+                    boolean updateLockAcquired = false;
+                    try {
+                        updateLockAcquired = spawner.getLootGenerationLock().tryLock(500, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                    
+                    if (!updateLockAcquired) {
+                        // Lock still held after timeout, skip this update to avoid blocking main thread
+                        return;
+                    }
 
                     try {
                         // Modified approach: Handle items and exp separately
