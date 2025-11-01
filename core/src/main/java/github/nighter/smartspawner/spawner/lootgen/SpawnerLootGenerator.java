@@ -89,6 +89,18 @@ public class SpawnerLootGenerator {
         }
 
         try {
+            boolean dataLockAcquired = false;
+            try {
+                dataLockAcquired = spawner.getDataLock().tryLock(50, java.util.concurrent.TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            
+            if (!dataLockAcquired) {
+                return;
+            }
+            
             final long currentTime = System.currentTimeMillis();
             final long spawnTime;
             final int minMobs;
@@ -96,7 +108,6 @@ public class SpawnerLootGenerator {
             final AtomicInteger usedSlots;
             final AtomicInteger maxSlots;
             
-            spawner.getDataLock().lock();
             try {
                 long lastSpawnTime = spawner.getLastSpawnTime();
                 long spawnDelay = spawner.getSpawnDelay();

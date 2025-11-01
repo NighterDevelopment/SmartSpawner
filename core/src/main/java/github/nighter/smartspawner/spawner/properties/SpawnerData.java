@@ -241,8 +241,6 @@ public class SpawnerData {
         transferItemsToNewInventory(currentItems, newInventory);
         this.virtualInventory = newInventory;
 
-        // Reset lastSpawnTime to prevent exploit where players break spawners to trigger immediate loot
-        this.lastSpawnTime = System.currentTimeMillis();
         updateHologramData();
 
         // Invalidate GUI cache when stack size changes
