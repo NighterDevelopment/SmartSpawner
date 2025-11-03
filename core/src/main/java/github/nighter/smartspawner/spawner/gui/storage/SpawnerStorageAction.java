@@ -39,6 +39,49 @@ import org.bukkit.entity.Item;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Handles spawner storage GUI interactions with comprehensive anti-duplication protection.
+ * 
+ * <h2>Anti-Dupe Security System</h2>
+ * <p>The {@link #handleDropPageItems(Player, SpawnerData, Inventory)} method implements an 11-layer 
+ * security system to prevent item duplication exploits that could occur through race conditions:</p>
+ * 
+ * <h3>Exploit Prevention Layers:</h3>
+ * <ol>
+ *   <li><b>Rate Limiting</b> - Prevents spam clicks (max 10 drops/minute)</li>
+ *   <li><b>Click Debouncing</b> - 500ms cooldown between operations</li>
+ *   <li><b>Transaction Locking</b> - Per-player locks prevent concurrent drops</li>
+ *   <li><b>Slot Tracking</b> - Maintains rollback capability via original slot mapping</li>
+ *   <li><b>Pre-Drop Validation</b> - Verifies items exist in VirtualInventory</li>
+ *   <li><b>GUI Clear</b> - Clears display slots before VirtualInventory update</li>
+ *   <li><b>Atomic Update</b> - VirtualInventory updated BEFORE world drop</li>
+ *   <li><b>Rollback Mechanism</b> - Restores GUI state if VirtualInventory fails</li>
+ *   <li><b>Security Logging</b> - Comprehensive audit trail via SpawnerActionLogger</li>
+ *   <li><b>Exception Handling</b> - Graceful degradation with logging</li>
+ *   <li><b>Lock Guarantee</b> - Finally block ensures lock release</li>
+ * </ol>
+ * 
+ * <h3>Thread Safety & Folia Compatibility:</h3>
+ * <ul>
+ *   <li>Uses {@link ConcurrentHashMap} for all shared state</li>
+ *   <li>Thread-safe {@link Set} via {@link ConcurrentHashMap#newKeySet()}</li>
+ *   <li>Lock timeout detection (5 seconds) prevents deadlocks</li>
+ *   <li>Region-aware operations compatible with Folia's entity scheduler</li>
+ * </ul>
+ * 
+ * <h3>Configuration (Suggested config.yml additions):</h3>
+ * <pre>{@code
+ * anti_dupe:
+ *   drop_page_cooldown_ms: 500      # Minimum time between drops per player
+ *   transaction_timeout_ms: 5000    # Max time for a drop transaction
+ *   max_drops_per_minute: 10        # Rate limit threshold
+ *   log_suspicious_activity: true   # Enable security logging
+ * }</pre>
+ * 
+ * @author SmartSpawner Development Team
+ * @version 1.5.5
+ * @since 1.5.5
+ */
 public class SpawnerStorageAction implements Listener {
     private final SmartSpawner plugin;
     private final LanguageManager languageManager;
