@@ -32,6 +32,30 @@
 
 For developers interested in integrating with SmartSpawner, visit our [Developer API Documentation](https://nighterdevelopment.github.io/smartspawner-docs/developer-api/) for installation instructions and documentation.
 
+## Security
+
+### Version 1.5.5 Security Patch
+
+**Critical Item Duplication Exploit Fixed** 🔒
+
+Version 1.5.5 includes a comprehensive security patch that eliminates a race condition vulnerability in the spawner storage system. The patch implements an 11-layer security system to prevent item duplication exploits.
+
+**For detailed information:**
+- 📖 [Security Patch Documentation](SECURITY_PATCH_ANTI_DUPE.md) - Complete security analysis
+- 🧪 [Test Scenarios](TEST_SCENARIOS_ANTI_DUPE.md) - Verification procedures
+- 📊 [Implementation Details](IMPLEMENTATION_SUMMARY.md) - Technical implementation
+- 🎨 [Visual Guide](VISUAL_GUIDE_ANTI_DUPE.md) - Visual explanation of the fix
+
+**Key Features:**
+- ✅ Atomic transaction processing
+- ✅ Per-player transaction locking
+- ✅ Rate limiting and spam protection
+- ✅ Automatic rollback on failure
+- ✅ Comprehensive security logging
+- ✅ Thread-safe for Folia compatibility
+
+**Impact:** All servers should update to 1.5.5+ to prevent potential item duplication exploits.
+
 ## Building
 
 ```bash
