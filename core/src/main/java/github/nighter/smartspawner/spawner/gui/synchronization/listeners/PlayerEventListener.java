@@ -1,10 +1,14 @@
 package github.nighter.smartspawner.spawner.gui.synchronization.listeners;
 
+import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.spawner.config.SpawnerMobHeadTexture;
 import github.nighter.smartspawner.spawner.gui.synchronization.managers.ViewerTrackingManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+
+import java.util.UUID;
 
 /**
  * Listener for player-related events.
@@ -20,6 +24,19 @@ public class PlayerEventListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
-        viewerTrackingManager.untrackViewer(event.getPlayer().getUniqueId());
+        UUID playerUUID = event.getPlayer().getUniqueId();
+        
+        // Clear viewer tracking
+        viewerTrackingManager.untrackViewer(playerUUID);
+        
+        // Clear player-specific caches to prevent memory leaks
+        SmartSpawner plugin = SmartSpawner.getInstance();
+        if (plugin != null && plugin.getSpawnerMenuUI() != null) {
+            plugin.getSpawnerMenuUI().clearPlayerCache(playerUUID);
+        }
+        
+        // Clear Bedrock player cache
+        SpawnerMobHeadTexture.clearBedrockPlayerCache(playerUUID);
     }
 }
+
