@@ -85,7 +85,7 @@ dependencies:
       load: BEFORE
       required: false
       join-classpath: true
-    MinePlots:
+    minePlots:
       load: BEFORE
       required: false
       join-classpath: true

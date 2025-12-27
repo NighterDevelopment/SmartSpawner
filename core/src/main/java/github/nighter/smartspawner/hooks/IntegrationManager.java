@@ -108,8 +108,8 @@ public class IntegrationManager {
             return pRP != null && pRP.isEnabled();
         }, true);
 
-        hasMinePlots = checkPlugin("MinePlots", () -> {
-            Plugin mP = Bukkit.getPluginManager().getPlugin("MinePlots");
+        hasMinePlots = checkPlugin("minePlots", () -> {
+            Plugin mP = Bukkit.getPluginManager().getPlugin("minePlots");
             return mP != null && mP.isEnabled();
         }, true);
 

@@ -27,7 +27,7 @@ softdepend:
   - Towny
   - SimpleClaimSystem
   - RedProtect
-  - MinePlots
+  - minePlots
   - PlotSquared
   - Residence
 
