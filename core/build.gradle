@@ -25,7 +25,7 @@ dependencies {
 
     // Implementation dependencies
     implementation 'com.github.GriefPrevention:GriefPrevention:18.0.0'
-    implementation 'com.github.IncrediblePlugins:LandsAPI:7.19.15'
+    implementation 'com.github.IncrediblePlugins:LandsAPI:7.23.0'
     implementation 'com.github.Xyness:SimpleClaimSystem:1.12.3.2'
     implementation("com.github.Zrips:Residence:6.0.0.1") { exclude group: "org.bukkit" }
 
