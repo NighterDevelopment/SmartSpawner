@@ -13,14 +13,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Custom mode:
- * - Spawners run WITHOUT any player requirement.
- * - The ONLY requirement is: the spawner's chunk must be loaded.
- *   (Chunk loaders like WildLoaders keep chunks loaded -> production continues even with 0 online players.)
+ * Chunk-based spawner ticking:
+ * - NO player requirement.
+ * - Spawners run ONLY if their chunk is loaded.
  *
- * Notes:
- * - If chunk is not loaded, spawner is stopped.
- * - This can increase production significantly; ensure your spawner caps/limits are configured.
+ * HARD PAUSE behavior:
+ * - When chunk is NOT loaded, spawner is stopped and its timer is frozen
+ *   (no offline progress / no "catch-up" production).
+ * - When chunk becomes loaded again, spawner resumes normally.
  */
 public class SpawnerRangeChecker {
 
@@ -28,9 +28,6 @@ public class SpawnerRangeChecker {
 
     private final SmartSpawner plugin;
     private final SpawnerManager spawnerManager;
-
-    // We keep a lightweight async executor to iterate spawners without blocking main thread.
-    // All world/chunk access is still done via Scheduler.runLocationTask for Folia/Leaf safety.
     private final ExecutorService executor;
 
     public SpawnerRangeChecker(SmartSpawner plugin) {
@@ -54,34 +51,45 @@ public class SpawnerRangeChecker {
                 final Location loc = spawner.getSpawnerLocation();
                 if (loc == null) continue;
 
-                // Folia/Leaf: chunk/world checks must happen on the region thread for that location
+                // Folia/Leaf: any world/chunk access should happen on the region thread for that location
                 Scheduler.runLocationTask(loc, () -> {
                     if (!isSpawnerValid(spawner)) {
                         cleanupRemovedSpawner(spawner.getSpawnerId());
                         return;
                     }
 
-                    Location liveLoc = spawner.getSpawnerLocation();
+                    final Location liveLoc = spawner.getSpawnerLocation();
                     if (liveLoc == null || liveLoc.getWorld() == null) return;
 
-                    // ✅ ONLY condition: chunk must be loaded
                     boolean chunkLoaded;
                     try {
                         chunkLoaded = liveLoc.getChunk().isLoaded();
                     } catch (Throwable t) {
-                        // If anything goes wrong, fail-safe to "stopped"
                         chunkLoaded = false;
                     }
 
-                    boolean shouldStop = !chunkLoaded;
+                    // ONLY rule:
+                    // chunk loaded -> shouldStop=false
+                    // chunk unloaded -> shouldStop=true (HARD PAUSE)
+                    final boolean shouldStop = !chunkLoaded;
 
-                    // Update stop flag only if changed
+                    // Apply stop/resume state transitions
                     boolean previous = spawner.getSpawnerStop().getAndSet(shouldStop);
                     if (previous != shouldStop) {
                         handleSpawnerStateChange(spawner, shouldStop);
                     }
 
-                    // If active and not stopped, run loot tick
+                    // HARD PAUSE:
+                    // If chunk is not loaded, freeze timer so no offline progress accumulates.
+                    // We also do NOT run any loot logic.
+                    if (shouldStop) {
+                        // Freeze timer to "now" to prevent catch-up on next load
+                        spawner.setLastSpawnTime(System.currentTimeMillis());
+                        spawner.clearPreGeneratedLoot();
+                        return;
+                    }
+
+                    // If active and not stopped, tick loot
                     if (spawner.getSpawnerActive() && !spawner.getSpawnerStop().get()) {
                         checkAndSpawnLoot(spawner);
                     }
@@ -91,11 +99,8 @@ public class SpawnerRangeChecker {
     }
 
     private boolean isSpawnerValid(SpawnerData spawner) {
-        // Still present in manager?
         SpawnerData current = spawnerManager.getSpawnerById(spawner.getSpawnerId());
         if (current == null) return false;
-
-        // Prevent stale copies being processed
         if (current != spawner) return false;
 
         Location loc = spawner.getSpawnerLocation();
@@ -116,23 +121,21 @@ public class SpawnerRangeChecker {
             deactivateSpawner(spawner);
         }
 
-        // Force GUI update when state changes
         if (plugin.getSpawnerGuiViewManager().hasViewers(spawner)) {
             plugin.getSpawnerGuiViewManager().forceStateChangeUpdate(spawner);
         }
     }
 
     public void activateSpawner(SpawnerData spawner) {
-        // Reset any pre-generated loot to avoid stale state
+        // ensure clean state
         deactivateSpawner(spawner);
 
         if (!spawner.getSpawnerActive()) {
             return;
         }
 
-        // Start countdown immediately
-        long currentTime = System.currentTimeMillis();
-        spawner.setLastSpawnTime(currentTime);
+        // Start countdown from now
+        spawner.setLastSpawnTime(System.currentTimeMillis());
 
         if (plugin.getSpawnerGuiViewManager().hasViewers(spawner)) {
             plugin.getSpawnerGuiViewManager().updateSpawnerMenuViewers(spawner);
@@ -146,19 +149,18 @@ public class SpawnerRangeChecker {
     private void checkAndSpawnLoot(SpawnerData spawner) {
         long cachedDelay = spawner.getCachedSpawnDelay();
         if (cachedDelay == 0) {
-            // Convert ticks to milliseconds (+20 ticks safety margin like original code)
+            // (ticks + 20 safety) -> ms
             cachedDelay = (spawner.getSpawnDelay() + 20L) * 50L;
             spawner.setCachedSpawnDelay(cachedDelay);
         }
 
         final long finalCachedDelay = cachedDelay;
 
-        long currentTime = System.currentTimeMillis();
-        long lastSpawnTime = spawner.getLastSpawnTime();
-        long timeElapsed = currentTime - lastSpawnTime;
+        long now = System.currentTimeMillis();
+        long last = spawner.getLastSpawnTime();
+        long elapsed = now - last;
 
-        if (timeElapsed < cachedDelay) {
-            // Update open GUIs if needed
+        if (elapsed < cachedDelay) {
             if (plugin.getSpawnerGuiViewManager().hasViewers(spawner)) {
                 plugin.getSpawnerGuiViewManager().updateSpawnerMenuViewers(spawner);
             }
@@ -170,53 +172,48 @@ public class SpawnerRangeChecker {
                 return;
             }
             try {
-                currentTime = System.currentTimeMillis();
-                lastSpawnTime = spawner.getLastSpawnTime();
-                timeElapsed = currentTime - lastSpawnTime;
+                now = System.currentTimeMillis();
+                last = spawner.getLastSpawnTime();
+                elapsed = now - last;
 
-                if (timeElapsed < cachedDelay) return;
+                if (elapsed < cachedDelay) return;
+
                 if (!spawner.getSpawnerActive() || spawner.getSpawnerStop().get()) {
                     spawner.clearPreGeneratedLoot();
                     return;
                 }
 
-                final Location spawnerLocation = spawner.getSpawnerLocation();
-                if (spawnerLocation == null || spawnerLocation.getWorld() == null) return;
+                final Location loc = spawner.getSpawnerLocation();
+                if (loc == null || loc.getWorld() == null) return;
 
-                // Must run on region thread for safety
-                Scheduler.runLocationTask(spawnerLocation, () -> {
-                    if (!spawner.getSpawnerActive() || spawner.getSpawnerStop().get()) {
-                        spawner.clearPreGeneratedLoot();
-                        return;
-                    }
+                // Safety: ensure chunk still loaded at spawn moment
+                if (!loc.getChunk().isLoaded()) {
+                    // HARD PAUSE freeze here too
+                    spawner.setLastSpawnTime(System.currentTimeMillis());
+                    spawner.clearPreGeneratedLoot();
+                    return;
+                }
 
-                    // ✅ Hard requirement: chunk loaded
-                    if (!spawnerLocation.getChunk().isLoaded()) {
-                        // Do NOT advance time; we'll retry next tick
-                        return;
-                    }
-
-                    long timeSinceLastSpawn = System.currentTimeMillis() - spawner.getLastSpawnTime();
-                    if (timeSinceLastSpawn < finalCachedDelay - 100) {
-                        if (plugin.getSpawnerGuiViewManager().hasViewers(spawner)) {
-                            plugin.getSpawnerGuiViewManager().updateSpawnerMenuViewers(spawner);
-                        }
-                        return;
-                    }
-
-                    // If there is pre-generated loot, commit it; otherwise generate fresh loot
-                    if (spawner.hasPreGeneratedLoot()) {
-                        List<ItemStack> items = spawner.getAndClearPreGeneratedItems();
-                        int exp = spawner.getAndClearPreGeneratedExperience();
-                        plugin.getSpawnerLootGenerator().addPreGeneratedLoot(spawner, items, exp);
-                    } else {
-                        plugin.getSpawnerLootGenerator().spawnLootToSpawner(spawner);
-                    }
-
+                // Commit/Generate loot on region thread (already on region thread here)
+                long timeSinceLast = System.currentTimeMillis() - spawner.getLastSpawnTime();
+                if (timeSinceLast < finalCachedDelay - 100) {
                     if (plugin.getSpawnerGuiViewManager().hasViewers(spawner)) {
                         plugin.getSpawnerGuiViewManager().updateSpawnerMenuViewers(spawner);
                     }
-                });
+                    return;
+                }
+
+                if (spawner.hasPreGeneratedLoot()) {
+                    List<ItemStack> items = spawner.getAndClearPreGeneratedItems();
+                    int exp = spawner.getAndClearPreGeneratedExperience();
+                    plugin.getSpawnerLootGenerator().addPreGeneratedLoot(spawner, items, exp);
+                } else {
+                    plugin.getSpawnerLootGenerator().spawnLootToSpawner(spawner);
+                }
+
+                if (plugin.getSpawnerGuiViewManager().hasViewers(spawner)) {
+                    plugin.getSpawnerGuiViewManager().updateSpawnerMenuViewers(spawner);
+                }
 
             } finally {
                 spawner.getDataLock().unlock();
