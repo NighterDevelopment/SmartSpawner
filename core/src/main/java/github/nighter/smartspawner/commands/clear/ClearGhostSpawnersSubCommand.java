@@ -48,20 +48,33 @@ public class ClearGhostSpawnersSubCommand extends BaseSubCommand {
         // Track how many spawners are being checked using thread-safe counter
         final AtomicInteger removedCount = new AtomicInteger(0);
         final int totalSpawners = allSpawners.size();
-        
+
         // Check each spawner on its location thread for Folia compatibility
         for (SpawnerData spawner : allSpawners) {
             org.bukkit.Location loc = spawner.getSpawnerLocation();
-            if (loc != null && loc.getWorld() != null) {
-                Scheduler.runLocationTask(loc, () -> {
-                    if (plugin.getSpawnerManager().isGhostSpawner(spawner)) {
-                        plugin.getSpawnerManager().removeGhostSpawner(spawner.getSpawnerId());
-                        removedCount.incrementAndGet();
-                    }
-                });
+            if (loc == null) continue;
+
+            org.bukkit.World world = null;
+            try {
+                world = loc.getWorld();
+            } catch (IllegalArgumentException ignored) {
+                // Leaf can throw "World unloaded" here
             }
+
+            if (world == null) {
+                // World is currently unloaded -> don't crash, just skip
+                continue;
+            }
+
+            Scheduler.runLocationTask(loc, () -> {
+                if (plugin.getSpawnerManager().isGhostSpawner(spawner)) {
+                    plugin.getSpawnerManager().removeGhostSpawner(spawner.getSpawnerId());
+                    removedCount.incrementAndGet();
+                }
+            });
         }
-        
+
+
         // Schedule a delayed message to report results (give time for checks to complete)
         Scheduler.runTaskLater(() -> {
             int count = removedCount.get();

@@ -340,6 +340,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         PluginManager pm = getServer().getPluginManager();
 
         // Register core listeners
+        getServer().getPluginManager().registerEvents(new WorldEventHandler(this), this);
         pm.registerEvents(naturalSpawnerListener, this);
         pm.registerEvents(spawnerBreakListener, this);
         pm.registerEvents(spawnerPlaceListener, this);
