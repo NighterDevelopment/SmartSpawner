@@ -24,7 +24,6 @@ allprojects {
         maven { name = "nightexpress-releases"; url = "https://repo.nightexpressdev.com/releases"}
         maven { name = "iridiumdevelopment"; url = "https://nexus.iridiumdevelopment.net/repository/maven-releases/" }
         maven { name = "Lumine Releases"; url = 'https://mvn.lumine.io/repository/maven-public/' }
-        maven { name = "groupez"; url = uri("https://repo.groupez.dev/releases") }
         maven { name = "minecodes-repository-releases"; url = "https://maven.minecodes.pl/releases"}
     }
 }
