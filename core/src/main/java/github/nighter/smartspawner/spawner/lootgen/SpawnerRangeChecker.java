@@ -5,7 +5,9 @@ import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -14,25 +16,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Chunk-based spawner ticking with optional "any online player" gate.
- *
- * - If REQUIRE_ANY_ONLINE_PLAYER = false:
- *     Spawners run with 0 online players as long as their chunk is loaded.
- *
- * - If REQUIRE_ANY_ONLINE_PLAYER = true:
- *     Spawners will NOT run when there are 0 online players, even if chunks are loaded.
+ * Island-world gate:
+ * - NO "nearby player" requirement.
+ * - Spawner runs ONLY if:
+ *    1) its chunk is loaded AND
+ *    2) there is at least 1 eligible player in the SAME WORLD as the spawner (i.e., someone is on the island)
  *
  * HARD PAUSE:
- * - When production is not allowed (chunk unloaded OR gate blocks), timer freezes (no catch-up).
+ * - If not allowed, timer is frozen (no offline progress / no catch-up).
  */
 public class SpawnerRangeChecker {
 
     private static final long CHECK_INTERVAL = 20L; // 1 second in ticks
-
-    // ✅ Toggle THIS depending on what you actually want:
-    // true  = if 0 players online -> STOP production
-    // false = allow production even with 0 players online (fully offline if chunk loaded)
-    private static final boolean REQUIRE_ANY_ONLINE_PLAYER = true;
 
     private final SmartSpawner plugin;
     private final SpawnerManager spawnerManager;
@@ -41,7 +36,7 @@ public class SpawnerRangeChecker {
     public SpawnerRangeChecker(SmartSpawner plugin) {
         this.plugin = plugin;
         this.spawnerManager = plugin.getSpawnerManager();
-        this.executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "SmartSpawner-ChunkCheck"));
+        this.executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "SmartSpawner-IslandGate"));
         Scheduler.runTaskTimer(this::tick, CHECK_INTERVAL, CHECK_INTERVAL);
     }
 
@@ -49,16 +44,13 @@ public class SpawnerRangeChecker {
         this.executor.execute(() -> {
             final List<SpawnerData> allSpawners = spawnerManager.getAllSpawners();
 
-            // "Any online player" gate
-            final boolean anyOnline = !Bukkit.getOnlinePlayers().isEmpty();
-            final boolean gateAllows = !REQUIRE_ANY_ONLINE_PLAYER || anyOnline;
-
             for (SpawnerData spawner : allSpawners) {
                 if (spawner == null) continue;
 
                 final Location loc = spawner.getSpawnerLocation();
                 if (loc == null) continue;
 
+                // Folia/Leaf safety: do world/chunk/player-world checks on region thread
                 Scheduler.runLocationTask(loc, () -> {
                     if (!isSpawnerValid(spawner)) {
                         cleanupRemovedSpawner(spawner.getSpawnerId());
@@ -75,9 +67,11 @@ public class SpawnerRangeChecker {
                         chunkLoaded = false;
                     }
 
-                    // Allowed only if chunk is loaded AND gate allows
-                    final boolean allowed = chunkLoaded && gateAllows;
+                    // ✅ Gate: at least 1 eligible player must be in the SAME WORLD
+                    boolean hasPlayerInSameWorld = hasEligiblePlayerInWorld(liveLoc);
 
+                    // Allowed only if chunk loaded AND world has player (island not empty)
+                    final boolean allowed = chunkLoaded && hasPlayerInSameWorld;
                     final boolean shouldStop = !allowed;
 
                     boolean previous = spawner.getSpawnerStop().getAndSet(shouldStop);
@@ -85,7 +79,7 @@ public class SpawnerRangeChecker {
                         handleSpawnerStateChange(spawner, shouldStop);
                     }
 
-                    // HARD PAUSE: freeze timer & clear any pre-gen when not allowed
+                    // HARD PAUSE: freeze timer & clear pre-gen loot when not allowed
                     if (shouldStop) {
                         spawner.setLastSpawnTime(System.currentTimeMillis());
                         spawner.clearPreGeneratedLoot();
@@ -98,6 +92,20 @@ public class SpawnerRangeChecker {
                 });
             }
         });
+    }
+
+    private boolean hasEligiblePlayerInWorld(Location spawnerLoc) {
+        // Same-world presence check (island has someone on it)
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p == null) continue;
+            if (!p.isConnected() || p.isDead()) continue;
+            if (p.getGameMode() == GameMode.SPECTATOR) continue;
+
+            if (p.getWorld() != null && p.getWorld().equals(spawnerLoc.getWorld())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isSpawnerValid(SpawnerData spawner) {
@@ -178,6 +186,14 @@ public class SpawnerRangeChecker {
                 if (!loc.getChunk().isLoaded()) {
                     spawner.setLastSpawnTime(System.currentTimeMillis());
                     spawner.clearPreGeneratedLoot();
+                    return;
+                }
+
+                // Also ensure island world still has a player (prevents edge cases mid-tick)
+                if (!hasEligiblePlayerInWorld(loc)) {
+                    spawner.setLastSpawnTime(System.currentTimeMillis());
+                    spawner.clearPreGeneratedLoot();
+                    spawner.getSpawnerStop().set(true);
                     return;
                 }
 
