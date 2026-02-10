@@ -4,31 +4,39 @@ import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.api.events.SpawnerExplodeEvent;
 import github.nighter.smartspawner.extras.HopperHandler;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
+import github.nighter.smartspawner.spawner.item.SpawnerItemFactory;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.spawner.data.SpawnerFileHandler;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.CreatureSpawner;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SpawnerExplosionListener implements Listener {
     private final SmartSpawner plugin;
     private final SpawnerManager spawnerManager;
     private final SpawnerFileHandler spawnerFileHandler;
+    private final SpawnerItemFactory spawnerItemFactory;
     private final HopperHandler hopperHandler;
 
     public SpawnerExplosionListener(SmartSpawner plugin) {
         this.plugin = plugin;
         this.spawnerManager = plugin.getSpawnerManager();
         this.spawnerFileHandler = plugin.getSpawnerFileHandler();
+        this.spawnerItemFactory = plugin.getSpawnerItemFactory();
         this.hopperHandler = plugin.getHopperHandler();
     }
 
@@ -61,6 +69,10 @@ public class SpawnerExplosionListener implements Listener {
                             e = new SpawnerExplodeEvent(null, spawnerData.getSpawnerLocation(), 1, false);
                         }
                     } else {
+                        double explosionDropChance = plugin.getConfig().getDouble("spawner_properties.default.explosion_drop_chance", 0.0);
+                        if (passesChanceCheck(explosionDropChance)) {
+                            dropSmartSpawnerItem(block, spawnerData);
+                        }
                         spawnerData.getSpawnerStop().set(true);
                         String spawnerId = spawnerData.getSpawnerId();
                         cleanupAssociatedHopper(block);
@@ -74,9 +86,13 @@ public class SpawnerExplosionListener implements Listener {
                         Bukkit.getPluginManager().callEvent(e);
                     }
                 } else {
-                    // Allow vanilla spawners to be destroyed
                     if (plugin.getConfig().getBoolean("natural_spawner.protect_from_explosions", false)) {
                         blocksToRemove.add(block);
+                    } else {
+                        double naturalDropChance = plugin.getConfig().getDouble("natural_spawner.explosion_drop_chance", 0.0);
+                        if (passesChanceCheck(naturalDropChance)) {
+                            dropVanillaSpawnerItem(block);
+                        }
                     }
                 }
             } else if (block.getType() == Material.RESPAWN_ANCHOR) {
@@ -112,6 +128,43 @@ public class SpawnerExplosionListener implements Listener {
             }
         }
         return false;
+    }
+
+    private boolean passesChanceCheck(double chance) {
+        if (chance >= 100.0) return true;
+        if (chance <= 0.0) return false;
+        return ThreadLocalRandom.current().nextDouble(100.0) < chance;
+    }
+
+    private void dropSmartSpawnerItem(Block block, SpawnerData spawnerData) {
+        Location location = block.getLocation();
+        World world = location.getWorld();
+        if (world == null) return;
+
+        ItemStack spawnerItem;
+        if (spawnerData.isItemSpawner()) {
+            spawnerItem = spawnerItemFactory.createItemSpawnerItem(spawnerData.getSpawnedItemMaterial());
+        } else {
+            spawnerItem = spawnerItemFactory.createSmartSpawnerItem(spawnerData.getEntityType());
+        }
+        world.dropItemNaturally(location.toCenterLocation(), spawnerItem);
+    }
+
+    private void dropVanillaSpawnerItem(Block block) {
+        Location location = block.getLocation();
+        World world = location.getWorld();
+        if (world == null) return;
+
+        if (block.getState(false) instanceof CreatureSpawner creatureSpawner) {
+            EntityType entityType = creatureSpawner.getSpawnedType();
+            ItemStack spawnerItem;
+            if (plugin.getConfig().getBoolean("natural_spawner.convert_to_smart_spawner", false)) {
+                spawnerItem = spawnerItemFactory.createSmartSpawnerItem(entityType);
+            } else {
+                spawnerItem = spawnerItemFactory.createVanillaSpawnerItem(entityType);
+            }
+            world.dropItemNaturally(location.toCenterLocation(), spawnerItem);
+        }
     }
 
     private void cleanupAssociatedHopper(Block block) {

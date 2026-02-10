@@ -42,6 +42,11 @@ spawner_properties:
     allow_exp_mending: true   # Allow spawners to repair items with stored XP
     protect_from_explosions: true   # Protect spawner blocks from explosion
 
+    # Chance (0-100%) for spawner to drop as item when destroyed by explosion
+    # Only applies when protect_from_explosions is false
+    # 100.0 = always drops, 50.0 = 50% chance, 0.0 = never drops (just destroyed)
+    explosion_drop_chance: 0.0
+
 #---------------------------------------------------
 #           Spawner Breaking Mechanics
 #---------------------------------------------------
@@ -61,6 +66,10 @@ spawner_break:
 
   # Durability impact on tools when breaking a spawner
   durability_loss: 1    # Number of durability points deducted
+
+  # Chance (0-100%) for spawner to drop when broken with valid tool
+  # 100.0 = always drops, 50.0 = 50% chance, 0.0 = never drops
+  drop_chance: 100.0
 
   # Enchantment Requirements for successful spawner collection
   silk_touch:
@@ -84,6 +93,11 @@ natural_spawner:
 
   # Whether natural spawner block will be protected from explosions
   protect_from_explosions: false
+
+  # Chance (0-100%) for natural spawner to drop as item when destroyed by explosion
+  # Only applies when protect_from_explosions is false
+  # 100.0 = always drops, 50.0 = 50% chance, 0.0 = never drops (just destroyed)
+  explosion_drop_chance: 0.0
 
 #---------------------------------------------------
 #                Economy Settings

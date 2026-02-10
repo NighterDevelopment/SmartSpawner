@@ -27,7 +27,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SpawnerBreakListener implements Listener {
     private static final int MAX_STACK_SIZE = 64;
@@ -130,12 +132,27 @@ public class SpawnerBreakListener implements Listener {
 
             plugin.getSpawnerGuiViewManager().closeAllViewersInventory(spawner);
 
-            SpawnerBreakResult result = processDrops(player, location, spawner, player.isSneaking(), block);
+            double dropChance = plugin.getConfig().getDouble("spawner_break.drop_chance", 100.0);
+            boolean shouldDrop = player.getGameMode() == GameMode.CREATIVE || passesChanceCheck(dropChance);
 
-            if (result.isSuccess()) {
-                if (player.getGameMode() != GameMode.CREATIVE) {
-                    reduceDurability(tool, player, result.getDurabilityLoss());
+            Map<String, String> chancePlaceholders = new HashMap<>();
+            chancePlaceholders.put("chance", String.format("%.1f", dropChance));
+
+            if (shouldDrop) {
+                SpawnerBreakResult result = processDrops(player, location, spawner, player.isSneaking(), block);
+
+                if (result.isSuccess()) {
+                    if (player.getGameMode() != GameMode.CREATIVE) {
+                        reduceDurability(tool, player, result.getDurabilityLoss());
+                    }
+                    messageService.sendMessage(player, "spawner_break_success", chancePlaceholders);
                 }
+            } else {
+                cleanupSpawner(block, spawner);
+                if (player.getGameMode() != GameMode.CREATIVE) {
+                    reduceDurability(tool, player, plugin.getConfig().getInt("spawner_break.durability_loss", 1));
+                }
+                messageService.sendMessage(player, "spawner_break_no_drop", chancePlaceholders);
             }
         } finally {
             locationLockManager.unlock(location);
@@ -162,25 +179,38 @@ public class SpawnerBreakListener implements Listener {
                 return;
             }
 
-            EntityType entityType = creatureSpawner.getSpawnedType();
-            ItemStack spawnerItem;
-            if (plugin.getConfig().getBoolean("natural_spawner.convert_to_smart_spawner", false)) {
-                spawnerItem = spawnerItemFactory.createSmartSpawnerItem(entityType);
-            } else {
-                spawnerItem = spawnerItemFactory.createVanillaSpawnerItem(entityType);
-            }
+            double dropChance = plugin.getConfig().getDouble("spawner_break.drop_chance", 100.0);
+            boolean shouldDrop = player.getGameMode() == GameMode.CREATIVE || passesChanceCheck(dropChance);
 
-            boolean directToInventory = plugin.getConfig().getBoolean("spawner_break.direct_to_inventory", false);
+            Map<String, String> chancePlaceholders = new HashMap<>();
+            chancePlaceholders.put("chance", String.format("%.1f", dropChance));
 
             World world = location.getWorld();
             if (world != null) {
-                block.setType(Material.AIR);
+                if (shouldDrop) {
+                    EntityType entityType = creatureSpawner.getSpawnedType();
+                    ItemStack spawnerItem;
+                    if (plugin.getConfig().getBoolean("natural_spawner.convert_to_smart_spawner", false)) {
+                        spawnerItem = spawnerItemFactory.createSmartSpawnerItem(entityType);
+                    } else {
+                        spawnerItem = spawnerItemFactory.createVanillaSpawnerItem(entityType);
+                    }
 
-                if (directToInventory) {
-                    giveSpawnersToPlayer(player, 1, spawnerItem);
-                    player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
+                    boolean directToInventory = plugin.getConfig().getBoolean("spawner_break.direct_to_inventory", false);
+
+                    block.setType(Material.AIR);
+
+                    if (directToInventory) {
+                        giveSpawnersToPlayer(player, 1, spawnerItem);
+                        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
+                    } else {
+                        world.dropItemNaturally(location.toCenterLocation(), spawnerItem);
+                    }
+
+                    messageService.sendMessage(player, "spawner_break_success", chancePlaceholders);
                 } else {
-                    world.dropItemNaturally(location.toCenterLocation(), spawnerItem);
+                    block.setType(Material.AIR);
+                    messageService.sendMessage(player, "spawner_break_no_drop", chancePlaceholders);
                 }
 
                 reduceDurability(tool, player, plugin.getConfig().getInt("spawner_break.durability_loss", 1));
@@ -368,6 +398,12 @@ public class SpawnerBreakListener implements Listener {
         public int getDurabilityLoss() {
             return droppedAmount * baseDurabilityLoss;
         }
+    }
+
+    private boolean passesChanceCheck(double chance) {
+        if (chance >= 100.0) return true;
+        if (chance <= 0.0) return false;
+        return ThreadLocalRandom.current().nextDouble(100.0) < chance;
     }
 
     @EventHandler

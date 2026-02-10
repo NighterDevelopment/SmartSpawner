@@ -152,17 +152,25 @@ spawner_break_no_permission:
   sound: entity.villager.no
 
 spawner_break_silk_touch_required:
-  action_bar: "&#ff5252ʙᴇʜᴜᴛꜱᴀᴍᴋᴇɪᴛ ᴇʀꜰᴏʀᴅᴇʀʟɪᴄʜ"
+  action_bar: "&#ff5252ᴢᴜᴍ ᴀʙʙᴀᴜᴇɴ ᴇɪɴᴇꜱ ꜱᴘᴀᴡɴᴇʀꜱ ʙʀᴀᴜᴄʜꜱᴛ ᴅᴜ ᴇɪɴᴇ ꜱᴘɪᴛᴢʜᴀᴄᴋᴇ ᴍɪᴛ ʙᴇʜᴜᴛꜱᴀᴍᴋᴇɪᴛ"
   sound: item.shield.block
 
 spawner_break_required_tools:
-  action_bar: "&#ff5252ꜱᴘᴀᴡɴᴇʀ ᴋᴀɴɴ ɴɪᴄʜᴛ ᴍɪᴛ ᴅɪᴇꜱᴇᴍ ᴡᴇʀᴋᴢᴇᴜɢ ᴀʙɢᴇʙᴀᴜᴛ ᴡᴇʀᴅᴇɴ!"
+  action_bar: "&#ff5252ᴢᴜᴍ ᴀʙʙᴀᴜᴇɴ ᴇɪɴᴇꜱ ꜱᴘᴀᴡɴᴇʀꜱ ʙʀᴀᴜᴄʜꜱᴛ ᴅᴜ ᴇɪɴᴇ ꜱᴘɪᴛᴢʜᴀᴄᴋᴇ ᴍɪᴛ ʙᴇʜᴜᴛꜱᴀᴍᴋᴇɪᴛ"
   sound: item.shield.block
 
 spawner_break_warning:
   enabled: false
   title: "&#f0c857ᴡᴀʀɴᴜɴɢ"
   subtitle: "&#e6e6faɪᴛᴇᴍꜱ ɪᴍ ꜱᴘᴀᴡɴᴇʀ ɢᴇʜᴇɴ ᴠᴇʀʟᴏʀᴇɴ!"
+  sound: block.note_block.bass
+
+spawner_break_success:
+  action_bar: "&#37eb9aꜱᴘᴀᴡɴᴇʀ ᴇʀꜰᴏʟɢʀᴇɪᴄʜ ᴀʙɢᴇʙᴀᴜᴛ! &#f8f8ff(&#37eb9a{chance}% &#f8f8ffᴄʜᴀɴᴄᴇ)"
+  sound: entity.experience_orb.pickup
+
+spawner_break_no_drop:
+  action_bar: "&#ff5252ꜱᴘᴀᴡɴᴇʀ ᴀʙʙᴀᴜ ꜰᴇʜʟɢᴇꜱᴄʜʟᴀɢᴇɴ &#f8f8ff(&#ff5252{chance}% &#f8f8ffᴄʜᴀɴᴄᴇ)"
   sound: block.note_block.bass
 
 natural_spawner_break_blocked:
