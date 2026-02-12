@@ -4,7 +4,7 @@ plugins {
     `maven-publish`
     id("com.gradleup.shadow") version "9.3.1" apply false
     id("com.github.ben-manes.versions") version "0.51.0"
-    id("org.owasp.dependencycheck") version "11.1.1" apply false
+    id("org.owasp.dependencycheck") version "12.2.0" apply false
 }
 
 allprojects {
