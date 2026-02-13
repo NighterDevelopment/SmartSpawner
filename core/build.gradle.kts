@@ -42,7 +42,7 @@ dependencies {
     compileOnly("fr.maxlego08.menu:zmenu-api:1.1.0.9")
 
     implementation("com.github.GriefPrevention:GriefPrevention:18.0.0")
-    implementation("com.github.IncrediblePlugins:LandsAPI:7.23.0")
+    implementation("com.github.IncrediblePlugins:LandsAPI:7.24.1")
     implementation("com.github.Xyness:SimpleClaimSystem:1.12.3.4")
     implementation("com.github.Zrips:Residence:6.0.0.1") {
         exclude(group = "org.bukkit")
