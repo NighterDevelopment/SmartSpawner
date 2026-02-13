@@ -16,7 +16,7 @@ dependencies {
     shade("com.zaxxer:HikariCP:5.1.0")
     shade("org.mariadb.jdbc:mariadb-java-client:3.3.2")
     // SQLite JDBC is provided by Paper's runtime classpath - no need to shade
-    compileOnly("org.xerial:sqlite-jdbc:3.45.1.0")
+    compileOnly("org.xerial:sqlite-jdbc:3.51.2.0")
 
     compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.1.0-SNAPSHOT")
