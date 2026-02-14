@@ -837,7 +837,8 @@ public class ListSubCommand extends BaseSubCommand {
         placeholders.put("x", String.valueOf(spawner.getLocX()));
         placeholders.put("y", String.valueOf(spawner.getLocY()));
         placeholders.put("z", String.valueOf(spawner.getLocZ()));
-        placeholders.put("last_player", "N/A");
+        String lastPlayer = spawner.getLastInteractedPlayer();
+        placeholders.put("last_player", lastPlayer != null ? lastPlayer : "None");
 
         ItemStack spawnerItem;
 
