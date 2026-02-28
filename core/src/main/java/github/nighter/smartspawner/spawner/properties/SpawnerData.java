@@ -326,13 +326,6 @@ public class SpawnerData {
         if (plugin.getSpawnerMenuFormUI() != null) {
             plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(this.spawnerId);
         }
-
-        // Restart hopper task if hopper integration is enabled
-        // This ensures hopper continues to work after stack size changes
-        // Skip during batch loading to avoid performance bottleneck
-        if (restartHopper && plugin.getHopperHandler() != null) {
-            plugin.getHopperHandler().restartHopperForSpawner(this.spawnerLocation);
-        }
     }
 
     private void recreateVirtualInventory() {
