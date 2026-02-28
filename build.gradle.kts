@@ -9,8 +9,8 @@ allprojects {
     apply(plugin = "java")
     apply(plugin = "maven-publish")
 
-    group = "github.nighter"
-    version = "1.6.1"
+    group = findProperty("group") as String? ?: "github.nighter"
+    version = findProperty("version") as String? ?: "1.6.1"
 
     repositories {
         mavenCentral()

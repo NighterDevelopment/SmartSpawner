@@ -9,8 +9,6 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    labels:
-      - "dependencies"
     assignees:
       - "ptthanh02"
     commit-message:
