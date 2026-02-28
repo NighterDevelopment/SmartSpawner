@@ -2,6 +2,7 @@ package github.nighter.smartspawner;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -266,6 +267,32 @@ public final class Scheduler {
             try {
                 io.papermc.paper.threadedregions.scheduler.ScheduledTask task =
                         Bukkit.getRegionScheduler().run(plugin, location, scheduledTask -> runnable.run());
+                return new Task(task);
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.WARNING, "Error scheduling location task in Folia, falling back to global scheduler", e);
+                return runTask(runnable);
+            }
+        } else {
+            return runTask(runnable);
+        }
+    }
+
+    /**
+     * Runs a task in the region of a specific chunk in a world.
+     * If the server is running Folia, the task will be scheduled on the chunk's region thread.
+     * On non-Folia servers or in case of an error, the task will fall back to global scheduling.
+     *
+     * @param world   The world containing the chunk where the task will be executed.
+     * @param chunkX  The X-coordinate of the chunk.
+     * @param chunkZ  The Z-coordinate of the chunk.
+     * @param runnable The task to be run in the specified chunk's region.
+     * @return A Task object representing the scheduled task.
+     */
+    public static Task runChunkTask(World world, int chunkX, int chunkZ, Runnable runnable) {
+        if (isFolia && world != null) {
+            try {
+                io.papermc.paper.threadedregions.scheduler.ScheduledTask task =
+                        Bukkit.getRegionScheduler().run(plugin, world, chunkX, chunkZ, scheduledTask -> runnable.run());
                 return new Task(task);
             } catch (Exception e) {
                 plugin.getLogger().log(Level.WARNING, "Error scheduling location task in Folia, falling back to global scheduler", e);

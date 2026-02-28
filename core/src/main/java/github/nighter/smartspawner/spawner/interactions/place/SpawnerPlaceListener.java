@@ -2,7 +2,7 @@ package github.nighter.smartspawner.spawner.interactions.place;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.api.events.SpawnerPlaceEvent;
-import github.nighter.smartspawner.extras.HopperHandler;
+import github.nighter.smartspawner.extras.HopperService;
 import github.nighter.smartspawner.hooks.protections.CheckStackBlock;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
@@ -10,6 +10,7 @@ import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.spawner.utils.SpawnerTypeChecker;
 
+import github.nighter.smartspawner.utils.BlockPos;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -37,7 +38,7 @@ public class SpawnerPlaceListener implements Listener {
     private final SmartSpawner plugin;
     private final MessageService messageService;
     private final SpawnerManager spawnerManager;
-    private final HopperHandler hopperHandler;
+    private final HopperService hopperService;
 
     private final Map<UUID, Long> lastPlacementTime = new ConcurrentHashMap<>();
 
@@ -45,7 +46,7 @@ public class SpawnerPlaceListener implements Listener {
         this.plugin = plugin;
         this.messageService = plugin.getMessageService();
         this.spawnerManager = plugin.getSpawnerManager();
-        this.hopperHandler = plugin.getHopperHandler();
+        this.hopperService = plugin.getHopperService();
     }
 
     @EventHandler
@@ -381,12 +382,10 @@ public class SpawnerPlaceListener implements Listener {
     }
 
     private void setupHopperIntegration(Block block) {
-        Scheduler.runLocationTask(block.getLocation(), () -> {
-            Block blockBelow = block.getRelative(BlockFace.DOWN);
-            if (blockBelow.getType() == Material.HOPPER && hopperHandler != null) {
-                hopperHandler.startHopperTask(blockBelow.getLocation(), block.getLocation());
-            }
-        });
+        Block blockBelow = block.getRelative(BlockFace.DOWN);
+        if (plugin.getHopperConfig().isHopperEnabled() && blockBelow.getType() == Material.HOPPER) {
+            hopperService.getTracker().tryAdd(blockBelow);
+        }
     }
 
     public void cleanupPlayer(UUID playerId) {

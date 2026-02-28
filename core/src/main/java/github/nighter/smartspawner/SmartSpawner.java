@@ -11,6 +11,7 @@ import github.nighter.smartspawner.commands.list.gui.management.SpawnerManagemen
 import github.nighter.smartspawner.commands.list.gui.adminstacker.AdminStackerHandler;
 import github.nighter.smartspawner.commands.list.gui.serverselection.ServerSelectionHandler;
 import github.nighter.smartspawner.commands.prices.PricesGUI;
+import github.nighter.smartspawner.extras.HopperConfig;
 import github.nighter.smartspawner.spawner.config.SpawnerSettingsConfig;
 import github.nighter.smartspawner.spawner.config.ItemSpawnerSettingsConfig;
 import github.nighter.smartspawner.logging.LoggingConfig;
@@ -20,7 +21,7 @@ import github.nighter.smartspawner.spawner.natural.NaturalSpawnerListener;
 import github.nighter.smartspawner.utils.TimeFormatter;
 import github.nighter.smartspawner.hooks.economy.ItemPriceManager;
 import github.nighter.smartspawner.hooks.economy.shops.providers.shopguiplus.SpawnerProvider;
-import github.nighter.smartspawner.extras.HopperHandler;
+import github.nighter.smartspawner.extras.HopperService;
 import github.nighter.smartspawner.hooks.IntegrationManager;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.migration.SpawnerDataMigration;
@@ -121,7 +122,8 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     private SpawnerStorage spawnerStorage;
     private DatabaseManager databaseManager;
     private SpawnerManager spawnerManager;
-    private HopperHandler hopperHandler;
+    private HopperService hopperService;
+    private HopperConfig hopperConfig;
     private SpawnerLocationLockManager spawnerLocationLockManager;
 
     // Event handlers and utilities
@@ -418,13 +420,15 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     }
 
     public void setUpHopperHandler() {
-        if (this.hopperHandler != null) {
-            this.hopperHandler.cleanup();
-            this.hopperHandler = null;
+        this.hopperConfig = new HopperConfig(this);
+
+        if (this.hopperService != null) {
+            this.hopperService.cleanup();
+            this.hopperService = null;
         }
         
-        if (getConfig().getBoolean("hopper.enabled", false)) {
-            this.hopperHandler = new HopperHandler(this);
+        if (hopperConfig.isHopperEnabled()) {
+            this.hopperService = new HopperService(this);
         }
     }
 
@@ -572,7 +576,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     private void cleanupResources() {
         if (rangeChecker != null) rangeChecker.cleanup();
         if (spawnerGuiViewManager != null) spawnerGuiViewManager.cleanup();
-        if (hopperHandler != null) hopperHandler.cleanup();
+        if (hopperService != null) hopperService.cleanup();
         if (spawnerClickManager != null) spawnerClickManager.cleanup();
         if (spawnerStackerHandler != null) spawnerStackerHandler.cleanupAll();
         if (spawnerStorageUI != null) spawnerStorageUI.cleanup();

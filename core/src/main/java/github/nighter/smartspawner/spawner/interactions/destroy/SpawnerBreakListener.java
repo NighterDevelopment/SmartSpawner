@@ -2,7 +2,7 @@ package github.nighter.smartspawner.spawner.interactions.destroy;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.api.events.SpawnerPlayerBreakEvent;
-import github.nighter.smartspawner.extras.HopperHandler;
+import github.nighter.smartspawner.extras.HopperService;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.hooks.protections.CheckBreakBlock;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
@@ -10,6 +10,7 @@ import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.item.SpawnerItemFactory;
 import github.nighter.smartspawner.spawner.data.SpawnerFileHandler;
 import github.nighter.smartspawner.spawner.utils.SpawnerLocationLockManager;
+import github.nighter.smartspawner.utils.BlockPos;
 import lombok.Getter;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -34,7 +35,7 @@ public class SpawnerBreakListener implements Listener {
     private final SmartSpawner plugin;
     private final MessageService messageService;
     private final SpawnerManager spawnerManager;
-    private final HopperHandler hopperHandler;
+    private final HopperService hopperService;
     private final SpawnerItemFactory spawnerItemFactory;
     private final SpawnerFileHandler spawnerFileHandler;
     private final SpawnerLocationLockManager locationLockManager;
@@ -43,7 +44,7 @@ public class SpawnerBreakListener implements Listener {
         this.plugin = plugin;
         this.messageService = plugin.getMessageService();
         this.spawnerManager = plugin.getSpawnerManager();
-        this.hopperHandler = plugin.getHopperHandler();
+        this.hopperService = plugin.getHopperService();
         this.spawnerItemFactory = plugin.getSpawnerItemFactory();
         this.spawnerFileHandler = plugin.getSpawnerFileHandler();
         this.locationLockManager = plugin.getSpawnerLocationLockManager();
@@ -322,13 +323,6 @@ public class SpawnerBreakListener implements Listener {
         locationLockManager.removeLock(location);
     }
 
-    private void cleanupAssociatedHopper(Block block) {
-        Block blockBelow = block.getRelative(BlockFace.DOWN);
-        if (blockBelow.getType() == Material.HOPPER && hopperHandler != null) {
-            hopperHandler.stopHopperTask(blockBelow.getLocation());
-        }
-    }
-
     private boolean isValidTool(ItemStack tool) {
         if (tool == null) {
             return false;
@@ -408,6 +402,14 @@ public class SpawnerBreakListener implements Listener {
 
         } else {
             messageService.sendMessage(player, "spawner_break_required_tools");
+        }
+    }
+
+    // TODO: deduplicate
+    public void cleanupAssociatedHopper(Block block) {
+        Block blockBelow = block.getRelative(BlockFace.DOWN);
+        if (plugin.getHopperConfig().isHopperEnabled() && blockBelow.getType() == Material.HOPPER) {
+            hopperService.getRegistry().remove(new BlockPos(blockBelow.getLocation()));
         }
     }
 }
