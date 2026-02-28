@@ -9,7 +9,7 @@ allprojects {
     apply(plugin = "java")
     apply(plugin = "maven-publish")
 
-    group = findProperty("group")?.toString() ?: "github.nighter"
+    group = if (System.getenv("JITPACK") != null) "com.github.NighterDevelopment" else "github.nighter"
     version = "1.6.1"
 
     repositories {
