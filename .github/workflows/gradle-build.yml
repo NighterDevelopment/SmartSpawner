@@ -57,7 +57,7 @@ jobs:
       - name: Extract version information
         id: extract_version
         run: |
-          VERSION=$(grep 'version = findProperty("version")' build.gradle.kts | awk -F'"' '{print $4}')
+          VERSION=$(./gradlew properties --no-daemon -q | grep "^version:" | awk '{print $2}')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           COMMIT_SHA_SHORT=$(git rev-parse --short HEAD)
