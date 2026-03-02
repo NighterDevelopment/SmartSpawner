@@ -4,3 +4,12 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.42")
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            artifactId = "api"
+        }
+    }
+}
+
