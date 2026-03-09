@@ -267,8 +267,9 @@ public class SpawnerStorageAction implements Listener {
     }
 
     /**
-     * Optimized method to transfer items from storage to player inventory.
-     * Handles all click types with a single efficient path.
+     * Transfers items from spawner storage to player inventory.
+     * Uses Bukkit's addItem() API which correctly respects maxStackSize for all items....
+     * including non-stackable items like totems preventing stacking bugs when spamming.
      */
     private void transferToPlayerInventory(Player player, ItemStack clickedItem, int amountToTake,
                                           Inventory storageInv, SpawnerData spawner, StoragePageHolder holder) {
@@ -276,38 +277,10 @@ public class SpawnerStorageAction implements Listener {
         ItemStack toTransfer = clickedItem.clone();
         toTransfer.setAmount(amountToTake);
 
-        int amountMoved = 0;
-        int remaining = amountToTake;
-
-        // Optimize: Try to stack with existing items first (more efficient)
-        for (int i = 0; i < 36 && remaining > 0; i++) {
-            ItemStack slot = playerInv.getItem(i);
-
-            if (slot != null && slot.getType() != Material.AIR && slot.isSimilar(toTransfer)) {
-                // Found similar item - try to stack
-                int space = slot.getMaxStackSize() - slot.getAmount();
-                if (space > 0) {
-                    int add = Math.min(space, remaining);
-                    slot.setAmount(slot.getAmount() + add);
-                    amountMoved += add;
-                    remaining -= add;
-                }
-            }
-        }
-
-        // Then fill empty slots
-        for (int i = 0; i < 36 && remaining > 0; i++) {
-            ItemStack slot = playerInv.getItem(i);
-
-            if (slot == null || slot.getType() == Material.AIR) {
-                int stackSize = Math.min(remaining, toTransfer.getMaxStackSize());
-                ItemStack newStack = toTransfer.clone();
-                newStack.setAmount(stackSize);
-                playerInv.setItem(i, newStack);
-                amountMoved += stackSize;
-                remaining -= stackSize;
-            }
-        }
+// S
+        Map<Integer, ItemStack> leftover = playerInv.addItem(toTransfer);
+        int leftoverAmount = leftover.values().stream().mapToInt(ItemStack::getAmount).sum();
+        int amountMoved = amountToTake - leftoverAmount;
 
         // Update VirtualInventory if any items were moved
         if (amountMoved > 0) {
@@ -322,10 +295,11 @@ public class SpawnerStorageAction implements Listener {
                 player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.0f);
 
                 // Notify if inventory was full
-                if (remaining > 0) {
+                if (leftoverAmount > 0) { //
                     messageService.sendMessage(player, "inventory_full");
                 }
             }
+            player.updateInventory(); //
         } else {
             // No items moved - inventory full
             messageService.sendMessage(player, "inventory_full");
@@ -815,6 +789,7 @@ public class SpawnerStorageAction implements Listener {
                     if (spaceInStack > 0) {
                         int addAmount = Math.min(spaceInStack, amountToMove);
                         targetItem.setAmount(targetItem.getAmount() + addAmount);
+                        playerInv.setItem(i, targetItem); //
                         amountMoved += addAmount;
                         amountToMove -= addAmount;
                         anyItemMoved = true;
