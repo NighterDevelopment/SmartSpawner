@@ -53,8 +53,8 @@ dependencies {
     implementation(platform("com.intellectualsites.bom:bom-newest:1.55"))
     compileOnly("com.intellectualsites.plotsquared:plotsquared-core")
 
-    compileOnly("org.projectlombok:lombok:1.18.42")
-    annotationProcessor("org.projectlombok:lombok:1.18.42")
+    compileOnly("org.projectlombok:lombok:1.18.44")
+    annotationProcessor("org.projectlombok:lombok:1.18.44")
 
     implementation("org.bstats:bstats-bukkit:3.2.1")
 }
