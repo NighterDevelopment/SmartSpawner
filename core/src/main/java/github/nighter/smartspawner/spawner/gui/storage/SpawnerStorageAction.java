@@ -191,7 +191,13 @@ public class SpawnerStorageAction implements Listener {
 
         // Check if there are items to sell
         if (spawner.getVirtualInventory().getUsedSlots() == 0) {
-            messageService.sendMessage(player, "no_items");
+            if (collectExp) {
+                // No items to sell but still collect exp
+                // Pass isSell=true to bypass the inner cooldown check (already checked above)
+                plugin.getSpawnerMenuAction().handleExpBottleClick(player, spawner, true);
+            } else {
+                messageService.sendMessage(player, "no_items");
+            }
             return;
         }
 

@@ -195,9 +195,6 @@ public class SpawnerStackHandler {
         int spaceLeft = maxStackSize - currentStack;
 
         int amountToStack = stackAll ? Math.min(spaceLeft, itemAmount) : 1;
-
-        // Check chunk limits before proceeding
-        Location location = targetSpawner.getSpawnerLocation();
         int newStack = currentStack + amountToStack;
 
         if(SpawnerStackEvent.getHandlerList().getRegisteredListeners().length != 0) {

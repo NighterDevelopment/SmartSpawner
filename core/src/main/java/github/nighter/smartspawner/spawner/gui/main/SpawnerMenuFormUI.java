@@ -249,9 +249,9 @@ public class SpawnerMenuFormUI {
             return;
         }
 
-        // Check if there are items to sell
+        // If no items to sell, still collect exp
         if (spawner.getVirtualInventory().getUsedSlots() == 0) {
-            messageService.sendMessage(player, "no_items");
+            plugin.getSpawnerMenuAction().handleExpBottleClick(player, spawner, false);
             return;
         }
 

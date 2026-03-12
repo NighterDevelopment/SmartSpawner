@@ -290,7 +290,7 @@ public class GuiLayoutConfig {
                         String[] clickTypes = {"click", "left_click", "right_click", "shift_left_click", "shift_right_click"};
                         for (String clickType : clickTypes) {
                             String action = conditionActions.getString(clickType);
-                            if (action != null && !action.isEmpty() && !action.equals("none")) {
+                            if (action != null && !action.isEmpty()) {
                                 actions.put(clickType, action);
                             }
                         }
@@ -303,7 +303,7 @@ public class GuiLayoutConfig {
             String[] clickTypes = {"click", "left_click", "right_click", "shift_left_click", "shift_right_click"};
             for (String clickType : clickTypes) {
                 String action = config.getString(buttonKey + "." + clickType);
-                if (action != null && !action.isEmpty() && !action.equals("none")) {
+                if (action != null && !action.isEmpty()) {
                     actions.put(clickType, action);
                 }
             }

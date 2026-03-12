@@ -130,7 +130,13 @@ public class SpawnerMenuAction implements Listener {
         String action = button.getActionWithFallback(clickType);
 
         if (action == null || action.isEmpty()) {
-            return false;
+            // Button exists but no action for this click type
+            // Consume the click to prevent legacy material-based fallback from firing
+            return true;
+        }
+
+        if (action.equals("none")) {
+            return true; // Explicitly disabled action — consume click, do nothing
         }
 
         switch (action) {
@@ -158,9 +164,10 @@ public class SpawnerMenuAction implements Listener {
                     messageService.sendMessage(player, "no_permission");
                     return true;
                 }
-                // Check if there are items to sell
+                // If no items to sell, still allow exp collection
+                // Pass isSell=true to bypass the inner cooldown check (already checked above)
                 if (spawner.getVirtualInventory().getUsedSlots() == 0) {
-                    messageService.sendMessage(player, "no_items");
+                    handleExpBottleClick(player, spawner, true);
                     return true;
                 }
                 // Open confirmation GUI with exp collection enabled
