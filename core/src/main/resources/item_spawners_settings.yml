@@ -1,6 +1,6 @@
 # Important: Each time a spawner is triggered, it will generate between min_mobs and max_mobs (default: 1 to 4) times the drops specified below.
 # For detailed configuration guide and examples, please visit:
-# https://nighterdevelopment.github.io/smartspawner-docs/item_spawners_settings/
+# https://nighterdevelopment.github.io/SmartSpawner/item_spawners_settings/
 
 # Default head material for unknown items
 default_material: "SPAWNER"

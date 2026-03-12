@@ -7,6 +7,8 @@
 
 This repository hosts the official documentation website for **[SmartSpawner](https://modrinth.com/plugin/smart-spawner-plugin)**, a powerful Minecraft plugin designed to enhance mob spawner management on servers.
 
+> **Note:** The documentation source is located in the `docs/` folder of the main [SmartSpawner repository](https://github.com/NighterDevelopment/SmartSpawner).
+
 ## About SmartSpawner
 
 SmartSpawner is a feature-rich plugin that simplifies and enhances the management of mob spawners in Minecraft servers. It offers advanced customization options, seamless integrations with popular plugins, and a robust developer API for extending functionality. Notably, its GUI-based system generates mob drops and experience without spawning entities, significantly boosting server performance.
@@ -31,8 +33,8 @@ SmartSpawner is a feature-rich plugin that simplifies and enhances the managemen
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/NighterDevelopment/smartspawner-docs.git
-   cd smartspawner-docs
+   git clone https://github.com/NighterDevelopment/SmartSpawner.git
+   cd SmartSpawner/docs
    ```
 
 2. **Install dependencies**:
@@ -61,18 +63,21 @@ SmartSpawner is a feature-rich plugin that simplifies and enhances the managemen
 ## Project Structure
 
 ```
-smartspawner-docs/
-├── src/
-│   ├── content/
-│   │   ├── docs/          # Main documentation files (Markdown/MDX)
-│   │   └── config.ts      # Content configuration
-│   ├── components/        # Custom Astro components
-│   ├── styles/            # Custom CSS styles
-│   └── assets/            # Static assets
-├── public/                # Public static files
-├── astro.config.mjs       # Astro configuration
-├── package.json           # Project dependencies and scripts
-└── tsconfig.json          # TypeScript configuration
+SmartSpawner/
+├── docs/                  # Documentation site (this folder)
+│   ├── src/
+│   │   ├── content/
+│   │   │   └── docs/      # Main documentation files (Markdown/MDX)
+│   │   ├── components/    # Custom Astro components
+│   │   ├── styles/        # Custom CSS styles
+│   │   └── assets/        # Static assets
+│   ├── public/            # Public static files
+│   ├── astro.config.mjs   # Astro configuration
+│   ├── package.json       # Project dependencies and scripts
+│   └── tsconfig.json      # TypeScript configuration
+├── core/                  # Plugin core module
+├── api/                   # Plugin API module
+└── ...                    # Other plugin source files
 ```
 
 ## Contributing
@@ -113,13 +118,9 @@ For significant changes or new features, please open an issue first to discuss t
 
 ## Deployment
 
-This site is configured for deployment to GitHub Pages:
+The site is automatically deployed to GitHub Pages via GitHub Actions on every push to the `main` branch. The workflow is defined in `.github/workflows/deploy-docs.yml` at the root of the repository.
 
-```bash
-npm run deploy
-```
-
-This command builds the site and deploys it using `gh-pages`.
+The live site is available at: https://nighterdevelopment.github.io/SmartSpawner/
 
 ## License
 
@@ -127,7 +128,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support and Contact
 
-- **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/NighterDevelopment/smartspawner-docs/issues)
+- **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/NighterDevelopment/SmartSpawner/issues)
 - **Discussions**: Join community discussions on [Discord Server](https://dsc.gg/nighterdevelopment)
 
 For questions about the SmartSpawner plugin itself, please refer to the main plugin repository or community channels.

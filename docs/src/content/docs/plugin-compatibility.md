@@ -29,7 +29,7 @@ SmartSpawner respects all major protection plugins to ensure proper permissions 
 - **[GriefPrevention](https://modrinth.com/plugin/griefprevention)**
 - **[Lands](https://www.spigotmc.org/resources/lands-%E2%AD%95-land-claim-plugin-%E2%9C%85-grief-prevention-protection-gui-management-nations-wars-1-21-support.53313/)**
 - **[Towny Advanced](https://www.spigotmc.org/resources/towny-advanced.72694/)**
-- **[SimpleClaimSystem](https://modrinth.com/plugin/simpleclaimsystem)** - **[📖 Setup Guide](/SmartSpawner-Docs/integrations/SimpleClaimSystem)**
+- **[SimpleClaimSystem](https://modrinth.com/plugin/simpleclaimsystem)** - **[📖 Setup Guide](/SmartSpawner/integrations/simpleclaimsystem)**
 - **[RedProtect](https://www.spigotmc.org/resources/redprotect-anti-grief-server-protection-region-management-mod-mobs-flag-compat-1-7-1-21.15841/)**
 - **[Residence](https://www.spigotmc.org/resources/residence-1-7-10-up-to-1-21.11480/)**
 - **[MinePlots](https://builtbybit.com/resources/mineplots.21646/)**
@@ -44,7 +44,7 @@ Multi-world compatibility ensures spawners work across different worlds:
 ## SkyBlock Integrations
 Specialized support for skyblock environments with enhanced features:
 
-- **[SuperiorSkyblock2](https://www.spigotmc.org/resources/%E2%9A%A1%EF%B8%8F-superiorskyblock2-%E2%9A%A1%EF%B8%8F-the-best-core-on-market-%E2%9A%A1%EF%B8%8F-1-21-3-support.87411/)** -> **[📖 Setup Guide](/SmartSpawner-Docs/integrations/superiorskyblock2)**
+- **[SuperiorSkyblock2](https://www.spigotmc.org/resources/%E2%9A%A1%EF%B8%8F-superiorskyblock2-%E2%9A%A1%EF%B8%8F-the-best-core-on-market-%E2%9A%A1%EF%B8%8F-1-21-3-support.87411/)** -> **[📖 Setup Guide](/SmartSpawner/integrations/superiorskyblock2)**
 - **[IridiumSkyblock](https://www.spigotmc.org/resources/iridium-skyblock-1-13-1-21-5.62480/)**
 
 ## RPG & Skills Systems
@@ -53,7 +53,7 @@ Specialized support for skyblock environments with enhanced features:
 
 ## Custom Mob Systems
 
-- **[MythicMobs](https://www.spigotmc.org/resources/mythicmobs.5702/)** -> **[📖 Setup Guide](/SmartSpawner-Docs/integrations/mythicmobs)**
+- **[MythicMobs](https://www.spigotmc.org/resources/mythicmobs.5702/)** -> **[📖 Setup Guide](/SmartSpawner/integrations/mythicmobs)**
 
 ## Additional Compatibility
 

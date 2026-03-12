@@ -4,7 +4,7 @@ main: github.nighter.smartspawner.SmartSpawner
 api-version: '1.21'
 description: "A GUI-based spawner plugin that generates items and experience without spawning mobs"
 authors: [ https://github.com/NighterDevelopment/SmartSpawner ]
-website: "https://nighterdevelopment.github.io/smartspawner-docs/"
+website: "https://nighterdevelopment.github.io/SmartSpawner/"
 folia-supported: true
 
 # Load order - POSTWORLD means after all worlds are loaded

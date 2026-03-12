@@ -6,7 +6,7 @@
 [![Spigot](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/spigot_vector.svg)](https://www.spigotmc.org/resources/120743/)
 [![Hangar](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/hangar_vector.svg)](https://hangar.papermc.io/Nighter/SmartSpawner)
 
-[![Documentation](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/documentation/ghpages_vector.svg)](https://nighterdevelopment.github.io/smartspawner-docs/)
+[![Documentation](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/documentation/ghpages_vector.svg)](https://nighterdevelopment.github.io/SmartSpawner/)
 [![discord-plural](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/social/discord-plural_46h.png)](http://discord.com/invite/FJN7hJKPyb)
 
 </div>
@@ -30,7 +30,7 @@
 
 ## API
 
-For developers interested in integrating with SmartSpawner, visit our [Developer API Documentation](https://nighterdevelopment.github.io/smartspawner-docs/developer-api/api-installation/) for installation instructions and documentation.
+For developers interested in integrating with SmartSpawner, visit our [Developer API Documentation](https://nighterdevelopment.github.io/SmartSpawner/developer-api/api-installation/) for installation instructions and documentation.
 
 ## Building
 

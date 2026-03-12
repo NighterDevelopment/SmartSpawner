@@ -9,7 +9,7 @@ Before installing SmartSpawner, ensure your server meets these requirements:
 
 | Requirement | Specification |
 |-------------|---------------|
-| **Minecraft Version** | 1.21 - 1.21.10 |
+| **Minecraft Version** | 1.21 - 1.21.11 |
 | **Server Software** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) or compatible forks |
 | **Java Version** | Java 21+ (latest LTS recommended) |
 
@@ -74,11 +74,11 @@ If you encounter issues:
 
 1. **Check console logs** for error messages
 2. **Join our Discord** for community support: [Discord](https://discord.gg/zrnyG4CuuT)
-3. **Report bugs** on GitHub: [Issues](https://github.com/ptthanh02/SmartSpawner/issues)
+3. **Report bugs** on GitHub: [Issues](https://github.com/NighterDevelopment/SmartSpawner/issues)
 
 <br>
 <br>
 
 ---
 
-*Last update: November 9, 2025 18:53:43*
+*Last update: March 12, 2026 15:53:43*
