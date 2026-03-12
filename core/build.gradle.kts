@@ -103,7 +103,7 @@ tasks.shadowJar {
 
     mergeServiceFiles()
 
-    destinationDirectory.set(file("C:\\Users\\USER\\Desktop\\TestServer\\plugins"))
+    // destinationDirectory.set(file("C:\\Users\\USER\\Desktop\\TestServer\\plugins"))
 }
 
 tasks.build {

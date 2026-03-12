@@ -1,0 +1,26 @@
+{
+  "name": "smartspawner-docs",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "deploy": "npm run build && gh-pages -d dist",
+    "add-timestamps": "node scripts/add-timestamps.js"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.35.2",
+    "@catppuccin/starlight": "^1.0.1",
+    "sharp": "^0.34.2",
+    "starlight-contributor-list": "^0.3.0",
+    "starlight-theme-next": "^0.3.2",
+    "starlight-theme-obsidian": "^0.4.0"
+  },
+  "devDependencies": {
+    "astro": "^5.13.2",
+    "gh-pages": "^6.3.0"
+  }
+}

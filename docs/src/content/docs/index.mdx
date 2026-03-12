@@ -1,0 +1,67 @@
+---
+title: SmartSpawner Documentation
+description: The ultimate GUI-based spawner plugin for Minecraft servers — High performance, intuitive interaction, and seamless integration.
+template: splash
+hero:
+  title: 'SmartSpawner'
+  tagline: Enhances spawner usage with GUIs that provide drops and experience without spawning actual mobs!
+  image:
+    file: ../../assets/Spawner.png
+  actions:
+    - text: Get Started
+      link: /smartspawner-docs/installation/
+      icon: rocket
+      variant: primary
+    - text: View Features
+      link: /smartspawner-docs/features/
+      icon: star
+      variant: minimal
+    - text: Download
+      link: https://modrinth.com/plugin/smart-spawner-plugin
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import ContributorList from '/src/components/ContributorList.astro';
+
+<h2>Quick Start</h2>
+<br />
+
+<CardGrid stagger>
+  <Card title="Installation" icon="rocket">
+    Install SmartSpawner plugin on your Minecraft server.<br />
+    [Get Started →](/smartspawner-docs/installation/)
+  </Card>
+
+  <Card title="Features" icon="star">
+    Experience advanced mechanics with spawner stacking and a powerful, user-friendly GUI.<br />
+    [Learn More →](/smartspawner-docs/features/)
+  </Card>
+
+  <Card title="Commands" icon="laptop">
+    Browse the complete command list and permission system.<br />
+    [View Reference →](/smartspawner-docs/commands/)
+  </Card>
+
+  <Card title="API Integration" icon="puzzle">
+    Extend SmartSpawner with your own plugins using the flexible developer API.<br />
+    [Developer Docs →](/smartspawner-docs/developer-api/)
+  </Card>
+</CardGrid>
+
+<br/>
+
+<h2>Statistics</h2>
+
+Over **1400+** Minecraft servers trust and using SmartSpawner for their spawner management needs. The plugin has proven to be reliable and efficient, making it a popular **free choice** among server administrators.
+
+<div style="text-align: center; margin: 2rem 0;">
+  <a href="https://bstats.org/plugin/bukkit/SmartSpawner" target="_blank" rel="noopener noreferrer">
+    <img src="https://bstats.org/signatures/bukkit/SmartSpawner.svg" alt="bStats Servers" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 900px; width: 100%; display: block; margin: 0 auto;" />
+  </a>
+</div>
+
+<br/>
+
+<ContributorList repository="NighterDevelopment/smartspawner" />
