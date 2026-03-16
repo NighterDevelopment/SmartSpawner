@@ -6,7 +6,6 @@ import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.gui.synchronization.SpawnerGuiViewManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
-import github.nighter.smartspawner.Scheduler;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

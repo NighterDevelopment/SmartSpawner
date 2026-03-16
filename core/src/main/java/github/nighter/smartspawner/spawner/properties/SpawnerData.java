@@ -470,6 +470,7 @@ public class SpawnerData {
 
     public void markLastSellAsProcessed() {
         this.lastSellProcessed = true;
+        this.lastSellResult = null;
     }
 
     public boolean isInteracted() {
@@ -541,7 +542,7 @@ public class SpawnerData {
             if (item == null || item.getAmount() <= 0) continue;
             // Use cached signature to avoid excessive cloning
             VirtualInventory.ItemSignature sig = VirtualInventory.getSignature(item);
-            consolidated.merge(sig, (long) item.getAmount(), Long::sum);
+            consolidated.merge(sig, (long) item.getAmount(), (a, b) -> a + b);
         }
 
         double removedValue = 0.0;
@@ -646,13 +647,13 @@ public class SpawnerData {
         }
 
         // Add custom model data if present
-        if (item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
-            key.append("_cmd:").append(item.getItemMeta().getCustomModelData());
+        if (item.hasItemMeta() && item.getItemMeta(). hasCustomModelDataComponent()) {
+            key.append("_cmd:").append(item.getItemMeta().getCustomModelDataComponent());
         }
 
         // Add display name if present
         if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
-            key.append("_name:").append(item.getItemMeta().getDisplayName());
+            key.append("_name:").append(item.getItemMeta().displayName());
         }
 
         return key.toString();
@@ -678,7 +679,7 @@ public class SpawnerData {
                 if (item == null || item.getAmount() <= 0) continue;
                 // Use cached signature to avoid excessive cloning
                 VirtualInventory.ItemSignature sig = VirtualInventory.getSignature(item);
-                itemsToAdd.merge(sig, (long) item.getAmount(), Long::sum);
+                itemsToAdd.merge(sig, (long) item.getAmount(), (a, b) -> a + b);
             }
 
             // Add to VirtualInventory (source of truth) - this operation is atomic within the lock

@@ -2,11 +2,11 @@ package github.nighter.smartspawner.spawner.properties;
 
 import lombok.Getter;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class VirtualInventory {
     private final Map<ItemSignature, Long> consolidatedItems;
@@ -60,14 +60,14 @@ public class VirtualInventory {
         private int calculateHashCode() {
             // Use a faster hash algorithm and cache more item properties
             int result = 31 * template.getType().ordinal(); // Using ordinal() instead of name() hashing
-            result = 31 * result + (int)template.getDurability();
+            result = 31 * result + getItemDamage(template);
 
             // Only access ItemMeta when needed
             if (template.hasItemMeta()) {
                 ItemMeta meta = template.getItemMeta();
                 // Extract only the essential meta properties that determine similarity
-                result = 31 * result + (meta.hasDisplayName() ? meta.getDisplayName().hashCode() : 0);
-                result = 31 * result + (meta.hasLore() ? meta.getLore().hashCode() : 0);
+                result = 31 * result + (meta.hasDisplayName() ? meta.displayName().hashCode() : 0);
+                result = 31 * result + (meta.hasLore() ? meta.lore().hashCode() : 0);
                 result = 31 * result + (meta.hasEnchants() ? meta.getEnchants().hashCode() : 0);
             }
             return result;
@@ -80,8 +80,8 @@ public class VirtualInventory {
             ItemSignature that = (ItemSignature) o;
 
             // First compare cheap properties
-            if (template.getType() != that.template.getType() ||
-                    template.getDurability() != that.template.getDurability()) {
+                if (template.getType() != that.template.getType() ||
+                    getItemDamage(template) != getItemDamage(that.template)) {
                 return false;
             }
 
@@ -116,6 +116,17 @@ public class VirtualInventory {
             return template;
         }
 
+        private int getItemDamage(ItemStack item) {
+            if (!item.hasItemMeta()) {
+                return 0;
+            }
+            ItemMeta meta = item.getItemMeta();
+            if (meta instanceof Damageable) {
+                return ((Damageable) meta).getDamage();
+            }
+            return 0;
+        }
+
     }
 
     public static ItemSignature getSignature(ItemStack item) {
@@ -142,13 +153,13 @@ public class VirtualInventory {
         for (ItemStack item : items) {
             if (item == null || item.getAmount() <= 0) continue;
             ItemSignature sig = getSignature(item); // Use cached signature
-            itemBatch.merge(sig, (long) item.getAmount(), Long::sum);
+            itemBatch.merge(sig, (long) item.getAmount(), (a, b) -> a + b);
         }
 
         // Apply all changes in one operation
         if (!itemBatch.isEmpty()) {
             for (Map.Entry<ItemSignature, Long> entry : itemBatch.entrySet()) {
-                consolidatedItems.merge(entry.getKey(), entry.getValue(), Long::sum);
+                consolidatedItems.merge(entry.getKey(), entry.getValue(), (a, b) -> a + b);
             }
             displayCacheDirty = true;
             metricsCacheDirty = true;
@@ -166,7 +177,7 @@ public class VirtualInventory {
             if (item == null || item.getAmount() <= 0) continue;
             // Use cached signature to avoid excessive cloning
             ItemSignature sig = getSignature(item);
-            toRemove.merge(sig, (long) item.getAmount(), Long::sum);
+            toRemove.merge(sig, (long) item.getAmount(), (a, b) -> a + b);
         }
 
         if (toRemove.isEmpty()) return true;
