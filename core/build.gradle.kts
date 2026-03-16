@@ -22,7 +22,7 @@ dependencies {
     compileOnly("com.github.brcdev-minecraft:shopgui-api:3.2.0") {
         exclude(group = "*")
     }
-    compileOnly("com.palmergames.bukkit.towny:towny:0.102.0.11")
+    compileOnly("com.palmergames.bukkit.towny:towny:0.102.0.12")
     compileOnly("com.bgsoftware:SuperiorSkyblockAPI:2025.2.1")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     compileOnly("su.nightexpress.coinsengine:CoinsEngine:2.6.0")
