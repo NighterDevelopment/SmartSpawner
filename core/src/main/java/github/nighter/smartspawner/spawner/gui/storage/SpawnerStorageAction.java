@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.spawner.gui.storage;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.api.events.SpawnerDropAllEvent;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayoutConfig;
 import github.nighter.smartspawner.spawner.gui.storage.filter.FilterConfigUI;
@@ -12,9 +13,7 @@ import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -407,6 +406,13 @@ public class SpawnerStorageAction implements Listener {
         if (pageItems.isEmpty()) {
             messageService.sendMessage(player, "no_items_to_drop");
             return;
+        }
+
+        if (SpawnerDropAllEvent.getHandlerList().getRegisteredListeners().length != 0) {
+            SpawnerDropAllEvent event = new SpawnerDropAllEvent(player, spawner.getSpawnerLocation(), pageItems);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return;
+            pageItems = event.getItems();
         }
 
         final int itemsFound = itemsFoundCount;
