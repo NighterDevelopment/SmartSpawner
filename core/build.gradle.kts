@@ -15,14 +15,14 @@ dependencies {
 
     shade("com.zaxxer:HikariCP:7.0.2")
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.7")
-    compileOnly("org.xerial:sqlite-jdbc:3.45.1.0")
+    compileOnly("org.xerial:sqlite-jdbc:3.51.3.0")
 
     compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.1.0-SNAPSHOT")
     compileOnly("com.github.brcdev-minecraft:shopgui-api:3.2.0") {
         exclude(group = "*")
     }
-    compileOnly("com.palmergames.bukkit.towny:towny:0.102.0.11")
+    compileOnly("com.palmergames.bukkit.towny:towny:0.102.0.12")
     compileOnly("com.bgsoftware:SuperiorSkyblockAPI:2025.2.1")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     compileOnly("su.nightexpress.coinsengine:CoinsEngine:2.6.0")
@@ -38,7 +38,7 @@ dependencies {
     compileOnly("dev.aurelium:auraskills-api-bukkit:2.3.9")
     compileOnly("pl.minecodes.plots:plugin-api:4.6.2")
     compileOnly("fr.maxlego08.shop:zshop-api:3.3.3")
-    compileOnly("fr.maxlego08.menu:zmenu-api:1.1.1.1")
+    compileOnly("fr.maxlego08.menu:zmenu-api:1.1.1.2")
 
     implementation("com.github.GriefPrevention:GriefPrevention:18.0.0")
     implementation("com.github.IncrediblePlugins:LandsAPI:7.24.1")
