@@ -6,18 +6,20 @@ description: Event handlers for spawner-related actions and interactions.
 
 SmartSpawner provides various events to hook into spawner-related actions:
 
-| Event | Description | Cancellable |
-|-------|-------------|:-----------:|
-| `SpawnerBreakEvent` | Spawner broken by a player or an explosion | ❌ |
-| `SpawnerPlaceEvent` | Spawner placed by player | ✅ |
-| `SpawnerPlayerBreakEvent` | Spawner broken by player | ✅ |
-| `SpawnerStackEvent` | Spawners stacking by hand | ✅ |
-| `SpawnerSellEvent` | Selling item from spawner storage | ✅ |
-| `SpawnerExpClaimEvent` | Experience claimed from spawner | ✅ |
-| `SpawnerEggChangeEvent` | Spawner type changed with egg | ✅ |
-| `SpawnerExplodeEvent` | Spawners destroyed by explosion | ❌ |
-| `SpawnerRemoveEvent` | Unstack spawners from the stacker GUI | ✅ |
-| `SpawnerOpenGUIEvent` | GUI opened by player | ✅ |
+| Event                     | Description                                      | Cancellable |
+|---------------------------|--------------------------------------------------|:----------:|
+| `SpawnerBreakEvent`       | Spawner broken by a player or an explosion       |      ❌     |
+| `SpawnerPlaceEvent`       | Spawner placed by player                         |      ✅     |
+| `SpawnerPlayerBreakEvent` | Spawner broken by player                         |      ✅     |
+| `SpawnerStackEvent`       | Spawners stacking by hand                        |      ✅     |
+| `SpawnerSellEvent`        | Selling item from spawner storage                |      ✅     |
+| `SpawnerExpClaimEvent`    | Experience claimed from spawner                  |      ✅     |
+| `SpawnerEggChangeEvent`   | Spawner type changed with egg                    |      ✅     |
+| `SpawnerExplodeEvent`     | Spawners destroyed by explosion                  |      ❌     |
+| `SpawnerRemoveEvent`      | Unstack spawners from the stacker GUI            |      ✅     |
+| `SpawnerOpenGUIEvent`     | GUI opened by player                             |      ✅     |
+| `SpawnerDropAllEvent`     | Dropping all item from a page of spawner storage |      ✅      |
+| `SpawnerTakeAllEvent`     | Taking all item from a page of spawner storage   |      ✅      |
 
 ### SpawnerBreakEvent
 Triggered when a spawner is broken by a player or explosion.
@@ -189,9 +191,45 @@ public void onSpawnerOpenGUI(SpawnerOpenGUIEvent event) {
 }
 ```
 
+### SpawnerDropAllEvent
+Triggered when a player drop all items from a page of spawner storage.
+
+```java
+import github.nighter.smartspawner.api.events.SpawnerDropAllEvent;
+
+@EventHandler
+public void onSpawnerDropAll(SpawnerDropAllEvent event) {
+    Player player = event.getPlayer();
+    
+    // Handle drop all
+    if (!player.hasPermission("spawner.gui.dropall")) {
+        event.setCancelled(true);
+        player.sendMessage("No permission to drop all items from spawner!");
+    }
+}
+```
+
+### SpawnerTakeAllEvent
+Triggered when a player take all items from a page of spawner storage.
+
+```java
+import github.nighter.smartspawner.api.events.SpawnerTakeAllEvent;
+
+@EventHandler
+public void onSpawnerTakeAll(SpawnerTakeAllEvent event) {
+    Player player = event.getPlayer();
+    
+    // Handle take all
+    if (!player.hasPermission("spawner.gui.takeall")) {
+        event.setCancelled(true);
+        player.sendMessage("No permission to take all items from spawner!");
+    }
+}
+```
+
 <br>
 <br>
 
 ---
 
-*Last update: November 17, 2025 11:38:36*
+*Last update: March 19, 2026 17:08*

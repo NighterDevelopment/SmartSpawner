@@ -1,6 +1,8 @@
 package github.nighter.smartspawner.spawner.gui.storage;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.api.events.SpawnerDropAllEvent;
+import github.nighter.smartspawner.api.events.SpawnerTakeAllEvent;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayoutConfig;
 import github.nighter.smartspawner.spawner.gui.storage.filter.FilterConfigUI;
@@ -12,9 +14,7 @@ import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -28,7 +28,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.Vector;
-import org.bukkit.World;
 import org.bukkit.entity.Item;
 
 import java.util.*;
@@ -409,6 +408,13 @@ public class SpawnerStorageAction implements Listener {
             return;
         }
 
+        if (SpawnerDropAllEvent.getHandlerList().getRegisteredListeners().length != 0) {
+            SpawnerDropAllEvent event = new SpawnerDropAllEvent(player, spawner.getSpawnerLocation(), pageItems);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return;
+            pageItems = event.getItems();
+        }
+
         final int itemsFound = itemsFoundCount;
 
         // Remove from VirtualInventory
@@ -741,6 +747,13 @@ public class SpawnerStorageAction implements Listener {
         if (sourceItems.isEmpty()) {
             messageService.sendMessage(player, "no_items_to_take");
             return;
+        }
+
+        if (SpawnerTakeAllEvent.getHandlerList().getRegisteredListeners().length != 0) {
+            SpawnerTakeAllEvent event = new SpawnerTakeAllEvent(player, spawner.getSpawnerLocation(), sourceItems);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return;
+            sourceItems = event.getItems();
         }
 
         // Transfer items and update VirtualInventory
