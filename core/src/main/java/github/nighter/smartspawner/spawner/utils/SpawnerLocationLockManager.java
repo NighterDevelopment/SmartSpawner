@@ -3,7 +3,6 @@ package github.nighter.smartspawner.spawner.utils;
 import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 import java.util.Iterator;
