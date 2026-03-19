@@ -386,8 +386,11 @@ public class SpawnerFileHandler implements SpawnerStorage {
                         spawner.setMaxStoredExp(Integer.parseInt(settings[6]));
                         spawner.setMinMobs(Integer.parseInt(settings[7]));
                         spawner.setMaxMobs(Integer.parseInt(settings[8]));
-                        spawner.setStackSize(Integer.parseInt(settings[9]), restartHopper);
+                        // Load maxStackSize BEFORE stackSize so the saved limit is in place
+                        // when setStackSize validates the value, preventing data loss if the
+                        // global config limit was lowered after this spawner was saved.
                         spawner.setMaxStackSize(Integer.parseInt(settings[10]));
+                        spawner.setStackSize(Integer.parseInt(settings[9]), restartHopper);
                         spawner.setLastSpawnTime(Long.parseLong(settings[11]));
                         spawner.setIsAtCapacity(Boolean.parseBoolean(settings[12]));
                     }

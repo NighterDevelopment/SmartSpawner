@@ -303,9 +303,11 @@ public class SpawnerData {
             return;
         }
 
-        if (newStackSize > this.maxStackSize) {
-            this.stackSize = this.maxStackSize;
-            plugin.getLogger().warning("Stack size exceeds maximum. Setting to " + this.stackSize);
+        // Only prevent INCREASING beyond maxStackSize.
+        // If the config limit was lowered after a spawner accumulated a higher stack,
+        // we must still allow the count to decrease (e.g. on break) to avoid data loss.
+        if (newStackSize > this.maxStackSize && newStackSize > this.stackSize) {
+            plugin.getLogger().warning("Stack size " + newStackSize + " exceeds maximum " + this.maxStackSize + ". Ignoring.");
             return;
         }
 
