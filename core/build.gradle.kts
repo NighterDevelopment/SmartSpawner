@@ -50,7 +50,7 @@ dependencies {
     compileOnly("io.lumine:Mythic-Dist:5.11.2")
     compileOnly("com.iridium:IridiumSkyblock:4.1.2")
 
-    implementation(platform("com.intellectualsites.bom:bom-newest:1.55"))
+    implementation(platform("com.intellectualsites.bom:bom-newest:1.56"))
     compileOnly("com.intellectualsites.plotsquared:plotsquared-core")
 
     compileOnly("org.projectlombok:lombok:1.18.44")
