@@ -209,29 +209,4 @@ public class DiscordEmbedBuilder {
         if (l.contains("type"))     return "🏷️";
         return "•";
     }
-
-    private static String getEventIcon(github.nighter.smartspawner.logging.SpawnerEventType t) {
-        return switch (t) {
-            case SPAWNER_PLACE         -> "✅";
-            case SPAWNER_BREAK         -> "❌";
-            case SPAWNER_EXPLODE       -> "💥";
-            case SPAWNER_STACK_HAND    -> "✋";
-            case SPAWNER_STACK_GUI     -> "📦";
-            case SPAWNER_DESTACK_GUI   -> "📤";
-            case SPAWNER_GUI_OPEN      -> "📋";
-            case SPAWNER_STORAGE_OPEN  -> "📦";
-            case SPAWNER_STACKER_OPEN  -> "🔢";
-            case SPAWNER_EXP_CLAIM     -> "✨";
-            case SPAWNER_SELL_ALL      -> "💰";
-            case SPAWNER_ITEM_TAKE_ALL -> "🎒";
-            case SPAWNER_ITEM_DROP     -> "🗑️";
-            case SPAWNER_ITEMS_SORT    -> "🔃";
-            case SPAWNER_ITEM_FILTER   -> "🔍";
-            case SPAWNER_DROP_PAGE_ITEMS -> "📄";
-            case SPAWNER_EGG_CHANGE    -> "🥚";
-            case COMMAND_EXECUTE_PLAYER  -> "👤";
-            case COMMAND_EXECUTE_CONSOLE -> "🖥️";
-            case COMMAND_EXECUTE_RCON    -> "🔌";
-        };
-    }
 }
