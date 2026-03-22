@@ -1,0 +1,67 @@
+# ──────────────────────────────────────────────────────────────────────────────
+#   SmartSpawner – Centralized Changelog
+# ──────────────────────────────────────────────────────────────────────────────
+#
+#   This file is the single source of truth for version history.
+#   It is auto-updated by the Gradle `generateChangelog` task each time a build
+#   is compiled with a version that is higher than the latest published GitHub
+#   release.
+#
+#   The file is bundled inside the plugin JAR and readable at runtime via
+#   ChangelogService (get the latest release notes, compare URLs, etc.).
+#
+#   Entry format
+#   ─────────────
+#   versions:
+#     "X.Y.Z":
+#       date:        YYYY-MM-DD
+#       tag:         vX.Y.Z
+#       compare_url: GitHub diff link between the previous and this version
+#       changes:
+#         - type:        added | changed | fixed | removed | security | improvement
+#           description: human-readable description of the change
+#           files:       (optional) source-code locations where the change lives
+#             - path: relative path from repo root
+#               line: 1-based line number of the key/symbol affected
+#
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ── GitHub Repository Reference ───────────────────────────────────────────────
+github:
+  owner: "NighterDevelopment"
+  repo:  "SmartSpawner"
+  url:          "https://github.com/NighterDevelopment/SmartSpawner"
+  releases_url: "https://github.com/NighterDevelopment/SmartSpawner/releases"
+  api_latest:   "https://api.github.com/repos/NighterDevelopment/SmartSpawner/releases/latest"
+
+# ── Version History (newest first) ───────────────────────────────────────────
+versions:
+  "1.6.3":
+    date: "2026-03-22"
+    tag: "v1.6.3"
+    compare_url: "https://github.com/NighterDevelopment/SmartSpawner/compare/v1.6.2...v1.6.3"
+    changes:
+      - type: "improvement"
+        description: "Merged discord.yml and discord/event_defaults.yml into a single discord_logging.yml for centralized Discord configuration"
+        files:
+          - path: "core/src/main/resources/discord_logging.yml"
+            line: 1
+          - path: "core/src/main/java/github/nighter/smartspawner/logging/discord/DiscordWebhookConfig.java"
+            line: 19
+          - path: "core/src/main/java/github/nighter/smartspawner/logging/discord/DiscordConfigUpdater.java"
+            line: 13
+          - path: "core/src/main/java/github/nighter/smartspawner/logging/discord/DiscordEmbedConfigManager.java"
+            line: 30
+      - type: "added"
+        description: "Added centralized changelog.yml bundled in plugin JAR, auto-updated by Gradle generateChangelog task on each new version build"
+        files:
+          - path: "core/src/main/resources/changelog.yml"
+            line: 1
+          - path: "core/build.gradle.kts"
+            line: 108
+      - type: "added"
+        description: "Added migration path: legacy discord.yml is automatically migrated to discord_logging.yml on first server start with the new version"
+        files:
+          - path: "core/src/main/java/github/nighter/smartspawner/logging/discord/DiscordConfigUpdater.java"
+            line: 24
+
