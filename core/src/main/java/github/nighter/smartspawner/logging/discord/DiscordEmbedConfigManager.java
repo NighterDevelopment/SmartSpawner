@@ -26,8 +26,9 @@ import java.util.logging.Level;
  */
 public class DiscordEmbedConfigManager {
 
-    private static final String EVENTS_FOLDER    = "discord/events";
-    private static final String DEFAULTS_RESOURCE = "discord/event_defaults.yml";
+    private static final String EVENTS_FOLDER     = "discord/events";
+    private static final String DEFAULTS_RESOURCE  = "discord_logging.yml";
+    private static final String DEFAULTS_SECTION   = "event_defaults";
 
     private final SmartSpawner plugin;
     private final DiscordWebhookConfig config;
@@ -98,20 +99,27 @@ public class DiscordEmbedConfigManager {
     }
 
     /**
-     * Reads the event's section from {@code event_defaults.yml} and writes
-     * a formatted, commented file to the plugin data folder.
+     * Reads the event's section from {@code discord_logging.yml} under
+     * {@code event_defaults.<EVENT_NAME>} and writes a formatted, commented
+     * file to the plugin data folder.
      */
     private void extractDefaultForEvent(SpawnerEventType eventType, File dest, File eventsDir) {
         try (InputStream in = plugin.getResource(DEFAULTS_RESOURCE)) {
             if (in == null) {
-                plugin.getLogger().warning("discord/event_defaults.yml not found in JAR");
+                plugin.getLogger().warning(DEFAULTS_RESOURCE + " not found in JAR");
                 return;
             }
 
             FileConfiguration defaults = YamlConfiguration.loadConfiguration(
                     new InputStreamReader(in, StandardCharsets.UTF_8));
 
-            ConfigurationSection section = defaults.getConfigurationSection(eventType.name());
+            // Templates live under event_defaults.<EVENT_NAME> in discord_logging.yml
+            ConfigurationSection eventDefaults = defaults.getConfigurationSection(DEFAULTS_SECTION);
+            if (eventDefaults == null) {
+                plugin.getLogger().warning(DEFAULTS_RESOURCE + ": missing '" + DEFAULTS_SECTION + "' section");
+                return;
+            }
+            ConfigurationSection section = eventDefaults.getConfigurationSection(eventType.name());
             if (section == null) {
                 plugin.debug("No default embed found for event: " + eventType.name());
                 return;

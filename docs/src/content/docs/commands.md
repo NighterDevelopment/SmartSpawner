@@ -25,6 +25,8 @@ All commands can be used with these aliases:
 | `/ss reload` | `smartspawner.command.reload` |
 | `/ss clear holograms` | `smartspawner.command.clear` |
 | `/ss clear ghost_spawners` | `smartspawner.command.clear` |
+| `/ss near [radius]` | `smartspawner.command.near` |
+| `/ss near cancel` | `smartspawner.command.near` |
 
 ## Command Details
 
@@ -148,6 +150,29 @@ Automatically detects and removes broken spawners without physical blocks.
 - Fixing spawner data corruption
 - Routine maintenance to keep spawner data clean
 
+### `/ss near`
+
+```bash
+/ss near [radius]
+/ss near cancel
+```
+
+Scan for nearby spawners and highlight them through walls using glowing block outlines.
+
+**Features:**
+- **Async Scan**: Non-blocking scan that won't lag the server. Progress is shown in a boss bar
+- **Through-Wall Visibility**: BlockDisplay glow outlines are visible through any block
+- **Player-Only**: Highlights are exclusive to the player who ran the command
+- **Auto-Expire**: Highlights disappear automatically after 30 seconds
+- **Cancellable**: Run `/ss near cancel` to remove highlights immediately
+
+**Parameters:**
+- `[radius]` — Scan radius in blocks (1–200, defaults to 50)
+
+**Notes:**
+- Maximum 200 spawners can be highlighted per scan
+- Scans are optimised for servers with large numbers of spawners
+
 <br>
 <br>
 
@@ -156,4 +181,4 @@ Automatically detects and removes broken spawners without physical blocks.
 
 ---
 
-*Last update: November 8, 2025 23:33:28*
+*Last update: March 22, 2026*

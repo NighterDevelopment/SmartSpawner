@@ -30,6 +30,7 @@ Understanding the **Default** column in the permissions table:
 | `smartspawner.command.hologram`  | Allow toggling hologram for spawners                   | `op`        |
 | `smartspawner.command.prices`    | Allow viewing spawner prices GUI                       | `op`        |
 | `smartspawner.command.clear`     | Allow clearing holograms and ghost spawners            | `op`        |
+| `smartspawner.command.near`      | Allow scanning and highlighting nearby spawners        | `op`        |
 
 #### Feature Permissions
 
@@ -45,4 +46,4 @@ Understanding the **Default** column in the permissions table:
 
 ---
 
-*Last update: October 16, 2025 15:13:54*
+*Last update: March 22, 2026*

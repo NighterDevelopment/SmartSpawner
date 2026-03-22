@@ -5,7 +5,6 @@ import github.nighter.smartspawner.api.events.SpawnerExplodeEvent;
 import github.nighter.smartspawner.extras.HopperService;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
-import github.nighter.smartspawner.spawner.data.SpawnerFileHandler;
 import github.nighter.smartspawner.utils.BlockPos;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -23,13 +22,11 @@ import java.util.List;
 public class SpawnerExplosionListener implements Listener {
     private final SmartSpawner plugin;
     private final SpawnerManager spawnerManager;
-    private final SpawnerFileHandler spawnerFileHandler;
     private final HopperService hopperService;
 
     public SpawnerExplosionListener(SmartSpawner plugin) {
         this.plugin = plugin;
         this.spawnerManager = plugin.getSpawnerManager();
-        this.spawnerFileHandler = plugin.getSpawnerFileHandler();
         this.hopperService = plugin.getHopperService();
     }
 

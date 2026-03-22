@@ -16,164 +16,141 @@ import java.util.logging.Level;
 
 /**
  * Handles sending log entries to Discord via webhooks.
- * Implements rate limiting and async processing to prevent blocking.
+ * Implements rate-limiting and async processing to avoid blocking.
+ *
+ * <p>Per-event embed appearance is resolved lazily through {@link DiscordEmbedConfigManager}.</p>
  */
 public class DiscordWebhookLogger {
+
     private final SmartSpawner plugin;
     private final DiscordWebhookConfig config;
+    private final DiscordEmbedConfigManager embedConfigManager;
     private final ConcurrentLinkedQueue<SpawnerLogEntry> webhookQueue;
     private final AtomicBoolean isShuttingDown;
     private final AtomicLong lastWebhookTime;
     private final AtomicLong webhooksSentThisMinute;
     private Scheduler.Task webhookTask;
-    
-    // Discord rate limits: 30 requests per minute per webhook
-    private static final int MAX_REQUESTS_PER_MINUTE = 25; // Leave some buffer
-    private static final long MINUTE_IN_MILLIS = 60000;
-    
-    public DiscordWebhookLogger(SmartSpawner plugin, DiscordWebhookConfig config) {
-        this.plugin = plugin;
-        this.config = config;
-        this.webhookQueue = new ConcurrentLinkedQueue<>();
-        this.isShuttingDown = new AtomicBoolean(false);
-        this.lastWebhookTime = new AtomicLong(System.currentTimeMillis());
+
+    // Discord rate limits: ~30 requests/min per webhook; leave buffer
+    private static final int  MAX_REQUESTS_PER_MINUTE = 25;
+    private static final long MINUTE_IN_MILLIS         = 60_000L;
+
+    public DiscordWebhookLogger(SmartSpawner plugin,
+                                DiscordWebhookConfig config,
+                                DiscordEmbedConfigManager embedConfigManager) {
+        this.plugin              = plugin;
+        this.config              = config;
+        this.embedConfigManager  = embedConfigManager;
+        this.webhookQueue        = new ConcurrentLinkedQueue<>();
+        this.isShuttingDown      = new AtomicBoolean(false);
+        this.lastWebhookTime     = new AtomicLong(System.currentTimeMillis());
         this.webhooksSentThisMinute = new AtomicLong(0);
-        
-        if (config.isEnabled()) {
-            startWebhookTask();
-        }
+
+        if (config.isEnabled()) startWebhookTask();
     }
-    
+
+    // ── Public API ───────────────────────────────────────────────────────────
+
     /**
      * Queue a log entry to be sent to Discord.
      */
     public void queueWebhook(SpawnerLogEntry entry) {
-        if (!config.isEnabled() || !config.isEventEnabled(entry.getEventType())) {
-            return;
-        }
-        
+        if (!config.isEnabled() || !config.isEventEnabled(entry.getEventType())) return;
         webhookQueue.offer(entry);
     }
-    
-    private void startWebhookTask() {
-        // Process webhook queue every 2 seconds (always async)
-        webhookTask = Scheduler.runTaskTimerAsync(() -> {
-            if (isShuttingDown.get()) {
-                return;
-            }
-            processWebhookQueue();
-        }, 40L, 40L);
-    }
-    
-    private void processWebhookQueue() {
-        if (webhookQueue.isEmpty()) {
-            return;
-        }
-        
-        // Check rate limiting
-        long currentTime = System.currentTimeMillis();
-        long timeSinceLastCheck = currentTime - lastWebhookTime.get();
-        
-        // Reset counter every minute
-        if (timeSinceLastCheck >= MINUTE_IN_MILLIS) {
-            webhooksSentThisMinute.set(0);
-            lastWebhookTime.set(currentTime);
-        }
-        
-        // Process entries within rate limit
-        while (!webhookQueue.isEmpty() && webhooksSentThisMinute.get() < MAX_REQUESTS_PER_MINUTE) {
-            SpawnerLogEntry entry = webhookQueue.poll();
-            if (entry != null) {
-                sendWebhook(entry);
-                webhooksSentThisMinute.incrementAndGet();
-            }
-        }
-        
-        // Log warning if queue is backing up
-        if (webhookQueue.size() > 50) {
-            plugin.getLogger().warning("Discord webhook queue is backing up: " + webhookQueue.size() + " entries pending");
-        }
-    }
-    
-    private void sendWebhook(SpawnerLogEntry entry) {
-        String webhookUrl = config.getWebhookUrl();
-        if (webhookUrl == null || webhookUrl.isEmpty()) {
-            return;
-        }
 
-        try {
-            // Build the full JSON payload (handles both yaml and json embed_format)
-            String jsonPayload = DiscordEmbedBuilder.buildWebhookPayload(entry, config, plugin);
-
-            // Send async HTTP request
-            Scheduler.runTaskAsync(() -> {
-                try {
-                    sendHttpRequest(webhookUrl, jsonPayload);
-                } catch (IOException e) {
-                    plugin.getLogger().log(Level.WARNING, "Failed to send Discord webhook", e);
-                }
-            });
-
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.WARNING, "Error building Discord webhook payload", e);
-        }
-    }
-    
-    private void sendHttpRequest(String webhookUrl, String jsonPayload) throws IOException {
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(webhookUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("User-Agent", "SmartSpawner-Logger/1.0");
-            connection.setDoOutput(true);
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
-            
-            try (OutputStream os = connection.getOutputStream()) {
-                byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
-            }
-            
-            int responseCode = connection.getResponseCode();
-            if (responseCode == 429) {
-                // Rate limited - will retry from queue
-                plugin.getLogger().warning("Discord webhook rate limited. Entries will retry.");
-            } else if (responseCode < 200 || responseCode >= 300) {
-                plugin.getLogger().warning("Discord webhook returned error code: " + responseCode);
-            }
-            
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
-    }
-    
     /**
      * Shutdown the webhook logger.
      */
     public void shutdown() {
         isShuttingDown.set(true);
-        
-        if (webhookTask != null) {
-            webhookTask.cancel();
-        }
-        
-        // Attempt to flush remaining entries (with limit to prevent blocking)
+        if (webhookTask != null) webhookTask.cancel();
+
+        // Attempt a limited flush
         int flushed = 0;
         while (!webhookQueue.isEmpty() && flushed < 10) {
             SpawnerLogEntry entry = webhookQueue.poll();
-            if (entry != null) {
-                sendWebhook(entry);
-                flushed++;
-            }
+            if (entry != null) { sendWebhook(entry); flushed++; }
         }
-        
         if (!webhookQueue.isEmpty()) {
-            plugin.getLogger().warning("Discord webhook queue had " + webhookQueue.size() + 
-                    " pending entries at shutdown (flushed " + flushed + ")");
+            plugin.getLogger().warning("Discord queue had " + webhookQueue.size()
+                    + " pending entries at shutdown (flushed " + flushed + ")");
+        }
+    }
+
+    // ── Internal ─────────────────────────────────────────────────────────────
+
+    private void startWebhookTask() {
+        webhookTask = Scheduler.runTaskTimerAsync(() -> {
+            if (!isShuttingDown.get()) processWebhookQueue();
+        }, 40L, 40L);
+    }
+
+    private void processWebhookQueue() {
+        if (webhookQueue.isEmpty()) return;
+
+        long now = System.currentTimeMillis();
+        if (now - lastWebhookTime.get() >= MINUTE_IN_MILLIS) {
+            webhooksSentThisMinute.set(0);
+            lastWebhookTime.set(now);
+        }
+
+        while (!webhookQueue.isEmpty() && webhooksSentThisMinute.get() < MAX_REQUESTS_PER_MINUTE) {
+            SpawnerLogEntry entry = webhookQueue.poll();
+            if (entry != null) { sendWebhook(entry); webhooksSentThisMinute.incrementAndGet(); }
+        }
+
+        if (webhookQueue.size() > 50) {
+            plugin.getLogger().warning("Discord webhook queue backing up: " + webhookQueue.size() + " pending");
+        }
+    }
+
+    private void sendWebhook(SpawnerLogEntry entry) {
+        String url = config.getWebhookUrl();
+        if (url == null || url.isEmpty()) return;
+
+        try {
+            // Resolve per-event embed config (lazy, cached)
+            DiscordEventEmbedConfig embedCfg = embedConfigManager.getEmbedConfig(entry.getEventType());
+            String jsonPayload = DiscordEmbedBuilder.buildWebhookPayload(entry, embedCfg, config, plugin);
+
+            Scheduler.runTaskAsync(() -> {
+                try {
+                    sendHttpRequest(url, jsonPayload);
+                } catch (IOException e) {
+                    plugin.getLogger().log(Level.WARNING, "Failed to send Discord webhook", e);
+                }
+            });
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "Error building Discord webhook payload", e);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private void sendHttpRequest(String webhookUrl, String jsonPayload) throws IOException {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(webhookUrl);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("User-Agent", "SmartSpawner-Logger/1.0");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
+            }
+
+            int code = conn.getResponseCode();
+            if (code == 429) {
+                plugin.getLogger().warning("Discord webhook rate limited – entry will be retried.");
+            } else if (code < 200 || code >= 300) {
+                plugin.getLogger().warning("Discord webhook returned HTTP " + code);
+            }
+        } finally {
+            if (conn != null) conn.disconnect();
         }
     }
 }

@@ -283,6 +283,12 @@ drop_page_button:
   lore:
     - '&#607D8B⊳ &#f8f8ffɴʜấɴ để ᴛʜả ᴛấᴛ ᴄả ᴠậᴛ ᴘʜẩᴍ'
 
+collect_exp_button:
+  # Available placeholders: {current_exp}
+  name: '&#2ecc71ɴʜậɴ ᴇxᴘ: &#f8f8ff{current_exp} &#2ecc71xᴘ'
+  lore:
+    - '&#2ecc71⊳ &#f8f8ffɴʜấᴘ để ɴʜậɴ ᴇxᴘ'
+
 
 # ---------------------------------------------------
 #             Filter Configuration GUI

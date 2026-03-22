@@ -203,6 +203,12 @@ drop_page_button:
   lore:
     - '&fClick to drop all the loot on the page'
 
+collect_exp_button:
+  # Available placeholders: {current_exp}
+  name: '&#2ecc71ᴄʟᴀɪᴍ ᴇxᴘ: &#f8f8ff{current_exp} &#2ecc71xᴘ'
+  lore:
+    - '&#2ecc71⊳ &fClick to claim your XP'
+
 # ---------------------------------------------------
 #             Filter Configuration GUI
 # ---------------------------------------------------

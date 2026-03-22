@@ -4,6 +4,7 @@ import github.nighter.smartspawner.api.*;
 import github.nighter.smartspawner.bstats.Metrics;
 import github.nighter.smartspawner.commands.BrigadierCommandManager;
 import github.nighter.smartspawner.commands.list.ListSubCommand;
+import github.nighter.smartspawner.commands.near.SpawnerHighlightManager;
 import github.nighter.smartspawner.commands.list.gui.list.UserPreferenceCache;
 import github.nighter.smartspawner.commands.list.gui.list.SpawnerListGUI;
 import github.nighter.smartspawner.commands.list.gui.management.SpawnerManagementHandler;
@@ -61,6 +62,7 @@ import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.updates.ConfigUpdater;
 import github.nighter.smartspawner.nms.VersionInitializer;
 import github.nighter.smartspawner.updates.LanguageUpdater;
+import github.nighter.smartspawner.updates.LanguageChangelogUpdater;
 import github.nighter.smartspawner.updates.UpdateChecker;
 import github.nighter.smartspawner.spawner.utils.SpawnerTypeChecker;
 import github.nighter.smartspawner.spawner.utils.SpawnerLocationLockManager;
@@ -151,6 +153,9 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     private SpawnerActionLogger spawnerActionLogger;
     private SpawnerAuditListener spawnerAuditListener;
     private LoggingConfig loggingConfig;
+
+    // Near-command highlight manager
+    private SpawnerHighlightManager spawnerHighlightManager;
 
     // API implementation
     private SmartSpawnerAPIImpl apiImpl;
@@ -243,6 +248,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         configUpdater.checkAndUpdateConfig();
         this.languageManager = new LanguageManager(this);
         this.languageUpdater = new LanguageUpdater(this);
+        new LanguageChangelogUpdater(this).update();
         this.messageService = new MessageService(this, languageManager);
         
         // Initialize new unified spawner settings config (but don't load yet)
@@ -402,6 +408,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         this.spawnEggHandler = new SpawnEggHandler(this);
         this.spawnerStackHandler = new SpawnerStackHandler(this);
         this.spawnerClickManager = new SpawnerClickManager(this);
+        this.spawnerHighlightManager = new SpawnerHighlightManager(this);
     }
 
     private void initializeUIAndActions() {
@@ -452,6 +459,11 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         pm.registerEvents(serverSelectionHandler, this);
         pm.registerEvents(pricesGUI, this);
         pm.registerEvents(spawnerSellConfirmListener, this);
+
+        // Register near-command listener (player quit cleanup)
+        if (spawnerHighlightManager != null) {
+            pm.registerEvents(spawnerHighlightManager, this);
+        }
 
         // Register logging listener
         if (spawnerAuditListener != null) {
@@ -567,6 +579,11 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         // Shutdown logging system
         if (spawnerActionLogger != null) {
             spawnerActionLogger.shutdown();
+        }
+
+        // Clean up spawner highlight sessions
+        if (spawnerHighlightManager != null) {
+            spawnerHighlightManager.cleanup();
         }
 
         // Clean up resources

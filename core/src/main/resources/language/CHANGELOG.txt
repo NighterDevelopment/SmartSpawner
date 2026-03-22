@@ -18,22 +18,20 @@
 
 ================================================================================
 
+================================================================================
+
+
 ── v1.6.3 (2026-03-22) ─────────────────────────────────────────────────────────
 
-  Summary: Added Claim XP button to the Storage GUI; Discord webhook embed
-           config moved to per-event files.
+  Summary: Version 1.6.3 released – fill in details here.
+           Compare: https://github.com/NighterDevelopment/SmartSpawner/compare/v1.6.2...v1.6.3
 
   ADDED:
-    [gui.yml]  + collect_exp_button
-               Shown in the storage GUI bottom bar. Supports {current_exp}.
+    (none)
 
-── v1.6.2 ───────────────────────────────────────────────────────────────────────
+  CHANGED:
+    (none)
 
-  No language key changes.
-
-── v1.6.1 ───────────────────────────────────────────────────────────────────────
-
-  Initial versioned language tracking.
-
-================================================================================
+  REMOVED:
+    (none)
 

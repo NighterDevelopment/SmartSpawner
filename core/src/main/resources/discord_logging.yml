@@ -1,6 +1,6 @@
 # ──────────────────────────────────────────────────────────────────────────────
 #   SmartSpawner – Discord Logging Configuration
-#   File: discord_logging.yml  (replaces the old discord.yml + discord/event_defaults.yml)
+#   File: discord_logging.yml
 # ──────────────────────────────────────────────────────────────────────────────
 #
 #   This single file centralises every Discord-related setting:

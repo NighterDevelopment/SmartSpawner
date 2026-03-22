@@ -275,3 +275,27 @@ Handles erroneous spawners without physical blocks:
 
 - `remove_on_startup`: Cleans up on server start.
 - `remove_on_approach`: Removes when players get near.
+
+## Spawner Action Logging
+
+```yaml
+logging:
+  enabled: true
+  json_format: false      # false = human-readable, true = JSON structured logs
+  console_output: false
+  log_directory: "logs"
+  max_log_files: 10
+  max_log_size_mb: 10
+  log_all_events: false
+  logged_events:
+    - SPAWNER_PLACE
+    - SPAWNER_BREAK
+    # ...
+```
+
+Tracks spawner interactions to file with optional log rotation.
+
+:::tip[Discord Webhooks]
+Discord webhook settings are configured in a **separate `discord.yml`** file.
+See the [Discord Webhook Integration](/discord) page for a full reference.
+:::

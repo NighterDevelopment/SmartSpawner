@@ -1,3 +1,6 @@
+import java.net.URI
+import java.time.LocalDate
+
 plugins {
     id("com.gradleup.shadow")
 }
@@ -116,6 +119,115 @@ tasks.processResources {
     filteringCharset = "UTF-8"
     filesMatching(listOf("plugin.yml", "paper-plugin.yml")) {
         expand(props)
+    }
+}
+
+// ── Language Changelog generation ────────────────────────────────────────────
+//
+//  Run this task manually before releasing a new version:
+//
+//    ./gradlew generateLanguageChangelog
+//
+//  It compares the current project version against the latest published GitHub
+//  release.  If the build is newer it prepends a new skeleton entry to
+//  core/src/main/resources/language/CHANGELOG.txt – the human-readable file
+//  that is extracted to plugins/SmartSpawner/language/CHANGELOG.txt on every
+//  server start so admins know which language keys changed.
+//
+//  The task is skipped gracefully when GitHub is unreachable (offline / CI
+//  without network access).
+// ─────────────────────────────────────────────────────────────────────────────
+tasks.register("generateLanguageChangelog") {
+    group       = "documentation"
+    description = "Prepends a new skeleton entry to language/CHANGELOG.txt when the build version exceeds the latest GitHub release."
+
+    val changelogFile = project.file("src/main/resources/language/CHANGELOG.txt")
+
+    inputs.property("projectVersion", project.version.toString())
+    outputs.file(changelogFile)
+
+    doLast {
+        val currentVersion = project.version.toString()
+
+        // ── 1. Fetch latest GitHub release tag ───────────────────────────────
+        val githubVersion: String = try {
+            val conn = URI.create(
+                "https://api.github.com/repos/NighterDevelopment/SmartSpawner/releases/latest"
+            ).toURL().openConnection() as java.net.HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.setRequestProperty("Accept", "application/vnd.github.v3+json")
+            conn.setRequestProperty("User-Agent", "SmartSpawner-Changelog-Bot/1.0")
+            conn.connectTimeout = 6_000
+            conn.readTimeout    = 6_000
+            if (conn.responseCode == 200) {
+                val body = conn.inputStream.bufferedReader().readText()
+                Regex(""""tag_name"\s*:\s*"v?([^"]+)"""").find(body)
+                    ?.groupValues?.get(1) ?: "0.0.0"
+            } else {
+                println("[changelog] GitHub API returned HTTP ${conn.responseCode} – skipping.")
+                return@doLast
+            }
+        } catch (e: Exception) {
+            println("[changelog] ⚠ Cannot reach GitHub API (${e.message}) – skipping changelog update.")
+            return@doLast
+        }
+
+        // ── 2. Compare versions ──────────────────────────────────────────────
+        fun parseVer(v: String): List<Int> =
+            v.removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
+
+        val cur = parseVer(currentVersion)
+        val gh  = parseVer(githubVersion)
+        var isNewer = false
+        for (i in 0 until maxOf(cur.size, gh.size)) {
+            val a = cur.getOrElse(i) { 0 }
+            val b = gh.getOrElse(i) { 0 }
+            if (a > b) { isNewer = true; break }
+            if (a < b) break
+        }
+
+        if (!isNewer) {
+            println("[changelog] Up-to-date (build=$currentVersion, github=$githubVersion) – nothing to add.")
+            return@doLast
+        }
+
+        // ── 3. Guard against duplicates ──────────────────────────────────────
+        val existing = if (changelogFile.exists()) changelogFile.readText() else ""
+        if (existing.contains("── v$currentVersion")) {
+            println("[changelog] Version $currentVersion already present – skipping.")
+            return@doLast
+        }
+
+        // ── 4. Build plain-text entry (matches CHANGELOG.txt style) ──────────
+        val today = LocalDate.now().toString()
+        val separator = "─".repeat(80 - "── v$currentVersion ($today) ".length)
+        val newEntry = buildString {
+            appendLine("── v$currentVersion ($today) $separator")
+            appendLine()
+            appendLine("  Summary: Version $currentVersion released – fill in details here.")
+            appendLine("           Compare: https://github.com/NighterDevelopment/SmartSpawner/compare/v$githubVersion...v$currentVersion")
+            appendLine()
+            appendLine("  ADDED:")
+            appendLine("    (none)")
+            appendLine()
+            appendLine("  CHANGED:")
+            appendLine("    (none)")
+            appendLine()
+            appendLine("  REMOVED:")
+            appendLine("    (none)")
+            appendLine()
+        }
+
+        // ── 5. Insert before the first existing version entry ────────────────
+        val marker = "\n──"
+        val updated = if (existing.contains(marker)) {
+            existing.replaceFirst(marker, "\n$newEntry──")
+        } else {
+            "$existing\n$newEntry"
+        }
+
+        changelogFile.writeText(updated)
+        println("[changelog] ✓ Prepended entry for v$currentVersion into language/CHANGELOG.txt")
     }
 }
 

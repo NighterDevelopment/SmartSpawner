@@ -4,6 +4,7 @@ import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.logging.discord.DiscordWebhookConfig;
 import github.nighter.smartspawner.logging.discord.DiscordWebhookLogger;
+import github.nighter.smartspawner.logging.discord.DiscordEmbedConfigManager;
 import org.bukkit.Bukkit;
 
 import java.io.BufferedWriter;
@@ -46,10 +47,11 @@ public class SpawnerActionLogger {
             startLoggingTask();
         }
         
-        // Initialize Discord webhook logger
+        // Initialize Discord webhook logger (only when enabled – no memory cost otherwise)
         DiscordWebhookConfig discordConfig = new DiscordWebhookConfig(plugin);
         if (discordConfig.isEnabled()) {
-            this.discordLogger = new DiscordWebhookLogger(plugin, discordConfig);
+            DiscordEmbedConfigManager embedManager = new DiscordEmbedConfigManager(plugin, discordConfig);
+            this.discordLogger = new DiscordWebhookLogger(plugin, discordConfig, embedManager);
         }
     }
     

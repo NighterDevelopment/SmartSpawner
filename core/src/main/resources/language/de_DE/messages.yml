@@ -315,3 +315,31 @@ spawner_management:
   removed:
     message: "&#e6e6faꜱᴘᴀᴡɴᴇʀ &#ff5252ᴇʀꜰᴏʟɢʀᴇɪᴄʜ ᴇɴᴛꜰᴇʀɴᴛ&#e6e6fa!"
     sound: entity.item.break
+
+# Near command messages
+command_player_only:
+  message: "&#ff5252ᴅɪᴇꜱᴇʀ ʙᴇꜰᴇʜʟ ᴋᴀɴɴ ɴᴜʀ ᴠᴏɴ ꜱᴘɪᴇʟᴇʀɴ ɢᴇɴᴜᴛᴢᴛ ᴡᴇʀᴅᴇɴ."
+  sound: block.note_block.bass
+
+command_near_scan_start:
+  message: "&#3498db🔍 ꜱᴜᴄʜᴇ ɴᴀᴄʜ ꜱᴘᴀᴡɴᴇʀɴ ɪɴ &#f8f8ff{radius} &#3498dbʙʟöᴄᴋᴇɴ…"
+  sound: block.note_block.hat
+
+command_near_scan_found:
+  message: "&#37eb9a✓ &#f8f8ff{count} &#37eb9aꜱᴘᴀᴡɴᴇʀ ɪɴɴᴇʀʜᴀʟʙ ᴠᴏɴ &#f8f8ff{radius} &#37eb9aʙʟöᴄᴋᴇɴ ɢᴇꜰᴜɴᴅᴇɴ. &#f1c40fᴍᴀʀᴋɪᴇʀᴜɴɢ &#f8f8ff30ꜱ&#f1c40f ꜱɪᴄʜᴛʙᴀʀ."
+  sound: entity.experience_orb.pickup
+
+command_near_scan_none:
+  message: "&#ff5252✗ ᴋᴇɪɴᴇ ꜱᴘᴀᴡɴᴇʀ ɪɴɴᴇʀʜᴀʟʙ ᴠᴏɴ &#f8f8ff{radius} &#ff5252ʙʟöᴄᴋᴇɴ ɢᴇꜰᴜɴᴅᴇɴ."
+  sound: block.note_block.pling
+
+command_near_scan_cancelled:
+  message: "&#f1c40f⊘ ꜱᴄᴀɴ ᴀʙɢᴇʙʀᴏᴄʜᴇɴ & ᴍᴀʀᴋɪᴇʀᴜɴɢᴇɴ ᴇɴᴛꜰᴇʀɴᴛ."
+  sound: block.note_block.bass
+
+command_near_no_active_scan:
+  message: "&#ff5252ᴋᴇɪɴ ᴀᴋᴛɪᴠᴇʀ ꜱᴄᴀɴ ᴢᴜᴍ ᴀʙʙʀᴇᴄʜᴇɴ."
+  sound: block.note_block.bass
+
+command_near_highlights_expired:
+  message: "&#888888⏱ ꜱᴘᴀᴡɴᴇʀ-ᴍᴀʀᴋɪᴇʀᴜɴɢᴇɴ ꜱɪɴᴅ ᴠᴇʀꜰᴀʟʟᴇɴ."

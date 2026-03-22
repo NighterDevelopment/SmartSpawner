@@ -104,11 +104,6 @@ public class SpawnerClickManager implements Listener {
             return;
         }
 
-        // Special handling for Bedrock players using tools
-        if (isBedrockPlayerUsingTool(player, itemType)) {
-            return;
-        }
-
         // Check if player is holding armor in either hand - allow equipping but don't open menu
         if (isArmor(itemType) || isArmor(offhandType)) {
             return;
@@ -141,20 +136,6 @@ public class SpawnerClickManager implements Listener {
 
     private boolean shouldAllowNormalBlockPlacement(Player player, Material itemType) {
         return player.isSneaking() && itemType.isBlock() && itemType != Material.SPAWNER;
-    }
-
-    private boolean isBedrockPlayerUsingTool(Player player, Material itemType) {
-        if (!isBedrockPlayer(player)) {
-            return false;
-        }
-
-        String itemName = itemType.name();
-        boolean isTool = itemName.endsWith("_PICKAXE") ||
-                itemName.endsWith("_SHOVEL") ||
-                itemName.endsWith("_HOE") ||
-                itemName.endsWith("_AXE");
-
-        return isTool;
     }
 
     private boolean isArmor(Material material) {
@@ -230,11 +211,6 @@ public class SpawnerClickManager implements Listener {
 
     private boolean isSpawnEgg(Material material) {
         return material.name().endsWith("_SPAWN_EGG");
-    }
-
-    private boolean isBedrockPlayer(Player player) {
-        // Use cached FloodgateHook reference for performance
-        return floodgateHook != null && floodgateHook.isBedrockPlayer(player);
     }
 
     private void initCleanupTask() {

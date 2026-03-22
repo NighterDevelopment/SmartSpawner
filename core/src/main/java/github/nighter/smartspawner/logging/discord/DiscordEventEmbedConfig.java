@@ -1,6 +1,5 @@
 package github.nighter.smartspawner.logging.discord;
 
-import github.nighter.smartspawner.logging.SpawnerEventType;
 import lombok.Getter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
