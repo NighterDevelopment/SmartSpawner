@@ -15,12 +15,6 @@ import java.util.Map;
  *
  * <p>Uses a {@link DiscordEventEmbedConfig} (per-event) for appearance and a
  * {@link DiscordWebhookConfig} (global) for the player-head thumbnail flag.</p>
- *
- * <h3>Routing</h3>
- * <ul>
- *   <li>{@code embed_format: yaml} → programmatic {@link DiscordEmbed} object → JSON</li>
- *   <li>{@code embed_format: json} → template string with placeholder substitution → JSON</li>
- * </ul>
  */
 public class DiscordEmbedBuilder {
 
@@ -43,29 +37,10 @@ public class DiscordEmbedBuilder {
                                              DiscordWebhookConfig globalCfg,
                                              SmartSpawner plugin) {
         Map<String, String> placeholders = buildPlaceholders(entry, embedCfg);
-
-        if (embedCfg.isJsonFormat()) {
-            return buildFromJsonTemplate(embedCfg.getEmbedJsonTemplate(), placeholders);
-        }
-
         return buildYamlEmbed(entry, embedCfg, globalCfg, placeholders).toJson();
     }
 
-    // ── JSON-template path ───────────────────────────────────────────────────
-
-    private static String buildFromJsonTemplate(String template,
-                                                Map<String, String> placeholders) {
-        if (template == null || template.isBlank()) {
-            return "{\"content\":\"SmartSpawner event – no embed_json template configured.\"}";
-        }
-        String result = template;
-        for (Map.Entry<String, String> ph : placeholders.entrySet()) {
-            result = result.replace("{" + ph.getKey() + "}", ph.getValue());
-        }
-        return result;
-    }
-
-    // ── Programmatic (YAML) embed path ───────────────────────────────────────
+    // ── Programmatic embed path ───────────────────────────────────────────────
 
     private static DiscordEmbed buildYamlEmbed(SpawnerLogEntry entry,
                                                DiscordEventEmbedConfig embedCfg,

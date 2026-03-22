@@ -140,7 +140,7 @@ public class GiveSubCommand extends BaseSubCommand {
             List<Player> players = playerSelector.resolve(context.getSource());
 
             if (players.isEmpty()) {
-                plugin.getMessageService().sendMessage(sender, "command_give_player_not_found");
+                plugin.getMessageService().sendMessage(sender, "give.player_not_found");
                 return 0;
             }
 
@@ -149,7 +149,7 @@ public class GiveSubCommand extends BaseSubCommand {
 
             // Validate mob type (case insensitive check)
             if (!supportedMobs.contains(mobType.toUpperCase())) {
-                plugin.getMessageService().sendMessage(sender, "command_give_invalid_mob_type");
+                plugin.getMessageService().sendMessage(sender, "give.invalid_mob_type");
                 return 0;
             }
 
@@ -167,7 +167,7 @@ public class GiveSubCommand extends BaseSubCommand {
             // Give the item to the player
             if (target.getInventory().firstEmpty() == -1) {
                 target.getWorld().dropItem(target.getLocation(), spawnerItem);
-                plugin.getMessageService().sendMessage(target, "command_give_inventory_full");
+                plugin.getMessageService().sendMessage(target, "give.inventory_full");
             } else {
                 target.getInventory().addItem(spawnerItem);
             }
@@ -193,9 +193,8 @@ public class GiveSubCommand extends BaseSubCommand {
             targetPlaceholders.put("ᴇɴᴛɪᴛʏ", smallCapsEntityName);
 
             // Send messages with placeholders
-            String messageKey = "command_give_spawner_";
-            plugin.getMessageService().sendMessage(sender, messageKey + "given", senderPlaceholders);
-            plugin.getMessageService().sendMessage(target, messageKey + "received", targetPlaceholders);
+            plugin.getMessageService().sendMessage(sender, "give.spawner_given", senderPlaceholders);
+            plugin.getMessageService().sendMessage(target, "give.spawner_received", targetPlaceholders);
 
             return 1;
         } catch (Exception e) {
@@ -216,7 +215,7 @@ public class GiveSubCommand extends BaseSubCommand {
             List<Player> players = playerSelector.resolve(context.getSource());
 
             if (players.isEmpty()) {
-                plugin.getMessageService().sendMessage(sender, "command_give_player_not_found");
+                plugin.getMessageService().sendMessage(sender, "give.player_not_found");
                 return 0;
             }
 
@@ -228,13 +227,13 @@ public class GiveSubCommand extends BaseSubCommand {
             try {
                 itemMaterial = Material.valueOf(itemType.toUpperCase());
             } catch (IllegalArgumentException e) {
-                plugin.getMessageService().sendMessage(sender, "command_give_invalid_item_type");
+                plugin.getMessageService().sendMessage(sender, "give.invalid_item_type");
                 return 0;
             }
 
             // Verify it's a valid item spawner type
             if (!plugin.getItemSpawnerSettingsConfig().isValidItemSpawner(itemMaterial)) {
-                plugin.getMessageService().sendMessage(sender, "command_give_invalid_item_spawner");
+                plugin.getMessageService().sendMessage(sender, "give.invalid_item_spawner");
                 return 0;
             }
 
@@ -244,7 +243,7 @@ public class GiveSubCommand extends BaseSubCommand {
             // Give the item to the player
             if (target.getInventory().firstEmpty() == -1) {
                 target.getWorld().dropItem(target.getLocation(), spawnerItem);
-                plugin.getMessageService().sendMessage(target, "command_give_inventory_full");
+                plugin.getMessageService().sendMessage(target, "give.inventory_full");
             } else {
                 target.getInventory().addItem(spawnerItem);
             }
@@ -270,9 +269,8 @@ public class GiveSubCommand extends BaseSubCommand {
             targetPlaceholders.put("ᴇɴᴛɪᴛʏ", smallCapsItemName);
 
             // Send messages with placeholders (use same keys as regular spawners)
-            String messageKey = "command_give_spawner_";
-            plugin.getMessageService().sendMessage(sender, messageKey + "given", senderPlaceholders);
-            plugin.getMessageService().sendMessage(target, messageKey + "received", targetPlaceholders);
+            plugin.getMessageService().sendMessage(sender, "give.spawner_given", senderPlaceholders);
+            plugin.getMessageService().sendMessage(target, "give.spawner_received", targetPlaceholders);
 
             return 1;
         } catch (Exception e) {

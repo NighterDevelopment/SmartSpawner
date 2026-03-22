@@ -79,8 +79,7 @@ public final class ConfigVersionService {
             return false; // Already up-to-date
         }
 
-        plugin.getLogger().info(
-                "Updating " + dataFile.getName() + " from v" + fileVersionStr + " → v" + currentVersion);
+        plugin.debug("Updating " + dataFile.getName() + " from v" + fileVersionStr + " → v" + currentVersion);
 
         try {
             Map<String, Object> userValues = flattenConfig(current);

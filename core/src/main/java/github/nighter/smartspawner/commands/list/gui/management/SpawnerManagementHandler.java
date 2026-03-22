@@ -153,7 +153,7 @@ public class SpawnerManagementHandler implements Listener {
         spawnerStorage.markSpawnerDeleted(spawnerId);
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("id", spawner.getSpawnerId());
-        messageService.sendMessage(player, "spawner_management.removed", placeholders);
+        messageService.sendMessage(player, "management.removed", placeholders);
         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 
         // Return to spawner list
@@ -267,7 +267,7 @@ public class SpawnerManagementHandler implements Listener {
             if (success) {
                 Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("id", spawnerId);
-                messageService.sendMessage(player, "spawner_management.removed", placeholders);
+                messageService.sendMessage(player, "management.removed", placeholders);
                 player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 
                 // Note: The physical block on the remote server will remain until that server syncs

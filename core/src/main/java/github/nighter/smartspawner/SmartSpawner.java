@@ -4,6 +4,7 @@ import github.nighter.smartspawner.api.*;
 import github.nighter.smartspawner.bstats.Metrics;
 import github.nighter.smartspawner.commands.BrigadierCommandManager;
 import github.nighter.smartspawner.commands.list.ListSubCommand;
+import github.nighter.smartspawner.commands.near.NearResultGUI;
 import github.nighter.smartspawner.commands.near.SpawnerHighlightManager;
 import github.nighter.smartspawner.commands.list.gui.list.UserPreferenceCache;
 import github.nighter.smartspawner.commands.list.gui.list.SpawnerListGUI;
@@ -156,6 +157,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
 
     // Near-command highlight manager
     private SpawnerHighlightManager spawnerHighlightManager;
+    private NearResultGUI nearResultGUI;
 
     // API implementation
     private SmartSpawnerAPIImpl apiImpl;
@@ -409,6 +411,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         this.spawnerStackHandler = new SpawnerStackHandler(this);
         this.spawnerClickManager = new SpawnerClickManager(this);
         this.spawnerHighlightManager = new SpawnerHighlightManager(this);
+        this.nearResultGUI = new NearResultGUI(this, spawnerHighlightManager);
     }
 
     private void initializeUIAndActions() {
@@ -463,6 +466,9 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         // Register near-command listener (player quit cleanup)
         if (spawnerHighlightManager != null) {
             pm.registerEvents(spawnerHighlightManager, this);
+        }
+        if (nearResultGUI != null) {
+            pm.registerEvents(nearResultGUI, this);
         }
 
         // Register logging listener

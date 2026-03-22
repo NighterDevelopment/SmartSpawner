@@ -40,7 +40,7 @@ public class ClearGhostSpawnersSubCommand extends BaseSubCommand {
         CommandSender sender = context.getSource().getSender();
 
         // Notify that the check is starting
-        plugin.getMessageService().sendMessage(sender, "command_ghost_spawner_check_start");
+        plugin.getMessageService().sendMessage(sender, "clear.ghost_check_start");
 
         // Get all spawners first
         List<SpawnerData> allSpawners = plugin.getSpawnerManager().getAllSpawners();
@@ -66,10 +66,10 @@ public class ClearGhostSpawnersSubCommand extends BaseSubCommand {
         Scheduler.runTaskLater(() -> {
             int count = removedCount.get();
             if (count > 0) {
-                plugin.getMessageService().sendMessage(sender, "command_ghost_spawner_cleared", 
+                plugin.getMessageService().sendMessage(sender, "clear.ghost_cleared",
                     java.util.Map.of("count", String.valueOf(count)));
             } else {
-                plugin.getMessageService().sendMessage(sender, "command_ghost_spawner_none_found");
+                plugin.getMessageService().sendMessage(sender, "clear.ghost_none_found");
             }
         }, 100L); // Wait 5 seconds (100 ticks) for checks to complete
 

@@ -129,17 +129,17 @@ tasks.processResources {
 //    ./gradlew generateLanguageChangelog
 //
 //  It compares the current project version against the latest published GitHub
-//  release.  If the build is newer it prepends a new skeleton entry to
-//  core/src/main/resources/language/CHANGELOG.txt – the human-readable file
-//  that is extracted to plugins/SmartSpawner/language/CHANGELOG.txt on every
-//  server start so admins know which language keys changed.
+//  release.  If the build is newer it fetches the old en_US language files from
+//  GitHub, diffs their keys against the local ones, and prepends an entry to
+//  core/src/main/resources/language/CHANGELOG.txt showing exactly which keys
+//  were ADDED, CHANGED, or REMOVED.
 //
 //  The task is skipped gracefully when GitHub is unreachable (offline / CI
 //  without network access).
 // ─────────────────────────────────────────────────────────────────────────────
 tasks.register("generateLanguageChangelog") {
     group       = "documentation"
-    description = "Prepends a new skeleton entry to language/CHANGELOG.txt when the build version exceeds the latest GitHub release."
+    description = "Diffs en_US language keys vs the latest GitHub release and prepends a changelog entry."
 
     val changelogFile = project.file("src/main/resources/language/CHANGELOG.txt")
 
@@ -148,6 +148,8 @@ tasks.register("generateLanguageChangelog") {
 
     doLast {
         val currentVersion = project.version.toString()
+        val locale    = "en_US"
+        val langFiles = listOf("messages.yml", "gui.yml", "items.yml", "formatting.yml", "command_messages.yml")
 
         // ── 1. Fetch latest GitHub release tag ───────────────────────────────
         val githubVersion: String = try {
@@ -198,28 +200,172 @@ tasks.register("generateLanguageChangelog") {
             return@doLast
         }
 
-        // ── 4. Build plain-text entry (matches CHANGELOG.txt style) ──────────
-        val today = LocalDate.now().toString()
+        // ── 3b. Resolve the "to" ref: use the version tag if it exists, else main ──
+        //   Tags in this repo have no "v" prefix (e.g. "1.6.2"), so we check
+        //   both the bare version and the v-prefixed form.
+        val toRef: String = run {
+            listOf(currentVersion, "v$currentVersion").firstOrNull { tag ->
+                try {
+                    val tagConn = URI.create(
+                        "https://api.github.com/repos/NighterDevelopment/SmartSpawner/git/refs/tags/$tag"
+                    ).toURL().openConnection() as java.net.HttpURLConnection
+                    tagConn.requestMethod = "GET"
+                    tagConn.setRequestProperty("Accept", "application/vnd.github.v3+json")
+                    tagConn.setRequestProperty("User-Agent", "SmartSpawner-Changelog-Bot/1.0")
+                    tagConn.connectTimeout = 6_000
+                    tagConn.readTimeout    = 6_000
+                    tagConn.responseCode == 200
+                } catch (e: Exception) { false }
+            } ?: "main"
+        }
+        println("[changelog] Compare range: $githubVersion...$toRef")
+
+        // ── 4. YAML flat-key extractor ───────────────────────────────────────
+        //  Returns map of  dotPath → Pair(1-based lineNumber, rawValue)
+        //  Handles comments, blank lines, list items, and block scalars.
+        fun extractKeys(yaml: String): LinkedHashMap<String, Pair<Int, String>> {
+            val result = LinkedHashMap<String, Pair<Int, String>>()
+            // stack entries: indent-level → key-name
+            val stack  = ArrayDeque<Pair<Int, String>>()
+            var blockScalarIndent = -1   // >=0 while inside a | or > scalar
+
+            yaml.lines().forEachIndexed { idx, raw ->
+                val lineNo  = idx + 1
+                val trimmed = raw.trimStart()
+                if (trimmed.isEmpty() || trimmed.startsWith('#')) return@forEachIndexed
+
+                val indent = raw.length - trimmed.length
+
+                // Leaving a block scalar when indentation returns to its level
+                if (blockScalarIndent >= 0) {
+                    if (indent > blockScalarIndent) return@forEachIndexed
+                    else blockScalarIndent = -1
+                }
+
+                // List items are not individually tracked as keys
+                if (trimmed.startsWith("- ") || trimmed == "-") return@forEachIndexed
+
+                val colonIdx = trimmed.indexOf(':')
+                if (colonIdx < 0) return@forEachIndexed
+
+                val key = trimmed.substring(0, colonIdx).trim()
+                if (key.isEmpty() || key.startsWith('#')) return@forEachIndexed
+
+                var value = trimmed.substring(colonIdx + 1).trim()
+
+                // Strip trailing inline comment (only outside quoted values)
+                if (!value.startsWith('"') && !value.startsWith('\'')) {
+                    val ci = value.indexOf(" #")
+                    if (ci >= 0) value = value.substring(0, ci).trim()
+                }
+
+                // Pop stack entries whose indent >= current level
+                while (stack.isNotEmpty() && stack.last().first >= indent) stack.removeLast()
+
+                val path = if (stack.isEmpty()) key
+                           else stack.joinToString(".") { it.second } + ".$key"
+
+                if (value == "|" || value == ">" || value == "|-" || value == ">-"
+                        || value == "|+" || value == ">+") {
+                    result[path] = lineNo to value
+                    blockScalarIndent = indent
+                } else {
+                    result[path] = lineNo to value
+                }
+
+                stack.addLast(indent to key)
+            }
+            return result
+        }
+
+        // Truncate long values for display
+        fun truncate(s: String, max: Int = 70) = if (s.length > max) s.take(max) + "…" else s
+
+        // ── 5. Fetch the old language files from GitHub and diff ─────────────
+        fun fetchRaw(tag: String, file: String): String? = try {
+            val url = "https://raw.githubusercontent.com/NighterDevelopment/" +
+                      "SmartSpawner/$tag/core/src/main/resources/language/$locale/$file"
+            val conn = URI.create(url).toURL().openConnection() as java.net.HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.setRequestProperty("User-Agent", "SmartSpawner-Changelog-Bot/1.0")
+            conn.connectTimeout = 8_000
+            conn.readTimeout    = 8_000
+            if (conn.responseCode == 200) conn.inputStream.bufferedReader().readText() else null
+        } catch (e: Exception) { null }
+
+        // Per-file diffs: maps file name → pre-formatted entry lines
+        val addedPerFile   = mutableMapOf<String, List<String>>()
+        val changedPerFile = mutableMapOf<String, List<String>>()
+        val removedPerFile = mutableMapOf<String, List<String>>()
+
+        for (file in langFiles) {
+            val oldYaml = fetchRaw(githubVersion, file)
+            if (oldYaml == null) {
+                println("[changelog] ⚠ Could not fetch $file @ $githubVersion – skipping diff.")
+                continue
+            }
+            val newFile = project.file("src/main/resources/language/$locale/$file")
+            if (!newFile.exists()) continue
+
+            val oldKeys = extractKeys(oldYaml)
+            val newKeys = extractKeys(newFile.readText())
+
+            val added = newKeys.entries
+                .filter { it.key !in oldKeys }
+                .sortedBy { it.key }
+                .map { (k, e) -> "      - $k (L${e.first}): ${truncate(e.second)}" }
+
+            val removed = oldKeys.entries
+                .filter { it.key !in newKeys }
+                .sortedBy { it.key }
+                .map { (k, e) -> "      - $k (L${e.first}): ${truncate(e.second)}" }
+
+            val changed = newKeys.entries
+                .filter { it.key in oldKeys && oldKeys[it.key]!!.second != it.value.second }
+                .sortedBy { it.key }
+                .map { (k, newE) ->
+                    val oldVal = truncate(oldKeys[k]!!.second)
+                    val newVal = truncate(newE.second)
+                    "      - $k (L${newE.first}): $oldVal → $newVal"
+                }
+
+            if (added.isNotEmpty())   addedPerFile[file]   = added
+            if (changed.isNotEmpty()) changedPerFile[file] = changed
+            if (removed.isNotEmpty()) removedPerFile[file] = removed
+
+            println("[changelog]   $file – +${added.size} ~${changed.size} -${removed.size}")
+        }
+
+        // ── 6. Build the CHANGELOG entry ─────────────────────────────────────
+        // perFile values are already fully-formatted lines ("      - key (Lnn): value")
+        fun formatSection(label: String, perFile: Map<String, List<String>>): String {
+            if (perFile.isEmpty()) return "  $label:\n    (none)"
+            val sb = StringBuilder("  $label:\n")
+            for ((file, lines) in perFile) {
+                sb.appendLine("    $file:")
+                lines.forEach { sb.appendLine(it) }
+            }
+            return sb.toString().trimEnd()
+        }
+
+        val today     = LocalDate.now().toString()
         val separator = "─".repeat(80 - "── v$currentVersion ($today) ".length)
-        val newEntry = buildString {
+        val newEntry  = buildString {
             appendLine("── v$currentVersion ($today) $separator")
             appendLine()
             appendLine("  Summary: Version $currentVersion released – fill in details here.")
-            appendLine("           Compare: https://github.com/NighterDevelopment/SmartSpawner/compare/v$githubVersion...v$currentVersion")
+            appendLine("           Compare: https://github.com/NighterDevelopment/SmartSpawner/compare/$githubVersion...$toRef")
             appendLine()
-            appendLine("  ADDED:")
-            appendLine("    (none)")
+            appendLine(formatSection("ADDED",   addedPerFile))
             appendLine()
-            appendLine("  CHANGED:")
-            appendLine("    (none)")
+            appendLine(formatSection("CHANGED", changedPerFile))
             appendLine()
-            appendLine("  REMOVED:")
-            appendLine("    (none)")
+            appendLine(formatSection("REMOVED", removedPerFile))
             appendLine()
         }
 
-        // ── 5. Insert before the first existing version entry ────────────────
-        val marker = "\n──"
+        // ── 7. Insert before the first existing version entry ────────────────
+        val marker  = "\n──"
         val updated = if (existing.contains(marker)) {
             existing.replaceFirst(marker, "\n$newEntry──")
         } else {

@@ -13,11 +13,6 @@
 #     2. Go to "Integrations" → "Webhooks" → "New Webhook".
 #     3. Choose the target channel, copy the URL and paste into webhook_url below.
 #
-#   Per-event embed files are still extracted to:
-#     plugins/SmartSpawner/discord/events/<EVENT>.yml
-#   on first startup so you can tweak each event's appearance without touching
-#   this file.  Delete an events/<EVENT>.yml file to re-generate it from the
-#   defaults below.
 # ──────────────────────────────────────────────────────────────────────────────
 
 # ── Connection ────────────────────────────────────────────────────────────────
@@ -59,12 +54,9 @@ logged_events:
   - COMMAND_EXECUTE_CONSOLE
   - COMMAND_EXECUTE_RCON
 
-# ── Per-Event Embed Defaults ──────────────────────────────────────────────────
+# ── Per-Event Embed Configuration ──────────────────────────────────────────────────
 #
-#   These templates are extracted to  plugins/SmartSpawner/discord/events/<EVENT>.yml
-#   the first time Discord logging is enabled.  Edit those individual files to
-#   customise each event's appearance; they support both a structured YAML
-#   format and a raw JSON payload for full Discord customisation.
+#   Edit the embed blocks below to customise each event's appearance.
 #
 #   Supported placeholders (common to all events):
 #     {player}        – Player name  (N/A for console / explosion events)
@@ -77,310 +69,289 @@ logged_events:
 #     {world} {x} {y} {z}
 #     {entity}        – Mob / entity name
 #     {color}         – Decimal colour integer for this event
-#     + any metadata key logged by the event (see each file for specifics)
+#     + any metadata key logged by the event (see each event block for specifics)
 #
-event_defaults:
 
-  SPAWNER_PLACE:
-    embed_format: yaml
-    embed:
-      title: "✅ Spawner Placed"
-      description: "**{player}** placed a **{entity}** spawner"
-      color: "57F287"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "🐾 Entity"
-          value: "`{entity}`"
-          inline: true
-        - name: "🔢 Quantity"
-          value: "`{quantity}`"
-          inline: true
+SPAWNER_PLACE:
+  embed:
+    title: "✅ Spawner Placed"
+    description: "**{player}** placed a **{entity}** spawner"
+    color: "57F287"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "🐾 Entity"
+        value: "`{entity}`"
+        inline: true
+      - name: "🔢 Quantity"
+        value: "`{quantity}`"
+        inline: true
 
-  SPAWNER_BREAK:
-    embed_format: yaml
-    embed:
-      title: "❌ Spawner Broken"
-      description: "**{player}** broke a **{entity}** spawner"
-      color: "ED4245"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "🔢 Quantity"
-          value: "`{quantity}`"
-          inline: true
+SPAWNER_BREAK:
+  embed:
+    title: "❌ Spawner Broken"
+    description: "**{player}** broke a **{entity}** spawner"
+    color: "ED4245"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "🔢 Quantity"
+        value: "`{quantity}`"
+        inline: true
 
-  SPAWNER_EXPLODE:
-    embed_format: yaml
-    embed:
-      title: "💥 Spawner Destroyed by Explosion"
-      description: "A **{entity}** spawner was destroyed by an explosion"
-      color: "FF6B6B"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "🔢 Quantity"
-          value: "`{quantity}`"
-          inline: true
+SPAWNER_EXPLODE:
+  embed:
+    title: "💥 Spawner Destroyed by Explosion"
+    description: "A **{entity}** spawner was destroyed by an explosion"
+    color: "FF6B6B"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "🔢 Quantity"
+        value: "`{quantity}`"
+        inline: true
 
-  SPAWNER_STACK_HAND:
-    embed_format: yaml
-    embed:
-      title: "✋ Spawner Stacked by Hand"
-      description: "**{player}** stacked a **{entity}** spawner by hand"
-      color: "FEE75C"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "➕ Added"
-          value: "`{amount_added}`"
-          inline: true
-        - name: "📦 New Stack"
-          value: "`{new_stack_size}`"
-          inline: true
+SPAWNER_STACK_HAND:
+  embed:
+    title: "✋ Spawner Stacked by Hand"
+    description: "**{player}** stacked a **{entity}** spawner by hand"
+    color: "FEE75C"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "➕ Added"
+        value: "`{amount_added}`"
+        inline: true
+      - name: "📦 New Stack"
+        value: "`{new_stack_size}`"
+        inline: true
 
-  SPAWNER_STACK_GUI:
-    embed_format: yaml
-    embed:
-      title: "📦 Spawner Stacked via GUI"
-      description: "**{player}** stacked a **{entity}** spawner via GUI"
-      color: "F1C40F"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "➕ Added"
-          value: "`{amount_added}`"
-          inline: true
-        - name: "📦 New Stack"
-          value: "`{new_stack_size}`"
-          inline: true
+SPAWNER_STACK_GUI:
+  embed:
+    title: "📦 Spawner Stacked via GUI"
+    description: "**{player}** stacked a **{entity}** spawner via GUI"
+    color: "F1C40F"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "➕ Added"
+        value: "`{amount_added}`"
+        inline: true
+      - name: "📦 New Stack"
+        value: "`{new_stack_size}`"
+        inline: true
 
-  SPAWNER_DESTACK_GUI:
-    embed_format: yaml
-    embed:
-      title: "📤 Spawner Destacked via GUI"
-      description: "**{player}** destacked a **{entity}** spawner"
-      color: "E67E22"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "🐾 Entity"
-          value: "`{entity}`"
-          inline: true
+SPAWNER_DESTACK_GUI:
+  embed:
+    title: "📤 Spawner Destacked via GUI"
+    description: "**{player}** destacked a **{entity}** spawner"
+    color: "E67E22"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "🐾 Entity"
+        value: "`{entity}`"
+        inline: true
 
-  SPAWNER_GUI_OPEN:
-    embed_format: yaml
-    embed:
-      title: "📋 Spawner GUI Opened"
-      description: "**{player}** opened the spawner GUI"
-      color: "9B59B6"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "🐾 Entity"
-          value: "`{entity}`"
-          inline: true
+SPAWNER_GUI_OPEN:
+  embed:
+    title: "📋 Spawner GUI Opened"
+    description: "**{player}** opened the spawner GUI"
+    color: "9B59B6"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "🐾 Entity"
+        value: "`{entity}`"
+        inline: true
 
-  SPAWNER_STORAGE_OPEN:
-    embed_format: yaml
-    embed:
-      title: "📦 Storage GUI Opened"
-      description: "**{player}** opened the storage GUI"
-      color: "8E44AD"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "📄 Page"
-          value: "`{page}/{total_pages}`"
-          inline: true
+SPAWNER_STORAGE_OPEN:
+  embed:
+    title: "📦 Storage GUI Opened"
+    description: "**{player}** opened the storage GUI"
+    color: "8E44AD"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "📄 Page"
+        value: "`{page}/{total_pages}`"
+        inline: true
 
-  SPAWNER_STACKER_OPEN:
-    embed_format: yaml
-    embed:
-      title: "🔢 Stacker GUI Opened"
-      description: "**{player}** opened the stacker GUI"
-      color: "BB8FCE"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "🐾 Entity"
-          value: "`{entity}`"
-          inline: true
+SPAWNER_STACKER_OPEN:
+  embed:
+    title: "🔢 Stacker GUI Opened"
+    description: "**{player}** opened the stacker GUI"
+    color: "BB8FCE"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "🐾 Entity"
+        value: "`{entity}`"
+        inline: true
 
-  SPAWNER_EXP_CLAIM:
-    embed_format: yaml
-    embed:
-      title: "✨ Experience Claimed"
-      description: "**{player}** collected experience from a spawner"
-      color: "2ECC71"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "✨ XP Amount"
-          value: "`{exp_amount}`"
-          inline: true
+SPAWNER_EXP_CLAIM:
+  embed:
+    title: "✨ Experience Claimed"
+    description: "**{player}** collected experience from a spawner"
+    color: "2ECC71"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "✨ XP Amount"
+        value: "`{exp_amount}`"
+        inline: true
 
-  SPAWNER_SELL_ALL:
-    embed_format: yaml
-    embed:
-      title: "💰 Items Sold"
-      description: "**{player}** sold items from a spawner"
-      color: "27AE60"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "💰 Revenue"
-          value: "`${total_price}`"
-          inline: true
-        - name: "📦 Items Sold"
-          value: "`{items_sold}`"
-          inline: true
+SPAWNER_SELL_ALL:
+  embed:
+    title: "💰 Items Sold"
+    description: "**{player}** sold items from a spawner"
+    color: "27AE60"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "💰 Revenue"
+        value: "`${total_price}`"
+        inline: true
+      - name: "📦 Items Sold"
+        value: "`{items_sold}`"
+        inline: true
 
-  SPAWNER_ITEM_TAKE_ALL:
-    embed_format: yaml
-    embed:
-      title: "🎒 Items Taken from Storage"
-      description: "**{player}** took all items from a spawner"
-      color: "1ABC9C"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "📦 Taken"
-          value: "`{items_taken}`"
-          inline: true
-        - name: "📦 Remaining"
-          value: "`{items_left}`"
-          inline: true
+SPAWNER_ITEM_TAKE_ALL:
+  embed:
+    title: "🎒 Items Taken from Storage"
+    description: "**{player}** took all items from a spawner"
+    color: "1ABC9C"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "📦 Taken"
+        value: "`{items_taken}`"
+        inline: true
+      - name: "📦 Remaining"
+        value: "`{items_left}`"
+        inline: true
 
-  SPAWNER_ITEM_DROP:
-    embed_format: yaml
-    embed:
-      title: "🗑️ Item Dropped from Storage"
-      description: "**{player}** dropped an item from storage"
-      color: "16A085"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
+SPAWNER_ITEM_DROP:
+  embed:
+    title: "🗑️ Item Dropped from Storage"
+    description: "**{player}** dropped an item from storage"
+    color: "16A085"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
 
-  SPAWNER_ITEMS_SORT:
-    embed_format: yaml
-    embed:
-      title: "🔃 Storage Items Sorted"
-      description: "**{player}** sorted items in storage"
-      color: "48C9B0"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "🔃 Sort Key"
-          value: "`{sort_item}`"
-          inline: true
+SPAWNER_ITEMS_SORT:
+  embed:
+    title: "🔃 Storage Items Sorted"
+    description: "**{player}** sorted items in storage"
+    color: "48C9B0"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "🔃 Sort Key"
+        value: "`{sort_item}`"
+        inline: true
 
-  SPAWNER_ITEM_FILTER:
-    embed_format: yaml
-    embed:
-      title: "🔍 Item Filter Toggled"
-      description: "**{player}** changed the item filter"
-      color: "45B7AF"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
+SPAWNER_ITEM_FILTER:
+  embed:
+    title: "🔍 Item Filter Toggled"
+    description: "**{player}** changed the item filter"
+    color: "45B7AF"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
 
-  SPAWNER_DROP_PAGE_ITEMS:
-    embed_format: yaml
-    embed:
-      title: "📄 Page Items Dropped"
-      description: "**{player}** dropped all items from a storage page"
-      color: "138D75"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "📦 Dropped"
-          value: "`{items_dropped}`"
-          inline: true
-        - name: "📄 Page"
-          value: "`{page_number}`"
-          inline: true
+SPAWNER_DROP_PAGE_ITEMS:
+  embed:
+    title: "📄 Page Items Dropped"
+    description: "**{player}** dropped all items from a storage page"
+    color: "138D75"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "📦 Dropped"
+        value: "`{items_dropped}`"
+        inline: true
+      - name: "📄 Page"
+        value: "`{page_number}`"
+        inline: true
 
-  SPAWNER_EGG_CHANGE:
-    embed_format: yaml
-    embed:
-      title: "🥚 Spawner Entity Changed"
-      description: "**{player}** changed a spawner's entity type"
-      color: "E91E63"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "📍 Location"
-          value: "`{location}`"
-          inline: false
-        - name: "🐾 New Type"
-          value: "`{entity}`"
-          inline: true
+SPAWNER_EGG_CHANGE:
+  embed:
+    title: "🥚 Spawner Entity Changed"
+    description: "**{player}** changed a spawner's entity type"
+    color: "E91E63"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "📍 Location"
+        value: "`{location}`"
+        inline: false
+      - name: "🐾 New Type"
+        value: "`{entity}`"
+        inline: true
 
-  COMMAND_EXECUTE_PLAYER:
-    embed_format: yaml
-    embed:
-      title: "👤 Command Executed by Player"
-      description: "**{player}** ran a SmartSpawner command"
-      color: "5865F2"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "⚙️ Command"
-          value: "`{full_command}`"
-          inline: false
+COMMAND_EXECUTE_PLAYER:
+  embed:
+    title: "👤 Command Executed by Player"
+    description: "**{player}** ran a SmartSpawner command"
+    color: "5865F2"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "⚙️ Command"
+        value: "`{full_command}`"
+        inline: false
 
-  COMMAND_EXECUTE_CONSOLE:
-    embed_format: yaml
-    embed:
-      title: "🖥️ Command Executed by Console"
-      description: "Console ran a SmartSpawner command"
-      color: "3B5998"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "⚙️ Command"
-          value: "`{full_command}`"
-          inline: false
+COMMAND_EXECUTE_CONSOLE:
+  embed:
+    title: "🖥️ Command Executed by Console"
+    description: "Console ran a SmartSpawner command"
+    color: "3B5998"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "⚙️ Command"
+        value: "`{full_command}`"
+        inline: false
 
-  COMMAND_EXECUTE_RCON:
-    embed_format: yaml
-    embed:
-      title: "🔌 Command Executed via RCON"
-      description: "RCON ran a SmartSpawner command"
-      color: "7289DA"
-      footer: "SmartSpawner • {time}"
-      fields:
-        - name: "⚙️ Command"
-          value: "`{full_command}`"
-          inline: false
+COMMAND_EXECUTE_RCON:
+  embed:
+    title: "🔌 Command Executed via RCON"
+    description: "RCON ran a SmartSpawner command"
+    color: "7289DA"
+    footer: "SmartSpawner • {time}"
+    fields:
+      - name: "⚙️ Command"
+        value: "`{full_command}`"
+        inline: false
 

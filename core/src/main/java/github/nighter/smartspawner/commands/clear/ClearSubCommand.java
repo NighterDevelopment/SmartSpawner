@@ -52,7 +52,7 @@ public class ClearSubCommand extends BaseSubCommand {
         CommandSender sender = context.getSource().getSender();
         
         // When no subcommand is provided, show usage
-        plugin.getMessageService().sendMessage(sender, "clear_command_usage");
+        plugin.getMessageService().sendMessage(sender, "clear.usage");
         return 0;
     }
 }

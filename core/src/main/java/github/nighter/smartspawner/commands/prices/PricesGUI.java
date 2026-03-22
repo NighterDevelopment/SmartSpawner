@@ -50,7 +50,7 @@ public class PricesGUI implements Listener {
         Map<Material, PriceInfo> allItems = collectAllPriceableItems();
         
         if (allItems.isEmpty()) {
-            messageService.sendMessage(player, "no_priceable_items");
+            messageService.sendMessage(player, "prices.no_priceable_items");
             return;
         }
 
