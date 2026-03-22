@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,9 +125,11 @@ public class UpdateChecker implements Listener {
             return "N/A";
         }
 
-        return latestSupportedVersions.asList().stream()
-                .map(JsonElement::getAsString)
-                .collect(Collectors.joining(", "));
+        List<String> versions = new ArrayList<>();
+        for (JsonElement element : latestSupportedVersions) {
+            versions.add(element.getAsString());
+        }
+        return String.join(", ", versions);
     }
 
     private String formatConsoleText(String text, int maxLength) {

@@ -8,7 +8,6 @@ import github.nighter.smartspawner.hooks.protections.CheckBreakBlock;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.item.SpawnerItemFactory;
-import github.nighter.smartspawner.spawner.data.SpawnerFileHandler;
 import github.nighter.smartspawner.spawner.utils.SpawnerLocationLockManager;
 import github.nighter.smartspawner.utils.BlockPos;
 import lombok.Getter;
@@ -37,7 +36,6 @@ public class SpawnerBreakListener implements Listener {
     private final SpawnerManager spawnerManager;
     private final HopperService hopperService;
     private final SpawnerItemFactory spawnerItemFactory;
-    private final SpawnerFileHandler spawnerFileHandler;
     private final SpawnerLocationLockManager locationLockManager;
 
     public SpawnerBreakListener(SmartSpawner plugin) {
@@ -46,7 +44,6 @@ public class SpawnerBreakListener implements Listener {
         this.spawnerManager = plugin.getSpawnerManager();
         this.hopperService = plugin.getHopperService();
         this.spawnerItemFactory = plugin.getSpawnerItemFactory();
-        this.spawnerFileHandler = plugin.getSpawnerFileHandler();
         this.locationLockManager = plugin.getSpawnerLocationLockManager();
     }
 
@@ -181,7 +178,7 @@ public class SpawnerBreakListener implements Listener {
                     giveSpawnersToPlayer(player, 1, spawnerItem);
                     player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
                 } else {
-                    world.dropItemNaturally(location.toCenterLocation(), spawnerItem);
+                    world.dropItemNaturally(findSafeDropLocation(block), spawnerItem);
                 }
 
                 reduceDurability(tool, player, plugin.getConfig().getInt("spawner_break.durability_loss", 1));
@@ -270,7 +267,7 @@ public class SpawnerBreakListener implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
         } else {
             template.setAmount(dropAmount);
-            world.dropItemNaturally(location.toCenterLocation(), template.clone());
+            world.dropItemNaturally(findSafeDropLocation(spawnerBlock), template.clone());
         }
 
         return new SpawnerBreakResult(true, dropAmount, durabilityLoss);
@@ -321,6 +318,27 @@ public class SpawnerBreakListener implements Listener {
         // Remove location lock to prevent memory leak
         Location location = block.getLocation();
         locationLockManager.removeLock(location);
+    }
+
+    /**
+     * Finds a safe drop location for spawner items. Scans adjacent faces in priority order
+     * (down → horizontal → up) for a non-solid block to drop into. This prevents items from
+     * teleporting to distant cave pockets when the spawner is encased in solid blocks on most sides.
+     */
+    private Location findSafeDropLocation(Block block) {
+        BlockFace[] priority = {
+            BlockFace.DOWN,
+            BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST,
+            BlockFace.UP
+        };
+        for (BlockFace face : priority) {
+            Block neighbor = block.getRelative(face);
+            if (!neighbor.getType().isSolid()) {
+                return neighbor.getLocation().toCenterLocation();
+            }
+        }
+        // Fully enclosed — fall back to the spawner's own location (now air)
+        return block.getLocation().toCenterLocation();
     }
 
     private boolean isValidTool(ItemStack tool) {
