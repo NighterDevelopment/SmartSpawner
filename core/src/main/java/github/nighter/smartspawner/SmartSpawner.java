@@ -248,7 +248,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         // Initialize logging system
         this.loggingConfig = new LoggingConfig(this);
         this.spawnerActionLogger = new SpawnerActionLogger(this, loggingConfig);
-        this.spawnerAuditListener = new SpawnerAuditListener(this, spawnerActionLogger);
+        this.spawnerAuditListener = new SpawnerAuditListener(spawnerActionLogger);
     }
 
     private void initializeEconomyComponents() {
@@ -534,7 +534,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         // Unregister the old listener before registering a fresh one to prevent
         // duplicate event handling and the associated memory leak.
         if (spawnerAuditListener != null) HandlerList.unregisterAll(spawnerAuditListener);
-        this.spawnerAuditListener = new SpawnerAuditListener(this, spawnerActionLogger);
+        this.spawnerAuditListener = new SpawnerAuditListener(spawnerActionLogger);
         getServer().getPluginManager().registerEvents(spawnerAuditListener, this);
         
         // Reinitialize FormUI components in case config changed
