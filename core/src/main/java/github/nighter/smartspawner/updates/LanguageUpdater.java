@@ -27,7 +27,7 @@ public class LanguageUpdater {
 
     public LanguageUpdater(SmartSpawner plugin, LanguageFileType... fileTypes) {
         this.plugin = plugin;
-        this.currentVersion = plugin.getDescription().getVersion();
+        this.currentVersion = plugin.getPluginMeta().getVersion();
         activeFileTypes.addAll(Arrays.asList(fileTypes));
         checkAndUpdateLanguageFiles();
     }

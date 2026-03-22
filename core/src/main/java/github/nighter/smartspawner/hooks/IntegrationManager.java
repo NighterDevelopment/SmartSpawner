@@ -100,7 +100,7 @@ public class IntegrationManager {
                 return false;
             }
             // Prevent SimpleClaimSystem paid version (2.x.x)
-            if (simpleClaimPlugin.getDescription().getVersion().startsWith("2.")) {
+            if (simpleClaimPlugin.getPluginMeta().getVersion().startsWith("2.")) {
                 return false;
             }
             SimpleClaimSystemAPI_Provider.initialize((SimpleClaimSystem) simpleClaimPlugin);

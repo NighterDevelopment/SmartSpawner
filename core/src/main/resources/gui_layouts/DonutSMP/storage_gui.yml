@@ -21,6 +21,12 @@ slot_1:
   enabled: true
   click: "return_main"
 
+# Collect experience button
+slot_3:
+  material: EXPERIENCE_BOTTLE
+  enabled: true
+  click: "collect_exp"
+
 # Previous page
 slot_4:
   material: ARROW

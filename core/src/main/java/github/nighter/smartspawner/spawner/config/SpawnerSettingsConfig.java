@@ -41,7 +41,7 @@ public class SpawnerSettingsConfig {
     public SpawnerSettingsConfig(SmartSpawner plugin) {
         this.plugin = plugin;
         this.configFile = new File(plugin.getDataFolder(), "spawners_settings.yml");
-        CURRENT_CONFIG_VERSION = plugin.getDescription().getVersion();
+        CURRENT_CONFIG_VERSION = plugin.getPluginMeta().getVersion();
     }
     
     /**

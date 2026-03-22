@@ -100,12 +100,11 @@ public class DiscordWebhookLogger {
         if (webhookUrl == null || webhookUrl.isEmpty()) {
             return;
         }
-        
+
         try {
-            // Build the embed
-            DiscordEmbed embed = DiscordEmbedBuilder.buildEmbed(entry, config, plugin);
-            String jsonPayload = embed.toJson();
-            
+            // Build the full JSON payload (handles both yaml and json embed_format)
+            String jsonPayload = DiscordEmbedBuilder.buildWebhookPayload(entry, config, plugin);
+
             // Send async HTTP request
             Scheduler.runTaskAsync(() -> {
                 try {
@@ -114,9 +113,9 @@ public class DiscordWebhookLogger {
                     plugin.getLogger().log(Level.WARNING, "Failed to send Discord webhook", e);
                 }
             });
-            
+
         } catch (Exception e) {
-            plugin.getLogger().log(Level.WARNING, "Error building Discord embed", e);
+            plugin.getLogger().log(Level.WARNING, "Error building Discord webhook payload", e);
         }
     }
     

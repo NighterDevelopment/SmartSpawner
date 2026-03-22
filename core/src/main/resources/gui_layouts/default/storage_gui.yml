@@ -24,6 +24,7 @@
 #   open_filter: Open filter configuration
 #   sell_all: Sell all items (no exp collection)
 #   sell_and_exp: Sell all items and collect exp
+#   collect_exp: Collect stored experience only
 #   return_main: Return to main menu
 #   take_all: Take all items from current page
 #   drop_page: Drop all items from current page

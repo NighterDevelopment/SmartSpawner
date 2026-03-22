@@ -365,6 +365,9 @@ public class SpawnerStorageUI {
                 case "sell_and_exp":
                     item = createSellAndExpButton(spawner, button.getMaterial());
                     break;
+                case "collect_exp":
+                    item = createCollectExpButton(spawner, button.getMaterial());
+                    break;
             }
 
             if (item != null) {
@@ -464,6 +467,15 @@ public class SpawnerStorageUI {
 
         String name = languageManager.getGuiItemName("sell_and_exp_button.name", placeholders);
         List<String> lore = languageManager.getGuiItemLoreAsList("sell_and_exp_button.lore");
+        return createButton(material, name, lore);
+    }
+
+    private ItemStack createCollectExpButton(SpawnerData spawner, Material material) {
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("current_exp", languageManager.formatNumber(spawner.getSpawnerExp()));
+
+        String name = languageManager.getGuiItemName("collect_exp_button.name", placeholders);
+        List<String> lore = languageManager.getGuiItemLoreAsList("collect_exp_button.lore");
         return createButton(material, name, lore);
     }
 

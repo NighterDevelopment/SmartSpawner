@@ -283,6 +283,55 @@ public class SpawnerMenuAction implements Listener {
             github.nighter.smartspawner.spawner.gui.sell.SpawnerSellConfirmUI.PreviousGui.MAIN_MENU, false);
     }
 
+    /**
+     * Collects XP from a spawner without navigating the player to any GUI.
+     * Used by the storage GUI so the player stays on the storage page after collecting.
+     * Returns {@code true} if XP was successfully collected.
+     */
+    public boolean collectExpForPlayer(Player player, SpawnerData spawner) {
+        int exp = spawner.getSpawnerExp();
+        if (exp <= 0) {
+            messageService.sendMessage(player, "no_exp");
+            return false;
+        }
+
+        int initialExp = exp;
+        int expUsedForMending = 0;
+
+        if (plugin.getConfig().getBoolean("spawner_properties.default.allow_exp_mending")) {
+            expUsedForMending = applyMendingFromExp(player, exp);
+            exp -= expUsedForMending;
+        }
+
+        if (auraSkills != null) {
+            giveAuraSkillsXp(player, spawner, initialExp);
+        }
+
+        if (exp > 0) {
+            if (SpawnerExpClaimEvent.getHandlerList().getRegisteredListeners().length != 0) {
+                SpawnerExpClaimEvent expClaimEvent = new SpawnerExpClaimEvent(player, spawner.getSpawnerLocation(), exp);
+                Bukkit.getPluginManager().callEvent(expClaimEvent);
+                if (expClaimEvent.isCancelled()) return false;
+                if (exp != expClaimEvent.getExpAmount()) exp = expClaimEvent.getExpAmount();
+            }
+            player.giveExp(exp);
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+        }
+
+        spawner.setSpawnerExp(0);
+        plugin.getSpawnerManager().markSpawnerModified(spawner.getSpawnerId());
+        spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
+
+        if (spawner.getSpawnerExp() < spawner.getMaxStoredExp()) {
+            if (spawner.getIsAtCapacity()) {
+                spawner.setIsAtCapacity(false);
+            }
+        }
+
+        sendExpCollectionMessage(player, initialExp, expUsedForMending);
+        return true;
+    }
+
     public void handleExpBottleClick(Player player, SpawnerData spawner, boolean isSell) {
         if (isClickTooFrequent(player) && !isSell) {
             return;

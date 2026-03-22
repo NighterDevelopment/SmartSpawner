@@ -146,6 +146,9 @@ public class SpawnerStorageAction implements Listener {
             case "sell_and_exp":
                 handleSellAction(player, spawner, true);
                 break;
+            case "collect_exp":
+                handleCollectExpAction(player, spawner, inventory);
+                break;
             case "return_main":
                 handleReturnToMainMenu(player, spawner);
                 break;
@@ -203,6 +206,23 @@ public class SpawnerStorageAction implements Listener {
         // Open confirmation GUI
         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
         plugin.getSpawnerSellConfirmUI().openSellConfirmGui(player, spawner, STORAGE, collectExp);
+    }
+
+    /**
+     * Collects stored XP from the spawner while keeping the player on the storage GUI.
+     */
+    private void handleCollectExpAction(Player player, SpawnerData spawner, Inventory inventory) {
+        if (isControlClickTooFrequent(player)) {
+            return;
+        }
+        boolean collected = plugin.getSpawnerMenuAction().collectExpForPlayer(player, spawner);
+        if (collected) {
+            // Refresh button display so the XP counter updates to 0
+            StoragePageHolder holder = (StoragePageHolder) inventory.getHolder(false);
+            if (holder != null) {
+                plugin.getSpawnerStorageUI().updateDisplay(inventory, spawner, holder.getCurrentPage(), holder.getTotalPages());
+            }
+        }
     }
 
     /**

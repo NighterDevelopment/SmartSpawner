@@ -18,7 +18,7 @@ public class ConfigUpdater {
 
     public ConfigUpdater(SmartSpawner plugin) {
         this.plugin = plugin;
-        this.currentVersion = plugin.getDescription().getVersion();
+        this.currentVersion = plugin.getPluginMeta().getVersion();
     }
 
     /**

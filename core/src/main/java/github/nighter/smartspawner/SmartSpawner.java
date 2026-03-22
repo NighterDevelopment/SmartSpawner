@@ -522,7 +522,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
             itemSpawnerSettingsConfig.reload();
         }
         
-        // Reload logging system
+        // Reload logging system (file logging + discord webhook)
         loggingConfig.loadConfig();
         spawnerActionLogger.shutdown();
         this.spawnerActionLogger = new SpawnerActionLogger(this, loggingConfig);

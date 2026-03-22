@@ -11,50 +11,98 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Builds compact Discord embeds from log entries.
+ * Builds Discord webhook payloads from log entries.
+ *
+ * <p>Supports two modes controlled by {@link DiscordWebhookConfig#isJsonEmbedFormat()}:
+ * <ul>
+ *   <li><b>yaml</b> – Programmatic embed constructed from the structured config keys.</li>
+ *   <li><b>json</b> – The raw {@code embed_json} template string with placeholder substitution.</li>
+ * </ul>
  */
 public class DiscordEmbedBuilder {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss")
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss")
             .withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ISO_INSTANT;
 
-    public static DiscordEmbed buildEmbed(SpawnerLogEntry entry, DiscordWebhookConfig config, SmartSpawner plugin) {
+    // -------------------------------------------------------------------------
+    // Entry point
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns the full Discord webhook JSON payload string for the given log entry.
+     * Routes to the JSON-template path or the programmatic-embed path based on config.
+     */
+    public static String buildWebhookPayload(SpawnerLogEntry entry,
+                                             DiscordWebhookConfig config,
+                                             SmartSpawner plugin) {
+        Map<String, String> placeholders = buildPlaceholders(entry, config);
+
+        if (config.isJsonEmbedFormat()) {
+            return buildFromJsonTemplate(config.getEmbedJsonTemplate(), placeholders);
+        }
+
+        return buildEmbed(entry, config, plugin, placeholders).toJson();
+    }
+
+    // -------------------------------------------------------------------------
+    // JSON-template path
+    // -------------------------------------------------------------------------
+
+    /**
+     * Replaces all {@code {key}} placeholders in the template and returns the
+     * resulting string ready to POST to Discord.
+     */
+    private static String buildFromJsonTemplate(String template,
+                                                Map<String, String> placeholders) {
+        if (template == null || template.isBlank()) {
+            // Fallback: minimal valid payload
+            return "{\"content\":\"SmartSpawner event – no embed_json template configured.\"}";
+        }
+        String result = template;
+        for (Map.Entry<String, String> ph : placeholders.entrySet()) {
+            result = result.replace("{" + ph.getKey() + "}", ph.getValue());
+        }
+        return result;
+    }
+
+    // -------------------------------------------------------------------------
+    // Programmatic (YAML) embed path – kept for backward-compatibility
+    // -------------------------------------------------------------------------
+
+    /** @deprecated Use {@link #buildWebhookPayload} instead. */
+    public static DiscordEmbed buildEmbed(SpawnerLogEntry entry,
+                                          DiscordWebhookConfig config,
+                                          SmartSpawner plugin) {
+        return buildEmbed(entry, config, plugin, buildPlaceholders(entry, config));
+    }
+
+    private static DiscordEmbed buildEmbed(SpawnerLogEntry entry,
+                                           DiscordWebhookConfig config,
+                                           SmartSpawner plugin,
+                                           Map<String, String> placeholders) {
         DiscordEmbed embed = new DiscordEmbed();
 
-        // Set color based on specific event type
         embed.setColor(config.getColorForEvent(entry.getEventType()));
 
-        // Build placeholders
-        Map<String, String> placeholders = buildPlaceholders(entry);
-
-        // Set compact title with icon
         String eventIcon = getEventIcon(entry.getEventType());
-        String title = eventIcon + " " + replacePlaceholders(config.getEmbedTitle(), placeholders);
-        embed.setTitle(title);
-
-        // Set compact description
-        String description = buildCompactDescription(entry, placeholders, config);
-        embed.setDescription(description);
-
-        // Set footer
-        String footer = replacePlaceholders(config.getEmbedFooter(), placeholders);
-        embed.setFooter(footer, "https://images.minecraft-heads.com/render2d/head/2e/2eaa2d8b7e9a098ebd33fcb6cf1120f4.webp");
-
-        // Set timestamp
+        embed.setTitle(eventIcon + " " + replacePlaceholders(config.getEmbedTitle(), placeholders));
+        embed.setDescription(buildCompactDescription(entry, placeholders, config));
+        embed.setFooter(
+                replacePlaceholders(config.getEmbedFooter(), placeholders),
+                "https://images.minecraft-heads.com/render2d/head/2e/2eaa2d8b7e9a098ebd33fcb6cf1120f4.webp");
         embed.setTimestamp(Instant.ofEpochMilli(System.currentTimeMillis()));
 
-        // Add player thumbnail if enabled
         if (config.isShowPlayerHead() && entry.getPlayerName() != null) {
             embed.setThumbnail(getPlayerAvatarUrl(entry.getPlayerName()));
         }
 
-        // Add only important metadata as inline fields
         addCompactFields(embed, entry);
 
-        // Add custom fields from config (if any)
-        for (DiscordWebhookConfig.EmbedField customField : config.getCustomFields()) {
-            String fieldName = replacePlaceholders(customField.getName(), placeholders);
-            String fieldValue = replacePlaceholders(customField.getValue(), placeholders);
-            embed.addField(fieldName, fieldValue, customField.isInline());
+        for (DiscordWebhookConfig.EmbedField custom : config.getCustomFields()) {
+            embed.addField(
+                    replacePlaceholders(custom.getName(), placeholders),
+                    replacePlaceholders(custom.getValue(), placeholders),
+                    custom.isInline());
         }
 
         return embed;
@@ -133,15 +181,21 @@ public class DiscordEmbedBuilder {
         return "`" + str + "`";
     }
 
-    private static Map<String, String> buildPlaceholders(SpawnerLogEntry entry) {
+    private static Map<String, String> buildPlaceholders(SpawnerLogEntry entry,
+                                                          DiscordWebhookConfig config) {
         Map<String, String> placeholders = new HashMap<>();
 
+        Instant now = Instant.ofEpochMilli(System.currentTimeMillis());
         placeholders.put("description", entry.getEventType().getDescription());
-        placeholders.put("event_type", entry.getEventType().name());
-        placeholders.put("time", FORMATTER.format(Instant.ofEpochMilli(System.currentTimeMillis())));
+        placeholders.put("event_type",  entry.getEventType().name());
+        placeholders.put("time",        TIME_FMT.format(now));
+        placeholders.put("timestamp",   ISO_FMT.format(now));
+        placeholders.put("color",       String.valueOf(config.getColorForEvent(entry.getEventType())));
 
         if (entry.getPlayerName() != null) {
             placeholders.put("player", entry.getPlayerName());
+        } else {
+            placeholders.put("player", "N/A");
         }
 
         if (entry.getPlayerUuid() != null) {
@@ -150,10 +204,10 @@ public class DiscordEmbedBuilder {
 
         if (entry.getLocation() != null) {
             Location loc = entry.getLocation();
-            placeholders.put("world", loc.getWorld().getName());
-            placeholders.put("x", String.valueOf(loc.getBlockX()));
-            placeholders.put("y", String.valueOf(loc.getBlockY()));
-            placeholders.put("z", String.valueOf(loc.getBlockZ()));
+            placeholders.put("world",    loc.getWorld().getName());
+            placeholders.put("x",        String.valueOf(loc.getBlockX()));
+            placeholders.put("y",        String.valueOf(loc.getBlockY()));
+            placeholders.put("z",        String.valueOf(loc.getBlockZ()));
             placeholders.put("location", String.format("%s (%d, %d, %d)",
                     loc.getWorld().getName(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
         }
@@ -162,9 +216,9 @@ public class DiscordEmbedBuilder {
             placeholders.put("entity", formatEntityName(entry.getEntityType().name()));
         }
 
-        // Add metadata as placeholders
-        for (Map.Entry<String, Object> metaEntry : entry.getMetadata().entrySet()) {
-            placeholders.put(metaEntry.getKey(), String.valueOf(metaEntry.getValue()));
+        // Expose all metadata keys as placeholders
+        for (Map.Entry<String, Object> meta : entry.getMetadata().entrySet()) {
+            placeholders.put(meta.getKey(), String.valueOf(meta.getValue()));
         }
 
         return placeholders;

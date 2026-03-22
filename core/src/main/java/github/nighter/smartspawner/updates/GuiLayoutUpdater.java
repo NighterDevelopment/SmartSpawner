@@ -22,7 +22,7 @@ public class GuiLayoutUpdater {
 
     public GuiLayoutUpdater(SmartSpawner plugin) {
         this.plugin = plugin;
-        this.currentVersion = plugin.getDescription().getVersion();
+        this.currentVersion = plugin.getPluginMeta().getVersion();
     }
 
     /**
