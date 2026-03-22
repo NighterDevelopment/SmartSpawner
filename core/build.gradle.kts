@@ -149,7 +149,7 @@ tasks.register("generateLanguageChangelog") {
     doLast {
         val currentVersion = project.version.toString()
         val locale    = "en_US"
-        val langFiles = listOf("messages.yml", "gui.yml", "items.yml", "formatting.yml", "command_messages.yml")
+        val langFiles = listOf("messages.yml", "gui.yml", "items.yml", "formatting.yml", "command_messages.yml", "hologram.yml")
 
         // ── 1. Fetch latest GitHub release tag ───────────────────────────────
         val githubVersion: String = try {

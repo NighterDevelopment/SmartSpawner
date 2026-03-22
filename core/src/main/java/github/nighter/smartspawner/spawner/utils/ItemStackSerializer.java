@@ -161,8 +161,8 @@ public class ItemStackSerializer {
      * Get damage value from ItemStack using modern API
      */
     private static int getDamageValue(ItemStack item) {
-        if (item.getItemMeta() instanceof Damageable) {
-            return ((Damageable) item.getItemMeta()).getDamage();
+        if (item.getItemMeta() instanceof Damageable damageable) {
+            return damageable.getDamage();
         }
         return 0;
     }
@@ -171,10 +171,9 @@ public class ItemStackSerializer {
      * Set damage value to ItemStack using modern API
      */
     private static void setDamageValue(ItemStack item, int damage) {
-        if (item.getItemMeta() instanceof Damageable) {
-            Damageable meta = (Damageable) item.getItemMeta();
-            meta.setDamage(damage);
-            item.setItemMeta((org.bukkit.inventory.meta.ItemMeta) meta);
+        if (item.getItemMeta() instanceof Damageable damageable) {
+            damageable.setDamage(damage);
+            item.setItemMeta(damageable);
         }
     }
 

@@ -1,0 +1,24 @@
+# ──────────────────────────────────────────────────────────────────────────────
+#   SmartSpawner – Hologram Text Display  (DonutSMP)
+#   File: hologram.yml
+# ──────────────────────────────────────────────────────────────────────────────
+#
+#   Available placeholders:
+#     {entity}                  – Mob name (formatted by mob_names in formatting.yml)
+#     {ᴇɴᴛɪᴛʏ}                 – Mob name in small-caps unicode
+#     {stack_size}              – Number of stacked spawners
+#     {current_exp}             – Current stored XP
+#     {max_exp}                 – Maximum XP capacity
+#     {used_slots}              – Used inventory slots
+#     {max_slots}               – Total inventory slots
+#     {percent_storage_decimal} – Storage % with one decimal  (e.g. "75.5")
+#     {percent_storage_rounded} – Storage % rounded to integer (e.g. "76")
+#     {percent_exp_decimal}     – XP storage % with one decimal  (e.g. "50.0")
+#     {percent_exp_rounded}     – XP storage % rounded to integer (e.g. "50")
+#
+# ──────────────────────────────────────────────────────────────────────────────
+
+text:
+  - '[&#e6e6fa{stack_size}] &#3498db{ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ'
+  - '&#5dade2• &#e6e6faxᴘ: &#37eb9a{current_exp}&#e6e6fa/&#37eb9a{max_exp}'
+  - '&#5dade2• &#e6e6faɪᴛᴇᴍꜱ: &#37eb9a{used_slots}&#e6e6fa/&#37eb9a{max_slots}'

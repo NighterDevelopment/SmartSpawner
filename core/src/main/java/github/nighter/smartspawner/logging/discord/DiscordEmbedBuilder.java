@@ -49,8 +49,7 @@ public class DiscordEmbedBuilder {
         DiscordEmbed embed = new DiscordEmbed();
         embed.setColor(embedCfg.getColor());
 
-        String icon  = getEventIcon(entry.getEventType());
-        embed.setTitle(icon + " " + replacePlaceholders(embedCfg.getTitle(), placeholders));
+        embed.setTitle(replacePlaceholders(embedCfg.getTitle(), placeholders));
         embed.setDescription(buildCompactDescription(entry, placeholders, embedCfg));
         embed.setFooter(
                 replacePlaceholders(embedCfg.getFooter(), placeholders),

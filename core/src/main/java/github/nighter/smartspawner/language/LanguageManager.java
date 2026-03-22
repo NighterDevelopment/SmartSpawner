@@ -54,7 +54,8 @@ public class LanguageManager {
         GUI("gui.yml"),
         FORMATTING("formatting.yml"),
         ITEMS("items.yml"),
-        COMMAND_MESSAGES("command_messages.yml");
+        COMMAND_MESSAGES("command_messages.yml"),
+        HOLOGRAM("hologram.yml");
         private final String fileName;
         LanguageFileType(String fileName) {
             this.fileName = fileName;
@@ -159,6 +160,7 @@ public class LanguageManager {
                     new YamlConfiguration(),
                     new YamlConfiguration(),
                     new YamlConfiguration(),
+                    new YamlConfiguration(),
                     new YamlConfiguration()
             );
             localeMap.put(defaultLocale, cachedDefaultLocaleData);
@@ -202,28 +204,39 @@ public class LanguageManager {
     private void updateLocaleData(String locale, LanguageFileType fileType, YamlConfiguration config) {
         LocaleData existingData = localeMap.getOrDefault(locale,
                 new LocaleData(new YamlConfiguration(), new YamlConfiguration(),
-                        new YamlConfiguration(), new YamlConfiguration(), new YamlConfiguration()));
+                        new YamlConfiguration(), new YamlConfiguration(), new YamlConfiguration(),
+                        new YamlConfiguration()));
 
         switch (fileType) {
             case MESSAGES:
                 localeMap.put(locale, new LocaleData(config, existingData.gui(),
-                        existingData.formatting(), existingData.items(), existingData.commandMessages()));
+                        existingData.formatting(), existingData.items(), existingData.commandMessages(),
+                        existingData.hologram()));
                 break;
             case GUI:
                 localeMap.put(locale, new LocaleData(existingData.messages(), config,
-                        existingData.formatting(), existingData.items(), existingData.commandMessages()));
+                        existingData.formatting(), existingData.items(), existingData.commandMessages(),
+                        existingData.hologram()));
                 break;
             case FORMATTING:
                 localeMap.put(locale, new LocaleData(existingData.messages(), existingData.gui(),
-                        config, existingData.items(), existingData.commandMessages()));
+                        config, existingData.items(), existingData.commandMessages(),
+                        existingData.hologram()));
                 break;
             case ITEMS:
                 localeMap.put(locale, new LocaleData(existingData.messages(), existingData.gui(),
-                        existingData.formatting(), config, existingData.commandMessages()));
+                        existingData.formatting(), config, existingData.commandMessages(),
+                        existingData.hologram()));
                 break;
             case COMMAND_MESSAGES:
                 localeMap.put(locale, new LocaleData(existingData.messages(), existingData.gui(),
-                        existingData.formatting(), existingData.items(), config));
+                        existingData.formatting(), existingData.items(), config,
+                        existingData.hologram()));
+                break;
+            case HOLOGRAM:
+                localeMap.put(locale, new LocaleData(existingData.messages(), existingData.gui(),
+                        existingData.formatting(), existingData.items(), existingData.commandMessages(),
+                        config));
                 break;
         }
     }
@@ -330,6 +343,7 @@ public class LanguageManager {
         YamlConfiguration formatting = null;
         YamlConfiguration items = null;
         YamlConfiguration commandMessages = null;
+        YamlConfiguration hologram = null;
 
         for (LanguageFileType fileType : fileTypes) {
             switch (fileType) {
@@ -348,6 +362,9 @@ public class LanguageManager {
                 case COMMAND_MESSAGES:
                     commandMessages = loadOrCreateFile(locale, fileType.getFileName());
                     break;
+                case HOLOGRAM:
+                    hologram = loadOrCreateFile(locale, fileType.getFileName());
+                    break;
             }
         }
 
@@ -357,8 +374,9 @@ public class LanguageManager {
         if (formatting == null) formatting = new YamlConfiguration();
         if (items == null) items = new YamlConfiguration();
         if (commandMessages == null) commandMessages = new YamlConfiguration();
+        if (hologram == null) hologram = new YamlConfiguration();
 
-        localeMap.put(locale, new LocaleData(messages, gui, formatting, items, commandMessages));
+        localeMap.put(locale, new LocaleData(messages, gui, formatting, items, commandMessages, hologram));
     }
 
     //---------------------------------------------------
@@ -1143,21 +1161,27 @@ public class LanguageManager {
     //---------------------------------------------------
 
     public String getHologramText() {
-        // Check if the text exists in the config
-        if (plugin.getConfig().contains("hologram.text")) {
-            // Get as string list for multi-line support
-            List<String> lines = plugin.getConfig().getStringList("hologram.text");
-
-            // Join lines with newline characters
+        // Try reading from per-language hologram.yml first
+        YamlConfiguration hologramCfg = cachedDefaultLocaleData.hologram();
+        if (hologramCfg != null && hologramCfg.contains("text")) {
+            List<String> lines = hologramCfg.getStringList("text");
             if (!lines.isEmpty()) {
                 return String.join("\n", lines);
             }
+            String single = hologramCfg.getString("text");
+            if (single != null) return single;
+        }
 
-            // Fallback to string if list is empty or not properly defined
+        // Fallback: legacy hologram.text key in config.yml
+        if (plugin.getConfig().contains("hologram.text")) {
+            List<String> lines = plugin.getConfig().getStringList("hologram.text");
+            if (!lines.isEmpty()) {
+                return String.join("\n", lines);
+            }
             return plugin.getConfig().getString("hologram.text");
         }
 
-        // Default value if not defined
+        // Default value if not defined anywhere
         return "&e%entity% Spawner &7[&f%stack_size%x&7]\n" +
                 "&7XP: &a%current_exp%&7/&a%max_exp%\n" +
                 "&7Items: &a%used_slots%&7/&a%max_slots%";

@@ -5,7 +5,6 @@ import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.logging.discord.DiscordWebhookConfig;
 import github.nighter.smartspawner.logging.discord.DiscordWebhookLogger;
 import github.nighter.smartspawner.logging.discord.DiscordEmbedConfigManager;
-import org.bukkit.Bukkit;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -134,10 +133,6 @@ public class SpawnerActionLogger {
         if (!entries.isEmpty()) {
             writeLogEntries(entries);
         }
-    }
-    
-    private void writeLogEntry(SpawnerLogEntry entry) {
-        writeLogEntries(Collections.singletonList(entry));
     }
     
     private void writeLogEntries(List<SpawnerLogEntry> entries) {

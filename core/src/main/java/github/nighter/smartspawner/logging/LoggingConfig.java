@@ -2,7 +2,6 @@ package github.nighter.smartspawner.logging;
 
 import github.nighter.smartspawner.SmartSpawner;
 import lombok.Getter;
-import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.EnumSet;
 import java.util.HashSet;
