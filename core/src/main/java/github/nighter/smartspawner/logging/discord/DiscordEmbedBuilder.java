@@ -25,6 +25,19 @@ public class DiscordEmbedBuilder {
     // ── Entry point ──────────────────────────────────────────────────────────
 
     /**
+     * Builds a {@link DiscordEmbed} for the given log entry (no JSON serialisation yet).
+     * Callers that need batching should collect these and pass them to
+     * {@link DiscordEmbed#buildBatchJson(java.util.List)}.
+     */
+    public static DiscordEmbed buildEmbed(SpawnerLogEntry entry,
+                                          DiscordEventEmbedConfig embedCfg,
+                                          DiscordWebhookConfig globalCfg,
+                                          SmartSpawner plugin) {
+        Map<String, String> placeholders = buildPlaceholders(entry, embedCfg);
+        return buildYamlEmbed(entry, embedCfg, globalCfg, placeholders);
+    }
+
+    /**
      * Builds the full Discord webhook JSON payload string ready to POST.
      *
      * @param entry       the log entry to render
@@ -36,8 +49,7 @@ public class DiscordEmbedBuilder {
                                              DiscordEventEmbedConfig embedCfg,
                                              DiscordWebhookConfig globalCfg,
                                              SmartSpawner plugin) {
-        Map<String, String> placeholders = buildPlaceholders(entry, embedCfg);
-        return buildYamlEmbed(entry, embedCfg, globalCfg, placeholders).toJson();
+        return buildEmbed(entry, embedCfg, globalCfg, plugin).toJson();
     }
 
     // ── Programmatic embed path ───────────────────────────────────────────────

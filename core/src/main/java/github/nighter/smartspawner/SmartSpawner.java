@@ -71,6 +71,7 @@ import github.nighter.smartspawner.spawner.utils.SpawnerLocationLockManager;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -217,28 +218,15 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     }
 
     private void initializeComponents() {
-        // Initialize services
+        // Initialize services and utilities first since many components depend on them
         initializeServices();
-
-        // Initialize factories and economy
         initializeEconomyComponents();
-
-        // Initialize core components in order
         initializeCoreComponents();
-
-        // Initialize handlers
         initializeHandlers();
-
-        // Initialize UI and actions
         initializeUIAndActions();
-
         // Initialize hopper handler if enabled in config
         setUpHopperHandler();
-
-        // Initialize listeners
         initializeListeners();
-
-        // Initialize API implementation
         this.apiImpl = new SmartSpawnerAPIImpl(this);
         this.updateChecker = new UpdateChecker(this);
     }
@@ -542,8 +530,10 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         
         // Reload logging system (file logging + discord webhook)
         loggingConfig.loadConfig();
-        spawnerActionLogger.shutdown();
-        this.spawnerActionLogger = new SpawnerActionLogger(this, loggingConfig);
+        spawnerActionLogger.reloadDiscord();
+        // Unregister the old listener before registering a fresh one to prevent
+        // duplicate event handling and the associated memory leak.
+        if (spawnerAuditListener != null) HandlerList.unregisterAll(spawnerAuditListener);
         this.spawnerAuditListener = new SpawnerAuditListener(this, spawnerActionLogger);
         getServer().getPluginManager().registerEvents(spawnerAuditListener, this);
         

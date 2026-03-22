@@ -14,8 +14,6 @@ import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SpawnerHologram {
@@ -35,6 +33,14 @@ public class SpawnerHologram {
     private static final Vector3f SCALE = new Vector3f(1.0f, 1.0f, 1.0f);
     private static final Vector3f TRANSLATION = new Vector3f(0.0f, 0.0f, 0.0f);
     private static final AxisAngle4f ROTATION = new AxisAngle4f(0, 0, 0, 0);
+
+    // Cached color-translated template (static part; recomputed after reload)
+    private String cachedProcessedTemplate = null;
+
+    // Cached entity display names (recomputed only when entityType changes)
+    private EntityType cachedEntityType = null;
+    private String cachedEntityName = null;
+    private String cachedEntitySmallCaps = null;
 
     public SpawnerHologram(Location location) {
         this.plugin = SmartSpawner.getInstance();
@@ -104,49 +110,68 @@ public class SpawnerHologram {
         });
     }
 
+    // -------------------------------------------------------------------------
+    // Template & text helpers
+    // -------------------------------------------------------------------------
+
+    /** Returns the hologram template with colour codes already translated.
+     *  Result is cached until {@link #invalidateTemplateCache()} is called. */
+    private String getProcessedTemplate() {
+        if (cachedProcessedTemplate == null) {
+            cachedProcessedTemplate = ColorUtil.translateHexColorCodes(languageManager.getHologramText());
+        }
+        return cachedProcessedTemplate;
+    }
+
+    /** Call this after a language/config reload so the next update re-fetches the template. */
+    public void invalidateTemplateCache() {
+        cachedProcessedTemplate = null;
+    }
+
+    /** Builds the final display string from cached data. Must be called on the owning region thread. */
+    private String computeText() {
+        // Refresh entity name cache only when the entity type changes
+        if (cachedEntityType != entityType) {
+            cachedEntityType = entityType;
+            cachedEntityName = languageManager.getFormattedMobName(entityType);
+            cachedEntitySmallCaps = languageManager.getSmallCaps(cachedEntityName);
+        }
+
+        double pctStorage = maxSlots > 0 ? (double) currentItems / maxSlots * 100 : 0;
+        double pctExp = maxExp > 0 ? (double) currentExp / maxExp * 100 : 0;
+
+        return getProcessedTemplate()
+                .replace("{entity}", cachedEntityName)
+                .replace("{ᴇɴᴛɪᴛʏ}", cachedEntitySmallCaps)
+                .replace("{stack_size}", String.valueOf(stackSize))
+                .replace("{current_exp}", languageManager.formatNumber(currentExp))
+                .replace("{max_exp}", languageManager.formatNumber(maxExp))
+                .replace("{used_slots}", languageManager.formatNumber(currentItems))
+                .replace("{max_slots}", languageManager.formatNumber(maxSlots))
+                .replace("{percent_storage_decimal}", formatOneDecimal(pctStorage))
+                .replace("{percent_storage_rounded}", String.valueOf((int) Math.round(pctStorage)))
+                .replace("{percent_exp_decimal}", formatOneDecimal(pctExp))
+                .replace("{percent_exp_rounded}", String.valueOf((int) Math.round(pctExp)));
+    }
+
+    /** Faster substitute for {@code String.format("%.1f", value)}. */
+    private static String formatOneDecimal(double value) {
+        long scaled = Math.round(value * 10);
+        return (scaled / 10) + "." + (scaled % 10);
+    }
+
+    // -------------------------------------------------------------------------
+    // Public update API
+    // -------------------------------------------------------------------------
+
     public void updateText() {
         TextDisplay display = textDisplay.get();
         if (display == null || entityType == null) return;
 
-        // Don't check isValid() here as it needs to be on the entity thread
+        // Compute the text on the calling (region) thread – avoids doing string work
+        // inside the entity-thread lambda and keeps the lambda allocation tiny.
+        final String finalText = computeText();
 
-        // Prepare the text content outside of the entity thread
-        String entityTypeName = languageManager.getFormattedMobName(entityType);
-
-        // Create replacements map
-        Map<String, String> replacements = new HashMap<>();
-        replacements.put("entity", entityTypeName);
-        replacements.put("ᴇɴᴛɪᴛʏ", languageManager.getSmallCaps(entityTypeName));
-        replacements.put("stack_size", String.valueOf(stackSize));
-        replacements.put("current_exp", languageManager.formatNumber(currentExp));
-        replacements.put("max_exp", languageManager.formatNumber(maxExp));
-        replacements.put("used_slots", languageManager.formatNumber(currentItems));
-        replacements.put("max_slots", languageManager.formatNumber(maxSlots));
-        
-        // Calculate and add percentage placeholders
-        double percentStorageDecimal = maxSlots > 0 ? ((double) currentItems / maxSlots) * 100 : 0;
-        String formattedPercentStorage = String.format("%.1f", percentStorageDecimal);
-        int percentStorageRounded = (int) Math.round(percentStorageDecimal);
-        replacements.put("percent_storage_decimal", formattedPercentStorage);
-        replacements.put("percent_storage_rounded", String.valueOf(percentStorageRounded));
-        
-        double percentExpDecimal = maxExp > 0 ? ((double) currentExp / maxExp) * 100 : 0;
-        String formattedPercentExp = String.format("%.1f", percentExpDecimal);
-        int percentExpRounded = (int) Math.round(percentExpDecimal);
-        replacements.put("percent_exp_decimal", formattedPercentExp);
-        replacements.put("percent_exp_rounded", String.valueOf(percentExpRounded));
-
-        String hologramText = languageManager.getHologramText();
-
-        // Apply replacements
-        for (Map.Entry<String, String> entry : replacements.entrySet()) {
-            hologramText = hologramText.replace("{" + entry.getKey() + "}", entry.getValue());
-        }
-
-        // Apply color codes
-        final String finalText = ColorUtil.translateHexColorCodes(hologramText);
-
-        // Schedule the entity update on the entity's thread
         Scheduler.runEntityTask(display, () -> {
             if (display.isValid()) {
                 display.setText(finalText);
@@ -155,7 +180,19 @@ public class SpawnerHologram {
     }
 
     public void updateData(int stackSize, EntityType entityType, int currentExp, int maxExp, int currentItems, int maxSlots) {
-        // Update data values
+        TextDisplay display = textDisplay.get();
+
+        // Skip entirely when nothing has changed and the hologram already exists.
+        if (display != null
+                && this.stackSize == stackSize
+                && this.entityType == entityType
+                && this.currentExp == currentExp
+                && this.maxExp == maxExp
+                && this.currentItems == currentItems
+                && this.maxSlots == maxSlots) {
+            return;
+        }
+
         this.stackSize = stackSize;
         this.entityType = entityType;
         this.currentExp = currentExp;
@@ -163,21 +200,18 @@ public class SpawnerHologram {
         this.currentItems = currentItems;
         this.maxSlots = maxSlots;
 
-        // First, ensure we have a valid hologram
-        TextDisplay display = textDisplay.get();
         if (display == null) {
-            // If hologram doesn't exist, recreate it
             createHologram();
         } else {
-            // Check validity on the entity thread to avoid race conditions
+            // Pre-compute text here (region thread) so the entity-thread lambda
+            // only needs to call display.setText() – no extra task dispatch.
+            final String finalText = computeText();
             Scheduler.runEntityTask(display, () -> {
                 if (!display.isValid()) {
-                    // If invalid, recreate the hologram
                     textDisplay.set(null);
                     createHologram();
                 } else {
-                    // Update the text display
-                    updateText();
+                    display.setText(finalText);
                 }
             });
         }

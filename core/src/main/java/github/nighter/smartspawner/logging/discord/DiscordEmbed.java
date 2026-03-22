@@ -44,21 +44,23 @@ public class DiscordEmbed {
     }
     
     /**
-     * Convert the embed to Discord webhook JSON format.
+     * Serialize just this embed object to JSON: {@code {...}}.
+     * Use {@link #toJson()} for a single-embed payload or
+     * {@link #buildBatchJson(java.util.List)} for a multi-embed payload.
      */
-    public String toJson() {
-        StringBuilder json = new StringBuilder("{\"embeds\":[{");
-        
+    public String toEmbedJson() {
+        StringBuilder json = new StringBuilder("{");
+
         if (title != null && !title.isEmpty()) {
             json.append("\"title\":\"").append(escapeJson(title)).append("\",");
         }
-        
+
         if (description != null && !description.isEmpty()) {
             json.append("\"description\":\"").append(escapeJson(description)).append("\",");
         }
-        
+
         json.append("\"color\":").append(color).append(",");
-        
+
         if (footer != null) {
             json.append("\"footer\":{\"text\":\"").append(escapeJson(footer.text)).append("\"");
             if (footer.iconUrl != null) {
@@ -66,15 +68,15 @@ public class DiscordEmbed {
             }
             json.append("},");
         }
-        
+
         if (thumbnail != null) {
             json.append("\"thumbnail\":{\"url\":\"").append(escapeJson(thumbnail.url)).append("\"},");
         }
-        
+
         if (timestamp != null) {
             json.append("\"timestamp\":\"").append(timestamp).append("\",");
         }
-        
+
         if (!fields.isEmpty()) {
             json.append("\"fields\":[");
             for (int i = 0; i < fields.size(); i++) {
@@ -86,14 +88,34 @@ public class DiscordEmbed {
             }
             json.append("],");
         }
-        
+
         // Remove trailing comma if present
         if (json.charAt(json.length() - 1) == ',') {
             json.setLength(json.length() - 1);
         }
-        
-        json.append("}]}");
+
+        json.append("}");
         return json.toString();
+    }
+
+    /**
+     * Wrap this embed in a single-embed Discord webhook payload.
+     */
+    public String toJson() {
+        return "{\"embeds\":[" + toEmbedJson() + "]}";
+    }
+
+    /**
+     * Build a multi-embed Discord webhook payload (Discord allows up to 10 embeds per POST).
+     */
+    public static String buildBatchJson(java.util.List<DiscordEmbed> embeds) {
+        StringBuilder sb = new StringBuilder("{\"embeds\":[");
+        for (int i = 0; i < embeds.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append(embeds.get(i).toEmbedJson());
+        }
+        sb.append("]}");
+        return sb.toString();
     }
     
     private String escapeJson(String str) {
