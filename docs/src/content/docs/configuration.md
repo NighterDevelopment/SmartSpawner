@@ -25,7 +25,7 @@ To add a custom language:
 ## Language Settings
 
 ```yaml
-# Language setting (available: en_US, vi_VN, DonutSMP)
+# Language setting (available: en_US, vi_VN, de_DE, DonutSMP)
 language: en_US
 
 # Spawner GUI layout configuration (available: default, DonutSMP)
@@ -35,7 +35,7 @@ gui_layout: default
 debug: false
 ```
 
-- **language**: Sets the language for plugin messages. Available options include `en_US`, `vi_VN`, and `DonutSMP`.
+- **language**: Sets the language for plugin messages. Available options: `en_US`, `vi_VN`, `de_DE`, and `DonutSMP`.
 - **gui_layout**: Chooses the layout for the spawner GUI. Options are `default` and `DonutSMP`.
 - **debug**: Enables debug mode for detailed console output, useful for troubleshooting.
 
@@ -206,6 +206,17 @@ hopper:
 - `check_delay`: Frequency of collection checks.
 - `stack_per_transfer`: Stacks transferred per operation.
 
+## Bedrock Player Support
+
+```yaml
+bedrock_support:
+  # Enable FormUI for Bedrock players
+  # Requires Floodgate plugin to be installed and enabled
+  enable_formui: true
+```
+
+- `enable_formui`: Shows mobile-friendly form menus to Bedrock Edition players (via [Floodgate](https://geysermc.org/download/#floodgate)) instead of chest GUIs.
+
 ## Visual Effects
 
 ### Hologram
@@ -213,11 +224,6 @@ hopper:
 ```yaml
 hologram:
   enabled: false        # Show floating text above spawners
-
-  text:
-    - '[&#f8f8ff%stack_size%] &#7b68ee%ᴇɴᴛɪᴛʏ% ꜱᴘᴀᴡɴᴇʀ'
-    - '&#ab7afd• &#e6e6faxᴘ: &#37eb9a%current_exp%&#f8f8ff/&#37eb9a%max_exp%'
-    - '&#ab7afd• &#e6e6faɪᴛᴇᴍꜱ: &#37eb9a%used_slots%&#f8f8ff/&#37eb9a%max_slots%'
 
   # Position Offset from spawner block center
   offset_x: 0.5
@@ -227,13 +233,16 @@ hologram:
   # Display Settings
   alignment: CENTER     # Text alignment (CENTER, LEFT, or RIGHT)
   shadowed_text: true   # Apply shadow effect to text
-  see_through: false    # Text visible through blocks
+  see_through: false    # Hologram visible through blocks
+  transparent_background: false  # Make background fully transparent
 ```
 
 - `enabled`: Shows floating text above spawners.
-- `text`: Customizable hologram lines with placeholders.
-- `offset_*`: Position adjustments.
-- `alignment`, `shadowed_text`, `see_through`: Display options.
+- `offset_*`: Position adjustments relative to the spawner block center.
+- `alignment`: Text alignment — `CENTER`, `LEFT`, or `RIGHT`.
+- `shadowed_text`: Applies a shadow effect to the text.
+- `see_through`: Hologram visible through blocks.
+- `transparent_background`: Makes the hologram background fully transparent.
 
 ### Particles
 
@@ -245,36 +254,6 @@ particle:
 ```
 
 Toggles particle effects for various spawner actions.
-
-## Data Management
-
-```yaml
-data_saving:
-  # Periodic auto-save interval
-  interval: 5m          # Time between saves
-
-  # Save spawner data on server shutdown
-  save_on_shutdown: true
-```
-
-- `interval`: Auto-save frequency.
-- `save_on_shutdown`: Saves data on server stop.
-
-## Ghost Spawners
-
-```yaml
-ghost_spawners:
-  # Remove ghost spawners when server starts up
-  remove_on_startup: true
-
-  # Remove ghost spawners when players approach them
-  remove_on_approach: false
-```
-
-Handles erroneous spawners without physical blocks:
-
-- `remove_on_startup`: Cleans up on server start.
-- `remove_on_approach`: Removes when players get near.
 
 ## Spawner Action Logging
 
@@ -290,10 +269,80 @@ logging:
   logged_events:
     - SPAWNER_PLACE
     - SPAWNER_BREAK
-    # ...
+    - SPAWNER_EXPLODE
+    - SPAWNER_STACK_HAND
+    - SPAWNER_STACK_GUI
+    - SPAWNER_DESTACK_GUI
+    - SPAWNER_EXP_CLAIM
+    - SPAWNER_SELL_ALL
+    - SPAWNER_ITEM_TAKE_ALL
+    - SPAWNER_ITEMS_SORT
+    - SPAWNER_ITEM_FILTER
+    - SPAWNER_DROP_PAGE_ITEMS
+    - COMMAND_EXECUTE_PLAYER
+    - COMMAND_EXECUTE_CONSOLE
+    - COMMAND_EXECUTE_RCON
 ```
 
 Tracks spawner interactions to file with optional log rotation.
+
+| Event | Description |
+|---|---|
+| `SPAWNER_PLACE` | Spawner placed by a player |
+| `SPAWNER_BREAK` | Spawner broken by a player |
+| `SPAWNER_EXPLODE` | Spawner destroyed by an explosion |
+| `SPAWNER_STACK_HAND` | Spawner stacked by hand |
+| `SPAWNER_STACK_GUI` | Spawner stacked via GUI |
+| `SPAWNER_DESTACK_GUI` | Spawner destacked via GUI |
+| `SPAWNER_EXP_CLAIM` | Experience claimed from spawner |
+| `SPAWNER_SELL_ALL` | Items sold from spawner |
+| `SPAWNER_ITEM_TAKE_ALL` | All items taken from storage |
+| `SPAWNER_ITEMS_SORT` | Items sorted in storage |
+| `SPAWNER_ITEM_FILTER` | Item filter toggled |
+| `SPAWNER_DROP_PAGE_ITEMS` | All items on current page dropped |
+| `SPAWNER_ITEM_DROP` | Single item dropped (Q key) |
+| `SPAWNER_EGG_CHANGE` | Entity type changed via egg |
+| `SPAWNER_GUI_OPEN` | Main spawner GUI opened |
+| `SPAWNER_STORAGE_OPEN` | Storage GUI opened |
+| `SPAWNER_STACKER_OPEN` | Stacker GUI opened |
+| `COMMAND_EXECUTE_PLAYER` | Command executed by a player |
+| `COMMAND_EXECUTE_CONSOLE` | Command executed by console |
+| `COMMAND_EXECUTE_RCON` | Command executed via RCON |
+
+## Database Settings
+
+```yaml
+database:
+  # Storage mode: YAML, MYSQL, or SQLITE
+  mode: YAML
+
+  # Server identifier for cross-server setups (must be unique per server)
+  server_name: "server1"
+
+  # Show all servers in /smartspawner list (only works with MYSQL)
+  sync_across_servers: false
+
+  # Auto-migrate from local storage on startup
+  migrate_from_local: true
+
+  database: "smartspawner"
+
+  sqlite:
+    file: "spawners.db"
+
+  sql:
+    host: "localhost"
+    port: 3306
+    username: "root"
+    password: ""
+```
+
+- `mode`: Storage backend — `YAML` (default), `MYSQL`, or `SQLITE`.
+- `server_name`: Unique server identifier used when sharing a database across multiple servers.
+- `sync_across_servers`: When enabled, `/smartspawner list` shows a server-selection page to browse spawners from all servers. Requires `MYSQL` mode.
+- `migrate_from_local`: Automatically migrates `spawners_data.yml` → database (and `spawners.db` → MySQL if applicable) on startup. Migrated files are renamed with `.migrated` suffix to prevent re-migration.
+- `sqlite.file`: SQLite database filename (stored in the plugin data folder).
+- `sql.*`: MySQL/MariaDB connection settings.
 
 :::tip[Discord Webhooks]
 Discord webhook settings are configured in a **separate `discord.yml`** file.

@@ -5,6 +5,10 @@ description: Comprehensive guide for integrating SmartSpawner with SimpleClaimSy
 
 ## Overview
 
+:::caution[Free Version Only]
+Starting from **SimpleClaimSystem v2.x.x**, the plugin became a **paid and closed-source** product with no public API. SmartSpawner only supports the **free version (v1.x.x)** of SimpleClaimSystem. If you are using v2 or later, this integration will not be available.
+:::
+
 This integration ensures that spawner-related actions respect claim permissions, preventing unauthorized modifications within protected claims.
 
 ## Required Permissions
