@@ -7,12 +7,14 @@ on:
       - '**.md'
       - '.gitignore'
       - 'LICENSE'
+      - 'docs/**'
   pull_request:
     branches: [ main ]
     paths-ignore:
       - '**.md'
       - '.gitignore'
       - 'LICENSE'
+      - 'docs/**'
   workflow_dispatch:
 
 # Cancel in-progress runs for the same workflow and branch
