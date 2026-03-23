@@ -7,8 +7,6 @@
 
 This repository hosts the official documentation website for **[SmartSpawner](https://modrinth.com/plugin/smart-spawner-plugin)**, a powerful Minecraft plugin designed to enhance mob spawner management on servers.
 
-> **Note:** The documentation source is located in the `docs/` folder of the main [SmartSpawner repository](https://github.com/NighterDevelopment/SmartSpawner).
-
 ## About SmartSpawner
 
 SmartSpawner is a feature-rich plugin that simplifies and enhances the management of mob spawners in Minecraft servers. It offers advanced customization options, seamless integrations with popular plugins, and a robust developer API for extending functionality. Notably, its GUI-based system generates mob drops and experience without spawning entities, significantly boosting server performance.
@@ -120,7 +118,7 @@ For significant changes or new features, please open an issue first to discuss t
 
 The site is automatically deployed to GitHub Pages via GitHub Actions on every push to the `main` branch. The workflow is defined in `.github/workflows/deploy-docs.yml` at the root of the repository.
 
-The live site is available at: https://nighterdevelopment.github.io/SmartSpawner/
+The live site is available at: https://docs.smartspawner.site/
 
 ## License
 
