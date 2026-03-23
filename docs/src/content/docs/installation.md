@@ -3,8 +3,6 @@ title: Installation
 description: Complete installation guide for SmartSpawner - from requirements to configuration.
 ---
 
-## System Requirements
-
 Before installing SmartSpawner, ensure your server meets these requirements:
 
 | Requirement | Specification |
@@ -14,6 +12,10 @@ Before installing SmartSpawner, ensure your server meets these requirements:
 | **Java Version** | Java 21+ (latest LTS recommended) |
 
 ## Download SmartSpawner
+
+<div style="text-align: center; margin: 2rem 0 1rem;">
+  <img src="https://github.com/user-attachments/assets/c976b6a9-537c-46ec-8efc-0e80cdd0840d" alt="SmartSpawner Banner" style="max-width: 100%; border-radius: 12px;" />
+</div>
 
 Choose your preferred download source:
 

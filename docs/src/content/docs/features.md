@@ -3,8 +3,6 @@ title: Features Overview
 description: Comprehensive overview of SmartSpawner's professional features for optimal server performance.
 ---
 
-## Core Features
-
 SmartSpawner provides enterprise-grade spawner management with focus on performance, usability, and integration. Here are some of its key features:
 
 ### Intuitive GUI System
