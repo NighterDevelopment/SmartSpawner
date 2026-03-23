@@ -5,8 +5,7 @@ import catppuccin from "@catppuccin/starlight";
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://nighterdevelopment.github.io/SmartSpawner/',
-	base: '/SmartSpawner/',
+	site: 'https://docs.smartspawner.site',
 	integrations: [
 		starlight({
 			plugins: [
