@@ -1,10 +1,10 @@
 ---
 title: SmartSpawner Documentation
-description: The ultimate GUI-based spawner plugin for Minecraft servers — High performance, intuitive interaction, and seamless integration.
+description: Official documentation for SmartSpawner, the high-performance GUI-based spawner plugin for Minecraft servers.
 template: splash
 hero:
   title: 'SmartSpawner'
-  tagline: A GUI-based spawner plugin that generates items and experience without spawning mobs, providing high performance and seamless integration for Minecraft servers.
+  tagline: A high-performance GUI-based spawner plugin that generates items and experience without spawning mobs.
   image:
     file: ../../assets/Spawner.png
   actions:
@@ -24,6 +24,18 @@ hero:
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 import ContributorList from '/src/components/ContributorList.astro';
+
+export const serverCount = await fetch(
+  'https://bstats.org/api/v1/plugins/24822/charts/servers/data/?maxElements=1'
+)
+  .then((r) => r.json())
+  .then((d) => {
+    const count = d?.[0]?.[1];
+    if (typeof count !== 'number') return '2,600+';
+    const rounded = Math.floor(count / 100) * 100;
+    return rounded.toLocaleString() + '+';
+  })
+  .catch(() => '2,600+');
 
 <h2>Quick Start</h2>
 <br />
@@ -54,7 +66,9 @@ import ContributorList from '/src/components/ContributorList.astro';
 
 <h2>Statistics</h2>
 
-Over **1400+** Minecraft servers trust and using SmartSpawner for their spawner management needs. The plugin has proven to be reliable and efficient, making it a popular **free choice** among server administrators.
+Over **{serverCount}** Minecraft servers trust and using SmartSpawner for their spawner management needs. The plugin has proven to be reliable and efficient, making it a popular **free choice** among server administrators.
+
+<small style="opacity: 0.6;">*Statistics are based on publicly available data from [bStats](https://bstats.org/plugin/bukkit/SmartSpawner)*</small>
 
 <div style="text-align: center; margin: 2rem 0;">
   <a href="https://bstats.org/plugin/bukkit/SmartSpawner" target="_blank" rel="noopener noreferrer">

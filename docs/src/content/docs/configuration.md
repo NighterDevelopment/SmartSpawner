@@ -344,7 +344,9 @@ database:
 - `sqlite.file`: SQLite database filename (stored in the plugin data folder).
 - `sql.*`: MySQL/MariaDB connection settings.
 
-:::tip[Discord Webhooks]
-Discord webhook settings are configured in a **separate `discord.yml`** file.
-See the [Discord Webhook Integration](/discord) page for a full reference.
-:::
+<br>
+<br>
+
+---
+
+*Last update: March 23, 2026 11:01:12*

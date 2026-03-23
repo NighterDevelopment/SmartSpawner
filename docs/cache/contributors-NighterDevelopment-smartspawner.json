@@ -20,7 +20,7 @@
       "type": "User",
       "user_view_type": "public",
       "site_admin": false,
-      "contributions": 501
+      "contributions": 618
     },
     {
       "login": "maiminhdung",
@@ -64,7 +64,29 @@
       "type": "User",
       "user_view_type": "public",
       "site_admin": false,
-      "contributions": 33
+      "contributions": 38
+    },
+    {
+      "login": "bedge117",
+      "id": 77640477,
+      "node_id": "MDQ6VXNlcjc3NjQwNDc3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/77640477?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bedge117",
+      "html_url": "https://github.com/bedge117",
+      "followers_url": "https://api.github.com/users/bedge117/followers",
+      "following_url": "https://api.github.com/users/bedge117/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bedge117/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bedge117/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bedge117/subscriptions",
+      "organizations_url": "https://api.github.com/users/bedge117/orgs",
+      "repos_url": "https://api.github.com/users/bedge117/repos",
+      "events_url": "https://api.github.com/users/bedge117/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bedge117/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false,
+      "contributions": 36
     },
     {
       "login": "RVSkeLe",
@@ -86,7 +108,7 @@
       "type": "User",
       "user_view_type": "public",
       "site_admin": false,
-      "contributions": 19
+      "contributions": 31
     },
     {
       "login": "OutDev0",
@@ -149,6 +171,28 @@
       "repos_url": "https://api.github.com/users/bugsum/repos",
       "events_url": "https://api.github.com/users/bugsum/events{/privacy}",
       "received_events_url": "https://api.github.com/users/bugsum/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false,
+      "contributions": 2
+    },
+    {
+      "login": "alexandrosmagos",
+      "id": 12672076,
+      "node_id": "MDQ6VXNlcjEyNjcyMDc2",
+      "avatar_url": "https://avatars.githubusercontent.com/u/12672076?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/alexandrosmagos",
+      "html_url": "https://github.com/alexandrosmagos",
+      "followers_url": "https://api.github.com/users/alexandrosmagos/followers",
+      "following_url": "https://api.github.com/users/alexandrosmagos/following{/other_user}",
+      "gists_url": "https://api.github.com/users/alexandrosmagos/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/alexandrosmagos/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/alexandrosmagos/subscriptions",
+      "organizations_url": "https://api.github.com/users/alexandrosmagos/orgs",
+      "repos_url": "https://api.github.com/users/alexandrosmagos/repos",
+      "events_url": "https://api.github.com/users/alexandrosmagos/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/alexandrosmagos/received_events",
       "type": "User",
       "user_view_type": "public",
       "site_admin": false,
@@ -221,6 +265,28 @@
       "contributions": 1
     },
     {
+      "login": "Xyness",
+      "id": 72358367,
+      "node_id": "MDQ6VXNlcjcyMzU4MzY3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/72358367?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Xyness",
+      "html_url": "https://github.com/Xyness",
+      "followers_url": "https://api.github.com/users/Xyness/followers",
+      "following_url": "https://api.github.com/users/Xyness/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Xyness/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Xyness/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Xyness/subscriptions",
+      "organizations_url": "https://api.github.com/users/Xyness/orgs",
+      "repos_url": "https://api.github.com/users/Xyness/repos",
+      "events_url": "https://api.github.com/users/Xyness/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Xyness/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false,
+      "contributions": 1
+    },
+    {
       "login": "klaidoshka",
       "id": 73783588,
       "node_id": "MDQ6VXNlcjczNzgzNTg4",
@@ -243,12 +309,12 @@
       "contributions": 1
     }
   ],
-  "timestamp": 1763353793604,
-  "lastSuccessfulFetch": 1763353793604,
-  "etag": "W/\"37c87174c400e63ae71364b53f8ebf71ccb2bcf77db7fc1de4729b9a0e56aede\"",
+  "timestamp": 1774236229560,
+  "lastSuccessfulFetch": 1774236229560,
+  "etag": "W/\"73ef6a3ccb3d0e03aec51c27912a357cab7d1a7b955d01db5fbf5dd2e722d040\"",
   "rateLimit": {
     "limit": 60,
-    "remaining": 59,
-    "reset": 1763357393
+    "remaining": 58,
+    "reset": 1774239831
   }
 }
