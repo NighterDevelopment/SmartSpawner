@@ -10,7 +10,6 @@ import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.spawner.utils.SpawnerTypeChecker;
 
-import github.nighter.smartspawner.utils.BlockPos;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;

@@ -139,7 +139,6 @@ public class IntegrationManager {
             Plugin is = Bukkit.getPluginManager().getPlugin("PlotSquared");
             if(is != null && is.isEnabled()) {
                 PlotAPI api = new PlotAPI();
-                if(api == null) return false;
                 PlotSquared ps = new PlotSquared();
                 api.registerListener(ps);
                 Bukkit.getPluginManager().registerEvents(ps, SmartSpawner.getInstance());

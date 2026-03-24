@@ -171,9 +171,6 @@ public class LanguageManager {
         // Clear all caches first to avoid using stale data
         clearCache();
 
-        // Get the previous default locale
-        String previousDefaultLocale = this.defaultLocale;
-
         // Update the default locale from config
         this.defaultLocale = plugin.getConfig().getString("language", "en_US");
 
