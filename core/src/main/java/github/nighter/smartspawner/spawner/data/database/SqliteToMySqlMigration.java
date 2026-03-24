@@ -17,7 +17,6 @@ public class SqliteToMySqlMigration {
     private final SmartSpawner plugin;
     private final Logger logger;
     private final DatabaseManager mysqlManager;
-    private final String serverName;
 
     private static final String MIGRATED_FILE_SUFFIX = ".migrated";
 
@@ -71,7 +70,6 @@ public class SqliteToMySqlMigration {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.mysqlManager = mysqlManager;
-        this.serverName = mysqlManager.getServerName();
     }
 
     /**

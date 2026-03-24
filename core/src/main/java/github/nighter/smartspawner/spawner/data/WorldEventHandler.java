@@ -210,7 +210,7 @@ public class WorldEventHandler implements Listener {
             if (locationString != null) {
                 String[] locParts = locationString.split(",");
                 if (locParts.length >= 1) {
-                    return new PendingSpawnerData(spawnerId, locParts[0]);
+                    return new PendingSpawnerData(locParts[0]);
                 }
             }
         } catch (Exception e) {
@@ -238,11 +238,9 @@ public class WorldEventHandler implements Listener {
      * Simple data class to store basic spawner information for pending loading
      */
     private static class PendingSpawnerData {
-        final String spawnerId;
         final String worldName;
 
-        PendingSpawnerData(String spawnerId, String worldName) {
-            this.spawnerId = spawnerId;
+        PendingSpawnerData(String worldName) {
             this.worldName = worldName;
         }
     }

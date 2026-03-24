@@ -504,11 +504,6 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             }
         }
         spawner.setVirtualInventory(virtualInv);
-
-        // Mark sell value dirty instead of recalculating immediately.
-        // createPriceCache() uses live ItemPriceManager prices, so the first recalculation
-        // (triggered on GUI open or sell) will always have correct prices even when shop
-        // plugins load after SmartSpawner (declared with load: AFTER).
         spawner.markSellValueDirty();
 
         // Apply sort preference to virtual inventory

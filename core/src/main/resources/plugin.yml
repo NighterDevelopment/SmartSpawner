@@ -48,7 +48,7 @@ softdepend:
 commands:
   smartspawner:
     description: Main command for SmartSpawner plugin
-    usage: /smartspawner [reload|give|list|hologram|prices|clear] [args...]
+    usage: /smartspawner [reload|give|list|hologram|prices|clear|near] [args...]
     aliases: [ ss, spawner ]
     permission: smartspawner.command.use
     permission-message: "You don't have permission to use SmartSpawner commands!"
@@ -82,6 +82,10 @@ permissions:
 
   smartspawner.command.clear:
     description: Allow clearing holograms and ghost spawners
+    default: op
+
+  smartspawner.command.near:
+    description: Allow highlighting nearby spawners through walls
     default: op
 
   # Feature permissions

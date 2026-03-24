@@ -165,6 +165,10 @@ permissions:
     description: "Allow clearing holograms and ghost spawners"
     default: op
 
+  smartspawner.command.near:
+    description: "Allow highlighting nearby spawners through walls"
+    default: op
+
   # Feature permissions
   smartspawner.changetype:
     description: "Allow changing spawner type with spawn egg"
