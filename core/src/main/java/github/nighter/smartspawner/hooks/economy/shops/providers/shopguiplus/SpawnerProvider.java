@@ -12,11 +12,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 
 public class SpawnerProvider implements ExternalSpawnerProvider {
-    private final SmartSpawner plugin;
     private final SpawnerItemFactory spawnerItemFactory;
 
     public SpawnerProvider(SmartSpawner plugin) {
-        this.plugin = plugin;
         this.spawnerItemFactory = plugin.getSpawnerItemFactory();
     }
 

@@ -9,7 +9,6 @@ import github.nighter.smartspawner.spawner.gui.stacker.SpawnerStackerUI;
 import github.nighter.smartspawner.spawner.gui.storage.SpawnerStorageUI;
 import github.nighter.smartspawner.spawner.gui.synchronization.SpawnerGuiViewManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
-import github.nighter.smartspawner.spawner.sell.SpawnerSellManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -48,7 +47,6 @@ public class SpawnerMenuAction implements Listener {
     private final SpawnerGuiViewManager spawnerGuiViewManager;
     private final LanguageManager languageManager;
     private final MessageService messageService;
-    private final SpawnerSellManager spawnerSellManager;
     private AuraSkillsIntegration auraSkills;
 
     // Anti spam click properties
@@ -62,7 +60,6 @@ public class SpawnerMenuAction implements Listener {
         this.spawnerGuiViewManager = plugin.getSpawnerGuiViewManager();
         this.languageManager = plugin.getLanguageManager();
         this.messageService = plugin.getMessageService();
-        this.spawnerSellManager = plugin.getSpawnerSellManager();
         this.auraSkills = plugin.getIntegrationManager().getAuraSkillsIntegration();
     }
 

@@ -2,7 +2,6 @@ package github.nighter.smartspawner.hooks.economy.shops.providers.shopguiplus;
 
 import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.SmartSpawner;
-import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import net.brcdev.shopgui.ShopGuiPlusApi;
 import net.brcdev.shopgui.event.ShopGUIPlusPostEnableEvent;
 import net.brcdev.shopgui.event.ShopsPostLoadEvent;
@@ -10,8 +9,6 @@ import net.brcdev.shopgui.exception.api.ExternalSpawnerProviderNameConflictExcep
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-
-import java.util.List;
 
 public class SpawnerHook implements Listener{
     private final SmartSpawner plugin;

@@ -6,7 +6,6 @@ import github.nighter.smartspawner.hooks.economy.shops.ShopIntegrationManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 

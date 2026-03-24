@@ -84,7 +84,6 @@ public class VersionInitializer {
     /**
      * Hide tooltip using DataComponent API (Paper 1.21.5+)
      */
-    @SuppressWarnings("unchecked")
     private static void hideTooltipUsingDataComponent(ItemStack item) {
         try {
             // Import the required classes dynamically
