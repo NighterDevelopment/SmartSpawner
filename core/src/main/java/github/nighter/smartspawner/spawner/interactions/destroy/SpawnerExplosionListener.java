@@ -48,8 +48,14 @@ public class SpawnerExplosionListener implements Listener {
                 SpawnerData spawnerData = this.spawnerManager.getSpawnerByLocation(block.getLocation());
 
                 if (spawnerData != null) {
-                    boolean isWindCharge = event != null && (event.getEntity().getType() == EntityType.BREEZE_WIND_CHARGE || event.getEntity().getType() == EntityType.WIND_CHARGE);
-                    boolean protect = plugin.getConfig().getBoolean("spawner_properties.default.protect_from_explosions", true) || isWindCharge;
+                    // WIND_CHARGE / BREEZE_WIND_CHARGE and PLAYER (mace wind burst) use KEEP block
+                    // interaction – blocks appear in the blockList but are never actually destroyed,
+                    // so we must always protect spawner data from these non-destructive explosions.
+                    boolean isNonDestructiveExplosion = event != null && (
+                            event.getEntity().getType() == EntityType.BREEZE_WIND_CHARGE ||
+                            event.getEntity().getType() == EntityType.WIND_CHARGE ||
+                            event.getEntity().getType() == EntityType.PLAYER);
+                    boolean protect = plugin.getConfig().getBoolean("spawner_properties.default.protect_from_explosions", true) || isNonDestructiveExplosion;
                     SpawnerExplodeEvent e = null;
                     if (protect) {
                         blocksToRemove.add(block);
