@@ -594,22 +594,30 @@ public class SpawnerData {
     }
 
     /**
-     * Gets the price cache from loot config
+     * Gets the price cache from loot config.
+     * Prefers live prices from ItemPriceManager to avoid startup timing issues where
+     * shop plugin prices aren't yet available when LootItem.sellPrice is baked in.
      */
     public Map<String, Double> createPriceCache() {
         if (lootConfig == null) {
             return new java.util.HashMap<>();
         }
 
+        github.nighter.smartspawner.hooks.economy.ItemPriceManager priceManager = plugin.getItemPriceManager();
         Map<String, Double> cache = new java.util.HashMap<>();
         java.util.List<LootItem> allLootItems = lootConfig.getAllItems();
 
         for (LootItem lootItem : allLootItems) {
-            if (lootItem.sellPrice() > 0.0) {
+            // Use live price from ItemPriceManager; fall back to baked sellPrice if unavailable
+            double price = (priceManager != null) ? priceManager.getPrice(lootItem.material()) : 0.0;
+            if (price <= 0.0) {
+                price = lootItem.sellPrice();
+            }
+            if (price > 0.0) {
                 ItemStack template = lootItem.createItemStack(new java.util.Random());
                 if (template != null) {
                     String key = createItemKey(template);
-                    cache.put(key, lootItem.sellPrice());
+                    cache.put(key, price);
                 }
             }
         }

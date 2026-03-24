@@ -51,7 +51,7 @@ public class SpawnerManager {
             return Objects.hash(world, x, y, z);
         }
     }
-
+    
     public void reloadSpawnerDrops() {
         List<SpawnerData> allSpawners = getAllSpawners();
         for (SpawnerData spawner : allSpawners) {

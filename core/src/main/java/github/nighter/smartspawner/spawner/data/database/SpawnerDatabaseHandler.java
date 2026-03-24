@@ -16,7 +16,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -506,8 +505,11 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         }
         spawner.setVirtualInventory(virtualInv);
 
-        // Recalculate accumulated sell value after loading inventory
-        spawner.recalculateSellValue();
+        // Mark sell value dirty instead of recalculating immediately.
+        // createPriceCache() uses live ItemPriceManager prices, so the first recalculation
+        // (triggered on GUI open or sell) will always have correct prices even when shop
+        // plugins load after SmartSpawner (declared with load: AFTER).
+        spawner.markSellValueDirty();
 
         // Apply sort preference to virtual inventory
         if (spawner.getPreferredSortItem() != null) {

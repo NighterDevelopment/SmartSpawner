@@ -286,10 +286,6 @@ public class SpawnerFileHandler implements SpawnerStorage {
         return spawnerData.getString(path);
     }
 
-    private SpawnerData loadSpawnerFromConfig(String spawnerId) {
-        return loadSpawnerFromConfig(spawnerId, true, true);
-    }
-
     private SpawnerData loadSpawnerFromConfig(String spawnerId, boolean logErrors) {
         return loadSpawnerFromConfig(spawnerId, logErrors, true);
     }
@@ -456,10 +452,8 @@ public class SpawnerFileHandler implements SpawnerStorage {
         }
 
         spawner.setVirtualInventory(virtualInv);
-        
-        // Recalculate accumulated sell value after loading inventory
-        spawner.recalculateSellValue();
-        
+        spawner.markSellValueDirty();
+
         // Load last interacted player
         String lastInteractedPlayer = spawnerData.getString(path + ".lastInteractedPlayer");
         spawner.setLastInteractedPlayer(lastInteractedPlayer);

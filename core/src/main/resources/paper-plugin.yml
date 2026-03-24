@@ -13,9 +13,6 @@ load: POSTWORLD
 # Prefix for logging messages
 prefix: "SmartSpawner"
 
-# Bootstrap configuration
-# bootstrapper: github.nighter.smartspawner.SmartSpawnerBootstrap
-
 # Dependencies
 dependencies:
   server:
@@ -184,7 +181,3 @@ permissions:
   smartspawner.sellall:
     description: "Allow selling items in spawner storage GUI"
     default: true
-
-  smartspawner.limits.bypass:
-    description: "Bypass spawner limits per chunk"
-    default: false
