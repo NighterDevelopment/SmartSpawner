@@ -72,6 +72,7 @@ public class ReloadSubCommand extends BaseSubCommand {
             if (plugin.getSpawnerClickManager() != null) {
                 plugin.getSpawnerClickManager().loadConfig();
             }
+            plugin.getSpawnerExplosionListener().loadConfig();
 
             // Recheck timer placeholders after language reload to detect GUI configuration changes
             plugin.getSpawnerGuiViewManager().recheckTimerPlaceholders();

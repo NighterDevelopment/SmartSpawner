@@ -7,6 +7,7 @@ import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.utils.BlockPos;
 import org.bukkit.Bukkit;
+import org.bukkit.ExplosionResult;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -14,9 +15,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.entity.EntityType;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class SpawnerExplosionListener implements Listener {
@@ -24,79 +24,83 @@ public class SpawnerExplosionListener implements Listener {
     private final SpawnerManager spawnerManager;
     private final HopperService hopperService;
 
+    // Cached config values — refreshed via loadConfig() on reload
+    private boolean protectSpawners;
+    private boolean protectNatural;
+
     public SpawnerExplosionListener(SmartSpawner plugin) {
         this.plugin = plugin;
         this.spawnerManager = plugin.getSpawnerManager();
         this.hopperService = plugin.getHopperService();
+        loadConfig();
+    }
+
+    public void loadConfig() {
+        this.protectSpawners = plugin.getConfig().getBoolean("spawner_properties.default.protect_from_explosions", true);
+        this.protectNatural  = plugin.getConfig().getBoolean("natural_spawner.protect_from_explosions", false);
     }
 
     @EventHandler
     public void onEntityExplosion(EntityExplodeEvent event) {
-        handleExplosion(event, event.blockList());
+        handleExplosion(event.blockList(), event.getExplosionResult());
     }
 
     @EventHandler
     public void onBlockExplosion(BlockExplodeEvent event) {
-        handleExplosion(null, event.blockList());
+        handleExplosion(event.blockList(), event.getExplosionResult());
     }
 
-    private void handleExplosion(EntityExplodeEvent event, List<Block> blockList) {
-        List<Block> blocksToRemove = new ArrayList<>();
+    private void handleExplosion(List<Block> blockList, ExplosionResult explosionResult) {
+        // Skip explosions that never destroy blocks:
+        //   KEEP          — player-thrown WindCharge, BreezeWindCharge entity        
+        //   TRIGGER_BLOCK — Mace Wind Burst enchantment (entity = struck mob, not player!)
+        // All wind-related mechanics use ExplosionInteraction.TRIGGER in NMS → TRIGGER_BLOCK in Bukkit.
+        if (explosionResult == ExplosionResult.KEEP || explosionResult == ExplosionResult.TRIGGER_BLOCK) {
+            return;
+        }
 
-        for (Block block : blockList) {
-            if (block.getType() == Material.SPAWNER) {
-                SpawnerData spawnerData = this.spawnerManager.getSpawnerByLocation(block.getLocation());
+        // Only real destructive explosions reach here (TNT, Creeper, Wither, Respawn Anchor…)
+        boolean hasApiListeners = SpawnerExplodeEvent.getHandlerList().getRegisteredListeners().length != 0;
+
+        Iterator<Block> it = blockList.iterator();
+        while (it.hasNext()) {
+            Block block = it.next();
+            Material type = block.getType();
+
+            if (type == Material.SPAWNER) {
+                SpawnerData spawnerData = spawnerManager.getSpawnerByLocation(block.getLocation());
 
                 if (spawnerData != null) {
-                    boolean isNonDestructiveExplosion = event != null && (
-                            event.getEntity().getType() == EntityType.BREEZE_WIND_CHARGE ||
-                            event.getEntity().getType() == EntityType.WIND_CHARGE ||
-                            event.getEntity().getType() == EntityType.PLAYER);
-                    boolean protect = plugin.getConfig().getBoolean("spawner_properties.default.protect_from_explosions", true) || isNonDestructiveExplosion;
-                    SpawnerExplodeEvent e = null;
-                    if (protect) {
-                        blocksToRemove.add(block);
+                    if (protectSpawners) {
+                        it.remove();
                         plugin.getSpawnerGuiViewManager().closeAllViewersInventory(spawnerData);
                         cleanupAssociatedHopper(block);
-                        if (SpawnerExplodeEvent.getHandlerList().getRegisteredListeners().length != 0) {
-                            e = new SpawnerExplodeEvent(null, spawnerData.getSpawnerLocation(), 1, false);
+                        if (hasApiListeners) {
+                            Bukkit.getPluginManager().callEvent(new SpawnerExplodeEvent(null, spawnerData.getSpawnerLocation(), 1, false));
                         }
                     } else {
                         spawnerData.getSpawnerStop().set(true);
                         String spawnerId = spawnerData.getSpawnerId();
                         cleanupAssociatedHopper(block);
-                        if (SpawnerExplodeEvent.getHandlerList().getRegisteredListeners().length != 0) {
-                            e = new SpawnerExplodeEvent(null, spawnerData.getSpawnerLocation(), 1, true);
+                        if (hasApiListeners) {
+                            Bukkit.getPluginManager().callEvent(new SpawnerExplodeEvent(null, spawnerData.getSpawnerLocation(), 1, true));
                         }
                         spawnerManager.removeSpawner(spawnerId);
                         spawnerManager.markSpawnerDeleted(spawnerId);
                     }
-                    if (e != null) {
-                        Bukkit.getPluginManager().callEvent(e);
-                    }
-                } else {
-                    // Allow vanilla spawners to be destroyed
-                    if (plugin.getConfig().getBoolean("natural_spawner.protect_from_explosions", false)) {
-                        blocksToRemove.add(block);
-                    }
+                } else if (protectNatural) {
+                    it.remove();
                 }
-            } else if (block.getType() == Material.RESPAWN_ANCHOR) {
-                if (plugin.getConfig().getBoolean("spawner_properties.default.protect_from_explosions", true)) {
-                    if (hasProtectedSpawnersNearby(block)) {
-                        blocksToRemove.add(block);
-                    }
+            } else if (type == Material.RESPAWN_ANCHOR) {
+                if (protectSpawners && hasProtectedSpawnersNearby(block)) {
+                    it.remove();
                 }
             }
         }
-
-        blockList.removeAll(blocksToRemove);
     }
 
     private boolean hasProtectedSpawnersNearby(Block anchorBlock) {
-        if (!plugin.getConfig().getBoolean("spawner_properties.default.protect_from_explosions", true)) {
-            return false;
-        }
-
+        if (!protectSpawners) return false;
         int protectionRadius = 8;
 
         for (int x = -protectionRadius; x <= protectionRadius; x++) {
