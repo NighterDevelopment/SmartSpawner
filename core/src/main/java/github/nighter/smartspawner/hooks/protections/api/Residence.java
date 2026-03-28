@@ -14,7 +14,7 @@ public class Residence {
     }
 
     public static boolean canInteract(@NotNull Player player, @NotNull Location location) {
-        return check(player, location, "use");
+        return check(player, location, "build");
     }
 
     public static boolean canStack(@NotNull Player player, @NotNull Location location) {
