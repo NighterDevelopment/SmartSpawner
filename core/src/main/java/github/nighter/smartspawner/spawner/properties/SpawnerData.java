@@ -483,6 +483,15 @@ public class SpawnerData {
         interacted.compareAndSet(false, true);
     }
 
+    /**
+     * Atomically marks this spawner as interacted only if it was not already interacted.
+     * @return true if the state was successfully changed from false to true (i.e., the caller owns the interaction lock),
+     *         false if another interaction was already in progress.
+     */
+    public boolean tryMarkInteracted() {
+        return interacted.compareAndSet(false, true);
+    }
+
     public void clearInteracted() {
         interacted.compareAndSet(true, false);
     }

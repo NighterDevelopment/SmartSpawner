@@ -61,8 +61,10 @@ public class SpawnerSellConfirmUI {
 
         // OPTIMIZATION: Check if sell confirmation should be skipped
         if (plugin.getGuiLayoutConfig().isSkipSellConfirmation()) {
-            // Skip confirmation - directly perform sell action
-            spawner.markInteracted();
+            // Atomically claim the interaction slot – abort if another request already owns it
+            if (!spawner.tryMarkInteracted()) {
+                return;
+            }
 
             // Collect exp if requested
             if (collectExp) {
@@ -80,8 +82,11 @@ public class SpawnerSellConfirmUI {
             return;
         }
 
-        // Mark spawner as interacted to lock state during transaction
-        spawner.markInteracted();
+        // Atomically mark as interacted – prevents a second confirm GUI from being opened
+        // while one is already pending (blocks packet-replay / GUI-spam exploits).
+        if (!spawner.tryMarkInteracted()) {
+            return;
+        }
 
         // Cache title - no placeholders needed
         String title = languageManager.getGuiTitle("gui_title_sell_confirm", null);

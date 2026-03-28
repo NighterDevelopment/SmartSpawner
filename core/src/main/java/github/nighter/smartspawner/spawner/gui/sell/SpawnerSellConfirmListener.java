@@ -12,11 +12,18 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.InventoryHolder;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SpawnerSellConfirmListener implements Listener {
 
     private final SmartSpawner plugin;
+    // Tracks which players are currently executing a sell confirmation to prevent
+    // duplicate processing when a client replays confirm-click packets within the same tick.
+    private final Set<UUID> activeSells = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public SpawnerSellConfirmListener(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -80,11 +87,13 @@ public class SpawnerSellConfirmListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryClose(InventoryCloseEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
-        if (!(holder instanceof SpawnerSellConfirmHolder)) {
+        if (!(holder instanceof SpawnerSellConfirmHolder confirmHolder)) {
             return;
         }
 
-        // Cleanup or additional actions when GUI is closed can be added here if needed
+        // Always release the interaction lock so the spawner is not stuck when the
+        // player closes the GUI with Escape instead of clicking Cancel.
+        confirmHolder.getSpawnerData().clearInteracted();
     }
 
     private void handleCancel(Player player, SpawnerData spawner, SpawnerSellConfirmUI.PreviousGui previousGui) {
@@ -99,21 +108,32 @@ public class SpawnerSellConfirmListener implements Listener {
     }
 
     private void handleConfirm(Player player, SpawnerData spawner, SpawnerSellConfirmUI.PreviousGui previousGui, boolean collectExp) {
-        // Collect exp if requested
-        if (collectExp) {
-            plugin.getSpawnerMenuAction().handleExpBottleClick(player, spawner, true);
+        // Prevent the same player from running two concurrent sell confirmations
+        // (e.g. duplicate confirm-click packets sent by a cheat client within the same tick).
+        if (!activeSells.add(player.getUniqueId())) {
+            return;
         }
 
-        // Clear interaction state
-        spawner.clearInteracted();
+        try {
+            // Collect exp if requested
+            if (collectExp) {
+                plugin.getSpawnerMenuAction().handleExpBottleClick(player, spawner, true);
+            }
 
-        // Trigger the actual sell operation
-        plugin.getSpawnerSellManager().sellAllItems(player, spawner);
+            // Trigger the actual sell operation
+            plugin.getSpawnerSellManager().sellAllItems(player, spawner);
 
-        // Schedule GUI reopening after sell completes (1 tick delay to ensure sell process finishes)
-        github.nighter.smartspawner.Scheduler.runTask(() -> {
-            reopenPreviousGui(player, spawner, previousGui);
-        });
+            // Release the interaction lock only AFTER the sell has fully completed so that the
+            // spawner cannot be re-opened by another replayed "open" packet mid-transaction.
+            spawner.clearInteracted();
+
+            // Schedule GUI reopening after sell completes (1 tick delay to ensure sell process finishes)
+            github.nighter.smartspawner.Scheduler.runTask(() -> {
+                reopenPreviousGui(player, spawner, previousGui);
+            });
+        } finally {
+            activeSells.remove(player.getUniqueId());
+        }
     }
 
     private void reopenPreviousGui(Player player, SpawnerData spawner, SpawnerSellConfirmUI.PreviousGui previousGui) {
