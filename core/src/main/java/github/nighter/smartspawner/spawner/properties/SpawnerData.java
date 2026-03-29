@@ -2,6 +2,7 @@ package github.nighter.smartspawner.spawner.properties;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.commands.hologram.SpawnerHologram;
+import github.nighter.smartspawner.nms.VersionInitializer;
 import github.nighter.smartspawner.spawner.lootgen.loot.EntityLootConfig;
 import github.nighter.smartspawner.spawner.lootgen.loot.LootItem;
 import github.nighter.smartspawner.spawner.sell.SellResult;
@@ -11,6 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -666,8 +668,11 @@ public class SpawnerData {
         }
 
         // Add custom model data if present
-        if (item.hasItemMeta() && item.getItemMeta(). hasCustomModelDataComponent()) {
-            key.append("_cmd:").append(item.getItemMeta().getCustomModelDataComponent());
+        if (item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            if (VersionInitializer.hasCustomModelData(meta)) {
+                key.append("_cmd:").append(VersionInitializer.getCustomModelDataString(meta));
+            }
         }
 
         // Add display name if present

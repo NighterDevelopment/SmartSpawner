@@ -120,6 +120,45 @@ public class VersionInitializer {
     }
 
     /**
+     * Check if an ItemMeta has custom model data in a version-independent way.
+     * Uses hasCustomModelDataComponent() on 1.21.5+, hasCustomModelData() on older versions.
+     * @param meta The ItemMeta to check
+     * @return true if custom model data is present
+     */
+    public static boolean hasCustomModelData(ItemMeta meta) {
+        if (meta == null) return false;
+        if (supportsDataComponentAPI) {
+            try {
+                return (boolean) meta.getClass().getMethod("hasCustomModelDataComponent").invoke(meta);
+            } catch (Exception e) {
+                return meta.hasCustomModelData();
+            }
+        } else {
+            return meta.hasCustomModelData();
+        }
+    }
+
+    /**
+     * Get a string representation of an item's custom model data in a version-independent way.
+     * Should only be called when hasCustomModelData() returns true.
+     * @param meta The ItemMeta to read
+     * @return String representation of custom model data, or empty string if unavailable
+     */
+    public static String getCustomModelDataString(ItemMeta meta) {
+        if (meta == null) return "";
+        if (supportsDataComponentAPI) {
+            try {
+                Object component = meta.getClass().getMethod("getCustomModelDataComponent").invoke(meta);
+                return component != null ? component.toString() : "";
+            } catch (Exception e) {
+                return meta.hasCustomModelData() ? String.valueOf(meta.getCustomModelData()) : "";
+            }
+        } else {
+            return meta.hasCustomModelData() ? String.valueOf(meta.getCustomModelData()) : "";
+        }
+    }
+
+    /**
      * Hide tooltip using ItemFlag (Paper < 1.21.5)
      */
     private static void hideTooltipUsingItemFlag(ItemStack item) {
