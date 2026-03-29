@@ -55,6 +55,7 @@ dependencies {
 
     implementation(platform("com.intellectualsites.bom:bom-newest:1.56"))
     compileOnly("com.intellectualsites.plotsquared:plotsquared-core")
+    compileOnly("net.william278.huskclaims:huskclaims-bukkit:1.5.10")
 
     compileOnly("org.projectlombok:lombok:1.18.44")
     annotationProcessor("org.projectlombok:lombok:1.18.44")
