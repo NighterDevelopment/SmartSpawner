@@ -33,6 +33,7 @@ SmartSpawner respects all major protection plugins to ensure proper permissions 
 - **[RedProtect](https://www.spigotmc.org/resources/redprotect-anti-grief-server-protection-region-management-mod-mobs-flag-compat-1-7-1-21.15841/)**
 - **[Residence](https://www.spigotmc.org/resources/residence-1-7-10-up-to-1-21.11480/)**
 - **[MinePlots](https://builtbybit.com/resources/mineplots.21646/)**
+- **[HuskClaims](https://www.spigotmc.org/resources/huskclaims.122347/)** - **[📖 Setup Guide](/integrations/huskclaims)**
 
 ## World Management Systems
 Multi-world compatibility ensures spawners work across different worlds:
@@ -64,4 +65,4 @@ SmartSpawner also maintains compatibility with numerous other plugins through it
 
 ---
 
-*Last update: October 16, 2025 15:16:02*
+*Last update: March 30, 2026 00:00:00*
