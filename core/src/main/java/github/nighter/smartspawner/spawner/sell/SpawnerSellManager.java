@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.spawner.sell;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.api.events.SpawnerSellEvent;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.gui.synchronization.SpawnerGuiViewManager;
@@ -8,10 +9,12 @@ import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
+
 
 public class SpawnerSellManager {
     private final SmartSpawner plugin;
@@ -25,194 +28,175 @@ public class SpawnerSellManager {
     }
 
     /**
-     * Sells all items from the spawner's virtual inventory
-     * This method is async-optimized and uses cached sell values for efficiency
+     * Sells all items from the spawner's virtual inventory.
+     * Convenience overload with no completion callback.
      */
     public void sellAllItems(Player player, SpawnerData spawner) {
-        // Try to acquire locks in consistent order to prevent deadlocks
-        // Always acquire inventoryLock first, then sellLock
-        boolean inventoryLockAcquired = spawner.getInventoryLock().tryLock();
-        if (!inventoryLockAcquired) {
-            messageService.sendMessage(player, "action_in_progress");
-            return;
-        }
-
-        try {
-            boolean sellLockAcquired = spawner.getSellLock().tryLock();
-            if (!sellLockAcquired) {
-                messageService.sendMessage(player, "action_in_progress");
-                return;
-            }
-
-            try {
-                VirtualInventory virtualInv = spawner.getVirtualInventory();
-
-                // Quick check if there are items to sell
-                if (virtualInv.getUsedSlots() == 0) {
-                    messageService.sendMessage(player, "no_items");
-                    return;
-                }
-                
-                // Recalculate sell value if dirty (should rarely happen)
-                if (spawner.isSellValueDirty()) {
-                    spawner.recalculateSellValue();
-                }
-
-                // Get all items for processing
-                Map<VirtualInventory.ItemSignature, Long> consolidatedItems = virtualInv.getConsolidatedItems();
-
-
-                // Process selling synchronously to prevent race conditions
-                // Use cached sell value for optimization
-                SellResult result = calculateSellValue(consolidatedItems, spawner);
-
-                // Store the result in SpawnerData for later access
-                spawner.setLastSellResult(result);
-
-                // Process result immediately on main thread
-                processSellResult(player, spawner, result);
-
-            } finally {
-                spawner.getSellLock().unlock();
-            }
-        } finally {
-            spawner.getInventoryLock().unlock();
-        }
+        sellAllItems(player, spawner, null);
     }
 
-
     /**
-     * Process the sell result on the main thread
+     * Sells all items from the spawner's virtual inventory.
+     *
+     * Threading model (Folia-safe):
+     * 1. CAS on {@code spawner.startSelling()} – single atomic guard, no nested locks.
+     * 2. Close all GUI viewers immediately (caller is already on the region/main thread).
+     * 3. Snapshot consolidated items + accumulated sell value (safe: isSelling blocks all
+     *    concurrent inventory mutations from loot-gen, break, and stack operations).
+     * 4. Async thread: calculate {@link SellResult} – pure CPU, no Bukkit API.
+     * 5. Location thread (Folia region / Paper main): apply deposit + item removal + notifications.
+     * 6. {@code onComplete.run()} called on the location thread after step 5, before stopSelling().
+     * 7. {@code spawner.stopSelling()} released in the finally block of step 5.
+     *
+     * If the sell cannot be initiated (already selling, empty inventory), {@code onComplete} is
+     * invoked synchronously on the calling thread so the caller can always do cleanup.
+     *
+     * @param onComplete optional callback, runs on the spawner's region/main thread after sell
+     *                   completes (success or failure that got past the CAS). Never called if
+     *                   the sell was outright rejected (CAS failed / empty).
      */
-    private void processSellResult(Player player, SpawnerData spawner, SellResult sellResult) {
-        // Re-acquire locks in consistent order for final operations
-        boolean inventoryLockAcquired = spawner.getInventoryLock().tryLock();
-        if (!inventoryLockAcquired) {
-            messageService.sendMessage(player, "action_in_progress");
+    public void sellAllItems(Player player, SpawnerData spawner, Runnable onComplete) {
+        // Single atomic guard – prevents race conditions and double-sell exploits
+        if (!spawner.startSelling()) {
+            messageService.sendMessage(player, "spawner_selling");
+            // Notify caller even on rejection so it can do its own cleanup
+            if (onComplete != null) onComplete.run();
             return;
         }
 
-        try {
-            boolean sellLockAcquired = spawner.getSellLock().tryLock();
-            if (!sellLockAcquired) {
-                messageService.sendMessage(player, "action_in_progress");
+        VirtualInventory virtualInv = spawner.getVirtualInventory();
+
+        // Quick empty-check before any real work
+        if (virtualInv.getUsedSlots() == 0) {
+            spawner.stopSelling();
+            messageService.sendMessage(player, "no_items");
+            if (onComplete != null) onComplete.run();
+            return;
+        }
+
+        // Recalculate sell value if the price cache is stale (rare)
+        if (spawner.isSellValueDirty()) {
+            spawner.recalculateSellValue();
+        }
+
+        // Kick all viewers out while the sell is running
+        spawnerGuiViewManager.closeAllViewersInventory(spawner);
+
+        // Lightweight snapshot – safe because isSelling prevents concurrent inventory changes
+        final Map<VirtualInventory.ItemSignature, Long> itemSnapshot = virtualInv.getConsolidatedItems();
+        final double accumulatedValue = spawner.getAccumulatedSellValue();
+        final Location spawnerLocation = spawner.getSpawnerLocation();
+
+        // Async: pure CPU computation, no Bukkit API
+        Scheduler.runTaskAsync(() -> {
+            SellResult result;
+            try {
+                result = calculateSellValue(itemSnapshot, accumulatedValue);
+            } catch (Exception e) {
+                plugin.getLogger().warning("Sell calculation error for " + player.getName() + ": " + e.getMessage());
+                Scheduler.runLocationTask(spawnerLocation, () -> {
+                    try {
+                        if (onComplete != null) onComplete.run();
+                    } finally {
+                        spawner.stopSelling();
+                    }
+                    messageService.sendMessage(player, "sell_failed");
+                });
                 return;
             }
 
-            try {
-                VirtualInventory virtualInv = spawner.getVirtualInventory();
-
-                // Double-check that we still have items and they match what we calculated
-                if (!sellResult.isSuccessful()) {
-                    messageService.sendMessage(player, "no_sellable_items");
-                    return;
+            // Apply on the location's region thread (Folia) or the main thread (Paper)
+            Scheduler.runLocationTask(spawnerLocation, () -> {
+                try {
+                    applySellResult(player, spawner, result);
+                    if (onComplete != null) onComplete.run();
+                } finally {
+                    spawner.stopSelling();
                 }
-
-                // Perform the actual sale
-                double amount = sellResult.getTotalValue();
-                if(SpawnerSellEvent.getHandlerList().getRegisteredListeners().length != 0) {
-                    SpawnerSellEvent event = new SpawnerSellEvent(player, spawner.getSpawnerLocation(), sellResult.getItemsToRemove(), amount);
-                    Bukkit.getPluginManager().callEvent(event);
-                    if(event.isCancelled()) return;
-                    if(event.getMoneyAmount() >= 0) amount = event.getMoneyAmount();
-                }
-                boolean depositSuccess = plugin.getItemPriceManager().getCurrencyManager()
-                        .deposit(amount, player);
-
-                if (!depositSuccess) {
-                    messageService.sendMessage(player, "sell_failed");
-                    return;
-                }
-
-                // Remove sold items from virtual inventory and update sell value
-                boolean itemsRemoved = spawner.removeItemsAndUpdateSellValue(sellResult.getItemsToRemove());
-                if (!itemsRemoved) {
-                    // If items couldn't be removed (race condition), this indicates a critical issue
-                    // The money has already been deposited, so we need to log this for investigation
-                    plugin.getLogger().warning("Critical: Could not remove all items after depositing money for player " + 
-                        player.getName() + " at spawner " + spawner.getSpawnerId() + ". Possible exploit detected.");
-                    // Note: Money has already been deposited, so we can't easily roll back without complex transaction handling
-                    plugin.getItemPriceManager().getCurrencyManager().withdraw(amount, player);
-                    messageService.sendMessage(player, "sell_failed");
-                }
-
-                // Update spawner state
-                spawner.updateHologramData();
-
-                // Update capacity status if needed
-                if (spawner.getIsAtCapacity() &&
-                        virtualInv.getUsedSlots() < spawner.getMaxSpawnerLootSlots()) {
-                    spawner.setIsAtCapacity(false);
-                }
-
-                // Update GUI viewers
-                spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
-                // Note: Don't close inventory here - let the confirmation GUI handler reopen the previous GUI
-                // player.closeInventory();
-
-                // Send success message
-                Map<String, String> placeholders = new HashMap<>();
-                placeholders.put("amount", plugin.getLanguageManager().formatNumber(sellResult.getItemsSold()));
-                placeholders.put("price", plugin.getLanguageManager().formatNumber(amount));
-                messageService.sendMessage(player, "sell_success", placeholders);
-
-                // Play UI button click sound
-                player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-
-                // Mark spawner as modified for saving
-                plugin.getSpawnerManager().markSpawnerModified(spawner.getSpawnerId());
-
-                // Update the result as successful after processing
-                spawner.markLastSellAsProcessed();
-
-            } finally {
-                spawner.getSellLock().unlock();
-            }
-        } finally {
-            spawner.getInventoryLock().unlock();
-        }
+            });
+        });
+        // stopSelling() ownership is transferred to the async chain above
     }
 
     /**
-     * Calculates the total sell value of items using cached accumulated value
-     * This method is optimized to use pre-calculated sell values
-     * OPTIMIZED: Single-pass iteration with progressive capacity adjustment
+     * Applies the sell result on the spawner's region/main thread.
+     * Called while {@code spawner.isSelling()} is true; {@code stopSelling()} is the caller's
+     * responsibility via the surrounding finally block.
+     */
+    private void applySellResult(Player player, SpawnerData spawner, SellResult sellResult) {
+        if (!sellResult.isSuccessful()) {
+            messageService.sendMessage(player, "no_sellable_items");
+            return;
+        }
+
+        double amount = sellResult.getTotalValue();
+
+        // Fire the cancellable API event
+        if (SpawnerSellEvent.getHandlerList().getRegisteredListeners().length != 0) {
+            SpawnerSellEvent event = new SpawnerSellEvent(
+                    player, spawner.getSpawnerLocation(), sellResult.getItemsToRemove(), amount);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return;
+            if (event.getMoneyAmount() >= 0) amount = event.getMoneyAmount();
+        }
+
+        // Deposit money first
+        boolean depositSuccess = plugin.getItemPriceManager().getCurrencyManager().deposit(amount, player);
+        if (!depositSuccess) {
+            messageService.sendMessage(player, "sell_failed");
+            return;
+        }
+
+        // Remove items – if removal somehow fails (should never happen under isSelling guard),
+        // items are simply lost; no rollback. Attempting to dupe results in item loss.
+        spawner.removeItemsAndUpdateSellValue(sellResult.getItemsToRemove());
+
+        // Update spawner state
+        spawner.updateHologramData();
+        VirtualInventory virtualInv = spawner.getVirtualInventory();
+        if (spawner.getIsAtCapacity() && virtualInv.getUsedSlots() < spawner.getMaxSpawnerLootSlots()) {
+            spawner.setIsAtCapacity(false);
+        }
+
+        // Invalidate GUI caches so the next open shows fresh data
+        spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
+        plugin.getSpawnerManager().markSpawnerModified(spawner.getSpawnerId());
+
+        // Notify the player
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("amount", plugin.getLanguageManager().formatNumber(sellResult.getItemsSold()));
+        placeholders.put("price", plugin.getLanguageManager().formatNumber(amount));
+        messageService.sendMessage(player, "sell_success", placeholders);
+        player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+
+        spawner.markLastSellAsProcessed();
+    }
+
+    /**
+     * Calculates the total sell value and constructs the list of {@link ItemStack}s to remove.
+     * Pure computation – no Bukkit API calls, safe to run on an async thread.
      */
     private SellResult calculateSellValue(Map<VirtualInventory.ItemSignature, Long> consolidatedItems,
-                                          SpawnerData spawner) {
-        // Use the accumulated sell value from spawner (already calculated incrementally)
-        double totalValue = spawner.getAccumulatedSellValue();
+                                          double totalValue) {
         long totalItemsSold = 0;
-
-        // Start with reasonable initial capacity (will grow progressively)
-        // Use ArrayList directly to access ensureCapacity method
         ArrayList<ItemStack> itemsToRemove = new ArrayList<>();
 
-        // Single-pass iteration: calculate stacks needed AND create them
         for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : consolidatedItems.entrySet()) {
-            // Use getTemplateRef() to avoid cloning when reading properties
             ItemStack templateRef = entry.getKey().getTemplateRef();
             long amount = entry.getValue();
             int maxStackSize = templateRef.getMaxStackSize();
 
-            // Count items for statistics
             totalItemsSold += amount;
 
-            // Calculate how many stacks this item type needs
             int stacksNeeded = (int) Math.ceil((double) amount / maxStackSize);
-
-            // Ensure capacity before adding to avoid resizing during loop
-            // This is cheaper than multiple resizes
             itemsToRemove.ensureCapacity(itemsToRemove.size() + stacksNeeded);
 
-            // Create ItemStacks to remove (handle stacking properly)
-            long remainingAmount = amount;
-            while (remainingAmount > 0) {
-                ItemStack stackToRemove = templateRef.clone(); // Single clone per stack
-                int stackSize = (int) Math.min(remainingAmount, maxStackSize);
-                stackToRemove.setAmount(stackSize);
-                itemsToRemove.add(stackToRemove); // No resize thanks to ensureCapacity
-                remainingAmount -= stackSize;
+            long remaining = amount;
+            while (remaining > 0) {
+                ItemStack stack = templateRef.clone();
+                stack.setAmount((int) Math.min(remaining, maxStackSize));
+                itemsToRemove.add(stack);
+                remaining -= stack.getAmount();
             }
         }
 

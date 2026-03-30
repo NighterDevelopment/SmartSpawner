@@ -83,6 +83,16 @@ public class SpawnerStorageAction implements Listener {
         int slot = event.getRawSlot();
         event.setCancelled(true);
 
+        // Block ALL storage interactions while a sell is in progress.
+        // This closes the race window where the storage GUI could be reopened (by the
+        // reopenPreviousGui callback) before the async sell's item-removal step has run,
+        // which would otherwise allow items to be taken from the virtual inventory twice –
+        // once by the player and once by applySellResult.
+        if (spawner.isSelling()) {
+            plugin.getMessageService().sendMessage(player, "spawner_selling");
+            return;
+        }
+
         // Handle clicks outside valid storage GUI area
         if (slot < 0 || slot >= INVENTORY_SIZE) {
             return;

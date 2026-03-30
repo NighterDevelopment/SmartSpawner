@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.spawner.gui.sell;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.spawner.gui.layout.GuiButton;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayout;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
@@ -10,6 +11,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.InventoryHolder;
 
 import java.util.Collections;
@@ -18,6 +20,93 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Handles all click/close events for the sell-confirm GUI.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SELL FLOW  (sell confirmation ENABLED – default)
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Entry: SpawnerMenuAction / SpawnerStorageAction  →  SpawnerSellConfirmUI.openSellConfirmGui()
+ *
+ *  1. openSellConfirmGui():
+ *       • spawner.tryMarkInteracted() – CAS false→true, abort if already interacted.
+ *         [LEAK RISK: must be cleared; see steps 5 and CANCEL/ESCAPE paths below]
+ *       • Creates SpawnerSellConfirmHolder inventory, opens it for the player.
+ *
+ *  2. Player clicks CONFIRM  →  handleConfirm():
+ *       • activeSells.add(uuid) – guards against duplicate confirm-click packets.
+ *         [LEAK RISK: removed in onComplete callback AND onPlayerQuit]
+ *       • If collectExp: handleExpBottleClick() runs synchronously here.
+ *       • SpawnerSellManager.sellAllItems(player, spawner, onComplete) called.
+ *         sellAllItems() owns the async chain from this point:
+ *           a. spawner.startSelling() CAS false→true – real dupe guard.
+ *              [LEAK RISK: always released in finally inside the location task]
+ *           b. closeAllViewersInventory(spawner) – evicts ALL current viewers.
+ *           c. Snapshot virtual inventory (safe while isSelling blocks mutations).
+ *           d. Async thread: calculate SellResult (pure CPU, no Bukkit API).
+ *           e. Location/main thread: applySellResult() – deposit money, remove items,
+ *              update hologram, notify player.
+ *           f. onComplete.run():
+ *                • activeSells.remove(uuid)
+ *                • spawner.clearInteracted()
+ *                • Scheduler.runTask → reopenPreviousGui() for the selling player only.
+ *           g. spawner.stopSelling() released in finally.
+ *
+ *  3. Player clicks CANCEL  →  handleCancel():
+ *       • spawner.clearInteracted() – releases interaction lock.
+ *       • reopenPreviousGui() immediately (sync).
+ *
+ *  4. Player presses ESCAPE (GUI close without clicking)  →  onInventoryClose():
+ *       • spawner.clearInteracted() – releases interaction lock.
+ *       (activeSells is NOT touched here; the player never clicked Confirm so they
+ *        were never added to activeSells.)
+ *
+ *  5. Player disconnects while sell is in flight  →  onPlayerQuit():
+ *       • activeSells.remove(uuid) – prevents permanent leak.
+ *       (spawner.isSelling and spawner.interacted are released by their own
+ *        finally/callback chains which complete even without the player online.)
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SELL FLOW  (sell confirmation DISABLED – skip_sell_confirmation: true)
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Entry: same as above  →  SpawnerSellConfirmUI.openSellConfirmGui()  (skip path)
+ *
+ *  1. openSellConfirmGui():
+ *       • spawner.tryMarkInteracted() – CAS guard (same as above).
+ *         [LEAK RISK: released in onComplete callback below]
+ *       • If collectExp: handleExpBottleClick() runs synchronously here.
+ *       • player.closeInventory() – close any currently open GUI first.
+ *       • SpawnerSellManager.sellAllItems(player, spawner, onComplete) called.
+ *         Async chain identical to steps d–g above.
+ *         onComplete = () -> spawner.clearInteracted()
+ *
+ *  No confirm GUI is ever created, so:
+ *       • SpawnerSellConfirmHolder is never instantiated.
+ *       • activeSells is never touched (no confirm click to guard).
+ *       • onInventoryClose / handleCancel / handleConfirm are never invoked.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * STATE OBJECTS AND LEAK CHECKLIST
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  spawner.interacted (AtomicBoolean)
+ *    Set by   : tryMarkInteracted() in openSellConfirmGui()
+ *    Cleared by: onComplete callback (Confirm path + skip path)
+ *               handleCancel() (Cancel path)
+ *               onInventoryClose() (Escape path)
+ *    Leak check: all four exit paths clear it.
+ *
+ *  activeSells (ConcurrentHashSet<UUID>)
+ *    Set by   : activeSells.add() at the top of handleConfirm()
+ *    Cleared by: onComplete callback (normal completion)
+ *               onPlayerQuit() (disconnect during sell)
+ *    Leak check: both exit paths covered; skip path never touches this set.
+ *
+ *  spawner.selling (AtomicBoolean, owned by SpawnerSellManager)
+ *    Set by   : spawner.startSelling() inside sellAllItems()
+ *    Cleared by: spawner.stopSelling() in the location-thread finally block
+ *               (runs even if player is offline or sell fails mid-way).
+ *    Leak check: finally block guarantees release.
+ */
 public class SpawnerSellConfirmListener implements Listener {
 
     private final SmartSpawner plugin;
@@ -114,26 +203,34 @@ public class SpawnerSellConfirmListener implements Listener {
             return;
         }
 
-        try {
-            // Collect exp if requested
-            if (collectExp) {
-                plugin.getSpawnerMenuAction().handleExpBottleClick(player, spawner, true);
-            }
-
-            // Trigger the actual sell operation
-            plugin.getSpawnerSellManager().sellAllItems(player, spawner);
-
-            // Release the interaction lock only AFTER the sell has fully completed so that the
-            // spawner cannot be re-opened by another replayed "open" packet mid-transaction.
-            spawner.clearInteracted();
-
-            // Schedule GUI reopening after sell completes (1 tick delay to ensure sell process finishes)
-            github.nighter.smartspawner.Scheduler.runTask(() -> {
-                reopenPreviousGui(player, spawner, previousGui);
-            });
-        } finally {
-            activeSells.remove(player.getUniqueId());
+        // Collect exp if requested (sync, safe on this thread)
+        if (collectExp) {
+            plugin.getSpawnerMenuAction().handleExpBottleClick(player, spawner, true);
         }
+
+        // Callback runs on the spawner's region/main thread after the sell fully completes.
+        // This defers clearInteracted() and the GUI reopen until the inventory is actually
+        // emptied, closing the race window where a storage GUI could be reopened with stale
+        // (pre-removal) items still visible.
+        final UUID playerId = player.getUniqueId();
+        Runnable onComplete = () -> {
+            activeSells.remove(playerId);
+            spawner.clearInteracted();
+            // player.openInventory must run on the global/main thread; schedule with runTask
+            // so it is always dispatched correctly on both Paper and Folia.
+            Scheduler.runTask(() -> reopenPreviousGui(player, spawner, previousGui));
+        };
+
+        plugin.getSpawnerSellManager().sellAllItems(player, spawner, onComplete);
+        // clearInteracted() and reopenPreviousGui() are now entirely owned by the callback.
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        // If a player disconnects while a sell is in progress, ensure the activeSells set
+        // is cleaned up so the entry doesn't leak (the spawner's isSelling flag will be
+        // cleared by the normal async chain completing even without the player online).
+        activeSells.remove(event.getPlayer().getUniqueId());
     }
 
     private void reopenPreviousGui(Player player, SpawnerData spawner, SpawnerSellConfirmUI.PreviousGui previousGui) {

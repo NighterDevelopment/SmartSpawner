@@ -123,6 +123,12 @@ public class SpawnerBreakListener implements Listener {
                 return;
             }
 
+            // Block break while a sell is in progress
+            if (currentSpawner.isSelling()) {
+                messageService.sendMessage(player, "spawner_selling");
+                return;
+            }
+
             // Track player interaction for last interaction field
             spawner.updateLastInteractedPlayer(player.getName());
 

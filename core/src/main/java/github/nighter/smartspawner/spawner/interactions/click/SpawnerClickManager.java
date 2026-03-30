@@ -158,6 +158,12 @@ public class SpawnerClickManager implements Listener {
 
     private void handleSpawnerInteraction(Player player, Block block, ItemStack heldItem, Material itemType, SpawnerData spawner) {
 
+        // Block interaction while a sell is in progress
+        if (spawner.isSelling()) {
+            messageService.sendMessage(player, "spawner_selling");
+            return;
+        }
+
         // Check permission on claimed land
         if (!CheckOpenMenu.CanPlayerOpenMenu(player, block.getLocation())) {
             messageService.sendMessage(player, "spawner_protected");

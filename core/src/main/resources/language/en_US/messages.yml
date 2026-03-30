@@ -196,6 +196,10 @@ action_in_progress:
   message: "&#f0c857ᴀɴᴏᴛʜᴇʀ ᴏᴘᴇʀᴀᴛɪᴏɴ ɪꜱ ɪɴ ᴘʀᴏɢʀᴇꜱꜱ. ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ ɪɴ ᴀ ᴍᴏᴍᴇɴᴛ."
   sound: block.note_block.pling
 
+spawner_selling:
+  message: "&#f0c857ꜱᴘᴀᴡɴᴇʀ ɪꜱ ᴄᴜʀʀᴇɴᴛʟʏ ꜱᴇʟʟɪɴɢ ɪᴛᴇᴍꜱ, ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ."
+  sound: block.note_block.pling
+
 action_failed:
   action_bar: "&#ff5252ᴀᴄᴛɪᴏɴ ꜰᴀɪʟᴇᴅ. ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ."
   sound: block.note_block.pling

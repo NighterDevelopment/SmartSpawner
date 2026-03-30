@@ -71,14 +71,11 @@ public class SpawnerSellConfirmUI {
                 plugin.getSpawnerMenuAction().handleExpBottleClick(player, spawner, true);
             }
 
-            // Clear interaction state
-            spawner.clearInteracted();
-
-            // Trigger the actual sell operation
-            plugin.getSpawnerSellManager().sellAllItems(player, spawner);
-
-            // Close current inventory if open
+            // clearInteracted() is intentionally deferred into the callback so that
+            // the interaction slot is held for the full duration of the async sell, blocking
+            // replayed open-packets from triggering a second sell while this one is in flight.
             player.closeInventory();
+            plugin.getSpawnerSellManager().sellAllItems(player, spawner, () -> spawner.clearInteracted());
             return;
         }
 

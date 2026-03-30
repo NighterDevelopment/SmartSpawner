@@ -28,6 +28,11 @@ public class SpawnerLootGenerator {
     }
 
     public void spawnLootToSpawner(SpawnerData spawner) {
+        // Skip loot generation while a sell is in progress to avoid inventory conflicts
+        if (spawner.isSelling()) {
+            return;
+        }
+
         // Try to acquire the lock, but don't block if it's already locked
         // This ensures we don't block the server thread while waiting for the lock
         boolean lockAcquired = spawner.getLootGenerationLock().tryLock();

@@ -1,3 +1,20 @@
+── v1.6.4 (2026-03-29) ─────────────────────────────────────────────────────────
+
+  Summary: Version 1.6.4 released – fill in details here.
+           Compare: https://github.com/NighterDevelopment/SmartSpawner/compare/1.6.3...main
+
+  ADDED:
+    messages.yml:
+      - spawner_selling (L199): 
+      - spawner_selling.message (L200): "&#f0c857ꜱᴘᴀᴡɴᴇʀ ɪꜱ ᴄᴜʀʀᴇɴᴛʟʏ ꜱᴇʟʟɪɴɢ ɪᴛᴇᴍꜱ, ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ."
+      - spawner_selling.sound (L201): block.note_block.pling
+
+  CHANGED:
+    (none)
+
+  REMOVED:
+    (none)
+
 ── v1.6.3 (2026-03-22) ─────────────────────────────────────────────────────────
 
   Summary: Version 1.6.3 released – fill in details here.
@@ -116,4 +133,3 @@
       - spawner_management.removed (L315): 
       - spawner_management.removed.message (L316): "&#e6e6faꜱᴘᴀᴡɴᴇʀ &#ff5252ʀᴇᴍᴏᴠᴇᴅ &#e6e6faꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ!"
       - spawner_management.removed.sound (L317): entity.item.break
-

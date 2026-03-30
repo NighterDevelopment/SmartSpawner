@@ -53,6 +53,12 @@ public class SpawnerStackHandler {
     }
 
     public void handleSpawnerStacking(Player player, Block block, SpawnerData spawnerData, ItemStack itemInHand) {
+        // Block stacking while a sell is in progress
+        if (spawnerData.isSelling()) {
+            messageService.sendMessage(player, "spawner_selling");
+            return;
+        }
+
         // Anti-spam check
         if (isOnCooldown(player)) {
             return;

@@ -34,9 +34,11 @@ public class SpawnerData {
     @Getter
     private final ReentrantLock lootGenerationLock = new ReentrantLock();  // For loot spawning
     @Getter
-    private final ReentrantLock sellLock = new ReentrantLock();  // For selling operations
-    @Getter
     private final ReentrantLock dataLock = new ReentrantLock();  // For metadata changes (exp, stack size, etc.)
+
+    // Atomic sell state – single CAS guard that replaces the old sellLock + double-lock pattern.
+    // All operations that touch virtual inventory must check isSelling() before proceeding.
+    private final AtomicBoolean selling = new AtomicBoolean(false);
 
     // Base values from config (immutable after load)
     @Getter @Setter
@@ -475,6 +477,24 @@ public class SpawnerData {
     public void markLastSellAsProcessed() {
         this.lastSellProcessed = true;
         this.lastSellResult = null;
+    }
+
+    /** @return true if this spawner is currently executing a sell operation */
+    public boolean isSelling() {
+        return selling.get();
+    }
+
+    /**
+     * Atomically transitions the spawner into selling state.
+     * @return true if the transition succeeded (caller owns the sell), false if already selling
+     */
+    public boolean startSelling() {
+        return selling.compareAndSet(false, true);
+    }
+
+    /** Releases the selling state so other operations may proceed. */
+    public void stopSelling() {
+        selling.set(false);
     }
 
     public boolean isInteracted() {
