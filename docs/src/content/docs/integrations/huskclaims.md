@@ -3,7 +3,7 @@ title: HuskClaims Integration
 description: Guide for integrating SmartSpawner with HuskClaims for spawner protection within claimed land.
 ---
 
-SmartSpawner automatically respects HuskClaims land protection. No additional configuration is required — once both plugins are detected on the server, spawner actions are validated against HuskClaims' permission system.
+SmartSpawner automatically respects HuskClaims land protection. No additional configuration is required, once both plugins are detected on the server, spawner actions are validated against HuskClaims' permission system.
 
 ## How It Works
 

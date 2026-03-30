@@ -63,6 +63,7 @@ export default defineConfig({
 								{ label: 'MythicMobs', slug: 'integrations/mythicmobs' },
 								{ label: 'SuperiorSkyblock2', slug: 'integrations/superiorskyblock2' },
 								{ label: 'SimpleClaimSystem', slug: 'integrations/simpleclaimsystem' },
+								{ label: 'HuskClaims', slug: 'integrations/huskclaims' },
 							],
 						},
 					],
