@@ -90,6 +90,10 @@ dependencies:
       load: BEFORE
       required: false
       join-classpath: true
+    HuskClaims:
+      load: BEFORE
+      required: false
+      join-classpath: true
 
     # World Management Plugins
     Multiverse-Core:
