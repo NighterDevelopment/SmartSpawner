@@ -30,6 +30,7 @@ softdepend:
   - minePlots
   - PlotSquared
   - Residence
+  - HuskClaims
 
   # World Management Plugins
   - Multiverse-Core
