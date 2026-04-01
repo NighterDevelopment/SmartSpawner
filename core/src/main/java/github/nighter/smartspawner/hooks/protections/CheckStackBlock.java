@@ -22,6 +22,8 @@ public class CheckStackBlock {
         if (integrationManager.isHasBentoBox() && !BentoBoxAPI.canPlayerStackBlock(player, location)) return false;
         if (integrationManager.isHasSimpleClaimSystem() && !SimpleClaimSystem.canPlayerStackClaimBlock(player, location))
             return false;
+        if (integrationManager.isHasSimpleClaimSystem2() && !SimpleClaimSystem2.canPlayerStackClaimBlock(player, location))
+            return false;
         if (integrationManager.isHasMinePlots() && !MinePlots.canPlayerStackBlock(player, location)) return false;
         if (integrationManager.isHasIridiumSkyblock() && !IridiumSkyblock.canPlayerStackBlock(player, location)) return false;
         if (integrationManager.isHasPlotSquared() && !PlotSquared.canInteract(player, location)) return false;

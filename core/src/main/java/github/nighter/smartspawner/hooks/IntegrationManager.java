@@ -15,6 +15,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import fr.xyness.SCS.API.SimpleClaimSystemAPI_Provider;
 import fr.xyness.SCS.SimpleClaimSystem;
+import fr.xyness.SimpleClaimSystem.API.SCS_API_Provider;
+import fr.xyness.SimpleClaimSystem.API.SCS_API;
 
 import java.util.logging.Level;
 
@@ -30,6 +32,7 @@ public class IntegrationManager {
     private boolean hasSuperiorSkyblock2 = false;
     private boolean hasBentoBox = false;
     private boolean hasSimpleClaimSystem = false;
+    private boolean hasSimpleClaimSystem2 = false;
     private boolean hasRedProtect = false;
     private boolean hasMinePlots = false;
     private boolean hasMythicMobs = false;
@@ -106,6 +109,22 @@ public class IntegrationManager {
             }
             SimpleClaimSystemAPI_Provider.initialize((SimpleClaimSystem) simpleClaimPlugin);
             return SimpleClaimSystemAPI_Provider.getAPI() != null;
+        }, true);
+
+        hasSimpleClaimSystem2 = checkPlugin("SimpleClaimSystem", () -> {
+            Plugin simpleClaimPlugin = Bukkit.getPluginManager().getPlugin("SimpleClaimSystem");
+            if (simpleClaimPlugin == null || !simpleClaimPlugin.isEnabled()) {
+                return false;
+            }
+            // Prevent SimpleClaimSystem free version (1.x.x)
+            if (simpleClaimPlugin.getPluginMeta().getVersion().startsWith("1.")) {
+                return false;
+            }
+            if (SCS_API_Provider.isRegistered()) {
+                SCS_API api = SCS_API_Provider.get();
+                return api != null;
+            }
+            return false;
         }, true);
 
         hasRedProtect = checkPlugin("RedProtect", () -> {
