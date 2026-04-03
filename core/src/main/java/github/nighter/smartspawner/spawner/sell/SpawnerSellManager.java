@@ -109,9 +109,14 @@ public class SpawnerSellManager {
             Scheduler.runLocationTask(spawnerLocation, () -> {
                 try {
                     applySellResult(player, spawner, result);
-                    if (onComplete != null) onComplete.run();
                 } finally {
-                    spawner.stopSelling();
+                    // onComplete MUST run in finally so activeSells is always cleared,
+                    // even when applySellResult throws (e.g. economy plugin error).
+                    try {
+                        if (onComplete != null) onComplete.run();
+                    } finally {
+                        spawner.stopSelling();
+                    }
                 }
             });
         });

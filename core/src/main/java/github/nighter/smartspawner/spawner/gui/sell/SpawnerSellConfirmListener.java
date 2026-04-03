@@ -10,14 +10,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.InventoryHolder;
 
-import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handles all click/close events for the sell-confirm GUI.
@@ -32,8 +27,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *       • Creates SpawnerSellConfirmHolder inventory, opens it for the player.
  *
  *  2. Player clicks CONFIRM  →  handleConfirm():
- *       • activeSells.add(uuid) – guards against duplicate confirm-click packets.
- *         [LEAK RISK: removed in onComplete callback AND onPlayerQuit]
+ *       • spawner.isSelling() early-exit – duplicate confirm-click packets in the same tick
+ *         are silently dropped before any onComplete lambda is created. Per-spawner by nature,
+ *         so confirming spawner B is never blocked by an in-flight sell on spawner A.
  *       • If collectExp: handleExpBottleClick() runs synchronously here.
  *       • SpawnerSellManager.sellAllItems(player, spawner, onComplete) called.
  *         sellAllItems() owns the async chain from this point:
@@ -45,7 +41,6 @@ import java.util.concurrent.ConcurrentHashMap;
  *           e. Location/main thread: applySellResult() – deposit money, remove items,
  *              update hologram, notify player.
  *           f. onComplete.run():
- *                • activeSells.remove(uuid)
  *                • Scheduler.runTask → reopenPreviousGui() for the selling player only.
  *           g. spawner.stopSelling() released in finally.
  *
@@ -55,9 +50,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *  4. Player presses ESCAPE (GUI close without clicking)  →  onInventoryClose():
  *       • No extra work needed; the sell never started.
  *
- *  5. Player disconnects while sell is in flight  →  onPlayerQuit():
- *       • activeSells.remove(uuid) – prevents permanent leak.
- *       (spawner.isSelling is released by its own finally chain.)
+ *  5. Player disconnects while sell is in flight:
+ *       • No extra cleanup needed. spawner.isSelling is released by its own finally chain.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * SELL FLOW  (sell confirmation DISABLED – skip_sell_confirmation: true)
@@ -72,30 +66,22 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  *  No confirm GUI is ever created, so:
  *       • SpawnerSellConfirmHolder is never instantiated.
- *       • activeSells is never touched (no confirm click to guard).
- *       • onInventoryClose / handleCancel / handleConfirm are never invoked.
+ *       • handleConfirm() is never invoked.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * STATE OBJECTS AND LEAK CHECKLIST
  * ─────────────────────────────────────────────────────────────────────────────
- *  activeSells (ConcurrentHashSet<UUID>)
- *    Set by   : activeSells.add() at the top of handleConfirm()
- *    Cleared by: onComplete callback (normal completion)
- *               onPlayerQuit() (disconnect during sell)
- *    Leak check: both exit paths covered; skip path never touches this set.
- *
  *  spawner.selling (AtomicBoolean, owned by SpawnerSellManager)
- *    Set by   : spawner.startSelling() inside sellAllItems()
+ *    Set by   : spawner.startSelling() inside sellAllItems() – synchronously, before async
  *    Cleared by: spawner.stopSelling() in the location-thread finally block
  *               (runs even if player is offline or sell fails mid-way).
  *    Leak check: finally block guarantees release.
+ *    Duplicate-click guard: handleConfirm() returns early if isSelling() is true,
+ *               so no onComplete lambda is ever created for the rejected click.
  */
 public class SpawnerSellConfirmListener implements Listener {
 
     private final SmartSpawner plugin;
-    // Tracks which players are currently executing a sell confirmation to prevent
-    // duplicate processing when a client replays confirm-click packets within the same tick.
-    private final Set<UUID> activeSells = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public SpawnerSellConfirmListener(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -165,9 +151,12 @@ public class SpawnerSellConfirmListener implements Listener {
     }
 
     private void handleConfirm(Player player, SpawnerData spawner, SpawnerSellConfirmUI.PreviousGui previousGui, boolean collectExp) {
-        // Prevent the same player from running two concurrent sell confirmations
-        // (e.g. duplicate confirm-click packets sent by a cheat client within the same tick).
-        if (!activeSells.add(player.getUniqueId())) {
+        // Drop duplicate confirm-click packets (e.g. from a cheat client replaying within the
+        // same tick). startSelling() is called synchronously inside sellAllItems() before any
+        // async work, so isSelling() is already true when the second click is processed.
+        // Returning here — before creating an onComplete lambda — ensures sellAllItems() is
+        // never called with a callback that would reopen the GUI mid-sell on CAS rejection.
+        if (spawner.isSelling()) {
             return;
         }
 
@@ -179,23 +168,12 @@ public class SpawnerSellConfirmListener implements Listener {
         // Callback runs on the spawner's region/main thread after the sell fully completes.
         // Defers the GUI reopen until the inventory is actually emptied, closing the race
         // window where a storage GUI could be reopened with stale (pre-removal) items.
-        final UUID playerId = player.getUniqueId();
-        Runnable onComplete = () -> {
-            activeSells.remove(playerId);
+        Runnable onComplete = () ->
             // player.openInventory must run on the global/main thread; schedule with runTask
             // so it is always dispatched correctly on both Paper and Folia.
             Scheduler.runTask(() -> reopenPreviousGui(player, spawner, previousGui));
-        };
 
         plugin.getSpawnerSellManager().sellAllItems(player, spawner, onComplete);
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        // If a player disconnects while a sell is in progress, ensure the activeSells set
-        // is cleaned up so the entry doesn't leak (the spawner's isSelling flag will be
-        // cleared by the normal async chain completing even without the player online).
-        activeSells.remove(event.getPlayer().getUniqueId());
     }
 
     private void reopenPreviousGui(Player player, SpawnerData spawner, SpawnerSellConfirmUI.PreviousGui previousGui) {
@@ -229,5 +207,3 @@ public class SpawnerSellConfirmListener implements Listener {
         return plugin.getIntegrationManager().getFloodgateHook().isBedrockPlayer(player);
     }
 }
-
-
