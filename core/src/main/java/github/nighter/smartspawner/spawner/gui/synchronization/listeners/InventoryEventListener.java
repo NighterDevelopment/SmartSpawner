@@ -63,6 +63,11 @@ public class InventoryEventListener implements Listener {
         }
 
         if (spawnerData != null && viewerType != null) {
+            // Record the interacting player immediately on open, not on close.
+            // This avoids data loss when a player disconnects while the GUI is open,
+            // since InventoryCloseEvent is not guaranteed to fire before PlayerQuitEvent.
+            spawnerData.updateLastInteractedPlayer(player.getName());
+
             viewerTrackingManager.trackViewer(playerId, spawnerData, viewerType);
             onViewerAdded.run(); // Trigger update task start if needed
         }
@@ -72,12 +77,6 @@ public class InventoryEventListener implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) {
             return;
-        }
-
-        // Update last interaction tracking before untracking
-        ViewerTrackingManager.ViewerInfo info = viewerTrackingManager.getViewerInfo(player.getUniqueId());
-        if (info != null && info.getSpawnerData() != null) {
-            info.getSpawnerData().updateLastInteractedPlayer(player.getName());
         }
 
         viewerTrackingManager.untrackViewer(player.getUniqueId());

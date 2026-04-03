@@ -20,6 +20,8 @@ public class PlayerEventListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
+        // InventoryCloseEvent is not guaranteed to fire before PlayerQuitEvent on disconnect.
+        // updateLastInteractedPlayer is already set on GUI open, so no extra update needed here.
         viewerTrackingManager.untrackViewer(event.getPlayer().getUniqueId());
     }
 }

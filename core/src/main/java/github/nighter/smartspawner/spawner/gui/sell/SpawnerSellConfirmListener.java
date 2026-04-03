@@ -10,7 +10,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.InventoryHolder;
 
@@ -29,8 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Entry: SpawnerMenuAction / SpawnerStorageAction  →  SpawnerSellConfirmUI.openSellConfirmGui()
  *
  *  1. openSellConfirmGui():
- *       • spawner.tryMarkInteracted() – CAS false→true, abort if already interacted.
- *         [LEAK RISK: must be cleared; see steps 5 and CANCEL/ESCAPE paths below]
+ *       • spawner.isSelling() – abort if a sell is already running for this spawner.
  *       • Creates SpawnerSellConfirmHolder inventory, opens it for the player.
  *
  *  2. Player clicks CONFIRM  →  handleConfirm():
@@ -48,23 +46,18 @@ import java.util.concurrent.ConcurrentHashMap;
  *              update hologram, notify player.
  *           f. onComplete.run():
  *                • activeSells.remove(uuid)
- *                • spawner.clearInteracted()
  *                • Scheduler.runTask → reopenPreviousGui() for the selling player only.
  *           g. spawner.stopSelling() released in finally.
  *
  *  3. Player clicks CANCEL  →  handleCancel():
- *       • spawner.clearInteracted() – releases interaction lock.
  *       • reopenPreviousGui() immediately (sync).
  *
  *  4. Player presses ESCAPE (GUI close without clicking)  →  onInventoryClose():
- *       • spawner.clearInteracted() – releases interaction lock.
- *       (activeSells is NOT touched here; the player never clicked Confirm so they
- *        were never added to activeSells.)
+ *       • No extra work needed; the sell never started.
  *
  *  5. Player disconnects while sell is in flight  →  onPlayerQuit():
  *       • activeSells.remove(uuid) – prevents permanent leak.
- *       (spawner.isSelling and spawner.interacted are released by their own
- *        finally/callback chains which complete even without the player online.)
+ *       (spawner.isSelling is released by its own finally chain.)
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * SELL FLOW  (sell confirmation DISABLED – skip_sell_confirmation: true)
@@ -72,13 +65,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * Entry: same as above  →  SpawnerSellConfirmUI.openSellConfirmGui()  (skip path)
  *
  *  1. openSellConfirmGui():
- *       • spawner.tryMarkInteracted() – CAS guard (same as above).
- *         [LEAK RISK: released in onComplete callback below]
+ *       • spawner.isSelling() guard (same as above).
  *       • If collectExp: handleExpBottleClick() runs synchronously here.
  *       • player.closeInventory() – close any currently open GUI first.
- *       • SpawnerSellManager.sellAllItems(player, spawner, onComplete) called.
- *         Async chain identical to steps d–g above.
- *         onComplete = () -> spawner.clearInteracted()
+ *       • SpawnerSellManager.sellAllItems(player, spawner, null) called.
  *
  *  No confirm GUI is ever created, so:
  *       • SpawnerSellConfirmHolder is never instantiated.
@@ -88,13 +78,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * ─────────────────────────────────────────────────────────────────────────────
  * STATE OBJECTS AND LEAK CHECKLIST
  * ─────────────────────────────────────────────────────────────────────────────
- *  spawner.interacted (AtomicBoolean)
- *    Set by   : tryMarkInteracted() in openSellConfirmGui()
- *    Cleared by: onComplete callback (Confirm path + skip path)
- *               handleCancel() (Cancel path)
- *               onInventoryClose() (Escape path)
- *    Leak check: all four exit paths clear it.
- *
  *  activeSells (ConcurrentHashSet<UUID>)
  *    Set by   : activeSells.add() at the top of handleConfirm()
  *    Cleared by: onComplete callback (normal completion)
@@ -173,24 +156,9 @@ public class SpawnerSellConfirmListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onInventoryClose(InventoryCloseEvent event) {
-        InventoryHolder holder = event.getInventory().getHolder();
-        if (!(holder instanceof SpawnerSellConfirmHolder confirmHolder)) {
-            return;
-        }
-
-        // Always release the interaction lock so the spawner is not stuck when the
-        // player closes the GUI with Escape instead of clicking Cancel.
-        confirmHolder.getSpawnerData().clearInteracted();
-    }
-
     private void handleCancel(Player player, SpawnerData spawner, SpawnerSellConfirmUI.PreviousGui previousGui) {
         // Play sound instead of sending message
         player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-
-        // Clear interaction state
-        spawner.clearInteracted();
 
         // Reopen previous GUI
         reopenPreviousGui(player, spawner, previousGui);
@@ -209,20 +177,17 @@ public class SpawnerSellConfirmListener implements Listener {
         }
 
         // Callback runs on the spawner's region/main thread after the sell fully completes.
-        // This defers clearInteracted() and the GUI reopen until the inventory is actually
-        // emptied, closing the race window where a storage GUI could be reopened with stale
-        // (pre-removal) items still visible.
+        // Defers the GUI reopen until the inventory is actually emptied, closing the race
+        // window where a storage GUI could be reopened with stale (pre-removal) items.
         final UUID playerId = player.getUniqueId();
         Runnable onComplete = () -> {
             activeSells.remove(playerId);
-            spawner.clearInteracted();
             // player.openInventory must run on the global/main thread; schedule with runTask
             // so it is always dispatched correctly on both Paper and Folia.
             Scheduler.runTask(() -> reopenPreviousGui(player, spawner, previousGui));
         };
 
         plugin.getSpawnerSellManager().sellAllItems(player, spawner, onComplete);
-        // clearInteracted() and reopenPreviousGui() are now entirely owned by the callback.
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

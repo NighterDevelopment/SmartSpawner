@@ -61,8 +61,8 @@ public class SpawnerSellConfirmUI {
 
         // OPTIMIZATION: Check if sell confirmation should be skipped
         if (plugin.getGuiLayoutConfig().isSkipSellConfirmation()) {
-            // Atomically claim the interaction slot – abort if another request already owns it
-            if (!spawner.tryMarkInteracted()) {
+            // Guard against a sell already in progress for this spawner
+            if (spawner.isSelling()) {
                 return;
             }
 
@@ -71,17 +71,13 @@ public class SpawnerSellConfirmUI {
                 plugin.getSpawnerMenuAction().handleExpBottleClick(player, spawner, true);
             }
 
-            // clearInteracted() is intentionally deferred into the callback so that
-            // the interaction slot is held for the full duration of the async sell, blocking
-            // replayed open-packets from triggering a second sell while this one is in flight.
             player.closeInventory();
-            plugin.getSpawnerSellManager().sellAllItems(player, spawner, () -> spawner.clearInteracted());
+            plugin.getSpawnerSellManager().sellAllItems(player, spawner, null);
             return;
         }
 
-        // Atomically mark as interacted – prevents a second confirm GUI from being opened
-        // while one is already pending (blocks packet-replay / GUI-spam exploits).
-        if (!spawner.tryMarkInteracted()) {
+        // Guard against opening a second sell GUI while a sell is already in progress.
+        if (spawner.isSelling()) {
             return;
         }
 

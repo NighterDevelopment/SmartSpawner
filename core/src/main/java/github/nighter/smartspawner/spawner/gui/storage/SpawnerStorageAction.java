@@ -405,9 +405,7 @@ public class SpawnerStorageAction implements Listener {
         }
 
         // Mark as modified
-        if (!spawner.isInteracted()) {
-            spawner.markInteracted();
-        }
+        spawner.markStorageDirty();
     }
 
     private void handleDropPageItems(Player player, SpawnerData spawner, Inventory inventory) {
@@ -465,9 +463,7 @@ public class SpawnerStorageAction implements Listener {
         if (spawner.getMaxSpawnerLootSlots() > holder.getOldUsedSlots() && spawner.getIsAtCapacity()) {
             spawner.setIsAtCapacity(false);
         }
-        if (!spawner.isInteracted()) {
-            spawner.markInteracted();
-        }
+        spawner.markStorageDirty();
 
         // Log drop page items action
         if (plugin.getSpawnerActionLogger() != null) {
@@ -622,9 +618,9 @@ public class SpawnerStorageAction implements Listener {
 
     private void openMainMenu(Player player, SpawnerData spawner) {
         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-        if (spawner.isInteracted()){
+        if (spawner.isStorageDirty()){
             spawnerManager.markSpawnerModified(spawner.getSpawnerId());
-            spawner.clearInteracted();
+            spawner.clearStorageDirty();
         }
 
         // If skip_main_gui is enabled, just close the storage GUI instead
@@ -707,9 +703,7 @@ public class SpawnerStorageAction implements Listener {
         spawner.setPreferredSortItem(nextSort);
 
         // Mark spawner as modified to save the preference
-        if (!spawner.isInteracted()) {
-            spawner.markInteracted();
-        }
+        spawner.markStorageDirty();
         spawnerManager.queueSpawnerForSaving(spawner.getSpawnerId());
 
         // Re-sort VirtualInventory
@@ -815,9 +809,7 @@ public class SpawnerStorageAction implements Listener {
             if (spawner.getMaxSpawnerLootSlots() > holder.getOldUsedSlots() && spawner.getIsAtCapacity()) {
                 spawner.setIsAtCapacity(false);
             }
-            if (!spawner.isInteracted()) {
-                spawner.markInteracted();
-            }
+            spawner.markStorageDirty();
 
             // Log take all items action
             if (plugin.getSpawnerActionLogger() != null) {
@@ -935,9 +927,9 @@ public class SpawnerStorageAction implements Listener {
 
 
         SpawnerData spawner = holder.getSpawnerData();
-        if (spawner.isInteracted()){
+        if (spawner.isStorageDirty()){
             plugin.getSpawnerManager().markSpawnerModified(spawner.getSpawnerId());
-            spawner.clearInteracted();
+            spawner.clearStorageDirty();
         }
     }
 }

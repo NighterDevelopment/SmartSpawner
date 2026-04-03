@@ -40,6 +40,10 @@ public class SpawnerData {
     // All operations that touch virtual inventory must check isSelling() before proceeding.
     private final AtomicBoolean selling = new AtomicBoolean(false);
 
+    // Dirty flag for storage GUI – set when items are moved/dropped inside the storage GUI,
+    // cleared (and spawner queued for save) when the GUI is closed or main menu is returned to.
+    private final AtomicBoolean storageDirty = new AtomicBoolean(false);
+
     // Base values from config (immutable after load)
     @Getter @Setter
     private int baseMaxStoredExp;
@@ -96,7 +100,6 @@ public class SpawnerData {
     @Getter
     private final Set<Material> filteredItems = new HashSet<>();
 
-    private final AtomicBoolean interacted = new AtomicBoolean(false);
     @Getter @Setter
     private String lastInteractedPlayer;
 
@@ -497,33 +500,23 @@ public class SpawnerData {
         selling.set(false);
     }
 
-    public boolean isInteracted() {
-        return interacted.get();
+    /** @return true if the storage GUI content was modified since last save. */
+    public boolean isStorageDirty() {
+        return storageDirty.get();
     }
 
-    public void markInteracted() {
-        interacted.compareAndSet(false, true);
+    /** Marks that the storage GUI content has been modified and needs to be saved. */
+    public void markStorageDirty() {
+        storageDirty.set(true);
     }
 
-    /**
-     * Atomically marks this spawner as interacted only if it was not already interacted.
-     * @return true if the state was successfully changed from false to true (i.e., the caller owns the interaction lock),
-     *         false if another interaction was already in progress.
-     */
-    public boolean tryMarkInteracted() {
-        return interacted.compareAndSet(false, true);
-    }
-
-    public void clearInteracted() {
-        interacted.compareAndSet(true, false);
+    /** Clears the storage dirty flag after the spawner has been queued for saving. */
+    public void clearStorageDirty() {
+        storageDirty.set(false);
     }
 
     public void updateLastInteractedPlayer(String playerName) {
         this.lastInteractedPlayer = playerName;
-        // Prevent concurrent modification during spawn events to avoid hologram desync
-        if (System.currentTimeMillis() - lastSpawnTime < 50) {
-            markInteracted();
-        }
     }
 
     /**

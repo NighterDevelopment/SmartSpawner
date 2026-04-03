@@ -124,21 +124,6 @@ tasks.processResources {
     }
 }
 
-// ── Language Changelog generation ────────────────────────────────────────────
-//
-//  Run this task manually before releasing a new version:
-//
-//    ./gradlew generateLanguageChangelog
-//
-//  It compares the current project version against the latest published GitHub
-//  release.  If the build is newer it fetches the old en_US language files from
-//  GitHub, diffs their keys against the local ones, and prepends an entry to
-//  core/src/main/resources/language/CHANGELOG.txt showing exactly which keys
-//  were ADDED, CHANGED, or REMOVED.
-//
-//  The task is skipped gracefully when GitHub is unreachable (offline / CI
-//  without network access).
-// ─────────────────────────────────────────────────────────────────────────────
 tasks.register("generateLanguageChangelog") {
     group       = "documentation"
     description = "Diffs en_US language keys vs the latest GitHub release and prepends a changelog entry."

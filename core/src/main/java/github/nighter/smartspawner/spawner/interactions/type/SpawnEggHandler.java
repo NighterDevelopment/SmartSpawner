@@ -96,6 +96,7 @@ public class SpawnEggHandler {
 
         // Update spawner data
         spawnerData.setEntityType(newType);
+        spawnerData.updateLastInteractedPlayer(player.getName());
 
         // Update physical spawner
         spawner.setSpawnedType(newType);
