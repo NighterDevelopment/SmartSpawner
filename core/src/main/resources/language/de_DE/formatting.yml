@@ -1,8 +1,7 @@
-#---------------------------------------------------
+# ──────────────────────────────────────────────────────
 #                 Number Formatting
-#---------------------------------------------------
+# ──────────────────────────────────────────────────────
 # Controls how large numbers are displayed in-game
-#---------------------------------------------------
 format_number:
   thousand: "{s}K"    # Example: 5000 → 5K
   million: "{s}M"     # Example: 2000000 → 2M
@@ -10,14 +9,14 @@ format_number:
   trillion: "{s}T"    # Example: 1000000000000 → 1T
   default: "{s}"      # Fallback format when no other rule matches
 
-#---------------------------------------------------
+# ──────────────────────────────────────────────────────
 #                 Mob Display Names
-#---------------------------------------------------
+# ──────────────────────────────────────────────────────
 # Defines how mob names appear in spawner GUIs, items, holograms and messages
-#---------------------------------------------------
+# ──────────────────────────────────────────────────────
 mob_names:
   # Passive Mobs
-  #-------------------------
+  # ─────────────────────────
   ALLAY: "Allay"
   ARMADILLO: "Gürteltier"
   AXOLOTL: "Axolotl"
@@ -61,7 +60,7 @@ mob_names:
   WOLF: "Wolf"
 
   # Hostile Mobs
-  #-------------------------
+  # ─────────────────────────
   BLAZE: "Lohe"
   BOGGED: "Sumpfskelett"
   BREEZE: "Böe"

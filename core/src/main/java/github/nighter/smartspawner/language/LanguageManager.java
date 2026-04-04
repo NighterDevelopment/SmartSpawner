@@ -1161,12 +1161,12 @@ public class LanguageManager {
     public String getHologramText() {
         // Try reading from per-language hologram.yml first
         YamlConfiguration hologramCfg = cachedDefaultLocaleData.hologram();
-        if (hologramCfg != null && hologramCfg.contains("text")) {
-            List<String> lines = hologramCfg.getStringList("text");
+        if (hologramCfg != null && hologramCfg.contains("hologram_text")) {
+            List<String> lines = hologramCfg.getStringList("hologram_text");
             if (!lines.isEmpty()) {
                 return String.join("\n", lines);
             }
-            String single = hologramCfg.getString("text");
+            String single = hologramCfg.getString("hologram_text");
             if (single != null) return single;
         }
 

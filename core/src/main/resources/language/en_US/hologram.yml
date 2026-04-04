@@ -1,27 +1,20 @@
-# ──────────────────────────────────────────────────────────────────────────────
-#   SmartSpawner – Hologram Text Display
-#   File: hologram.yml
-# ──────────────────────────────────────────────────────────────────────────────
+# SmartSpawner – hologram.yml
+# Text lines shown above each spawner. Supports &#RRGGBB hex and &x color codes.
 #
-#   Controls the text lines shown in the hologram floating above each spawner.
-#   Supports hex color codes (&#RRGGBB) and standard Bukkit color codes (&c, &a …).
-#
-#   Available placeholders:
-#     {entity}                  – Mob name (formatted by mob_names in formatting.yml)
-#     {ᴇɴᴛɪᴛʏ}                 – Mob name in small-caps unicode
-#     {stack_size}              – Number of stacked spawners
-#     {current_exp}             – Current stored XP
-#     {max_exp}                 – Maximum XP capacity
-#     {used_slots}              – Used inventory slots
-#     {max_slots}               – Total inventory slots
-#     {percent_storage_decimal} – Storage % with one decimal  (e.g. "75.5")
-#     {percent_storage_rounded} – Storage % rounded to integer (e.g. "76")
-#     {percent_exp_decimal}     – XP storage % with one decimal  (e.g. "50.0")
-#     {percent_exp_rounded}     – XP storage % rounded to integer (e.g. "50")
-#
-# ──────────────────────────────────────────────────────────────────────────────
+# Placeholders:
+#   {entity}                  – Mob name
+#   {ᴇɴᴛɪᴛʏ}                 – Mob name in small-caps unicode
+#   {stack_size}              – Stack count
+#   {current_exp}             – Stored XP
+#   {max_exp}                 – Max XP capacity
+#   {used_slots}              – Used item slots
+#   {max_slots}               – Total item slots
+#   {percent_storage_decimal} – Storage % (1 decimal, e.g. "75.5")
+#   {percent_storage_rounded} – Storage % rounded (e.g. "76")
+#   {percent_exp_decimal}     – XP % (1 decimal, e.g. "50.0")
+#   {percent_exp_rounded}     – XP % rounded (e.g. "50")
 
-text:
+hologram_text:
   - '[&#e6e6fa{stack_size}] &#3498db{ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ'
   - '&#5dade2• &#e6e6faxᴘ: &#37eb9a{current_exp}&#e6e6fa/&#37eb9a{max_exp}'
   - '&#5dade2• &#e6e6faɪᴛᴇᴍꜱ: &#37eb9a{used_slots}&#e6e6fa/&#37eb9a{max_slots}'

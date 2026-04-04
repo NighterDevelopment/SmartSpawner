@@ -1,25 +1,18 @@
-# ============================================================
+# ──────────────────────────────────────────────────────
 # SmartSpawner – command_messages.yml  (en_US)
-# Dedicated file for command-related messages.
-# Uses a nested key structure: <command>.<action>.message / sound
-# Component & bossbar texts are also stored here.
-# ============================================================
-
-# General (shared across multiple commands)
+# ──────────────────────────────────────────────────────
 player_only:
   message: "&#ff5252ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ᴄᴀɴ ᴏɴʟʏ ʙᴇ ᴜꜱᴇᴅ ʙʏ ᴘʟᴀʏᴇʀꜱ."
   sound: block.note_block.bass
 
-# ──────────────────────────────────────────
-#  /ss near
-# ──────────────────────────────────────────
+# ──────────────────────────────────────────────────────
+#                        /ss near
+# ──────────────────────────────────────────────────────
 near:
-  # BossBar texts (plain text – colour is set in code)
   bossbar:
     analyzing: "🔍 ᴀɴᴀʟʏᴢɪɴɢ... {percent}%"
     found: "✓ ꜰᴏᴜɴᴅ {count} ꜱᴘᴀᴡɴᴇʀ(ꜱ) ᴡɪᴛʜɪɴ {radius} ʙʟᴏᴄᴋꜱ"
     not_found: "✗ ɴᴏ ꜱᴘᴀᴡɴᴇʀꜱ ꜰᴏᴜɴᴅ ᴡɪᴛʜɪɴ {radius} ʙʟᴏᴄᴋꜱ"
-  # Clickable chat component texts (plain text – colour/style are set in code)
   view_gui:
     button: "[ᴠɪᴇᴡ ɪɴ ɢᴜɪ]"
     hover: "Click to browse the {count} spawner(s) found nearby"
@@ -41,9 +34,9 @@ near:
   highlights_expired:
     message: "&#888888⏱ ꜱᴘᴀᴡɴᴇʀ ʜɪɢʜʟɪɢʜᴛꜱ ʜᴀᴠᴇ ᴇxᴘɪʀᴇᴅ."
 
-# ──────────────────────────────────────────
-#  /ss give
-# ──────────────────────────────────────────
+# ──────────────────────────────────────────────────────
+#                        /ss give
+# ──────────────────────────────────────────────────────
 give:
   usage:
     message: "&#ff5252ᴜꜱᴀɢᴇ: /ss give <player> <mobtype> [amount]"
@@ -79,9 +72,9 @@ give:
     message: "&#37eb9aɢᴀᴠᴇ &#f8f8ff{amount} {ᴇɴᴛɪᴛʏ} &#37eb9aꜱᴘᴀᴡɴᴇʀ(ꜱ) ᴛᴏ &#f8f8ff{player}"
     sound: entity.experience_orb.pickup
 
-# ──────────────────────────────────────────
-#  /ss hologram
-# ──────────────────────────────────────────
+# ──────────────────────────────────────────────────────
+#                      /ss hologram
+# ──────────────────────────────────────────────────────
 hologram:
   enabled:
     message: "&#f8f8ffʜᴏʟᴏɢʀᴀᴍꜱ &#37eb9aᴇɴᴀʙʟᴇᴅ &#f8f8ffꜰᴏʀ ᴀʟʟ ꜱᴘᴀᴡɴᴇʀꜱ"
@@ -96,9 +89,9 @@ hologram:
     message: "&#ff5252ꜰᴀɪʟᴇᴅ ᴛᴏ ᴄʟᴇᴀʀ ʜᴏʟᴏɢʀᴀᴍꜱ"
     sound: block.note_block.pling
 
-# ──────────────────────────────────────────
-#  /ss clear
-# ──────────────────────────────────────────
+# ──────────────────────────────────────────────────────
+#                       /ss clear
+# ──────────────────────────────────────────────────────
 clear:
   usage:
     message: "&#f8f8ffᴜꜱᴀɢᴇ: &#3498db/ss clear <holograms|ghost_spawners>"
@@ -112,9 +105,9 @@ clear:
     message: "&#37eb9aɴᴏ ɢʜᴏꜱᴛ ꜱᴘᴀᴡɴᴇʀꜱ ꜰᴏᴜɴᴅ"
     sound: entity.experience_orb.pickup
 
-# ──────────────────────────────────────────
-#  /ss prices
-# ──────────────────────────────────────────
+# ──────────────────────────────────────────────────────
+#                       /ss prices
+# ──────────────────────────────────────────────────────
 prices:
   not_available:
     message: "&#ff5252ꜱᴇʟʟ ɪɴᴛᴇɢʀᴀᴛɪᴏɴ ɪꜱ ɴᴏᴛ ᴀᴠᴀɪʟᴀʙʟᴇ. ᴘʟᴇᴀꜱᴇ ᴄᴏɴꜰɪɢᴜʀᴇ ᴇᴄᴏɴᴏᴍʏ ꜱᴇᴛᴛɪɴɢꜱ."
@@ -123,9 +116,9 @@ prices:
     message: "&#ff5252ɴᴏ ɪᴛᴇᴍꜱ ᴡɪᴛʜ ᴘʀɪᴄᴇꜱ ꜰᴏᴜɴᴅ."
     sound: block.note_block.pling
 
-# ──────────────────────────────────────────
-#  Spawner management (/ss list → remove)
-# ──────────────────────────────────────────
+# ──────────────────────────────────────────────────────
+#                   spawner management
+# ──────────────────────────────────────────────────────
 management:
   removed:
     message: "&#e6e6faꜱᴘᴀᴡɴᴇʀ &#ff5252ʀᴇᴍᴏᴠᴇᴅ &#e6e6faꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ!"

@@ -101,11 +101,8 @@ tasks.shadowJar {
     exclude("META-INF/MANIFEST.MF")
     exclude("META-INF/LICENSE*")
     exclude("META-INF/NOTICE*")
-
     from(sourceSets["main"].output)
-
     exclude("org/slf4j/**")
-
     mergeServiceFiles()
 
     // destinationDirectory.set(file("C:\\Users\\USER\\Desktop\\TestServer\\plugins"))
