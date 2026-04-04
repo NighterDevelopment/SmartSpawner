@@ -19,7 +19,6 @@ public class GuiLayoutConfig {
     private static final String STORAGE_GUI_FILE = "storage_gui.yml";
     private static final String MAIN_GUI_FILE = "main_gui.yml";
     private static final String SELL_CONFIRM_GUI_FILE = "sell_confirm_gui.yml";
-    private static final String GUI_CONFIG_FILE = "gui_config.yml";
     private static final String DEFAULT_LAYOUT = "default";
     private static final int MIN_SLOT = 1;
     private static final int MAX_SLOT = 9;
@@ -55,13 +54,13 @@ public class GuiLayoutConfig {
         
         // Check and update layout files before loading
         layoutUpdater.checkAndUpdateLayouts();
-        
-        // Load GUI config settings
-        loadGuiConfig();
 
         this.currentStorageLayout = loadCurrentStorageLayout();
         this.currentMainLayout = loadCurrentMainLayout();
         this.currentSellConfirmLayout = loadCurrentSellConfirmLayout();
+
+        // Load GUI behaviour settings from the respective layout files
+        loadLayoutSettings();
     }
 
     private void initializeLayoutsDirectory() {
@@ -73,7 +72,7 @@ public class GuiLayoutConfig {
 
     private void autoSaveLayoutFiles() {
         try {
-            String[] layoutNames = new String[]{DEFAULT_LAYOUT, "DonutSMP"};
+            String[] layoutNames = new String[]{DEFAULT_LAYOUT, "DonutSMP", "DonutSMP_v2"};
 
             for (String layoutName : layoutNames) {
                 File layoutDir = new File(layoutsDir, layoutName);
@@ -120,44 +119,54 @@ public class GuiLayoutConfig {
                     }
                 }
             }
-
-            // Save GUI config file (shared across all layouts)
-            File guiConfigFile = new File(layoutsDir, GUI_CONFIG_FILE);
-            String guiConfigResourcePath = GUI_LAYOUTS_DIR + "/" + GUI_CONFIG_FILE;
-
-            if (!guiConfigFile.exists()) {
-                try {
-                    plugin.saveResource(guiConfigResourcePath, false);
-                } catch (Exception e) {
-                    plugin.getLogger().log(Level.WARNING,
-                            "Failed to auto-save GUI config file: " + e.getMessage(), e);
-                }
-            }
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to auto-save layout files", e);
         }
     }
 
-    private void loadGuiConfig() {
-        File guiConfigFile = new File(layoutsDir, GUI_CONFIG_FILE);
-
-        if (!guiConfigFile.exists()) {
-            plugin.getLogger().warning("GUI config file not found, using defaults");
-            this.skipMainGui = false;
-            this.skipSellConfirmation = false;
-            return;
+    private void loadLayoutSettings() {
+        // Read skip_main_gui from the current layout's main_gui.yml
+        File mainFile = resolveLayoutFile(MAIN_GUI_FILE);
+        this.skipMainGui = false;
+        if (mainFile != null) {
+            try {
+                FileConfiguration config = YamlConfiguration.loadConfiguration(mainFile);
+                this.skipMainGui = config.getBoolean("skip_main_gui", false);
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.WARNING,
+                        "Failed to read skip_main_gui from main_gui.yml, using default (false): " + e.getMessage(), e);
+            }
         }
 
-        try {
-            FileConfiguration config = YamlConfiguration.loadConfiguration(guiConfigFile);
-            this.skipMainGui = config.getBoolean("skip_main_gui", false);
-            this.skipSellConfirmation = config.getBoolean("skip_sell_confirmation", false);
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.WARNING,
-                    "Failed to load GUI config, using defaults: " + e.getMessage(), e);
-            this.skipMainGui = false;
-            this.skipSellConfirmation = false;
+        // Read skip_sell_confirmation from the current layout's sell_confirm_gui.yml
+        File sellConfirmFile = resolveLayoutFile(SELL_CONFIRM_GUI_FILE);
+        this.skipSellConfirmation = false;
+        if (sellConfirmFile != null) {
+            try {
+                FileConfiguration config = YamlConfiguration.loadConfiguration(sellConfirmFile);
+                this.skipSellConfirmation = config.getBoolean("skip_sell_confirmation", false);
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.WARNING,
+                        "Failed to read skip_sell_confirmation from sell_confirm_gui.yml, using default (false): " + e.getMessage(), e);
+            }
         }
+    }
+
+    /**
+     * Resolve a layout file for the current layout, falling back to the default layout.
+     */
+    private File resolveLayoutFile(String fileName) {
+        File layoutFile = new File(new File(layoutsDir, currentLayout), fileName);
+        if (layoutFile.exists()) {
+            return layoutFile;
+        }
+        if (!currentLayout.equals(DEFAULT_LAYOUT)) {
+            File defaultFile = new File(new File(layoutsDir, DEFAULT_LAYOUT), fileName);
+            if (defaultFile.exists()) {
+                return defaultFile;
+            }
+        }
+        return null;
     }
 
     private GuiLayout loadCurrentStorageLayout() {

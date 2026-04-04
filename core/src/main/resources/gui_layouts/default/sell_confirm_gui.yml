@@ -19,6 +19,11 @@
 # Multiple buttons can use same slot
 # You can add multiple cancel/confirm buttons by using different slot numbers
 
+# Skip sell confirmation GUI when selling items
+# When enabled: Clicking sell will immediately sell all items without confirmation
+# When disabled: Clicking sell will show a confirmation GUI first (default behavior)
+skip_sell_confirmation: false
+
 
 # Cancel button
 slot_11:

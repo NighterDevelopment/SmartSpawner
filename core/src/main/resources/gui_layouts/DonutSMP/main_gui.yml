@@ -22,6 +22,11 @@
 #   collect_exp: Collect exp only
 #   none: Display only, no action
 
+# Skip main GUI and open storage directly when clicking spawner
+# When enabled: Right-clicking a spawner opens the storage GUI directly
+# When disabled: Right-clicking a spawner opens the main GUI first (default behavior)
+skip_main_gui: false
+
 
 # Storage button
 slot_12:

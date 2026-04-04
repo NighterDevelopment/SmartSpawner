@@ -1,0 +1,194 @@
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+#   ███████╗███╗   ███╗ █████╗ ██████╗ ████████╗███████╗██████╗  █████╗ ██╗    ██╗███╗   ██╗███████╗██████╗
+#   ██╔════╝████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔══██╗██╔══██╗██║    ██║████╗  ██║██╔════╝██╔══██╗
+#   ███████╗██╔████╔██║███████║██████╔╝   ██║   ███████╗██████╔╝███████║██║ █╗ ██║██╔██╗ ██║█████╗  ██████╔╝
+#   ╚════██║██║╚██╔╝██║██╔══██║██╔══██╗   ██║   ╚════██║██╔═══╝ ██╔══██║██║███╗██║██║╚██╗██║██╔══╝  ██╔══██╗
+#   ███████║██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   ███████║██║     ██║  ██║╚███╔███╔╝██║ ╚████║███████╗██║  ██║
+#   ╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+#
+#   NOTE: Text placeholders in small caps (ᴇxᴀᴍᴘʟᴇ) will be automatically
+#   converted to small caps in-game. Numeric placeholders like {amount} or
+#   {chance} will remain as-is because they are not affected by the small caps.
+
+custom_item:
+  # Appearance of smart spawner items in inventory and tooltips
+  spawner:
+    name: "&#3498db{ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ"
+    loot_items: "  &#ecf0f1•  {amount} {ɪᴛᴇᴍ_ɴᴀᴍᴇ} &#3498db({chance}%)"
+    loot_items_empty: "  &#ecf0f1•  ɴᴏɴᴇ"
+    lore:
+      - ""
+      - "&#3498db◈ &#3498dbᴅᴇᴛᴀɪʟꜱ:"
+      - "  &#ecf0f1•  ᴇxᴘᴇʀɪᴇɴᴄᴇ ɢɪᴠᴇ: &#3498db{exp}"
+      - ""
+      - "&#3498db◈ &#3498dbᴅʀᴏᴘꜱ:"
+      - "{loot_items}"
+      - ""
+  
+  # Appearance of item spawner items in inventory and tooltips
+  item_spawner:
+    name: "&#3498db{ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ"
+    loot_items: "  &#ecf0f1•  {amount} {ɪᴛᴇᴍ_ɴᴀᴍᴇ} &#3498db({chance}%)"
+    loot_items_empty: "  &#ecf0f1•  ɴᴏɴᴇ"
+    lore:
+      - ""
+      - "&#3498db◈ &#3498dbᴅᴇᴛᴀɪʟꜱ:"
+      - "  &#ecf0f1•  ᴇxᴘᴇʀɪᴇɴᴄᴇ ɢɪᴠᴇ: &#3498db{exp}"
+      - ""
+      - "&#3498db◈ &#3498dbᴅʀᴏᴘꜱ:"
+      - "{loot_items}"
+      - ""
+  
+  # Appearance of vanilla spawner items in inventory and tooltips
+  # Available placeholders: {entity}, {ᴇɴᴛɪᴛʏ}
+  # Delete this section if you don't want to use custom vanilla spawners name and lore
+  vanilla_spawner:
+    name: "{entity} Spawner"
+
+# Item display names
+item:
+  # These names are used when displaying potential drops in spawner tooltips
+  # For multilingual support, replace with corresponding names from your language
+
+    # Animal & Fish Drops
+  LEATHER:
+    name: Leather
+  STRING:
+    name: String
+  FEATHER:
+    name: Feather
+  CHICKEN:
+    name: Raw Chicken
+  COD:
+    name: Raw Cod
+  SALMON:
+    name: Raw Salmon
+  BEEF:
+    name: Raw Beef
+  PORKCHOP:
+    name: Raw Porkchop
+  MUTTON:
+    name: Raw Mutton
+  RABBIT:
+    name: Raw Rabbit
+  WHITE_WOOL:
+    name: White Wool
+  RABBIT_HIDE:
+    name: Rabbit Hide
+  RABBIT_FOOT:
+    name: Rabbit's Foot
+  PUFFERFISH:
+    name: Pufferfish
+  TROPICAL_FISH:
+    name: Tropical Fish
+  
+  # Hostile Mob Drops
+  BONE:
+    name: Bone
+  BONE_MEAL:
+    name: Bone Meal
+  ARROW:
+    name: Arrow
+  SPIDER_EYE:
+    name: Spider Eye
+  GUNPOWDER:
+    name: Gunpowder
+  ROTTEN_FLESH:
+    name: Rotten Flesh
+  ENDER_PEARL:
+    name: Ender Pearl
+  GHAST_TEAR:
+    name: Ghast Tear
+  MAGMA_CREAM:
+    name: Magma Cream
+  PHANTOM_MEMBRANE:
+    name: Phantom Membrane
+  SHULKER_SHELL:
+    name: Shulker Shell
+  SLIME_BALL:
+    name: Slime Ball
+  BLAZE_ROD:
+    name: Blaze Rod
+  BREEZE_ROD:
+    name: Breeze Rod
+  WITHER_SKELETON_SKULL:
+    name: Wither Skeleton Skull
+  
+  # Weapons & Tools
+  BOW:
+    name: Bow
+  CROSSBOW:
+    name: Crossbow
+  GOLDEN_SWORD:
+    name: Golden Sword
+  GOLDEN_AXE:
+    name: Golden Axe
+  STONE_SWORD:
+    name: Stone Sword
+  IRON_AXE:
+    name: Iron Axe
+  TRIDENT:
+    name: Trident
+  TIPPED_ARROW:
+    name: Tipped Arrow
+  TOTEM_OF_UNDYING:
+    name: Totem of Undying
+  SADDLE:
+    name: Saddle
+  
+  # Materials & Resources
+  COPPER_INGOT:
+    name: Copper Ingot
+  PRISMARINE_SHARD:
+    name: Prismarine Shard
+  PRISMARINE_CRYSTALS:
+    name: Prismarine Crystals
+  WET_SPONGE:
+    name: Wet Sponge
+  EMERALD:
+    name: Emerald
+  IRON_INGOT:
+    name: Iron Ingot
+  GOLD_NUGGET:
+    name: Gold Nugget
+  GOLD_INGOT:
+    name: Gold Ingot
+  REDSTONE:
+    name: Redstone Dust
+  GLOWSTONE_DUST:
+    name: Glowstone Dust
+  COAL:
+    name: Coal
+  
+  # Miscellaneous Items
+  GLOW_INK_SAC:
+    name: Glow Ink Sac
+  INK_SAC:
+    name: Ink Sac
+  CARROT:
+    name: Carrot
+  POTATO:
+    name: Potato
+  POPPY:
+    name: Poppy
+  SNOWBALL:
+    name: Snowball
+  SEAGRASS:
+    name: Seagrass
+  SUGAR:
+    name: Sugar
+  GLASS_BOTTLE:
+    name: Glass Bottle
+  STICK:
+    name: Stick
+  SCULK_CATALYST:
+    name: Sculk Catalyst
+  TIDE_ARMOR_TRIM_SMITHING_TEMPLATE:
+    name: Tide Armor Trim
+  DIAMOND:
+    name: Diamond
+  NETHER_STAR:
+    name: Nether Star
+  NETHERITE_INGOT:
+    name: Netherite Ingot

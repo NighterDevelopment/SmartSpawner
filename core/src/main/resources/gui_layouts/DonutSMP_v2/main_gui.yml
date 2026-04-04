@@ -7,7 +7,6 @@
 #     material: MATERIAL_NAME  # Material to display (use PLAYER_HEAD for spawner mob head)
 #     enabled: true/false      # Show/hide button
 #     info_button: true/false  # Optional: Mark as spawner info button for timer updates
-#     condition: "condition"   # Optional: show only if condition met
 #     click: "action"          # Action for any click (left/right/shift)
 #     left_click: "action"     # Action for left click only (overrides click)
 #     right_click: "action"    # Action for right click only (overrides click)
@@ -26,7 +25,7 @@
 # Skip main GUI and open storage directly when clicking spawner
 # When enabled: Right-clicking a spawner opens the storage GUI directly
 # When disabled: Right-clicking a spawner opens the main GUI first (default behavior)
-skip_main_gui: false
+skip_main_gui: true
 
 
 # Storage button
@@ -35,19 +34,16 @@ slot_12:
   enabled: true
   click: "open_storage"
 
-# Spawner info button (conditional actions based on sell integration)
+# Spawner info button (conditional actions)
 slot_14:
   material: PLAYER_HEAD
   enabled: true
   info_button: true
-  # With sell integration: left click = sell+exp, right click = stacker
-  # Without sell integration: any click = stacker
   if:
     sell_integration:
-      left_click: "sell_and_exp"
-      right_click: "open_stacker"
+      click: "sell_and_exp"
     no_sell_integration:
-      click: "open_stacker"
+      click: "none"
 
 # Experience bottle
 slot_16:
