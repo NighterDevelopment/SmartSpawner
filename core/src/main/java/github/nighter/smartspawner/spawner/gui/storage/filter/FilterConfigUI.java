@@ -168,7 +168,6 @@ public class FilterConfigUI implements Listener {
             // Set the display name with correct formatting based on status
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("item_name", itemName);
-            placeholders.put("ɪᴛᴇᴍ_ɴᴀᴍᴇ", languageManager.getSmallCaps(itemName));
 
             String nameKey = isFiltered ? "filter_item_blocked.name" : "filter_item_allowed.name";
             meta.setDisplayName(languageManager.getGuiItemName(nameKey, placeholders));

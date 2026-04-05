@@ -6,7 +6,7 @@ custom_item:
   # Appearance of smart spawner items in inventory and tooltips
   spawner:
     name: "&#3498dbꜱᴘᴀᴡɴᴇʀ {ᴇɴᴛɪᴛʏ}"
-    loot_items: "  &#ecf0f1•  {amount} {ɪᴛᴇᴍ_ɴᴀᴍᴇ} &#3498db({chance}%)"
+    loot_items: "  &#ecf0f1•  {amount} {item_name} &#3498db({chance}%)"
     loot_items_empty: "  &#ecf0f1•  ᴋʜôɴɢ ᴄó ᴠậᴛ ᴘʜẩᴍ"
     lore:
       - ""
@@ -20,7 +20,7 @@ custom_item:
   # Appearance of item spawner items in inventory and tooltips
   item_spawner:
     name: "&#3498dbꜱᴘᴀᴡɴᴇʀ {ᴇɴᴛɪᴛʏ}"
-    loot_items: "  &#ecf0f1•  {amount} {ɪᴛᴇᴍ_ɴᴀᴍᴇ} &#3498db({chance}%)"
+    loot_items: "  &#ecf0f1•  {amount} {item_name} &#3498db({chance}%)"
     loot_items_empty: "  &#ecf0f1•  ᴋʜôɴɢ ᴄó ᴠậᴛ ᴘʜẩᴍ"
     lore:
       - ""

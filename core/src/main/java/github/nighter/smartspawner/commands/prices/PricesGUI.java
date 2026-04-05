@@ -148,7 +148,6 @@ public class PricesGUI implements Listener {
         String materialName = languageManager.getVanillaItemName(material);
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("item_name", materialName);
-        placeholders.put("ɪᴛᴇᴍ_ɴᴀᴍᴇ", languageManager.getSmallCaps(materialName));
         placeholders.put("price", languageManager.formatNumber(priceInfo.finalPrice));
         placeholders.put("price_source", priceInfo.source);
 

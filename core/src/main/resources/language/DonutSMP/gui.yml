@@ -12,10 +12,27 @@ spawner_storage_item:
   name: '&#F97603sᴘᴀᴡɴᴇʀ sᴛᴏʀᴀɢᴇ'
   lore:
     - '{loot_items}'
-  loot_items: '&#F97603{amount} &f{ɪᴛᴇᴍ_ɴᴀᴍᴇ}'
+  loot_items: '&#F97603{amount} &f{item_name}'
   loot_items_empty: '&#e6e6faɴᴏ ɪᴛᴇᴍ ᴅʀᴏᴘs'
 
-spawner_info_item:
+# Available placeholders:
+# {entity}           - Formatted entity name (e.g., "Zombie")
+# {ᴇɴᴛɪᴛʏ}           - Entity name in small caps (e.g., "ᴢᴏᴍʙɪᴇ")
+# {stack_size}       - Number of spawners stacked at this location
+# {range}            - Spawning range in blocks
+# {delay}            - Spawn delay in seconds
+# {min_mobs}         - Minimum number of mobs to spawn
+# {max_mobs}         - Maximum number of mobs to spawn
+# {current_items}    - Current number of items stored
+# {max_items}        - Maximum storage capacity for items
+# {percent_storage_rounded}  - Storage usage as integer percentage (e.g., "87")
+# {percent_storage_decimal} - Storage usage as formatted percentage with decimal (e.g., "87.5")
+# {current_exp}      - Current experience stored (formatted with commas)
+# {max_exp}          - Maximum experience capacity (formatted with commas)
+# {raw_current_exp}  - Raw current experience number
+# {raw_max_exp}      - Raw maximum experience number
+# {percent_exp_rounded}      - Experience storage as integer percentage
+# {percent_exp_decimal}    - Experience storage as formatted percentage with decimal (e.g., "42.7")spawner_info_item:
   name: '&#FCE300{stack_size} {ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ'
   lore:
     - '&#FCE300● &fClick to sell items and collect xp'
@@ -376,7 +393,7 @@ navigation:
 prices_gui_title: "ꜱᴇʟʟ ᴘʀɪᴄᴇꜱ - [{current_page}/{total_pages}]"
 
 price_item:
-  name: '&#3498db{ɪᴛᴇᴍ_ɴᴀᴍᴇ}'
+  name: '&#3498db{item_name}'
   lore:
     - ''
     - '&#3498db◈ &#ecf0f1ᴘʀɪᴄᴇ:'

@@ -8,13 +8,21 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.text.Normalizer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LanguageManager {
     private final JavaPlugin plugin;
@@ -880,6 +888,205 @@ public class LanguageManager {
             } else {
                 // Standard processing for lines without multi-line placeholders
                 result.add(applyPlaceholdersAndColors(line, placeholders));
+            }
+        }
+
+        return result;
+    }
+
+    // Pattern reused across calls to extract hex colour codes from template strings
+    private static final Pattern HEX_TEMPLATE_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
+
+    // Legacy &[0-9a-f] → TextColor mapping (Minecraft colour codes)
+    private static final Map<Character, TextColor> LEGACY_COLOR_MAP;
+    static {
+        Map<Character, TextColor> m = new HashMap<>(16);
+        m.put('0', TextColor.color(0x000000)); m.put('1', TextColor.color(0x0000AA));
+        m.put('2', TextColor.color(0x00AA00)); m.put('3', TextColor.color(0x00AAAA));
+        m.put('4', TextColor.color(0xAA0000)); m.put('5', TextColor.color(0xAA00AA));
+        m.put('6', TextColor.color(0xFFAA00)); m.put('7', TextColor.color(0xAAAAAA));
+        m.put('8', TextColor.color(0x555555)); m.put('9', TextColor.color(0x5555FF));
+        m.put('a', TextColor.color(0x55FF55)); m.put('b', TextColor.color(0x55FFFF));
+        m.put('c', TextColor.color(0xFF5555)); m.put('d', TextColor.color(0xFF55FF));
+        m.put('e', TextColor.color(0xFFFF55)); m.put('f', TextColor.color(0xFFFFFF));
+        LEGACY_COLOR_MAP = Collections.unmodifiableMap(m);
+    }
+
+    /** Removes the default italic decoration that Minecraft applies to all item lore lines. */
+    private static Component noItalic(Component c) {
+        return c.decoration(TextDecoration.ITALIC, false);
+    }
+
+    /**
+     * Finds the last active colour in {@code text}, considering both
+     * {@code &#RRGGBB} hex codes and legacy {@code &[0-9a-f]} codes.
+     * Whichever colour code appears furthest right in the string wins.
+     */
+    private TextColor extractLastColor(String text, TextColor defaultColor) {
+        if (text == null || text.isEmpty()) return defaultColor;
+
+        TextColor last = null;
+        int lastPos = -1;
+
+        // Scan hex codes
+        Matcher m = HEX_TEMPLATE_PATTERN.matcher(text);
+        while (m.find()) {
+            if (m.start() > lastPos) {
+                lastPos = m.start();
+                last = TextColor.color(Integer.parseInt(m.group(1), 16));
+            }
+        }
+
+        // Scan legacy &X codes
+        for (int i = 0; i < text.length() - 1; i++) {
+            if (text.charAt(i) == '&') {
+                char code = Character.toLowerCase(text.charAt(i + 1));
+                TextColor legacyColor = LEGACY_COLOR_MAP.get(code);
+                if (legacyColor != null && i > lastPos) {
+                    lastPos = i;
+                    last = legacyColor;
+                }
+            }
+        }
+
+        return last != null ? last : defaultColor;
+    }
+
+    /**
+     * Builds a single loot-drop lore line as an Adventure Component.
+     * The item name is rendered with {@link Component#translatable} so each player
+     * sees it in their own client language (no server-side name lookup needed).
+     *
+     * @param templateKey items.yml key for the loot_items template line
+     *                    (e.g. {@code "custom_item.spawner.loot_items"})
+     * @param material    the drop item material
+     * @param amount      formatted amount range string (e.g. {@code "1-3"})
+     * @param chance      formatted chance string (e.g. {@code "50.0"})
+     * @return Adventure Component for this lore line
+     */
+    public Component buildTranslatableLootLine(String templateKey, Material material, String amount, String chance) {
+        String template = cachedDefaultLocaleData.items().getString(templateKey);
+        return buildTranslatableLootLineFrom(template, material, amount, chance);
+    }
+
+    /**
+     * Same as {@link #buildTranslatableLootLine} but reads the template from gui.yml.
+     */
+    public Component buildTranslatableGuiLootLine(String templateKey, Material material, String amount, String chance) {
+        String template = cachedDefaultLocaleData.gui().getString(templateKey);
+        return buildTranslatableLootLineFrom(template, material, amount, chance);
+    }
+
+    private Component buildTranslatableLootLineFrom(String template, Material material, String amount, String chance) {
+        if (template == null) {
+            return noItalic(Component.text(amount + " ")
+                    .append(Component.translatable(material.translationKey()))
+                    .append(Component.text(" (" + chance + ")")));
+        }
+
+        // Substitute {amount} and {chance}; split on {item_name}
+        String resolved = template
+                .replace("{amount}", amount)
+                .replace("{chance}", chance);
+
+        String placeholder = "{item_name}";
+        int idx = resolved.indexOf(placeholder);
+        if (idx < 0) {
+            // No item-name placeholder – fall back to legacy colour conversion
+            return noItalic(LegacyComponentSerializer.legacySection()
+                    .deserialize(ColorUtil.translateHexColorCodes(resolved)));
+        }
+
+        String beforeRaw = resolved.substring(0, idx);
+        String afterRaw  = resolved.substring(idx + placeholder.length());
+
+        // Apply the last active colour (hex OR legacy &f etc.) from the before-segment
+        TextColor itemColor = extractLastColor(beforeRaw, TextColor.color(0xFFFFFF));
+
+        Component before = LegacyComponentSerializer.legacySection()
+                .deserialize(ColorUtil.translateHexColorCodes(beforeRaw));
+        Component after  = LegacyComponentSerializer.legacySection()
+                .deserialize(ColorUtil.translateHexColorCodes(afterRaw));
+
+        return noItalic(before
+                .append(Component.translatable(material.translationKey()).color(itemColor))
+                .append(after));
+    }
+
+    /**
+     * Reads the items.yml lore template at {@code key} and builds the full lore as Adventure
+     * Components.  When a template line contains {@code {loot_items}}, it is replaced by the
+     * supplied {@code lootItemComponents} list (one component per drop line).  All other lines
+     * go through the usual placeholder-and-colour pipeline and are then deserialised via
+     * {@link LegacyComponentSerializer}.
+     *
+     * @param key                items.yml key pointing to the lore list
+     *                           (e.g. {@code "custom_item.spawner.lore"})
+     * @param stringPlaceholders already-resolved string placeholders (entity, exp, …)
+     * @param lootItemComponents pre-built component per loot-drop line
+     *                           (build each with {@link #buildTranslatableLootLine})
+     * @param emptyLootKey       items.yml key for the "no drops" fallback line
+     * @return Adventure Component list, one element per visual lore line
+     */
+    public List<Component> buildItemLoreAsComponents(
+            String key,
+            Map<String, String> stringPlaceholders,
+            List<Component> lootItemComponents,
+            String emptyLootKey) {
+        if (!activeFileTypes.contains(LanguageFileType.ITEMS)) {
+            return Collections.emptyList();
+        }
+
+        List<String> loreList = cachedDefaultLocaleData.items().getStringList(key);
+        LegacyComponentSerializer legacySerial = LegacyComponentSerializer.legacySection();
+        List<Component> result = new ArrayList<>(loreList.size() + lootItemComponents.size());
+
+        for (String line : loreList) {
+            if (line.contains("{loot_items}")) {
+                if (lootItemComponents.isEmpty()) {
+                    String emptyRaw = cachedDefaultLocaleData.items().getString(emptyLootKey);
+                    if (emptyRaw == null) emptyRaw = "";
+                    result.add(noItalic(legacySerial.deserialize(ColorUtil.translateHexColorCodes(emptyRaw))));
+                } else {
+                    result.addAll(lootItemComponents);
+                }
+            } else {
+                String processed = applyPlaceholdersAndColors(line, stringPlaceholders);
+                result.add(noItalic(legacySerial.deserialize(processed)));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Same as {@link #buildItemLoreAsComponents} but reads the lore template from gui.yml.
+     */
+    public List<Component> buildGuiLoreAsComponents(
+            String key,
+            Map<String, String> stringPlaceholders,
+            List<Component> lootItemComponents,
+            String emptyLootKey) {
+        if (!activeFileTypes.contains(LanguageFileType.GUI)) {
+            return Collections.emptyList();
+        }
+
+        List<String> loreList = cachedDefaultLocaleData.gui().getStringList(key);
+        LegacyComponentSerializer legacySerial = LegacyComponentSerializer.legacySection();
+        List<Component> result = new ArrayList<>(loreList.size() + lootItemComponents.size());
+
+        for (String line : loreList) {
+            if (line.contains("{loot_items}")) {
+                if (lootItemComponents.isEmpty()) {
+                    String emptyRaw = cachedDefaultLocaleData.gui().getString(emptyLootKey);
+                    if (emptyRaw == null) emptyRaw = "";
+                    result.add(noItalic(legacySerial.deserialize(ColorUtil.translateHexColorCodes(emptyRaw))));
+                } else {
+                    result.addAll(lootItemComponents);
+                }
+            } else {
+                String processed = applyPlaceholdersAndColors(line, stringPlaceholders);
+                result.add(noItalic(legacySerial.deserialize(processed)));
             }
         }
 

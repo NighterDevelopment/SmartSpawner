@@ -1,7 +1,6 @@
-# ──────────────────────────────────────────────────────
-#                 Number Formatting
-# ──────────────────────────────────────────────────────
-# Controls how large numbers are displayed in-game
+# SmartSpawner – formatting.yml
+# Number formatting and mob display names used throughout the plugin.
+
 # ──────────────────────────────────────────────────────
 format_number:
   thousand: "{s}K"    # Example: 5000 → 5K

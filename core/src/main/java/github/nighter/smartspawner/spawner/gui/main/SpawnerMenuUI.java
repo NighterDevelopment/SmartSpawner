@@ -1,5 +1,6 @@
 package github.nighter.smartspawner.spawner.gui.main;
 
+import net.kyori.adventure.text.Component;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.nms.VersionInitializer;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayout;
@@ -252,18 +253,21 @@ public class SpawnerMenuUI {
             int percentStorage = calculatePercentage(currentItems, maxSlots);
             placeholders.put("percent_storage_rounded", String.valueOf(percentStorage));
         }
+        List<Component> lootComponents = Collections.emptyList();
         if (usedPlaceholders.contains("loot_items")) {
             Map<VirtualInventory.ItemSignature, Long> storedItems = virtualInventory.getConsolidatedItems();
-            String lootItemsText = buildLootItemsText(spawner.getEntityType(), storedItems);
-            placeholders.put("loot_items", lootItemsText);
+            lootComponents = buildLootItemComponents(spawner.getEntityType(), storedItems);
         }
 
         // Set display name
         chestMeta.setDisplayName(languageManager.getGuiItemName("spawner_storage_item.name", placeholders));
 
-        // Get lore efficiently
-        List<String> lore = languageManager.getGuiItemLoreWithMultilinePlaceholders("spawner_storage_item.lore", placeholders);
-        chestMeta.setLore(lore);
+        // Build lore as Adventure Components (italic=false, item names use client-side translation)
+        List<Component> lore = languageManager.buildGuiLoreAsComponents(
+                "spawner_storage_item.lore", placeholders, lootComponents, EMPTY_LOOT_MESSAGE_KEY);
+        if (!lore.isEmpty()) {
+            chestMeta.lore(lore);
+        }
         chestItem.setItemMeta(chestMeta);
 
         // Hide tooltip for BUNDLE material (prevents showing bundle contents)
@@ -309,14 +313,12 @@ public class SpawnerMenuUI {
                 long amount = materialAmountMap.getOrDefault(material, 0L);
 
                 String materialName = languageManager.getVanillaItemName(material);
-                String materialNameSmallCaps = languageManager.getSmallCaps(languageManager.getVanillaItemName(material));
                 String formattedAmount = languageManager.formatNumber(amount);
                 String chance = String.format("%.1f", lootItem.chance()) + "%";
 
                 // Format the line with minimal string operations
                 String line = lootItemFormat
                         .replace("{item_name}", materialName)
-                        .replace("{ɪᴛᴇᴍ_ɴᴀᴍᴇ}", materialNameSmallCaps)
                         .replace("{amount}", formattedAmount)
                         .replace("{raw_amount}", String.valueOf(amount))
                         .replace("{chance}", chance);
@@ -335,13 +337,11 @@ public class SpawnerMenuUI {
                 long amount = entry.getValue();
 
                 String materialName = languageManager.getVanillaItemName(material);
-                String materialNameSmallCaps = languageManager.getSmallCaps(languageManager.getVanillaItemName(material));
                 String formattedAmount = languageManager.formatNumber(amount);
 
                 // Format with minimal replacements
                 String line = lootItemFormat
                         .replace("{item_name}", materialName)
-                        .replace("{ɪᴛᴇᴍ_ɴᴀᴍᴇ}", materialNameSmallCaps)
                         .replace("{amount}", formattedAmount)
                         .replace("{raw_amount}", String.valueOf(amount))
                         .replace("{chance}", "");
@@ -600,6 +600,46 @@ public class SpawnerMenuUI {
 
     private int calculatePercentage(long current, long maximum) {
         return maximum > 0 ? (int) ((double) current / maximum * 100) : 0;
+    }
+
+    private List<Component> buildLootItemComponents(EntityType entityType, Map<VirtualInventory.ItemSignature, Long> storedItems) {
+        Map<Material, Long> materialAmountMap = new HashMap<>();
+        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : storedItems.entrySet()) {
+            Material material = entry.getKey().getTemplateRef().getType();
+            materialAmountMap.merge(material, entry.getValue(), Long::sum);
+        }
+
+        EntityLootConfig lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
+        List<LootItem> possibleLootItems = lootConfig != null ? lootConfig.getAllItems() : Collections.emptyList();
+
+        if (possibleLootItems.isEmpty() && storedItems.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Component> components = new ArrayList<>();
+        if (!possibleLootItems.isEmpty()) {
+            possibleLootItems.sort(Comparator.comparing(item -> item.material().name()));
+            for (LootItem lootItem : possibleLootItems) {
+                Material material = lootItem.material();
+                long amount = materialAmountMap.getOrDefault(material, 0L);
+                String formattedAmount = languageManager.formatNumber(amount);
+                String chance = String.format("%.1f", lootItem.chance()) + "%";
+                components.add(languageManager.buildTranslatableGuiLootLine(
+                        LOOT_ITEM_FORMAT_KEY, material, formattedAmount, chance));
+            }
+        } else {
+            List<Map.Entry<VirtualInventory.ItemSignature, Long>> sortedItems =
+                    new ArrayList<>(storedItems.entrySet());
+            sortedItems.sort(Comparator.comparing(e -> e.getKey().getMaterialName()));
+            for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : sortedItems) {
+                Material material = entry.getKey().getTemplateRef().getType();
+                long amount = entry.getValue();
+                String formattedAmount = languageManager.formatNumber(amount);
+                components.add(languageManager.buildTranslatableGuiLootLine(
+                        LOOT_ITEM_FORMAT_KEY, material, formattedAmount, ""));
+            }
+        }
+        return components;
     }
 
     /**

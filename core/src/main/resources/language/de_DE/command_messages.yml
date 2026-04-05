@@ -1,9 +1,13 @@
-# ──────────────────────────────────────────────────────
-# SmartSpawner – command_messages.yml  (de_DE)
-# ──────────────────────────────────────────────────────
+# SmartSpawner – command_messages.yml
+# Messages related to plugin commands, including usage instructions and error messages.
+
 player_only:
   message: "&#ff5252ᴅɪᴇꜱᴇʀ ʙᴇꜰᴇʜʟ ᴋᴀɴɴ ɴᴜʀ ᴠᴏɴ ꜱᴘɪᴇʟᴇʀɴ ɢᴇɴᴜᴛᴢᴛ ᴡᴇʀᴅᴇɴ."
   sound: block.note_block.bass
+
+no_permission:
+  message: "&#ff5252ᴅᴜ ʜᴀꜱᴛ ᴋᴇɪɴᴇ ʙᴇʀᴇᴄʜᴛɪɢᴜɴɢ ᴜᴍ ᴅᴀꜱ ᴢᴜ ᴛᴜɴ"
+  sound: block.note_block.pling
 
 # ──────────────────────────────────────────────────────
 #                        /ss near
@@ -115,6 +119,20 @@ prices:
   no_priceable_items:
     message: "&#ff5252ᴋᴇɪɴᴇ ɪᴛᴇᴍꜱ ᴍɪᴛ ᴘʀᴇɪꜱᴇɴ ɢᴇꜰᴜɴᴅᴇɴ."
     sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#                  /ss reload
+# ──────────────────────────────────────────────────────
+reload_command_start:
+  action_bar: "&#e9b949⌛ ᴘʟᴜɢɪɴ ᴡɪʀᴅ ɴᴇᴜɢᴇʟᴀᴅᴇɴ... ʙɪᴛᴛᴇ ᴡᴀʀᴛᴇɴ!"
+
+reload_command_success:
+  message: "&#37eb9aꜱᴍᴀʀᴛꜱᴘᴀᴡɴᴇʀ ᴇʀꜰᴏʟɢʀᴇɪᴄʜ ɴᴇᴜɢᴇʟᴀᴅᴇɴ"
+  sound: entity.experience_orb.pickup
+
+reload_command_error:
+  message: "&#e05252ɴᴇᴜʟᴀᴅᴇɴ ᴠᴏɴ ꜱᴍᴀʀᴛꜱᴘᴀᴡɴᴇʀ ꜰᴇʜʟɢᴇꜱᴄʜʟᴀɢᴇɴ, ʙɪᴛᴛᴇ ᴋᴏɴꜱᴏʟᴇ ᴘʀᴜ̈ꜰᴇɴ!"
+  sound: block.note_block.pling
 
 # ──────────────────────────────────────────────────────
 #                   spawner management

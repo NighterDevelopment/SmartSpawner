@@ -1,10 +1,21 @@
 # SmartSpawner – messages.yml
 # Each entry supports: message, title, subtitle, action_bar, sound, enabled.
-# All fields are optional. Set "enabled: false" to suppress an entry entirely.
+#
+#   MESSAGE STRUCTURE:
+#   message_name:               # Unique identifier for the message
+#     enabled: true/false       # Enable or disable this entire message (default: true if not specified)
+#     message: "Text content"   # Main chat message (optional)
+#     title: "Title text"       # Title display (optional)
+#     subtitle: "Subtitle"      # Subtitle display (optional)
+#     action_bar: "Text"        # Action bar text (optional)
+#     sound: sound.effect       # Sound to play (optional)
+#
+#   KEY FEATURES:
+#   - If "enabled: false" is set, none of the components will be sent to the player
+#   - If multiple components are present (message, title, action_bar, sound), all will be sent
+#   - All components are optional - you can use any combination as needed
+#   - The "message" field is not required and can be omitted if you only want other components
 
-# ──────────────────────────────────────────────────────
-#                  Messages Prefix
-# ──────────────────────────────────────────────────────
 prefix: "&8[&#3498dbSᴍᴀʀᴛSᴘᴀᴡɴᴇʀ&8] &r"
 
 # ──────────────────────────────────────────────────────
@@ -154,7 +165,7 @@ natural_spawner_break_blocked:
   sound: block.note_block.pling
 
 # ──────────────────────────────────────────────────────
-#              Shop Integration Messages
+#              Sell Integration Messages
 # ──────────────────────────────────────────────────────
 sell_failed:
   message: "&#ff5252ᴋʜôɴɢ ᴛʜể ʙáɴ ᴠậᴛ ᴘʜẩᴍ! Vᴜɪ ʟòɴɢ ᴛʜử ʟạɪ."
@@ -187,24 +198,3 @@ action_failed:
 please_wait:
   action_bar: "&#3498dbđᴀɴɢ xử ʟý... Vᴜɪ ʟòɴɢ đợɪ."
   sound: block.note_block.harp
-
-# ──────────────────────────────────────────────────────
-#                Plugin command messages
-# ──────────────────────────────────────────────────────
-no_permission:
-  message: "&#ff5252ʙạɴ ᴋʜôɴɢ ᴄó ǫᴜʏềɴ ᴛʜựᴄ ʜɪệɴ đɪềᴜ ɴàʏ"
-  sound: block.note_block.pling
-
-# Reload command messages
-reload_command_start:
-  action_bar: "&#e9b949⌛ Đᴀɴɢ ᴛảɪ ʟạɪ ᴘʟᴜɢɪɴ... ᴠᴜɪ ʟòɴɢ đợɪ!"
-
-reload_command_success:
-  message: "&#37eb9ađã ᴛảɪ ʟạɪ ᴛʜàɴʜ ᴄôɴɢ sᴍᴀʀᴛsᴘᴀᴡɴᴇʀ"
-  sound: entity.experience_orb.pickup
-
-reload_command_error:
-  message: "&#e05252ᴋʜôɴɢ ᴛʜể ᴛảɪ ʟạɪ SᴍᴀʀᴛSᴘᴀᴡɴᴇʀ, ᴠᴜɪ ʟòɴɢ ᴋɪểᴍ ᴛʀᴀ ᴄᴏɴsᴏʟᴇ để ʙɪếᴛ ᴄʜɪ ᴛɪếᴛ!"
-  sound: block.note_block.pling
-
-# Give command messages

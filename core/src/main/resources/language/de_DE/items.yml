@@ -6,7 +6,7 @@ custom_item:
   # Appearance of smart spawner items in inventory and tooltips
   spawner:
     name: "&#3498db{ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ"
-    loot_items: "  &#ecf0f1•  {amount} {ɪᴛᴇᴍ_ɴᴀᴍᴇ} &#3498db({chance}%)"
+    loot_items: "  &#ecf0f1•  {amount} {item_name} &#3498db({chance}%)"
     loot_items_empty: "  &#ecf0f1•  ʟᴇᴇʀ"
     lore:
       - ""
@@ -20,7 +20,7 @@ custom_item:
   # Appearance of item spawner items in inventory and tooltips
   item_spawner:
     name: "&#3498db{ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ"
-    loot_items: "  &#ecf0f1•  {amount} {ɪᴛᴇᴍ_ɴᴀᴍᴇ} &#3498db({chance}%)"
+    loot_items: "  &#ecf0f1•  {amount} {item_name} &#3498db({chance}%)"
     loot_items_empty: "  &#ecf0f1•  ʟᴇᴇʀ"
     lore:
       - ""
@@ -37,150 +37,3 @@ custom_item:
   vanilla_spawner:
     name: "{entity} Spawner"
     lore:
-
-# Item display names
-item:
-  # These names are used when displaying potential drops in spawner tooltips
-  # For multilingual support, replace with corresponding names from your language
-
-  # Animal & Fish Drops
-  LEATHER:
-    name: "Leder"
-  STRING:
-    name: "Faden"
-  FEATHER:
-    name: "Feder"
-  CHICKEN:
-    name: "Rohes Hühnchen"
-  COD:
-    name: "Roher Kabeljau"
-  SALMON:
-    name: "Roher Lachs"
-  BEEF:
-    name: "Rohes Rindfleisch"
-  PORKCHOP:
-    name: "Rohes Schweinefleisch"
-  MUTTON:
-    name: "Rohes Hammelfleisch"
-  RABBIT:
-    name: "Rohes Kaninchen"
-  WHITE_WOOL:
-    name: "Weiße Wolle"
-  RABBIT_HIDE:
-    name: "Kaninchenfell"
-  RABBIT_FOOT:
-    name: "Hasenpfote"
-  PUFFERFISH:
-    name: "Kugelfisch"
-  TROPICAL_FISH:
-    name: "Tropenfisch"
-
-  # Hostile Mob Drops
-  BONE:
-    name: "Knochen"
-  BONE_MEAL:
-    name: "Knochenmehl"
-  ARROW:
-    name: "Pfeil"
-  SPIDER_EYE:
-    name: "Spinnenauge"
-  GUNPOWDER:
-    name: "Schwarzpulver"
-  ROTTEN_FLESH:
-    name: "Verrottetes Fleisch"
-  ENDER_PEARL:
-    name: "Enderperle"
-  GHAST_TEAR:
-    name: "Ghastträne"
-  MAGMA_CREAM:
-    name: "Magmacreme"
-  PHANTOM_MEMBRANE:
-    name: "Phantomhaut"
-  SHULKER_SHELL:
-    name: "Shulker-Schale"
-  SLIME_BALL:
-    name: "Schleimball"
-  BLAZE_ROD:
-    name: "Lohenrute"
-  BREEZE_ROD:
-    name: "Böenrute"
-  WITHER_SKELETON_SKULL:
-    name: "Witherskelettschädel"
-
-  # Weapons & Tools
-  BOW:
-    name: "Bogen"
-  CROSSBOW:
-    name: "Armbrust"
-  GOLDEN_SWORD:
-    name: "Goldschwert"
-  GOLDEN_AXE:
-    name: "Goldaxt"
-  STONE_SWORD:
-    name: "Steinschwert"
-  IRON_AXE:
-    name: "Eisenaxt"
-  TRIDENT:
-    name: "Dreizack"
-  TIPPED_ARROW:
-    name: "Getränkter Pfeil"
-  TOTEM_OF_UNDYING:
-    name: "Totem der Unsterblichkeit"
-  SADDLE:
-    name: "Sattel"
-
-  # Materials & Resources
-  COPPER_INGOT:
-    name: "Kupferbarren"
-  PRISMARINE_SHARD:
-    name: "Prismarinscherbe"
-  PRISMARINE_CRYSTALS:
-    name: "Prismarinkristalle"
-  WET_SPONGE:
-    name: "Nasser Schwamm"
-  EMERALD:
-    name: "Smaragd"
-  IRON_INGOT:
-    name: "Eisenbarren"
-  GOLD_NUGGET:
-    name: "Goldklumpen"
-  GOLD_INGOT:
-    name: "Goldbarren"
-  REDSTONE:
-    name: "Redstone"
-  GLOWSTONE_DUST:
-    name: "Leuchtsteinstaub"
-  COAL:
-    name: "Kohle"
-
-  # Miscellaneous Items
-  GLOW_INK_SAC:
-    name: "Leuchttintenbeutel"
-  INK_SAC:
-    name: "Tintenbeutel"
-  CARROT:
-    name: "Karotte"
-  POTATO:
-    name: "Kartoffel"
-  POPPY:
-    name: "Mohnblume"
-  SNOWBALL:
-    name: "Schneeball"
-  SEAGRASS:
-    name: "Seegras"
-  SUGAR:
-    name: "Zucker"
-  GLASS_BOTTLE:
-    name: "Glasflasche"
-  STICK:
-    name: "Stock"
-  SCULK_CATALYST:
-    name: "Sculk-Katalysator"
-  TIDE_ARMOR_TRIM_SMITHING_TEMPLATE:
-    name: "Schmiedevorlage: Gezeiten-Rüstungsbesatz"
-  DIAMOND:
-    name: "Diamant"
-  NETHER_STAR:
-    name: "Netherstern"
-  NETHERITE_INGOT:
-    name: "Netheritbarren"

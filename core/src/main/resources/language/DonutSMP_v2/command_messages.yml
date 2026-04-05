@@ -1,9 +1,13 @@
-# ──────────────────────────────────────────────────────
-# SmartSpawner – command_messages.yml  (DonutSMP_v2)
-# ──────────────────────────────────────────────────────
+# SmartSpawner – command_messages.yml
+# Messages related to plugin commands, including usage instructions and error messages.
+
 player_only:
   message: "&#ff5252ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ᴄᴀɴ ᴏɴʟʏ ʙᴇ ᴜꜱᴇᴅ ʙʏ ᴘʟᴀʏᴇʀꜱ."
   sound: block.note_block.bass
+
+no_permission:
+  message: "&#ff5252ʏᴏᴜ ᴅᴏɴᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪꜱꜱɪᴏɴ ᴛᴏ ᴅᴏ ᴛʜɪꜱ"
+  sound: block.note_block.pling
 
 # ──────────────────────────────────────────────────────
 #                        /ss near
@@ -115,6 +119,20 @@ prices:
   no_priceable_items:
     message: "&#ff5252ɴᴏ ɪᴛᴇᴍꜱ ᴡɪᴛʜ ᴘʀɪᴄᴇꜱ ꜰᴏᴜɴᴅ."
     sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#                  /ss reload
+# ──────────────────────────────────────────────────────
+reload_command_start:
+  action_bar: "&#e9b949⌛ ʀᴇʟᴏᴀᴅɪɴɢ ᴘʟᴜɢɪɴ... ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ!"
+
+reload_command_success:
+  message: "&#37eb9asuᴄᴄᴇꜱꜱꜰᴜʟʟʏ ʀᴇʟᴏᴀᴅᴇᴅ ꜱᴍᴀʀᴛꜱᴘᴀᴡɴᴇʀ"
+  sound: entity.experience_orb.pickup
+
+reload_command_error:
+  message: "&#e05252ꜰᴀɪʟᴇᴅ ᴛᴏ ʀᴇʟᴏᴀᴅ ꜱᴍᴀʀᴛꜱᴘᴀᴡɴᴇʀ, ᴘʟᴇᴀꜱᴇ ᴄʜᴇᴄᴋ ᴄᴏɴꜱᴏʟᴇ ꜰᴏʀ ᴅᴇᴛᴀɪʟ!"
+  sound: block.note_block.pling
 
 # ──────────────────────────────────────────────────────
 #                   spawner management

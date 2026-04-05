@@ -9,21 +9,21 @@ gui_title_main:
   stacked_spawner: '&#545454{amount} ꜱᴘᴀᴡɴᴇʀ {ᴇɴᴛɪᴛʏ}'
 
 spawner_storage_item:
-  # Các placeholder khả dụng cho tên:
-  # {max_slots} - Số ô tối đa trong kho (có dấu phẩy)
-  # {current_items} - Số vật phẩm hiện có trong kho
-  # {percent_storage_rounded} - Phần trăm dung lượng đã dùng (0-100)
-  # {entity} - Loại mob của spawner (viết thường/hoa chuẩn)
-  # {ᴇɴᴛɪᴛʏ} - Loại mob của spawner (chữ nhỏ caps)
+  # Available placeholders for name:
+  # {max_slots} - Maximum number of slots in the storage (formatted with commas)
+  # {current_items} - Current number of items in the storage
+  # {percent_storage_rounded} - Percentage of storage used (0-100)
+  # {entity} - The spawner's entity type (normal capitalization)
+  # {ᴇɴᴛɪᴛʏ} - The spawner's entity type (small caps)
   name: '&#e67e22ᴋʜᴏ ꜱᴘᴀᴡɴᴇʀ'
 
-  # Các placeholder khả dụng cho mọi dòng lore:
-  # {max_slots} - Số ô tối đa trong kho (có dấu phẩy)
-  # {current_items} - Số vật phẩm hiện có trong kho
-  # {percent_storage_rounded} - Phần trăm dung lượng đã dùng (0-100)
-  # {loot_items} - Danh sách vật phẩm rơi đầy đủ
-  # {entity} - Loại mob của spawner (viết thường/hoa chuẩn)
-  # {ᴇɴᴛɪᴛʏ} - Loại mob của spawner (chữ nhỏ caps)
+  # Available placeholders for all lore lines:
+  # {max_slots} - Maximum number of slots in the storage (formatted with commas)
+  # {current_items} - Current number of items in the storage
+  # {percent_storage_rounded} - Percentage of storage used (0-100)
+  # {loot_items} - The complete formatted list of loot items
+  # {entity} - The spawner's entity type (normal capitalization)
+  # {ᴇɴᴛɪᴛʏ} - The spawner's entity type (small caps)
   lore:
     - ''
     - '&#e67e22◈ &#ecf0f1ᴛʜôɴɢ ᴛɪɴ:'
@@ -31,42 +31,31 @@ spawner_storage_item:
     - '  &#bdc3c7•  ᴋʜᴏ ᴄʜứᴀ: &#e67e22{percent_storage_rounded}% &#bdc3c7đã đầʏ'
     - ''
     - '&#e67e22⊳ &#ecf0f1ɴʜấᴘ để ᴍở ᴋʜᴏ'
-    # Có thể thêm dòng hiển thị toàn bộ vật phẩm rơi:
+    # You can add an optional line to display all loot items.
     # - '{loot_items}'
 
-  # Định nghĩa cách mỗi vật phẩm rơi sẽ hiển thị khi dùng {loot_items}
-  # Các placeholder khả dụng cho từng vật phẩm rơi:
-  # {item_name} - Tên vật phẩm (viết chuẩn)
-  # {ɪᴛᴇᴍ_ɴᴀᴍᴇ} - Tên vật phẩm (chữ nhỏ caps)
-  # {amount} - Số lượng vật phẩm (có dấu phẩy)
-  # {raw_amount} - Số lượng vật phẩm (không định dạng)
-  # {chance} - Tỉ lệ rơi vật phẩm này (có ký hiệu %, ví dụ: "8.5%")
-  loot_items: '  &#bdc3c7•  &#2ecc71{amount} &#bdc3c7{ɪᴛᴇᴍ_ɴᴀᴍᴇ}'
+  # This defines how each loot item will be displayed when using {loot_items}
+  # Available placeholders for each loot item:
+  # {item_name} - The name of the item (normal capitalization)
+  # {amount} - Number of items (formatted with commas)
+  # {raw_amount} - Number of items (without formatting)
+  # {chance} - The chance of this item dropping (with % symbol, e.g. "8.5%")
+  loot_items: '  &#bdc3c7•  &#2ecc71{amount} &#bdc3c7{item_name}'
   loot_items_empty: '  &#bdc3c7•  ᴋʜôɴɢ ᴄó'
 
-# Spawner Info Item Configuration
+
 # Available placeholders:
-#
-# Entity Information:
 # {entity}           - Formatted entity name (e.g., "Zombie")
 # {ᴇɴᴛɪᴛʏ}           - Entity name in small caps (e.g., "ᴢᴏᴍʙɪᴇ")
-#
-# Stack Information:
 # {stack_size}       - Number of spawners stacked at this location
-#
-# Spawner Settings:
 # {range}            - Spawning range in blocks
 # {delay}            - Spawn delay in seconds
 # {min_mobs}         - Minimum number of mobs to spawn
 # {max_mobs}         - Maximum number of mobs to spawn
-#
-# Storage Information:
 # {current_items}    - Current number of items stored
 # {max_items}        - Maximum storage capacity for items
 # {percent_storage_rounded}  - Storage usage as integer percentage (e.g., "87")
 # {percent_storage_decimal} - Storage usage as formatted percentage with decimal (e.g., "87.5")
-#
-# Experience Information:
 # {current_exp}      - Current experience stored (formatted with commas)
 # {max_exp}          - Maximum experience capacity (formatted with commas)
 # {raw_current_exp}  - Raw current experience number
@@ -169,7 +158,7 @@ button_add_all:
     - '&#2cc483⊳ &#f8f8ffɴʜấᴘ để ᴛʜêᴍ ᴛấᴛ ᴄả ᴠàᴏ ꜱᴛᴀᴄᴋ'
 
 # ──────────────────────────────────────────────────────
-#            GUI Xác Nhận Bán
+#            Sell Confirmation GUI
 # ──────────────────────────────────────────────────────
 gui_title_sell_confirm: '&#545454xáᴄ ɴʜậɴ ʙáɴ'
 
@@ -457,7 +446,7 @@ navigation:
 prices_gui_title: ɢɪá ʙáɴ ᴠậᴛ ᴘʜẩᴍ - [{current_page}/{total_pages}]
 
 price_item:
-  name: '&#3498db{ɪᴛᴇᴍ_ɴᴀᴍᴇ}'
+  name: '&#3498db{item_name}'
   lore:
     - ''
     - '&#3498db◈ &#ecf0f1ᴛʜôɴɢ ᴛɪɴ ɢɪá:'
