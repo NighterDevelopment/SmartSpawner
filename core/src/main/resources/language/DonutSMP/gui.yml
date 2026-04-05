@@ -33,6 +33,7 @@ spawner_storage_item:
 # {raw_max_exp}      - Raw maximum experience number
 # {percent_exp_rounded}      - Experience storage as integer percentage
 # {percent_exp_decimal}    - Experience storage as formatted percentage with decimal (e.g., "42.7")spawner_info_item:
+spawner_info_item:
   name: '&#FCE300{stack_size} {ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ'
   lore:
     - '&#FCE300● &fClick to sell items and collect xp'
