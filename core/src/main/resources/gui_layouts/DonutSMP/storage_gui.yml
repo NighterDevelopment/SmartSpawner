@@ -4,8 +4,9 @@
 #
 # Format:
 #   slot_X:                    # X = slot number (1-9)
-#     material: MATERIAL_NAME  # Material to display
+#     material: MATERIAL_NAME  # Material to display (use PLAYER_HEAD for spawner mob head)
 #     enabled: true/false      # Show/hide button
+#     info_button: true        # Optional: Mark as spawner mob-head info button (shows loot list)
 #     click: "action"          # Action for any click (left/right/shift)
 #     if:                      # Optional: conditional actions
 #       condition_name:
@@ -14,6 +15,20 @@
 # Conditions:
 #   sell_integration: When sell/shop integration is enabled
 #   no_sell_integration: When sell/shop integration is disabled
+#
+# Actions:
+#   previous_page: Go to previous page
+#   next_page: Go to next page
+#   sort_items: Sort items in storage
+#   open_filter: Open filter configuration
+#   sell_all: Sell all items (no exp collection)
+#   sell_and_exp: Sell all items and collect exp
+#   collect_exp: Collect stored experience only
+#   return_main: Return to main menu
+#   take_all: Take all items from current page
+#   drop_page: Drop all items from current page
+#   none: Display only, no action (use with info_button: true for mob-head display)
+#
 
 # Return to main menu
 slot_1:

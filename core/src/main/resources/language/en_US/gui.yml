@@ -265,6 +265,11 @@ collect_exp_button:
   lore:
     - '&#2ecc71⊳ &#f8f8ffᴄʟɪᴄᴋ ᴛᴏ ᴄᴏʟʟᴇᴄᴛ xᴘ'
 
+storage_spawner_info_button:
+  name: ''
+  lore:
+    - ''
+
 # ──────────────────────────────────────────────────────
 #             Filter Configuration GUI
 # ──────────────────────────────────────────────────────

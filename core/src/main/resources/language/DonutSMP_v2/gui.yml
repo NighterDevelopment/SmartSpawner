@@ -145,7 +145,7 @@ button_sell_info:
 # {entity}           - Formatted entity name (e.g., "Zombie")
 # {ᴇɴᴛɪᴛʏ}           - Entity name in small caps (e.g., "ᴢᴏᴍʙɪᴇ")
 # {amount}           - Number of spawners stacked
-gui_title_storage: '&#545454{amount} {ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀꜱ'
+gui_title_storage: '&#545454{amount} {ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ'
 
 navigation_button_previous:
   name: '&#7AFC00ᴘʀᴇᴠɪᴏᴜꜱ'
@@ -158,14 +158,14 @@ navigation_button_next:
   - '&fClick to go forward a page'
 
 sell_button:
-  name: '&#00F986ꜱᴇʟʟ ᴀʟʟ'
+  name: '&#FC0000ꜱᴇʟʟ ᴀʟʟ'
   lore:
-  - '&fClick to sell all mob drops'
+  - '&fClick to sell all mob drops!'
 
 sell_and_exp_button:
-  name: '&aꜱᴇʟʟ & ᴇxᴘ'
+  name: '&#FC0000ꜱᴇʟʟ & ᴇxᴘ'
   lore:
-  - '&fClick to sell items and collect experience'
+  - '&fClick to sell items and collect experience!'
 
 return_button:
   name: '&#FC0000ʀᴇᴛᴜʀɴ'
@@ -202,6 +202,15 @@ collect_exp_button:
   name: '&#2ecc71ᴄʟᴀɪᴍ ᴇxᴘ: &#f8f8ff{current_exp} &#2ecc71xᴘ'
   lore:
   - '&#2ecc71⊳ &fClick to claim your XP'
+
+storage_spawner_info_button:
+  name: '&#00F986{stack_size} {ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ'
+  lore:
+  - '{loot_items}'
+  - '&#00F986({percent_storage_decimal}% filled)'
+  - '&#7AFC00({percent_exp_decimal}% xp stored)'
+  loot_items: '&#00F986{amount} &f{item_name}'
+  loot_items_empty: '&#e6e6faɴᴏ ɪᴛᴇᴍ ᴅʀᴏᴘs'
 
 # ──────────────────────────────────────────────────────
 #             Filter Configuration GUI

@@ -2,15 +2,22 @@ package github.nighter.smartspawner.spawner.gui.storage;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.language.LanguageManager;
+import github.nighter.smartspawner.nms.VersionInitializer;
+import github.nighter.smartspawner.spawner.config.SpawnerMobHeadTexture;
 import github.nighter.smartspawner.spawner.gui.layout.GuiButton;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayout;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayoutConfig;
+import github.nighter.smartspawner.spawner.lootgen.loot.EntityLootConfig;
+import github.nighter.smartspawner.spawner.lootgen.loot.LootItem;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.Scheduler.Task;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.Bukkit;
@@ -18,6 +25,7 @@ import org.bukkit.Material;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 public class SpawnerStorageUI {
     private static final int INVENTORY_SIZE = 54;
@@ -324,6 +332,12 @@ public class SpawnerStorageUI {
                 continue;
             }
 
+            // Handle info_button (spawner mob head with loot info)
+            if (button.isInfoButton()) {
+                updates.put(button.getSlot(), createStorageSpawnerInfoButton(spawner, button.getMaterial()));
+                continue;
+            }
+
             String action = getAnyActionFromButton(button);
             if (action == null) continue;
 
@@ -519,6 +533,103 @@ public class SpawnerStorageUI {
         String name = languageManager.getGuiItemName("sort_items_button.name", placeholders);
         List<String> lore = languageManager.getGuiItemLoreWithMultilinePlaceholders("sort_items_button.lore", placeholders);
         return createButton(material, name, lore);
+    }
+
+    private ItemStack createStorageSpawnerInfoButton(SpawnerData spawner, Material material) {
+        Map<VirtualInventory.ItemSignature, Long> storedItems = spawner.getVirtualInventory().getConsolidatedItems();
+        List<Component> lootComponents = buildStorageInfoLootComponents(spawner, storedItems);
+
+        Map<String, String> placeholders = new HashMap<>();
+        String entityName;
+        if (spawner.isItemSpawner()) {
+            entityName = languageManager.getVanillaItemName(spawner.getSpawnedItemMaterial());
+        } else {
+            entityName = languageManager.getFormattedMobName(spawner.getEntityType());
+        }
+        placeholders.put("entity", entityName);
+        placeholders.put("\u1d07\u0274\u1d1b\u026a\u1d1b\u028f", languageManager.getSmallCaps(entityName));
+        placeholders.put("stack_size", String.valueOf(spawner.getStackSize()));
+
+        int currentItems = spawner.getVirtualInventory().getUsedSlots();
+        int maxSlots = spawner.getMaxSpawnerLootSlots();
+        double percentStorageDecimal = maxSlots > 0 ? ((double) currentItems / maxSlots) * 100 : 0;
+        placeholders.put("percent_storage_decimal", String.format("%.1f", percentStorageDecimal));
+        placeholders.put("percent_storage_rounded", String.valueOf((int) Math.round(percentStorageDecimal)));
+
+        long currentExp = spawner.getSpawnerExp();
+        long maxExp = spawner.getMaxStoredExp();
+        double percentExpDecimal = maxExp > 0 ? ((double) currentExp / maxExp) * 100 : 0;
+        placeholders.put("percent_exp_decimal", String.format("%.1f", percentExpDecimal));
+        placeholders.put("percent_exp_rounded", String.valueOf((int) Math.round(percentExpDecimal)));
+
+        Consumer<ItemMeta> metaModifier = meta -> {
+            meta.setDisplayName(languageManager.getGuiItemName("storage_spawner_info_button.name", placeholders));
+            List<Component> lore = languageManager.buildGuiLoreAsComponents(
+                    "storage_spawner_info_button.lore", placeholders, lootComponents,
+                    "storage_spawner_info_button.loot_items_empty");
+            if (!lore.isEmpty()) {
+                meta.lore(lore);
+            }
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
+        };
+
+        ItemStack item;
+        if (spawner.isItemSpawner()) {
+            item = SpawnerMobHeadTexture.getItemSpawnerHead(spawner.getSpawnedItemMaterial(), metaModifier);
+        } else {
+            item = SpawnerMobHeadTexture.getCustomHead(spawner.getEntityType(), metaModifier);
+        }
+
+        if (item.getType() == Material.SPAWNER) {
+            VersionInitializer.hideTooltip(item);
+        }
+
+        return item;
+    }
+
+    private List<Component> buildStorageInfoLootComponents(SpawnerData spawner,
+            Map<VirtualInventory.ItemSignature, Long> storedItems) {
+        Map<Material, Long> materialAmountMap = new HashMap<>();
+        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : storedItems.entrySet()) {
+            Material mat = entry.getKey().getTemplateRef().getType();
+            materialAmountMap.merge(mat, entry.getValue(), Long::sum);
+        }
+
+        EntityLootConfig lootConfig;
+        if (spawner.isItemSpawner()) {
+            lootConfig = plugin.getItemSpawnerSettingsConfig().getLootConfig(spawner.getSpawnedItemMaterial());
+        } else {
+            lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(spawner.getEntityType());
+        }
+        List<LootItem> possibleLootItems = lootConfig != null ? lootConfig.getAllItems() : Collections.emptyList();
+
+        if (possibleLootItems.isEmpty() && storedItems.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Component> components = new ArrayList<>();
+        if (!possibleLootItems.isEmpty()) {
+            possibleLootItems.sort(Comparator.comparing(item -> item.material().name()));
+            for (LootItem lootItem : possibleLootItems) {
+                Material mat = lootItem.material();
+                long amount = materialAmountMap.getOrDefault(mat, 0L);
+                String formattedAmount = languageManager.formatNumber(amount);
+                String chance = String.format("%.1f", lootItem.chance()) + "%";
+                components.add(languageManager.buildTranslatableGuiLootLine(
+                        "storage_spawner_info_button.loot_items", mat, formattedAmount, chance));
+            }
+        } else {
+            List<Map.Entry<VirtualInventory.ItemSignature, Long>> sortedItems = new ArrayList<>(storedItems.entrySet());
+            sortedItems.sort(Comparator.comparing(e -> e.getKey().getMaterialName()));
+            for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : sortedItems) {
+                Material mat = entry.getKey().getTemplateRef().getType();
+                long amount = entry.getValue();
+                String formattedAmount = languageManager.formatNumber(amount);
+                components.add(languageManager.buildTranslatableGuiLootLine(
+                        "storage_spawner_info_button.loot_items", mat, formattedAmount, ""));
+            }
+        }
+        return components;
     }
 
     private void startCleanupTask() {

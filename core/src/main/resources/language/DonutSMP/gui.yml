@@ -203,6 +203,11 @@ collect_exp_button:
   lore:
   - '&#2ecc71⊳ &fClick to claim your XP'
 
+storage_spawner_info_button:
+  name: ''
+  lore:
+    - ''
+
 # ──────────────────────────────────────────────────────
 #             Filter Configuration GUI
 # ──────────────────────────────────────────────────────

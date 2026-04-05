@@ -162,6 +162,9 @@ public class SpawnerStorageAction implements Listener {
             case "return_main":
                 handleReturnToMainMenu(player, spawner);
                 break;
+            case "none":
+                // Display-only button — consume click, do nothing
+                break;
             default:
                 // Unknown action, log warning
                 plugin.getLogger().warning("Unknown storage action: " + action);
