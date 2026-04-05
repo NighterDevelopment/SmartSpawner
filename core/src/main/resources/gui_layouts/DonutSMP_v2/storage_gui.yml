@@ -39,7 +39,7 @@ slot_4:
   enabled: true
   if:
     sell_integration:
-      click: "sell_all"
+      click: "sell_and_exp"
     no_sell_integration:
       material: SPECTRAL_ARROW
       click: "take_all"
