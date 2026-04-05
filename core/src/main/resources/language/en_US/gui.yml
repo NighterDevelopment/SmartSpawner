@@ -195,7 +195,8 @@ button_sell_info:
     - '  &#bdc3c7•  ɪᴛᴇᴍꜱ: &#3498db{current_items}'
     - '  &#bdc3c7•  xᴘ: &#3498db{current_exp}'
     - '  &#bdc3c7•  ᴠᴀʟᴜᴇ: &#3498db${total_sell_price}'
-    - ''
+  loot_items: ''
+  loot_items_empty: ''
 
 # ──────────────────────────────────────────────────────
 #             Spawner Storage GUI

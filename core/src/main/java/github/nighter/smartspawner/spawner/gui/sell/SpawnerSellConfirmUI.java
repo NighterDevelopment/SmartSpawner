@@ -1,22 +1,31 @@
 package github.nighter.smartspawner.spawner.gui.sell;
 
+import net.kyori.adventure.text.Component;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.nms.VersionInitializer;
 import github.nighter.smartspawner.spawner.config.SpawnerMobHeadTexture;
 import github.nighter.smartspawner.spawner.gui.layout.GuiButton;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayout;
+import github.nighter.smartspawner.spawner.lootgen.loot.EntityLootConfig;
+import github.nighter.smartspawner.spawner.lootgen.loot.LootItem;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
+import github.nighter.smartspawner.spawner.properties.VirtualInventory;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -110,7 +119,7 @@ public class SpawnerSellConfirmUI {
 
             // Check if this is an info button (spawner display)
             if (button.isInfoButton()) {
-                buttonItem = createSpawnerInfoButton(player, placeholders);
+                buttonItem = createSpawnerInfoButton(player, spawner, placeholders);
             } else {
                 // OPTIMIZATION: Use getAnyActionFromButton to check all click types
                 String action = getAnyActionFromButton(button);
@@ -127,7 +136,7 @@ public class SpawnerSellConfirmUI {
                         break;
                     case "none":
                         // Display-only button (spawner info) - fallback for old format
-                        buttonItem = createSpawnerInfoButton(player, placeholders);
+                        buttonItem = createSpawnerInfoButton(player, spawner, placeholders);
                         break;
                     default:
                         plugin.getLogger().warning("Unknown action in sell confirm GUI: " + action);
@@ -153,18 +162,21 @@ public class SpawnerSellConfirmUI {
         return createButton(material, name, lore);
     }
 
-    private ItemStack createSpawnerInfoButton(Player player, Map<String, String> placeholders) {
-        // OPTIMIZATION: Reuse placeholders passed from parent
+    private ItemStack createSpawnerInfoButton(Player player, SpawnerData spawner, Map<String, String> placeholders) {
+        // Build loot item components for {loot_items} placeholder
+        Map<VirtualInventory.ItemSignature, Long> storedItems = spawner.getVirtualInventory().getConsolidatedItems();
+        List<Component> lootComponents = buildSellInfoLootComponents(spawner, storedItems);
 
         // Prepare the meta modifier consumer
         Consumer<ItemMeta> metaModifier = meta -> {
             // Set display name
             meta.setDisplayName(languageManager.getGuiItemName("button_sell_info.name", placeholders));
 
-            // Get and set lore
-            String[] lore = languageManager.getGuiItemLore("button_sell_info.lore", placeholders);
-            if (lore != null && lore.length > 0) {
-                meta.setLore(Arrays.asList(lore));
+            // Get and set lore with {loot_items} support
+            List<Component> lore = languageManager.buildGuiLoreAsComponents(
+                    "button_sell_info.lore", placeholders, lootComponents, "button_sell_info.loot_items_empty");
+            if (!lore.isEmpty()) {
+                meta.lore(lore);
             }
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
         };
@@ -177,7 +189,7 @@ public class SpawnerSellConfirmUI {
                 Material.valueOf(placeholders.get("spawnedItem")), player, metaModifier);
         } else {
             spawnerItem = SpawnerMobHeadTexture.getCustomHead(
-                org.bukkit.entity.EntityType.valueOf(placeholders.get("entityType")),
+                EntityType.valueOf(placeholders.get("entityType")),
                 player, metaModifier);
         }
 
@@ -186,6 +198,46 @@ public class SpawnerSellConfirmUI {
         }
 
         return spawnerItem;
+    }
+
+    private List<Component> buildSellInfoLootComponents(SpawnerData spawner, Map<VirtualInventory.ItemSignature, Long> storedItems) {
+        Map<Material, Long> materialAmountMap = new HashMap<>();
+        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : storedItems.entrySet()) {
+            Material material = entry.getKey().getTemplateRef().getType();
+            materialAmountMap.merge(material, entry.getValue(), Long::sum);
+        }
+
+        EntityType entityType = spawner.getEntityType();
+        EntityLootConfig lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
+        List<LootItem> possibleLootItems = lootConfig != null ? lootConfig.getAllItems() : Collections.emptyList();
+
+        if (possibleLootItems.isEmpty() && storedItems.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Component> components = new ArrayList<>();
+        if (!possibleLootItems.isEmpty()) {
+            possibleLootItems.sort(Comparator.comparing(item -> item.material().name()));
+            for (LootItem lootItem : possibleLootItems) {
+                Material material = lootItem.material();
+                long amount = materialAmountMap.getOrDefault(material, 0L);
+                String formattedAmount = languageManager.formatNumber(amount);
+                String chance = String.format("%.1f", lootItem.chance()) + "%";
+                components.add(languageManager.buildTranslatableGuiLootLine(
+                        "button_sell_info.loot_items", material, formattedAmount, chance));
+            }
+        } else {
+            List<Map.Entry<VirtualInventory.ItemSignature, Long>> sortedItems = new ArrayList<>(storedItems.entrySet());
+            sortedItems.sort(Comparator.comparing(e -> e.getKey().getMaterialName()));
+            for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : sortedItems) {
+                Material material = entry.getKey().getTemplateRef().getType();
+                long amount = entry.getValue();
+                String formattedAmount = languageManager.formatNumber(amount);
+                components.add(languageManager.buildTranslatableGuiLootLine(
+                        "button_sell_info.loot_items", material, formattedAmount, ""));
+            }
+        }
+        return components;
     }
 
     private Map<String, String> createPlaceholders(SpawnerData spawner, boolean collectExp) {
@@ -221,7 +273,7 @@ public class SpawnerSellConfirmUI {
 
         placeholders.put("total_sell_price", languageManager.formatNumber(totalSellPrice));
         placeholders.put("current_items", Integer.toString(currentItems));
-        placeholders.put("current_exp", Integer.toString(currentExp));
+        placeholders.put("current_exp", languageManager.formatNumber(currentExp));
 
         return placeholders;
     }
