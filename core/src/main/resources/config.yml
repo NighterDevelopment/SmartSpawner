@@ -12,10 +12,10 @@
 #---------------------------------------------------
 #               Language Settings
 #---------------------------------------------------
-# Language setting (available: en_US, vi_VN, de_DE, DonutSMP)
+# Language setting (available: en_US, vi_VN, de_DE, en_US_DonutSMP, en_US_DonutSMP_v2)
 language: en_US
 
-# Spawner GUI layout configuration (available: default, DonutSMP)
+# Spawner GUI layout configuration (available: default, DonutSMP, DonutSMP_v2)
 gui_layout: default
 
 # Enable or disable debug mode (provides verbose console output)

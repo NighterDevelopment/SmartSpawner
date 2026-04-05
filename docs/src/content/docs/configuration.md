@@ -25,7 +25,7 @@ To add a custom language:
 ## Language Settings
 
 ```yaml
-# Language setting (available: en_US, vi_VN, de_DE, DonutSMP)
+# Language setting (available: en_US, vi_VN, de_DE, en_US_DonutSMP, en_US_DonutSMP_v2)
 language: en_US
 
 # Spawner GUI layout configuration (available: default, DonutSMP)
@@ -35,7 +35,7 @@ gui_layout: default
 debug: false
 ```
 
-- **language**: Sets the language for plugin messages. Available options: `en_US`, `vi_VN`, `de_DE`, and `DonutSMP`.
+- **language**: Sets the language for plugin messages. Available options: `en_US`, `vi_VN`, `de_DE`, `en_US_DonutSMP`, and `en_US_DonutSMP_v2`.
 - **gui_layout**: Chooses the layout for the spawner GUI. Options are `default` and `DonutSMP`.
 - **debug**: Enables debug mode for detailed console output, useful for troubleshooting.
 

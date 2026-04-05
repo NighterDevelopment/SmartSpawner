@@ -59,7 +59,7 @@ Migration utilities: `YamlToDatabaseMigration`, `SqliteToMySqlMigration`.
 | `gui_layouts/{layout}/sell_confirm_gui.yml` | Sell confirmation GUI slot layout + `skip_sell_confirmation` option |
 | `gui_layouts/{layout}/storage_gui.yml` | Storage GUI slot layout |
 | `gui_layouts/default/main_gui.yml` | Per-GUI layout overrides (also `sell_confirm_gui.yml`, `storage_gui.yml`) |
-| `language/{locale}/` | Localisation files (`en_US`, `de_DE`, `vi_VN`, `DonutSMP`) |
+| `language/{locale}/` | Localisation files (`en_US`, `de_DE`, `vi_VN`, `en_US_DonutSMP`, `en_US_DonutSMP_v2`) |
 | `discord_logging.yml` | Discord webhook settings; per-event embed templates; event filter list |
 | `auraskills.yml` | AuraSkills RPG integration settings |
 

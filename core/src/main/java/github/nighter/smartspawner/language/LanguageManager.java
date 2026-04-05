@@ -121,8 +121,8 @@ public class LanguageManager {
     private void saveDefaultFiles() {
         Map<String, Set<LanguageFileType>> localeFileMap = new HashMap<>();
         localeFileMap.put("vi_VN", EnumSet.allOf(LanguageFileType.class));
-        localeFileMap.put("DonutSMP", EnumSet.allOf(LanguageFileType.class));
-        localeFileMap.put("DonutSMP_v2", EnumSet.allOf(LanguageFileType.class));
+        localeFileMap.put("en_US_DonutSMP", EnumSet.allOf(LanguageFileType.class));
+        localeFileMap.put("en_US_DonutSMP_v2", EnumSet.allOf(LanguageFileType.class));
         localeFileMap.put("de_DE", EnumSet.allOf(LanguageFileType.class));
 
         localeFileMap.forEach((locale, fileTypes) -> {
