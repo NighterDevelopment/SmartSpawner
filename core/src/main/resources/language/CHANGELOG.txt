@@ -1,3 +1,186 @@
+── v1.6.5 (2026-04-06) ─────────────────────────────────────────────────────────
+
+  Summary: Version 1.6.5 released – fill in details here.
+           Compare: https://github.com/NighterDevelopment/SmartSpawner/compare/1.6.4...main
+
+  ADDED:
+    gui.yml:
+      - button_sell_info.loot_items (L198): ''
+      - button_sell_info.loot_items_empty (L199): ''
+      - storage_spawner_info_button (L268): 
+      - storage_spawner_info_button.lore (L270): 
+      - storage_spawner_info_button.name (L269): ''
+    command_messages.yml:
+      - no_permission (L8): 
+      - no_permission.message (L9): "&#ff5252ʏᴏᴜ ᴅᴏɴᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪꜱꜱɪᴏɴ ᴛᴏ ᴅᴏ ᴛʜɪꜱ"
+      - no_permission.sound (L10): block.note_block.pling
+      - reload_command_error (L133): 
+      - reload_command_error.message (L134): "&#e05252ꜰᴀɪʟᴇᴅ ᴛᴏ ʀᴇʟᴏᴀᴅ ꜱᴍᴀʀᴛꜱᴘᴀᴡɴᴇʀ, ᴘʟᴇᴀꜱᴇ ᴄʜᴇᴄᴋ ᴄᴏɴꜱᴏʟᴇ ꜰᴏʀ ᴅᴇᴛᴀɪ…
+      - reload_command_error.sound (L135): block.note_block.pling
+      - reload_command_start (L126): 
+      - reload_command_start.action_bar (L127): "&#e9b949⌛ ʀᴇʟᴏᴀᴅɪɴɢ ᴘʟᴜɢɪɴ... ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ!"
+      - reload_command_success (L129): 
+      - reload_command_success.message (L130): "&#37eb9asuᴄᴄᴇꜱꜱꜰᴜʟʟʏ ʀᴇʟᴏᴀᴅᴇᴅ ꜱᴍᴀʀᴛꜱᴘᴀᴡɴᴇʀ"
+      - reload_command_success.sound (L131): entity.experience_orb.pickup
+    hologram.yml:
+      - hologram_text (L17):
+
+  CHANGED:
+    gui.yml:
+      - price_item.name (L453): '&#3498db{ɪᴛᴇᴍ_ɴᴀᴍᴇ}' → '&#3498db{item_name}'
+      - spawner_storage_item.loot_items (L43): '  &#bdc3c7•  &#2ecc71{amount} &#bdc3c7{ɪᴛᴇᴍ_ɴᴀᴍᴇ}' → '  &#bdc3c7•  &#2ecc71{amount} &#bdc3c7{item_name}'
+    items.yml:
+      - custom_item.item_spawner.loot_items (L23): "  &#ecf0f1•  {amount} {ɪᴛᴇᴍ_ɴᴀᴍᴇ} &#3498db({chance}%)" → "  &#ecf0f1•  {amount} {item_name} &#3498db({chance}%)"
+      - custom_item.spawner.loot_items (L9): "  &#ecf0f1•  {amount} {ɪᴛᴇᴍ_ɴᴀᴍᴇ} &#3498db({chance}%)" → "  &#ecf0f1•  {amount} {item_name} &#3498db({chance}%)"
+
+  REMOVED:
+    messages.yml:
+      - no_permission (L214): 
+      - no_permission.message (L215): "&#ff5252ʏᴏᴜ ᴅᴏɴᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪꜱꜱɪᴏɴ ᴛᴏ ᴅᴏ ᴛʜɪꜱ"
+      - no_permission.sound (L216): block.note_block.pling
+      - reload_command_error (L226): 
+      - reload_command_error.message (L227): "&#e05252ꜰᴀɪʟᴇᴅ ᴛᴏ ʀᴇʟᴏᴀᴅ ꜱᴍᴀʀᴛꜱᴘᴀᴡɴᴇʀ, ᴘʟᴇᴀꜱᴇ ᴄʜᴇᴄᴋ ᴄᴏɴꜱᴏʟᴇ ꜰᴏʀ ᴅᴇᴛᴀɪ…
+      - reload_command_error.sound (L228): block.note_block.pling
+      - reload_command_start (L219): 
+      - reload_command_start.action_bar (L220): "&#e9b949⌛ ʀᴇʟᴏᴀᴅɪɴɢ ᴘʟᴜɢɪɴ... ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ!"
+      - reload_command_success (L222): 
+      - reload_command_success.message (L223): "&#37eb9asuᴄᴄᴇꜱꜱꜰᴜʟʟʏ ʀᴇʟᴏᴀᴅᴇᴅ ꜱᴍᴀʀᴛꜱᴘᴀᴡɴᴇʀ"
+      - reload_command_success.sound (L224): entity.experience_orb.pickup
+    items.yml:
+      - item (L51): 
+      - item.ARROW (L92): 
+      - item.ARROW.name (L93): "Arrow"
+      - item.BEEF (L68): 
+      - item.BEEF.name (L69): "Raw Beef"
+      - item.BLAZE_ROD (L112): 
+      - item.BLAZE_ROD.name (L113): "Blaze Rod"
+      - item.BONE (L88): 
+      - item.BONE.name (L89): "Bone"
+      - item.BONE_MEAL (L90): 
+      - item.BONE_MEAL.name (L91): "Bone Meal"
+      - item.BOW (L120): 
+      - item.BOW.name (L121): "Bow"
+      - item.BREEZE_ROD (L114): 
+      - item.BREEZE_ROD.name (L115): "Breeze Rod"
+      - item.CARROT (L170): 
+      - item.CARROT.name (L171): "Carrot"
+      - item.CHICKEN (L62): 
+      - item.CHICKEN.name (L63): "Raw Chicken"
+      - item.COAL (L162): 
+      - item.COAL.name (L163): "Coal"
+      - item.COD (L64): 
+      - item.COD.name (L65): "Raw Cod"
+      - item.COPPER_INGOT (L142): 
+      - item.COPPER_INGOT.name (L143): "Copper Ingot"
+      - item.CROSSBOW (L122): 
+      - item.CROSSBOW.name (L123): "Crossbow"
+      - item.DIAMOND (L190): 
+      - item.DIAMOND.name (L191): "Diamond"
+      - item.EMERALD (L150): 
+      - item.EMERALD.name (L151): "Emerald"
+      - item.ENDER_PEARL (L100): 
+      - item.ENDER_PEARL.name (L101): "Ender Pearl"
+      - item.FEATHER (L60): 
+      - item.FEATHER.name (L61): "Feather"
+      - item.GHAST_TEAR (L102): 
+      - item.GHAST_TEAR.name (L103): "Ghast Tear"
+      - item.GLASS_BOTTLE (L182): 
+      - item.GLASS_BOTTLE.name (L183): "Glass Bottle"
+      - item.GLOWSTONE_DUST (L160): 
+      - item.GLOWSTONE_DUST.name (L161): "Glowstone Dust"
+      - item.GLOW_INK_SAC (L166): 
+      - item.GLOW_INK_SAC.name (L167): "Glow Ink Sac"
+      - item.GOLDEN_AXE (L126): 
+      - item.GOLDEN_AXE.name (L127): "Golden Axe"
+      - item.GOLDEN_SWORD (L124): 
+      - item.GOLDEN_SWORD.name (L125): "Golden Sword"
+      - item.GOLD_INGOT (L156): 
+      - item.GOLD_INGOT.name (L157): "Gold Ingot"
+      - item.GOLD_NUGGET (L154): 
+      - item.GOLD_NUGGET.name (L155): "Gold Nugget"
+      - item.GUNPOWDER (L96): 
+      - item.GUNPOWDER.name (L97): "Gunpowder"
+      - item.INK_SAC (L168): 
+      - item.INK_SAC.name (L169): "Ink Sac"
+      - item.IRON_AXE (L130): 
+      - item.IRON_AXE.name (L131): "Iron Axe"
+      - item.IRON_INGOT (L152): 
+      - item.IRON_INGOT.name (L153): "Iron Ingot"
+      - item.LEATHER (L56): 
+      - item.LEATHER.name (L57): "Leather"
+      - item.MAGMA_CREAM (L104): 
+      - item.MAGMA_CREAM.name (L105): "Magma Cream"
+      - item.MUTTON (L72): 
+      - item.MUTTON.name (L73): "Raw Mutton"
+      - item.NETHERITE_INGOT (L194): 
+      - item.NETHERITE_INGOT.name (L195): "Netherite Ingot"
+      - item.NETHER_STAR (L192): 
+      - item.NETHER_STAR.name (L193): "Nether Star"
+      - item.PHANTOM_MEMBRANE (L106): 
+      - item.PHANTOM_MEMBRANE.name (L107): "Phantom Membrane"
+      - item.POPPY (L174): 
+      - item.POPPY.name (L175): "Poppy"
+      - item.PORKCHOP (L70): 
+      - item.PORKCHOP.name (L71): "Raw Porkchop"
+      - item.POTATO (L172): 
+      - item.POTATO.name (L173): "Potato"
+      - item.PRISMARINE_CRYSTALS (L146): 
+      - item.PRISMARINE_CRYSTALS.name (L147): "Prismarine Crystals"
+      - item.PRISMARINE_SHARD (L144): 
+      - item.PRISMARINE_SHARD.name (L145): "Prismarine Shard"
+      - item.PUFFERFISH (L82): 
+      - item.PUFFERFISH.name (L83): "Pufferfish"
+      - item.RABBIT (L74): 
+      - item.RABBIT.name (L75): "Raw Rabbit"
+      - item.RABBIT_FOOT (L80): 
+      - item.RABBIT_FOOT.name (L81): "Rabbit's Foot"
+      - item.RABBIT_HIDE (L78): 
+      - item.RABBIT_HIDE.name (L79): "Rabbit Hide"
+      - item.REDSTONE (L158): 
+      - item.REDSTONE.name (L159): "Redstone Dust"
+      - item.ROTTEN_FLESH (L98): 
+      - item.ROTTEN_FLESH.name (L99): "Rotten Flesh"
+      - item.SADDLE (L138): 
+      - item.SADDLE.name (L139): "Saddle"
+      - item.SALMON (L66): 
+      - item.SALMON.name (L67): "Raw Salmon"
+      - item.SCULK_CATALYST (L186): 
+      - item.SCULK_CATALYST.name (L187): "Sculk Catalyst"
+      - item.SEAGRASS (L178): 
+      - item.SEAGRASS.name (L179): "Seagrass"
+      - item.SHULKER_SHELL (L108): 
+      - item.SHULKER_SHELL.name (L109): "Shulker Shell"
+      - item.SLIME_BALL (L110): 
+      - item.SLIME_BALL.name (L111): "Slime Ball"
+      - item.SNOWBALL (L176): 
+      - item.SNOWBALL.name (L177): "Snowball"
+      - item.SPIDER_EYE (L94): 
+      - item.SPIDER_EYE.name (L95): "Spider Eye"
+      - item.STICK (L184): 
+      - item.STICK.name (L185): "Stick"
+      - item.STONE_SWORD (L128): 
+      - item.STONE_SWORD.name (L129): "Stone Sword"
+      - item.STRING (L58): 
+      - item.STRING.name (L59): "String"
+      - item.SUGAR (L180): 
+      - item.SUGAR.name (L181): "Sugar"
+      - item.TIDE_ARMOR_TRIM_SMITHING_TEMPLATE (L188): 
+      - item.TIDE_ARMOR_TRIM_SMITHING_TEMPLATE.name (L189): "Tide Armor Trim"
+      - item.TIPPED_ARROW (L134): 
+      - item.TIPPED_ARROW.name (L135): "Tipped Arrow"
+      - item.TOTEM_OF_UNDYING (L136): 
+      - item.TOTEM_OF_UNDYING.name (L137): "Totem of Undying"
+      - item.TRIDENT (L132): 
+      - item.TRIDENT.name (L133): "Trident"
+      - item.TROPICAL_FISH (L84): 
+      - item.TROPICAL_FISH.name (L85): "Tropical Fish"
+      - item.WET_SPONGE (L148): 
+      - item.WET_SPONGE.name (L149): "Wet Sponge"
+      - item.WHITE_WOOL (L76): 
+      - item.WHITE_WOOL.name (L77): "White Wool"
+      - item.WITHER_SKELETON_SKULL (L116): 
+      - item.WITHER_SKELETON_SKULL.name (L117): "Wither Skeleton Skull"
+
 ── v1.6.4 (2026-03-29) ─────────────────────────────────────────────────────────
 
   Summary: Version 1.6.4 released – fill in details here.
