@@ -30,7 +30,7 @@ dependencies {
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     compileOnly("su.nightexpress.coinsengine:CoinsEngine:2.6.0")
     compileOnly("com.github.Gypopo:EconomyShopGUI-API:1.9.0")
-    compileOnly("world.bentobox:bentobox:3.12.0")
+    compileOnly("world.bentobox:bentobox:3.13.0")
     compileOnly("su.nightexpress.excellentshop:Core:4.22.0")
     compileOnly("io.github.fabiozumbi12.RedProtect:RedProtect-Core:8.1.2") {
         exclude(group = "*")
@@ -40,7 +40,7 @@ dependencies {
     }
     compileOnly("dev.aurelium:auraskills-api-bukkit:2.3.11")
     compileOnly("pl.minecodes.plots:plugin-api:4.6.2")
-    compileOnly("fr.maxlego08.shop:zshop-api:3.3.3")
+    compileOnly("fr.maxlego08.shop:zshop-api:3.3.4")
     compileOnly("fr.maxlego08.menu:zmenu-api:1.1.1.2")
 
     implementation("com.github.GriefPrevention:GriefPrevention:18.0.0")
@@ -52,7 +52,7 @@ dependencies {
     }
 
     compileOnly("io.lumine:Mythic-Dist:5.11.2")
-    compileOnly("com.iridium:IridiumSkyblock:4.1.2")
+    compileOnly("com.iridium:IridiumSkyblock:4.1.4")
 
     implementation(platform("com.intellectualsites.bom:bom-newest:1.56"))
     compileOnly("com.intellectualsites.plotsquared:plotsquared-core")
