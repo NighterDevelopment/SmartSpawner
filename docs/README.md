@@ -5,7 +5,7 @@
 [![Astro](https://img.shields.io/badge/Astro-5.13.2-orange)](https://astro.build/)
 [![Starlight](https://img.shields.io/badge/Starlight-0.35.2-purple)](https://starlight.astro.build/)
 
-This repository hosts the official documentation website for **[SmartSpawner](https://modrinth.com/plugin/smart-spawner-plugin)**, a powerful Minecraft plugin designed to enhance mob spawner management on servers.
+This repository hosts the official documentation website for **[SmartSpawner](https://modrinth.com/plugin/smartspawner)**, a powerful Minecraft plugin designed to enhance mob spawner management on servers.
 
 ## About SmartSpawner
 

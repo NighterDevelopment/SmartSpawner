@@ -20,7 +20,7 @@ Before installing SmartSpawner, ensure your server meets these requirements:
 Choose your preferred download source:
 
 <div style="text-align: center; margin: 1.5rem 0;">
-  <a href="https://modrinth.com/plugin/smart-spawner-plugin" style="display: inline-block; margin: 0 0.5rem;">
+  <a href="https://modrinth.com/plugin/smartspawner" style="display: inline-block; margin: 0 0.5rem;">
     <img src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/modrinth_vector.svg" alt="Modrinth" style="height: 40px;">
   </a>
   <a href="https://www.spigotmc.org/resources/120743/" style="display: inline-block; margin: 0 0.5rem;">
