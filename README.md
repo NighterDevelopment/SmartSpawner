@@ -54,7 +54,7 @@ The compiled JAR will be available in `build/libs/`
 ## Support
 
 - **Issues & Bug Reports:** [GitHub Issues](https://github.com/NighterDevelopment/smartspawner/issues)
-- **Discord Community:** [Join our Discord](https://discord.gg/zrnyG4CuuT)
+- **Discord Community:** [Join our Discord](https://dsc.gg/nighterdevelopment)
 
 ## Statistics
 
@@ -62,4 +62,4 @@ The compiled JAR will be available in `build/libs/`
 
 ## License
 
-This project is licensed under the CC BY-NC-SA 4.0 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GPLv3 License - see the [LICENSE](LICENSE) file for details.
