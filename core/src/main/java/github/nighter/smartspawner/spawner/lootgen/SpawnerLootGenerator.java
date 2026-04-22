@@ -407,12 +407,13 @@ public class SpawnerLootGenerator {
 
             final int minMobs;
             final int maxMobs;
-            final boolean atCapacity;
+            final boolean itemStorageFull;
             
             try {
                 int usedSlots = spawner.getVirtualInventory().getUsedSlots();
                 int maxSlots = spawner.getMaxSpawnerLootSlots();
-                atCapacity = usedSlots >= maxSlots && spawner.getSpawnerExp() >= spawner.getMaxStoredExp();
+                itemStorageFull = usedSlots >= maxSlots;
+                boolean atCapacity = itemStorageFull && spawner.getSpawnerExp() >= spawner.getMaxStoredExp();
                 
                 if (atCapacity) {
                     callback.onLootGenerated(Collections.emptyList(), 0);
@@ -426,15 +427,27 @@ public class SpawnerLootGenerator {
             }
 
             Scheduler.runTaskAsync(() -> {
-                LootResult loot = generateLoot(minMobs, maxMobs, spawner);
+                LootResult loot;
+                if (itemStorageFull) {
+                    loot = generateExperienceOnlyLoot(minMobs, maxMobs, spawner);
+                } else {
+                    loot = generateLoot(minMobs, maxMobs, spawner);
+                }
+
                 callback.onLootGenerated(
-                    loot.items() != null ? new ArrayList<>(loot.items()) : Collections.emptyList(),
-                    loot.experience()
+                        loot.items() != null ? new ArrayList<>(loot.items()) : Collections.emptyList(),
+                        loot.experience()
                 );
             });
         } finally {
             spawner.getLootGenerationLock().unlock();
         }
+    }
+
+    private LootResult generateExperienceOnlyLoot(int minMobs, int maxMobs, SpawnerData spawner) {
+        int mobCount = random.nextInt(maxMobs - minMobs + 1) + minMobs;
+        int totalExperience = spawner.getEntityExperienceValue() * mobCount;
+        return new LootResult(Collections.emptyList(), totalExperience);
     }
     
     /**
@@ -493,14 +506,12 @@ public class SpawnerLootGenerator {
                     return;
                 }
 
-                final boolean capacityCheck;
-                
                 try {
                     int usedSlots = spawner.getVirtualInventory().getUsedSlots();
                     int maxSlots = spawner.getMaxSpawnerLootSlots();
-                    capacityCheck = usedSlots >= maxSlots && spawner.getSpawnerExp() >= spawner.getMaxStoredExp();
-                    
-                    if (capacityCheck) {
+                    boolean isCompletelyFull = usedSlots >= maxSlots && spawner.getSpawnerExp() >= spawner.getMaxStoredExp();
+
+                    if (isCompletelyFull) {
                         return;
                     }
                 } finally {
@@ -530,8 +541,22 @@ public class SpawnerLootGenerator {
                         }
 
                         if (!validItems.isEmpty()) {
-                            spawner.addItemsAndUpdateSellValue(validItems);
-                            changed = true;
+                            int usedSlots = spawner.getVirtualInventory().getUsedSlots();
+                            int maxSlots = spawner.getMaxSpawnerLootSlots();
+
+                            if (usedSlots < maxSlots) {
+                                List<ItemStack> itemsToAdd = validItems;
+
+                                int totalRequiredSlots = calculateRequiredSlots(itemsToAdd, spawner.getVirtualInventory());
+                                if (totalRequiredSlots > maxSlots) {
+                                    itemsToAdd = limitItemsToAvailableSlots(itemsToAdd, spawner);
+                                }
+
+                                if (!itemsToAdd.isEmpty()) {
+                                    spawner.addItemsAndUpdateSellValue(itemsToAdd);
+                                    changed = true;
+                                }
+                            }
                         }
                     }
 

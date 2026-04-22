@@ -151,6 +151,33 @@ public class SpawnerManager {
         return worldIndex.get(worldName);
     }
 
+    /**
+     * Removes all spawners belonging to a world from in-memory indexes.
+     * Used when a world unloads so runtime memory only contains active worlds.
+     *
+     * @param worldName world being unloaded
+     * @return IDs of removed spawners for deferred reloading
+     */
+    public Set<String> unloadSpawnersInWorld(String worldName) {
+        Set<SpawnerData> worldSpawners = worldIndex.get(worldName);
+        if (worldSpawners == null || worldSpawners.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<String> removedSpawnerIds = new HashSet<>();
+        Set<SpawnerData> snapshot = new HashSet<>(worldSpawners);
+
+        for (SpawnerData spawner : snapshot) {
+            spawner.removeHologram();
+            removedSpawnerIds.add(spawner.getSpawnerId());
+            spawners.remove(spawner.getSpawnerId());
+            locationIndex.entrySet().removeIf(entry -> entry.getValue() == spawner);
+        }
+
+        worldIndex.remove(worldName);
+        return removedSpawnerIds;
+    }
+
     public void initializeWithoutLoading() {
         // Clear existing data
         spawners.clear();

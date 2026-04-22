@@ -97,11 +97,12 @@ public class WorldEventHandler implements Listener {
         // Remove world from processed set
         processedWorlds.remove(worldName);
 
+        // Flush pending changes before removing runtime references.
+        // Storage handlers save modified spawners by resolving them from SpawnerManager.
+        plugin.getSpawnerStorage().flushChanges();
+
         // Unload spawners from this world
         unloadSpawnersFromWorld(worldName);
-
-        // Save any pending changes before unloading
-        plugin.getSpawnerStorage().flushChanges();
     }
 
     /**
@@ -126,9 +127,20 @@ public class WorldEventHandler implements Listener {
             SpawnerData spawner = entry.getValue();
 
             if (spawner != null) {
-                // Successfully loaded spawner
-                plugin.getSpawnerManager().addSpawnerToIndexes(spawnerId, spawner);
-                loadedCount++;
+                String worldName = spawner.getSpawnerLocation() != null && spawner.getSpawnerLocation().getWorld() != null
+                        ? spawner.getSpawnerLocation().getWorld().getName()
+                        : null;
+
+                if (worldName != null && Bukkit.getWorld(worldName) != null) {
+                    plugin.getSpawnerManager().addSpawnerToIndexes(spawnerId, spawner);
+                    loadedCount++;
+                } else {
+                    PendingSpawnerData pending = loadPendingSpawnerFromFile(spawnerId);
+                    if (pending != null) {
+                        pendingSpawners.put(spawnerId, pending);
+                        pendingCount++;
+                    }
+                }
             } else {
                 // Spawner couldn't be loaded, likely due to missing world
                 // Store as pending for later loading
@@ -186,19 +198,16 @@ public class WorldEventHandler implements Listener {
      * Unload all spawners from a specific world
      */
     private void unloadSpawnersFromWorld(String worldName) {
-        Set<SpawnerData> worldSpawners = plugin.getSpawnerManager().getSpawnersInWorld(worldName);
-
-        if (worldSpawners != null && !worldSpawners.isEmpty()) {
-            int unloadedCount = 0;
-
-            for (SpawnerData spawner : new HashSet<>(worldSpawners)) {
-                // Remove hologram and cleanup
-                spawner.removeHologram();
-                unloadedCount++;
-            }
-
-            logger.info("Unloaded " + unloadedCount + " spawners from world: " + worldName);
+        Set<String> unloadedSpawnerIds = plugin.getSpawnerManager().unloadSpawnersInWorld(worldName);
+        if (unloadedSpawnerIds.isEmpty()) {
+            return;
         }
+
+        for (String spawnerId : unloadedSpawnerIds) {
+            pendingSpawners.put(spawnerId, new PendingSpawnerData(worldName));
+        }
+
+        logger.info("Unloaded " + unloadedSpawnerIds.size() + " spawners from world: " + worldName);
     }
 
     /**
@@ -210,7 +219,10 @@ public class WorldEventHandler implements Listener {
             if (locationString != null) {
                 String[] locParts = locationString.split(",");
                 if (locParts.length >= 1) {
-                    return new PendingSpawnerData(locParts[0]);
+                    String worldName = locParts[0].trim();
+                    if (!worldName.isEmpty()) {
+                        return new PendingSpawnerData(worldName);
+                    }
                 }
             }
         } catch (Exception e) {
