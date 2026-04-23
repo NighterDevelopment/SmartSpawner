@@ -26,7 +26,7 @@ dependencies {
         exclude(group = "*")
     }
     compileOnly("com.palmergames.bukkit.towny:towny:0.102.0.14")
-    compileOnly("com.bgsoftware:SuperiorSkyblockAPI:2025.2.1")
+    compileOnly("com.bgsoftware:SuperiorSkyblockAPI:2026.1")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     compileOnly("su.nightexpress.coinsengine:CoinsEngine:2.6.0")
     compileOnly("com.github.Gypopo:EconomyShopGUI-API:1.9.0")
