@@ -31,7 +31,7 @@ dependencies {
     compileOnly("su.nightexpress.coinsengine:CoinsEngine:2.6.0")
     compileOnly("com.github.Gypopo:EconomyShopGUI-API:1.9.0")
     compileOnly("world.bentobox:bentobox:3.14.2")
-    compileOnly("su.nightexpress.excellentshop:Core:4.22.0")
+    compileOnly("su.nightexpress.excellentshop:Core:5.0.1")
     compileOnly("io.github.fabiozumbi12.RedProtect:RedProtect-Core:8.1.2") {
         exclude(group = "*")
     }
