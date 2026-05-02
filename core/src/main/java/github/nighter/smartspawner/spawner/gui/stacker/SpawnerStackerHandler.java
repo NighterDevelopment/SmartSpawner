@@ -429,7 +429,8 @@ public class SpawnerStackerHandler implements Listener {
 
         // Remove from inventory and update stack
         if(SpawnerStackEvent.getHandlerList().getRegisteredListeners().length != 0) {
-            SpawnerStackEvent e = new SpawnerStackEvent(player, spawner.getSpawnerLocation(), spawner.getStackSize(), spawner.getStackSize() + actualChange, SpawnerStackEvent.StackSource.GUI);
+            SpawnerStackEvent e = new SpawnerStackEvent(player, spawner.getSpawnerLocation(), spawner.getStackSize(),
+                    spawner.getStackSize() + actualChange, SpawnerStackEvent.StackSource.GUI, spawner.getEntityType());
             Bukkit.getPluginManager().callEvent(e);
             if (e.isCancelled()) return;
         }
@@ -484,7 +485,7 @@ public class SpawnerStackerHandler implements Listener {
 
         if (SpawnerStackEvent.getHandlerList().getRegisteredListeners().length != 0) {
             SpawnerStackEvent e = new SpawnerStackEvent(player, spawner.getSpawnerLocation(), spawner.getStackSize(),
-                    spawner.getStackSize() + actualChange, SpawnerStackEvent.StackSource.GUI);
+                    spawner.getStackSize() + actualChange, SpawnerStackEvent.StackSource.GUI, spawner.getEntityType());
             Bukkit.getPluginManager().callEvent(e);
             if (e.isCancelled())
                 return;

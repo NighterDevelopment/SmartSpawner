@@ -153,13 +153,12 @@ public class DiscordEmbedBuilder {
                     loc.getWorld().getName(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
         }
 
-        if (entry.getEntityType() != null) {
-            p.put("entity", formatEntityName(entry.getEntityType().name()));
-        }
-
         for (Map.Entry<String, Object> meta : entry.getMetadata().entrySet()) {
             p.put(meta.getKey(), String.valueOf(meta.getValue()));
         }
+
+        // Keep a single placeholder for all spawner types: mob entity or item material fallback.
+        p.put("entity", resolveEntityPlaceholder(entry, p));
 
         return p;
     }
@@ -209,6 +208,19 @@ public class DiscordEmbedBuilder {
             }
         }
         return sb.toString().trim();
+    }
+
+    private static String resolveEntityPlaceholder(SpawnerLogEntry entry, Map<String, String> placeholders) {
+        String itemType = placeholders.get("item_type");
+        if (itemType != null && !itemType.isBlank()) {
+            return formatEntityName(itemType);
+        }
+
+        if (entry.getEntityType() != null) {
+            return formatEntityName(entry.getEntityType().name());
+        }
+
+        return "N/A";
     }
 
     private static String getFieldIcon(String key) {

@@ -139,7 +139,7 @@ public class SpawnerSellManager {
         // Fire the cancellable API event
         if (SpawnerSellEvent.getHandlerList().getRegisteredListeners().length != 0) {
             SpawnerSellEvent event = new SpawnerSellEvent(
-                    player, spawner.getSpawnerLocation(), sellResult.getItemsToRemove(), amount);
+                    player, spawner.getSpawnerLocation(), sellResult.getItemsToRemove(), amount, spawner.getEntityType());
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) return;
             if (event.getMoneyAmount() >= 0) amount = event.getMoneyAmount();

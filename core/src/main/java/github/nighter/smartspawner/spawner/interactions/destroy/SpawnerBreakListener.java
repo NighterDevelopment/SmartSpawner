@@ -88,7 +88,7 @@ public class SpawnerBreakListener implements Listener {
             handleSmartSpawnerBreak(block, spawner, player);
         } else {
             CreatureSpawner creatureSpawner = (CreatureSpawner) block.getState(false);
-            if(callAPIEvent(player, block.getLocation(), 1)) {
+            if(callAPIEvent(player, block.getLocation(), 1, creatureSpawner.getSpawnedType())) {
                 event.setCancelled(true);
                 return;
             }
@@ -244,15 +244,15 @@ public class SpawnerBreakListener implements Listener {
         if (isCrouching) {
             if (currentStackSize <= MAX_STACK_SIZE) {
                 dropAmount = currentStackSize;
-                if(callAPIEvent(player, location, dropAmount)) return new SpawnerBreakResult(false, dropAmount, 0);
+                if(callAPIEvent(player, location, dropAmount, spawner.getEntityType())) return new SpawnerBreakResult(false, dropAmount, 0);
             } else {
                 dropAmount = MAX_STACK_SIZE;
-                if(callAPIEvent(player, location, dropAmount)) return new SpawnerBreakResult(false, dropAmount, 0);
+                if(callAPIEvent(player, location, dropAmount, spawner.getEntityType())) return new SpawnerBreakResult(false, dropAmount, 0);
                 spawner.setStackSize(currentStackSize - MAX_STACK_SIZE);
             }
         } else {
             dropAmount = 1;
-            if(callAPIEvent(player, location, dropAmount)) return new SpawnerBreakResult(false, dropAmount, 0);
+            if(callAPIEvent(player, location, dropAmount, spawner.getEntityType())) return new SpawnerBreakResult(false, dropAmount, 0);
             if (currentStackSize <= 1) {
                 shouldDeleteSpawner = true;
             } else {
@@ -279,9 +279,9 @@ public class SpawnerBreakListener implements Listener {
         return new SpawnerBreakResult(true, dropAmount, durabilityLoss);
     }
 
-    private boolean callAPIEvent(Player player, Location location, int dropAmount) {
+    private boolean callAPIEvent(Player player, Location location, int dropAmount, EntityType entityType) {
         if(SpawnerPlayerBreakEvent.getHandlerList().getRegisteredListeners().length != 0) {
-            SpawnerPlayerBreakEvent e = new SpawnerPlayerBreakEvent(player, location, dropAmount);
+            SpawnerPlayerBreakEvent e = new SpawnerPlayerBreakEvent(player, location, dropAmount, entityType);
             Bukkit.getPluginManager().callEvent(e);
             return e.isCancelled();
         }

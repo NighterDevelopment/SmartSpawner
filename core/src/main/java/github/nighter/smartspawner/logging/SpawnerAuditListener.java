@@ -31,6 +31,7 @@ public class SpawnerAuditListener implements Listener {
     public void onSpawnerBreak(SpawnerBreakEvent event) {
         logger.log(new SpawnerLogEntry.Builder(SpawnerEventType.SPAWNER_BREAK)
                 .location(event.getLocation())
+                .entityType(event.getEntityType())
                 .metadata("quantity", event.getQuantity())
                 .build());
     }
@@ -40,6 +41,7 @@ public class SpawnerAuditListener implements Listener {
         logger.log(new SpawnerLogEntry.Builder(SpawnerEventType.SPAWNER_BREAK)
                 .player(event.getPlayer().getName(), event.getPlayer().getUniqueId())
                 .location(event.getLocation())
+                .entityType(event.getEntityType())
                 .metadata("quantity", event.getQuantity())
                 .build());
     }
@@ -48,6 +50,7 @@ public class SpawnerAuditListener implements Listener {
     public void onSpawnerExplode(SpawnerExplodeEvent event) {
         logger.log(new SpawnerLogEntry.Builder(SpawnerEventType.SPAWNER_EXPLODE)
                 .location(event.getLocation())
+                .entityType(event.getEntityType())
                 .metadata("quantity", event.getQuantity())
                 .metadata("cause", event.getClass().getSimpleName())
                 .build());
@@ -64,6 +67,7 @@ public class SpawnerAuditListener implements Listener {
         logger.log(new SpawnerLogEntry.Builder(eventType)
                 .player(event.getPlayer().getName(), event.getPlayer().getUniqueId())
                 .location(event.getLocation())
+                .entityType(event.getEntityType())
                 .metadata("amount_added", amountAdded)
                 .metadata("old_stack_size", event.getOldStackSize())
                 .metadata("new_stack_size", event.getNewStackSize())
@@ -97,7 +101,8 @@ public class SpawnerAuditListener implements Listener {
         logger.log(new SpawnerLogEntry.Builder(SpawnerEventType.SPAWNER_SELL_ALL)
                 .player(event.getPlayer().getName(), event.getPlayer().getUniqueId())
                 .location(event.getLocation())
-                .metadata("total_value", event.getMoneyAmount())
+                .entityType(event.getEntityType())
+                .metadata("total_price", event.getMoneyAmount())
                 .metadata("items_sold", itemsSold)
                 .build());
     }

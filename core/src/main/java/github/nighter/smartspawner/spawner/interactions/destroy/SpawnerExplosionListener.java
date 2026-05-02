@@ -76,14 +76,14 @@ public class SpawnerExplosionListener implements Listener {
                         plugin.getSpawnerGuiViewManager().closeAllViewersInventory(spawnerData);
                         cleanupAssociatedHopper(block);
                         if (hasApiListeners) {
-                            Bukkit.getPluginManager().callEvent(new SpawnerExplodeEvent(null, spawnerData.getSpawnerLocation(), 1, false));
+                            Bukkit.getPluginManager().callEvent(new SpawnerExplodeEvent(null, spawnerData.getSpawnerLocation(), 1, false, spawnerData.getEntityType()));
                         }
                     } else {
                         spawnerData.getSpawnerStop().set(true);
                         String spawnerId = spawnerData.getSpawnerId();
                         cleanupAssociatedHopper(block);
                         if (hasApiListeners) {
-                            Bukkit.getPluginManager().callEvent(new SpawnerExplodeEvent(null, spawnerData.getSpawnerLocation(), 1, true));
+                            Bukkit.getPluginManager().callEvent(new SpawnerExplodeEvent(null, spawnerData.getSpawnerLocation(), 1, true, spawnerData.getEntityType()));
                         }
                         spawnerManager.removeSpawner(spawnerId);
                         spawnerManager.markSpawnerDeleted(spawnerId);

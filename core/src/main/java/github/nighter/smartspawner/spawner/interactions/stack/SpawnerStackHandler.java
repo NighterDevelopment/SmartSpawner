@@ -204,7 +204,8 @@ public class SpawnerStackHandler {
         int newStack = currentStack + amountToStack;
 
         if(SpawnerStackEvent.getHandlerList().getRegisteredListeners().length != 0) {
-            SpawnerStackEvent e = new SpawnerStackEvent(player, targetSpawner.getSpawnerLocation(), currentStack, newStack);
+            SpawnerStackEvent e = new SpawnerStackEvent(player, targetSpawner.getSpawnerLocation(), currentStack, newStack,
+                    SpawnerStackEvent.StackSource.PLACE, targetSpawner.getEntityType());
             Bukkit.getPluginManager().callEvent(e);
             if (e.isCancelled()) return false;
         }
