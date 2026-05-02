@@ -269,7 +269,7 @@ public class SpawnerSellConfirmUI {
         // OPTIMIZATION: Get all values in single pass
         double totalSellPrice = spawner.getAccumulatedSellValue();
         int currentItems = spawner.getVirtualInventory().getUsedSlots();
-        int currentExp = spawner.getSpawnerExp();
+        long currentExp = spawner.getSpawnerExp();
 
         placeholders.put("total_sell_price", languageManager.formatNumber(totalSellPrice));
         placeholders.put("current_items", Integer.toString(currentItems));

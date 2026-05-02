@@ -23,8 +23,8 @@ public class SpawnerHologram {
     private final Location spawnerLocation;
     private int stackSize;
     private EntityType entityType;
-    private int currentExp;
-    private int maxExp;
+    private long currentExp;
+    private long maxExp;
     private int currentItems;
     private int maxSlots;
     private static final String HOLOGRAM_IDENTIFIER = "SmartSpawner-Holo";
@@ -179,7 +179,7 @@ public class SpawnerHologram {
         });
     }
 
-    public void updateData(int stackSize, EntityType entityType, int currentExp, int maxExp, int currentItems, int maxSlots) {
+    public void updateData(int stackSize, EntityType entityType, long currentExp, long maxExp, int currentItems, int maxSlots) {
         TextDisplay display = textDisplay.get();
 
         // Skip entirely when nothing has changed and the hologram already exists.

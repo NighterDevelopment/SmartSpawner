@@ -81,7 +81,7 @@ public interface SpawnerDataModifier {
      *
      * @return base maximum stored experience
      */
-    int getBaseMaxStoredExp();
+    long getBaseMaxStoredExp();
 
     /**
      * Sets the base maximum stored experience value.
@@ -89,7 +89,7 @@ public interface SpawnerDataModifier {
      * @param baseMaxStoredExp new base maximum stored experience
      * @return this modifier for method chaining
      */
-    SpawnerDataModifier setBaseMaxStoredExp(int baseMaxStoredExp);
+    SpawnerDataModifier setBaseMaxStoredExp(long baseMaxStoredExp);
 
     /**
      * Gets the base spawner delay value.

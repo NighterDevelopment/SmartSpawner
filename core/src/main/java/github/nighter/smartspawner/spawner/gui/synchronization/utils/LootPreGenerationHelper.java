@@ -117,7 +117,7 @@ public final class LootPreGenerationHelper {
 
                                 if (spawner.hasPreGeneratedLoot()) {
                                     List<ItemStack> items = spawner.getAndClearPreGeneratedItems();
-                                    int exp = spawner.getAndClearPreGeneratedExperience();
+                                    long exp = spawner.getAndClearPreGeneratedExperience();
 
                                     // Add the loot with scheduled spawn time for accurate timer reset
                                     plugin.getSpawnerLootGenerator().addPreGeneratedLoot(spawner, items, exp, scheduledSpawnTime);

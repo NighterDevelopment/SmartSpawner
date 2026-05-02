@@ -115,9 +115,10 @@ public class SpawnerLootGenerator {
 
                         // Process experience if there's any to add and not at max
                         if (loot.experience() > 0 && spawner.getSpawnerExp() < spawner.getMaxStoredExp()) {
-                            int currentExp = spawner.getSpawnerExp();
-                            int maxExp = spawner.getMaxStoredExp();
-                            int newExp = Math.min(currentExp + loot.experience(), maxExp);
+                            long currentExp = spawner.getSpawnerExp();
+                            long maxExp = spawner.getMaxStoredExp();
+                            long newExpLong = (long) currentExp + loot.experience();
+                            long newExp = Math.min(newExpLong, maxExp);
 
                             if (newExp != currentExp) {
                                 spawner.setSpawnerExp(newExp);
@@ -184,7 +185,8 @@ public class SpawnerLootGenerator {
     public LootResult generateLoot(int minMobs, int maxMobs, SpawnerData spawner) {
 
         int mobCount = random.nextInt(maxMobs - minMobs + 1) + minMobs;
-        int totalExperience = spawner.getEntityExperienceValue() * mobCount;
+        long totalExperienceLong = (long) spawner.getEntityExperienceValue() * mobCount;
+        long totalExperience = Math.min(totalExperienceLong, Long.MAX_VALUE);
 
         // Get valid items from the spawner's EntityLootConfig
         List<LootItem> validItems =  spawner.getValidLootItems();
@@ -446,7 +448,8 @@ public class SpawnerLootGenerator {
 
     private LootResult generateExperienceOnlyLoot(int minMobs, int maxMobs, SpawnerData spawner) {
         int mobCount = random.nextInt(maxMobs - minMobs + 1) + minMobs;
-        int totalExperience = spawner.getEntityExperienceValue() * mobCount;
+        long totalExperienceLong = (long) spawner.getEntityExperienceValue() * mobCount;
+        long totalExperience = Math.min(totalExperienceLong, Long.MAX_VALUE);
         return new LootResult(Collections.emptyList(), totalExperience);
     }
     
@@ -468,7 +471,7 @@ public class SpawnerLootGenerator {
      * @param items Pre-generated items list
      * @param experience Pre-generated experience amount
      */
-    public void addPreGeneratedLoot(SpawnerData spawner, List<ItemStack> items, int experience) {
+    public void addPreGeneratedLoot(SpawnerData spawner, List<ItemStack> items, long experience) {
         addPreGeneratedLoot(spawner, items, experience, System.currentTimeMillis());
     }
 
@@ -481,7 +484,7 @@ public class SpawnerLootGenerator {
      * @param experience Pre-generated experience amount
      * @param spawnTime The spawn time to set (for timer accuracy)
      */
-    public void addPreGeneratedLoot(SpawnerData spawner, List<ItemStack> items, int experience, long spawnTime) {
+    public void addPreGeneratedLoot(SpawnerData spawner, List<ItemStack> items, long experience, long spawnTime) {
         if ((items == null || items.isEmpty()) && experience == 0) {
             return;
         }
@@ -522,10 +525,11 @@ public class SpawnerLootGenerator {
                     boolean changed = false;
                     
                     if (experience > 0 && spawner.getSpawnerExp() < spawner.getMaxStoredExp()) {
-                        int currentExp = spawner.getSpawnerExp();
-                        int maxExp = spawner.getMaxStoredExp();
-                        int newExp = Math.min(currentExp + experience, maxExp);
-                        
+                        long currentExp = spawner.getSpawnerExp();
+                        long maxExp = spawner.getMaxStoredExp();
+                        long newExpLong = (long) currentExp + experience;
+                        long newExp = Math.min(newExpLong, maxExp);
+
                         if (newExp != currentExp) {
                             spawner.setSpawnerExp(newExp);
                             changed = true;
@@ -594,6 +598,6 @@ public class SpawnerLootGenerator {
          * @param items Generated items list (never null, may be empty)
          * @param experience Generated experience amount
          */
-        void onLootGenerated(List<ItemStack> items, int experience);
+        void onLootGenerated(List<ItemStack> items, long experience);
     }
 }

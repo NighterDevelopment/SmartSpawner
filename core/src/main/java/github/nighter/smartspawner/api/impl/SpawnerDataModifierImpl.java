@@ -13,7 +13,7 @@ public class SpawnerDataModifierImpl implements SpawnerDataModifier {
     private int pendingBaseMaxStoragePages;
     private int pendingBaseMinMobs;
     private int pendingBaseMaxMobs;
-    private int pendingBaseMaxStoredExp;
+    private long pendingBaseMaxStoredExp;
     private long pendingBaseSpawnerDelay;
 
     private boolean maxStackSizeChanged = false;
@@ -87,12 +87,12 @@ public class SpawnerDataModifierImpl implements SpawnerDataModifier {
     }
 
     @Override
-    public int getBaseMaxStoredExp() {
+    public long getBaseMaxStoredExp() {
         return pendingBaseMaxStoredExp;
     }
 
     @Override
-    public SpawnerDataModifier setBaseMaxStoredExp(int baseMaxStoredExp) {
+    public SpawnerDataModifier setBaseMaxStoredExp(long baseMaxStoredExp) {
         this.pendingBaseMaxStoredExp = baseMaxStoredExp;
         this.baseMaxStoredExpChanged = true;
         return this;

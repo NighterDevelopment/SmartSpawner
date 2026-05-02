@@ -20,7 +20,7 @@ public class SpawnerExpClaimEvent extends Event implements Cancellable {
 
     private final Player player;
     private final Location location;
-    private int expAmount;
+    private long expAmount;
     private boolean cancelled = false;
 
     /**
@@ -30,7 +30,7 @@ public class SpawnerExpClaimEvent extends Event implements Cancellable {
      * @param location the location of the spawner
      * @param expAmount the amount of experience claimed
      */
-    public SpawnerExpClaimEvent(Player player, Location location, int expAmount) {
+    public SpawnerExpClaimEvent(Player player, Location location, long expAmount) {
         this.player = player;
         this.location = location;
         this.expAmount = expAmount;

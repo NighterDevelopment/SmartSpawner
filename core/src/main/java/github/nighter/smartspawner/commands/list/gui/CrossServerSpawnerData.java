@@ -19,13 +19,13 @@ public class CrossServerSpawnerData {
     private final int stackSize;
     private final boolean active;
     private final String lastInteractedPlayer;
-    private final int storedExp;
+    private final long storedExp;
     private final long totalItems;
 
     public CrossServerSpawnerData(String spawnerId, String serverName, String worldName,
                                    int locX, int locY, int locZ, EntityType entityType,
                                    int stackSize, boolean active, String lastInteractedPlayer,
-                                   int storedExp, long totalItems) {
+                                   long storedExp, long totalItems) {
         this.spawnerId = spawnerId;
         this.serverName = serverName;
         this.worldName = worldName;
@@ -80,7 +80,7 @@ public class CrossServerSpawnerData {
         return lastInteractedPlayer;
     }
 
-    public int getStoredExp() {
+    public long getStoredExp() {
         return storedExp;
     }
 

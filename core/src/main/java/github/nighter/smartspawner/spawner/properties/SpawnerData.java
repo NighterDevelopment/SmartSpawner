@@ -46,7 +46,7 @@ public class SpawnerData {
 
     // Base values from config (immutable after load)
     @Getter @Setter
-    private int baseMaxStoredExp;
+    private long baseMaxStoredExp;
     @Getter @Setter
     private int baseMaxStoragePages;
     @Getter @Setter
@@ -55,7 +55,7 @@ public class SpawnerData {
     private int baseMaxMobs;
 
     @Getter
-    private Integer spawnerExp;
+    private long spawnerExp;
     @Getter @Setter
     private Boolean spawnerActive;
     @Getter @Setter
@@ -84,7 +84,7 @@ public class SpawnerData {
     @Getter @Setter
     private int maxSpawnerLootSlots;
     @Getter @Setter
-    private int maxStoredExp;
+    private long maxStoredExp;
     @Getter @Setter
     private int minMobs;
     @Getter @Setter
@@ -125,7 +125,7 @@ public class SpawnerData {
 
     // CRITICAL: Pre-generated loot storage for better UX - access must be synchronized via lootGenerationLock
     private volatile List<ItemStack> preGeneratedItems;
-    private volatile int preGeneratedExperience;
+    private volatile long preGeneratedExperience;
     private volatile boolean isPreGenerating;
 
     // Cache for no-loot detection to avoid repeated expensive checks
@@ -173,7 +173,7 @@ public class SpawnerData {
     }
 
     public void loadConfigurationValues() {
-        this.baseMaxStoredExp = plugin.getConfig().getInt("spawner_properties.default.max_stored_exp", 1000);
+        this.baseMaxStoredExp = plugin.getConfig().getLong("spawner_properties.default.max_stored_exp", 1000L);
         this.baseMaxStoragePages = plugin.getConfig().getInt("spawner_properties.default.max_storage_pages", 1);
         this.baseMinMobs = plugin.getConfig().getInt("spawner_properties.default.min_mobs", 1);
         this.baseMaxMobs = plugin.getConfig().getInt("spawner_properties.default.max_mobs", 4);
@@ -229,12 +229,12 @@ public class SpawnerData {
     }
 
     private void calculateStackBasedValues() {
-        this.maxStoredExp = baseMaxStoredExp * stackSize;
-        this.maxStoragePages = baseMaxStoragePages * stackSize;
-        this.maxSpawnerLootSlots = maxStoragePages * 45;
-        this.minMobs = baseMinMobs * stackSize;
-        this.maxMobs = baseMaxMobs * stackSize;
-        this.spawnerExp = Math.min(this.spawnerExp, this.maxStoredExp);
+        this.maxStoredExp = clampToLong(baseMaxStoredExp * stackSize, 0L, Long.MAX_VALUE);
+        this.maxStoragePages = clampToInt((long) baseMaxStoragePages * stackSize, 0, Integer.MAX_VALUE);
+        this.maxSpawnerLootSlots = clampToInt((long) maxStoragePages * 45L, 0, Integer.MAX_VALUE);
+        this.minMobs = clampToInt((long) baseMinMobs * stackSize, 0, Integer.MAX_VALUE);
+        this.maxMobs = clampToInt((long) baseMaxMobs * stackSize, 0, Integer.MAX_VALUE);
+        this.spawnerExp = clampToLong(this.spawnerExp, 0L, this.maxStoredExp);
     }
 
     public void setSpawnDelay(long baseSpawnerDelay) {
@@ -342,8 +342,8 @@ public class SpawnerData {
         virtualInventory.resize(maxSpawnerLootSlots);
     }
 
-    public void setSpawnerExp(int exp) {
-        this.spawnerExp = Math.min(Math.max(0, exp), maxStoredExp);
+    public void setSpawnerExp(long exp) {
+        this.spawnerExp = Math.min(Math.max(0L, exp), maxStoredExp);
         updateHologramData();
 
         // Invalidate GUI cache when experience changes
@@ -355,8 +355,32 @@ public class SpawnerData {
         }
     }
 
-    public void setSpawnerExpData(int exp) {
-        this.spawnerExp = exp;
+    public void setSpawnerExpData(long exp) {
+        this.spawnerExp = Math.max(0L, exp);
+    }
+
+    public void setBaseMaxStoredExp(long baseMaxStoredExp) {
+        this.baseMaxStoredExp = Math.max(0L, baseMaxStoredExp);
+    }
+
+    private int clampToInt(long value, int min, int max) {
+        if (value < min) {
+            return min;
+        }
+        if (value > max) {
+            return max;
+        }
+        return (int) value;
+    }
+
+    private long clampToLong(long value, long min, long max) {
+        if (value < min) {
+            return min;
+        }
+        if (value > max) {
+            return max;
+        }
+        return value;
     }
 
     public void updateHologramData() {
@@ -761,7 +785,7 @@ public class SpawnerData {
         }
     }
 
-    public synchronized void storePreGeneratedLoot(List<ItemStack> items, int experience) {
+    public synchronized void storePreGeneratedLoot(List<ItemStack> items, long experience) {
         this.preGeneratedItems = items;
         this.preGeneratedExperience = experience;
     }
@@ -772,8 +796,8 @@ public class SpawnerData {
         return items;
     }
 
-    public synchronized int getAndClearPreGeneratedExperience() {
-        int exp = preGeneratedExperience;
+    public synchronized long getAndClearPreGeneratedExperience() {
+        long exp = preGeneratedExperience;
         preGeneratedExperience = 0;
         return exp;
     }

@@ -23,7 +23,7 @@ public class SpawnerDataDTO {
     private final int baseMaxStoragePages;
     private final int baseMinMobs;
     private final int baseMaxMobs;
-    private final int baseMaxStoredExp;
+    private final long baseMaxStoredExp;
     private final long baseSpawnerDelay;
 
     /**
@@ -44,7 +44,7 @@ public class SpawnerDataDTO {
     public SpawnerDataDTO(String spawnerId, Location location, EntityType entityType,
                           Material spawnedItemMaterial, int stackSize, int maxStackSize,
                           int baseMaxStoragePages, int baseMinMobs, int baseMaxMobs,
-                          int baseMaxStoredExp, long baseSpawnerDelay) {
+                          long baseMaxStoredExp, long baseSpawnerDelay) {
         this.spawnerId = spawnerId;
         this.location = location;
         this.entityType = entityType;

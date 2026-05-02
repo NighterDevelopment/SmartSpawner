@@ -286,14 +286,14 @@ public class SpawnerMenuAction implements Listener {
      * Returns {@code true} if XP was successfully collected.
      */
     public boolean collectExpForPlayer(Player player, SpawnerData spawner) {
-        int exp = spawner.getSpawnerExp();
+        long exp = spawner.getSpawnerExp();
         if (exp <= 0) {
             messageService.sendMessage(player, "no_exp");
             return false;
         }
 
-        int initialExp = exp;
-        int expUsedForMending = 0;
+        long initialExp = exp;
+        long expUsedForMending = 0;
 
         if (plugin.getConfig().getBoolean("spawner_properties.default.allow_exp_mending")) {
             expUsedForMending = applyMendingFromExp(player, exp);
@@ -311,7 +311,7 @@ public class SpawnerMenuAction implements Listener {
                 if (expClaimEvent.isCancelled()) return false;
                 if (exp != expClaimEvent.getExpAmount()) exp = expClaimEvent.getExpAmount();
             }
-            player.giveExp(exp);
+            givePlayerExpInChunks(player, exp);
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
         }
 
@@ -334,7 +334,7 @@ public class SpawnerMenuAction implements Listener {
             return;
         }
 
-        int exp = spawner.getSpawnerExp();
+        long exp = spawner.getSpawnerExp();
 
         if (exp <= 0 && !isSell) {
             messageService.sendMessage(player, "no_exp");
@@ -342,8 +342,8 @@ public class SpawnerMenuAction implements Listener {
 
         }
 
-        int initialExp = exp;
-        int expUsedForMending = 0;
+        long initialExp = exp;
+        long expUsedForMending = 0;
 
         // Apply mending first if enabled
         if (plugin.getConfig().getBoolean("spawner_properties.default.allow_exp_mending")) {
@@ -364,7 +364,7 @@ public class SpawnerMenuAction implements Listener {
                 if(expClaimEvent.isCancelled()) return;
                 if(exp != expClaimEvent.getExpAmount()) exp = expClaimEvent.getExpAmount();
             }
-            player.giveExp(exp);
+            givePlayerExpInChunks(player, exp);
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
         }
 
@@ -398,12 +398,12 @@ public class SpawnerMenuAction implements Listener {
         sendExpCollectionMessage(player, initialExp, expUsedForMending);
     }
 
-    private int applyMendingFromExp(Player player, int availableExp) {
+    private long applyMendingFromExp(Player player, long availableExp) {
         if (availableExp <= 0) {
             return 0;
         }
 
-        int expUsed = 0;
+        long expUsed = 0;
         PlayerInventory inventory = player.getInventory();
         List<ItemStack> itemsToCheck = Arrays.asList(
                 inventory.getItemInMainHand(),
@@ -430,19 +430,19 @@ public class SpawnerMenuAction implements Listener {
 
             // Calculate repair amount based on available exp
             int damage = damageable.getDamage();
-            int durabilityToRepair = Math.min(damage, availableExp * 2);
-            int expNeeded = (durabilityToRepair + 1) / 2; // Round up for partial repairs
+            long durabilityToRepair = Math.min(damage, availableExp * 2);
+            long expNeeded = (durabilityToRepair + 1) / 2; // Round up for partial repairs
 
             if (expNeeded <= 0) {
                 continue;
             }
 
             // Apply repair and track exp usage
-            int actualExpUsed = Math.min(expNeeded, availableExp);
-            int actualRepair = actualExpUsed * 2;
+            long actualExpUsed = Math.min(expNeeded, availableExp);
+            long actualRepair = actualExpUsed * 2;
 
             // Ensure damage value does not go negative
-            int newDamage = Math.max(0, damage - actualRepair);
+            int newDamage = (int) Math.max(0L, damage - actualRepair);
 
             Damageable meta = (Damageable) item.getItemMeta();
             meta.setDamage(newDamage);
@@ -459,11 +459,11 @@ public class SpawnerMenuAction implements Listener {
         return expUsed;
     }
 
-    private void sendExpCollectionMessage(Player player, int totalExp, int mendingExp) {
+    private void sendExpCollectionMessage(Player player, long totalExp, long mendingExp) {
         Map<String, String> placeholders = new HashMap<>();
 
         if (mendingExp > 0) {
-            int remainingExp = totalExp - mendingExp;
+            long remainingExp = totalExp - mendingExp;
             placeholders.put("exp_mending", languageManager.formatNumber(mendingExp));
             placeholders.put("exp", languageManager.formatNumber(remainingExp));
             messageService.sendMessage(player, "exp_collected_with_mending", placeholders);
@@ -475,7 +475,7 @@ public class SpawnerMenuAction implements Listener {
         }
     }
 
-    private void giveAuraSkillsXp(Player player, SpawnerData spawner, int totalExp) {
+    private void giveAuraSkillsXp(Player player, SpawnerData spawner, long totalExp) {
         try {
             if (auraSkills == null || !auraSkills.isEnabled()) {
                 return;
@@ -489,7 +489,7 @@ public class SpawnerMenuAction implements Listener {
             }
 
             // Give skill XP based on the entity type and exp amount
-            auraSkills.giveSkillXp(player, entityType, totalExp);
+            auraSkills.giveSkillXp(player, entityType, clampLongToInt(totalExp));
 
         } catch (Exception e) {
             plugin.getLogger().warning("Error giving AuraSkills XP: " + e.getMessage());
@@ -503,5 +503,21 @@ public class SpawnerMenuAction implements Listener {
             return false;
         }
         return plugin.getIntegrationManager().getFloodgateHook().isBedrockPlayer(player);
+    }
+
+    private void givePlayerExpInChunks(Player player, long totalExp) {
+        long remaining = totalExp;
+        while (remaining > 0) {
+            int grant = clampLongToInt(Math.min(remaining, Integer.MAX_VALUE));
+            player.giveExp(grant);
+            remaining -= grant;
+        }
+    }
+
+    private int clampLongToInt(long value) {
+        if (value <= 0) {
+            return 0;
+        }
+        return (int) Math.min(value, Integer.MAX_VALUE);
     }
 }

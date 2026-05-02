@@ -308,13 +308,13 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         stmt.setInt(6, loc.getBlockZ());
         stmt.setString(7, spawner.getEntityType().name());
         stmt.setString(8, spawner.isItemSpawner() ? spawner.getSpawnedItemMaterial().name() : null);
-        stmt.setInt(9, spawner.getSpawnerExp());
+        stmt.setLong(9, Math.max(0L, spawner.getSpawnerExp()));
         stmt.setBoolean(10, spawner.getSpawnerActive());
         stmt.setInt(11, spawner.getSpawnerRange());
         stmt.setBoolean(12, spawner.getSpawnerStop().get());
         stmt.setLong(13, spawner.getSpawnDelay());
         stmt.setInt(14, spawner.getMaxSpawnerLootSlots());
-        stmt.setInt(15, spawner.getMaxStoredExp());
+        stmt.setLong(15, spawner.getMaxStoredExp());
         stmt.setInt(16, spawner.getMinMobs());
         stmt.setInt(17, spawner.getMaxMobs());
         stmt.setInt(18, spawner.getStackSize());
@@ -459,13 +459,13 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         }
 
         // Load settings
-        spawner.setSpawnerExpData(rs.getInt("spawner_exp"));
+        spawner.setSpawnerExpData(rs.getLong("spawner_exp"));
         spawner.setSpawnerActive(rs.getBoolean("spawner_active"));
         spawner.setSpawnerRange(rs.getInt("spawner_range"));
         spawner.getSpawnerStop().set(rs.getBoolean("spawner_stop"));
         spawner.setSpawnDelayFromConfig(); // Use config delay
         spawner.setMaxSpawnerLootSlots(rs.getInt("max_spawner_loot_slots"));
-        spawner.setMaxStoredExp(rs.getInt("max_stored_exp"));
+        spawner.setMaxStoredExp(rs.getLong("max_stored_exp"));
         spawner.setMinMobs(rs.getInt("min_mobs"));
         spawner.setMaxMobs(rs.getInt("max_mobs"));
         spawner.setStackSize(rs.getInt("stack_size"), false); // Don't restart hopper during batch load
@@ -834,7 +834,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                         int stackSize = rs.getInt("stack_size");
                         boolean active = !rs.getBoolean("spawner_stop");
                         String lastPlayer = rs.getString("last_interacted_player");
-                        int storedExp = rs.getInt("spawner_exp");
+                        long storedExp = rs.getLong("spawner_exp");
 
                         // Estimate total items from inventory data
                         long totalItems = estimateItemCount(rs.getString("inventory_data"));
@@ -949,7 +949,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                         int stackSize = rs.getInt("stack_size");
                         boolean active = !rs.getBoolean("spawner_stop");
                         String lastPlayer = rs.getString("last_interacted_player");
-                        int storedExp = rs.getInt("spawner_exp");
+                        long storedExp = rs.getLong("spawner_exp");
                         long totalItems = estimateItemCount(rs.getString("inventory_data"));
 
                         spawners.add(new CrossServerSpawnerData(
@@ -1009,7 +1009,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                         int stackSize = rs.getInt("stack_size");
                         boolean active = !rs.getBoolean("spawner_stop");
                         String lastPlayer = rs.getString("last_interacted_player");
-                        int storedExp = rs.getInt("spawner_exp");
+                        long storedExp = rs.getLong("spawner_exp");
                         long totalItems = estimateItemCount(rs.getString("inventory_data"));
 
                         spawnerData = new CrossServerSpawnerData(

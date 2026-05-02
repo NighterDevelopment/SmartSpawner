@@ -194,7 +194,7 @@ public class SpawnerFileHandler implements SpawnerStorage {
                 }
 
                 String settings = String.format("%d,%b,%d,%b,%d,%d,%d,%d,%d,%d,%d,%d,%b",
-                        spawner.getSpawnerExp(),
+                        Math.max(0, spawner.getSpawnerExp()),
                         spawner.getSpawnerActive(),
                         spawner.getSpawnerRange(),
                         spawner.getSpawnerStop().get(),
@@ -373,7 +373,7 @@ public class SpawnerFileHandler implements SpawnerStorage {
             try {
                 if (version >= 3) {
                     if (settings.length >= 13) {
-                        spawner.setSpawnerExpData(Integer.parseInt(settings[0]));
+                        spawner.setSpawnerExpData(parseClampedLong(settings[0], 0L, Long.MAX_VALUE));
                         spawner.setSpawnerActive(Boolean.parseBoolean(settings[1]));
                         spawner.setSpawnerRange(Integer.parseInt(settings[2]));
                         spawner.getSpawnerStop().set(Boolean.parseBoolean(settings[3]));
@@ -385,13 +385,13 @@ public class SpawnerFileHandler implements SpawnerStorage {
                         // Load maxStackSize BEFORE stackSize so the saved limit is in place
                         // when setStackSize validates the value, preventing data loss if the
                         // global config limit was lowered after this spawner was saved.
-                        spawner.setMaxStackSize(Integer.parseInt(settings[10]));
-                        spawner.setStackSize(Integer.parseInt(settings[9]), restartHopper);
+                        spawner.setMaxStackSize(parseClampedInt(settings[10], 1, Integer.MAX_VALUE));
+                        spawner.setStackSize(parseClampedInt(settings[9], 1, Integer.MAX_VALUE), restartHopper);
                         spawner.setLastSpawnTime(Long.parseLong(settings[11]));
                         spawner.setIsAtCapacity(Boolean.parseBoolean(settings[12]));
                     }
                 } else {
-                    spawner.setSpawnerExpData(Integer.parseInt(settings[0]));
+                    spawner.setSpawnerExpData(parseClampedLong(settings[0], 0L, Long.MAX_VALUE));
                     spawner.setSpawnerActive(Boolean.parseBoolean(settings[1]));
                     spawner.setSpawnerRange(Integer.parseInt(settings[2]));
                     spawner.getSpawnerStop().set(Boolean.parseBoolean(settings[3]));
@@ -400,7 +400,7 @@ public class SpawnerFileHandler implements SpawnerStorage {
                     spawner.setMaxStoredExp(Integer.parseInt(settings[6]));
                     spawner.setMinMobs(Integer.parseInt(settings[7]));
                     spawner.setMaxMobs(Integer.parseInt(settings[8]));
-                    spawner.setStackSize(Integer.parseInt(settings[9]), restartHopper);
+                    spawner.setStackSize(parseClampedInt(settings[9], 1, Integer.MAX_VALUE), restartHopper);
                     spawner.setLastSpawnTime(Long.parseLong(settings[10]));
                     spawner.setIsAtCapacity(false);
                 }
@@ -538,5 +538,30 @@ public class SpawnerFileHandler implements SpawnerStorage {
                 isSaving = false;
             }
         }
+    }
+
+    private int parseClampedInt(String raw, int min, int max) {
+        long value = Long.parseLong(raw);
+        if (value < min) {
+            return min;
+        }
+        if (value > max) {
+            return max;
+        }
+        return (int) value;
+    }
+
+    private long parseClampedLong(String raw, long min, long max) {
+        java.math.BigInteger value = new java.math.BigInteger(raw);
+        java.math.BigInteger minValue = java.math.BigInteger.valueOf(min);
+        java.math.BigInteger maxValue = java.math.BigInteger.valueOf(max);
+
+        if (value.compareTo(minValue) < 0) {
+            return min;
+        }
+        if (value.compareTo(maxValue) > 0) {
+            return max;
+        }
+        return value.longValue();
     }
 }

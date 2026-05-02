@@ -7,8 +7,12 @@ import github.nighter.smartspawner.spawner.data.storage.StorageMode;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,13 +62,13 @@ public class DatabaseManager {
                 item_spawner_material VARCHAR(64) DEFAULT NULL,
 
                 -- Settings
-                spawner_exp INT NOT NULL DEFAULT 0,
+                spawner_exp BIGINT NOT NULL DEFAULT 0,
                 spawner_active BOOLEAN NOT NULL DEFAULT TRUE,
                 spawner_range INT NOT NULL DEFAULT 16,
                 spawner_stop BOOLEAN NOT NULL DEFAULT TRUE,
                 spawn_delay BIGINT NOT NULL DEFAULT 500,
                 max_spawner_loot_slots INT NOT NULL DEFAULT 45,
-                max_stored_exp INT NOT NULL DEFAULT 1000,
+                max_stored_exp BIGINT NOT NULL DEFAULT 1000,
                 min_mobs INT NOT NULL DEFAULT 1,
                 max_mobs INT NOT NULL DEFAULT 4,
                 stack_size INT NOT NULL DEFAULT 1,
@@ -110,13 +114,13 @@ public class DatabaseManager {
                 item_spawner_material VARCHAR(64) DEFAULT NULL,
 
                 -- Settings
-                spawner_exp INT NOT NULL DEFAULT 0,
+                spawner_exp BIGINT NOT NULL DEFAULT 0,
                 spawner_active BOOLEAN NOT NULL DEFAULT 1,
                 spawner_range INT NOT NULL DEFAULT 16,
                 spawner_stop BOOLEAN NOT NULL DEFAULT 1,
                 spawn_delay BIGINT NOT NULL DEFAULT 500,
                 max_spawner_loot_slots INT NOT NULL DEFAULT 45,
-                max_stored_exp INT NOT NULL DEFAULT 1000,
+                max_stored_exp BIGINT NOT NULL DEFAULT 1000,
                 min_mobs INT NOT NULL DEFAULT 1,
                 max_mobs INT NOT NULL DEFAULT 4,
                 stack_size INT NOT NULL DEFAULT 1,
@@ -147,6 +151,27 @@ public class DatabaseManager {
             "CREATE INDEX IF NOT EXISTS idx_server ON smart_spawners (server_name)";
     private static final String CREATE_INDEX_WORLD_SQLITE =
             "CREATE INDEX IF NOT EXISTS idx_world ON smart_spawners (server_name, world_name)";
+
+    private static final String SCHEMA_META_TABLE = "smartspawner_meta";
+    private static final String SCHEMA_VERSION_KEY = "schema_version";
+    private static final int LEGACY_SCHEMA_VERSION = 1;
+    private static final int CURRENT_SCHEMA_VERSION = 2;
+
+    private static final String CREATE_META_TABLE_MYSQL = """
+            CREATE TABLE IF NOT EXISTS smartspawner_meta (
+                meta_key VARCHAR(64) PRIMARY KEY,
+                meta_value VARCHAR(64) NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            """;
+
+    private static final String CREATE_META_TABLE_SQLITE = """
+            CREATE TABLE IF NOT EXISTS smartspawner_meta (
+                meta_key VARCHAR(64) PRIMARY KEY,
+                meta_value VARCHAR(64) NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """;
 
     public DatabaseManager(SmartSpawner plugin, StorageMode storageMode) {
         this.plugin = plugin;
@@ -180,6 +205,8 @@ public class DatabaseManager {
         try {
             setupDataSource();
             createTables();
+            createSchemaMetaTable();
+            runSchemaMigrations();
             logger.info("Database connection pool initialized successfully.");
             return true;
         } catch (Exception e) {
@@ -275,6 +302,273 @@ public class DatabaseManager {
             }
 
             plugin.debug("Database tables created/verified successfully.");
+        }
+    }
+
+    private void createSchemaMetaTable() throws SQLException {
+        String createSql = storageMode == StorageMode.SQLITE ? CREATE_META_TABLE_SQLITE : CREATE_META_TABLE_MYSQL;
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(createSql);
+        }
+    }
+
+    private void runSchemaMigrations() throws SQLException {
+        Integer currentVersion = getSchemaVersionFromMeta();
+        if (currentVersion == null) {
+            currentVersion = detectInitialSchemaVersion();
+            setSchemaVersion(currentVersion);
+            logger.info("Initialized database schema version at v" + currentVersion + ".");
+        }
+
+        if (currentVersion > CURRENT_SCHEMA_VERSION) {
+            logger.warning("Database schema version v" + currentVersion + " is newer than plugin-supported v" + CURRENT_SCHEMA_VERSION + ".");
+            return;
+        }
+
+        while (currentVersion < CURRENT_SCHEMA_VERSION) {
+            int targetVersion = currentVersion + 1;
+            logger.info("Applying database schema migration v" + currentVersion + " -> v" + targetVersion + "...");
+            applyMigrationStep(targetVersion);
+            setSchemaVersion(targetVersion);
+            currentVersion = targetVersion;
+            logger.info("Database schema migration completed to v" + currentVersion + ".");
+        }
+    }
+
+    private Integer getSchemaVersionFromMeta() throws SQLException {
+        String sql = "SELECT meta_value FROM " + SCHEMA_META_TABLE + " WHERE meta_key = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, SCHEMA_VERSION_KEY);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+
+                String rawVersion = rs.getString("meta_value");
+                try {
+                    return Integer.parseInt(rawVersion);
+                } catch (NumberFormatException ex) {
+                    throw new SQLException("Invalid database schema version value: " + rawVersion, ex);
+                }
+            }
+        }
+    }
+
+    private int detectInitialSchemaVersion() throws SQLException {
+        return xpColumnsRequireMigration() ? LEGACY_SCHEMA_VERSION : CURRENT_SCHEMA_VERSION;
+    }
+
+    private void setSchemaVersion(int version) throws SQLException {
+        String sql = storageMode == StorageMode.SQLITE
+                ? "INSERT INTO " + SCHEMA_META_TABLE + " (meta_key, meta_value) VALUES (?, ?) ON CONFLICT(meta_key) DO UPDATE SET meta_value = excluded.meta_value"
+                : "INSERT INTO " + SCHEMA_META_TABLE + " (meta_key, meta_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, SCHEMA_VERSION_KEY);
+            stmt.setString(2, String.valueOf(version));
+            stmt.executeUpdate();
+        }
+    }
+
+    private void applyMigrationStep(int targetVersion) throws SQLException {
+        if (targetVersion == 2) {
+            migrateXpColumnsToBigIntIfNeeded();
+            return;
+        }
+        throw new SQLException("No database migration handler found for schema version: " + targetVersion);
+    }
+
+    private void migrateXpColumnsToBigIntIfNeeded() throws SQLException {
+        if (!xpColumnsRequireMigration()) {
+            return;
+        }
+
+        String backupName = createPreMigrationBackup();
+        logger.info("Created database backup before XP BIGINT migration: " + backupName);
+
+        if (storageMode == StorageMode.SQLITE) {
+            migrateSQLiteXpColumnsToBigInt();
+        } else {
+            migrateMySqlXpColumnsToBigInt();
+        }
+
+        logger.info("Successfully migrated XP columns to BIGINT.");
+    }
+
+    private boolean xpColumnsRequireMigration() throws SQLException {
+        return storageMode == StorageMode.SQLITE
+                ? sqliteXpColumnsRequireMigration()
+                : mySqlXpColumnsRequireMigration();
+    }
+
+    private boolean mySqlXpColumnsRequireMigration() throws SQLException {
+        String sql = """
+                SELECT column_name, data_type
+                FROM information_schema.columns
+                WHERE table_schema = ?
+                  AND table_name = 'smart_spawners'
+                  AND column_name IN ('spawner_exp', 'max_stored_exp')
+                """;
+
+        boolean needsMigration = false;
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, database);
+            try (ResultSet rs = stmt.executeQuery()) {
+                int seen = 0;
+                while (rs.next()) {
+                    seen++;
+                    String type = rs.getString("data_type");
+                    if (type == null || !"bigint".equalsIgnoreCase(type)) {
+                        needsMigration = true;
+                    }
+                }
+                if (seen < 2) {
+                    needsMigration = true;
+                }
+            }
+        }
+        return needsMigration;
+    }
+
+    private boolean sqliteXpColumnsRequireMigration() throws SQLException {
+        String sql = "PRAGMA table_info(smart_spawners)";
+        boolean spawnerExpBigInt = false;
+        boolean maxStoredExpBigInt = false;
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String name = rs.getString("name");
+                String type = rs.getString("type");
+                boolean isBigInt = type != null && type.equalsIgnoreCase("BIGINT");
+
+                if ("spawner_exp".equalsIgnoreCase(name)) {
+                    spawnerExpBigInt = isBigInt;
+                } else if ("max_stored_exp".equalsIgnoreCase(name)) {
+                    maxStoredExpBigInt = isBigInt;
+                }
+            }
+        }
+
+        return !(spawnerExpBigInt && maxStoredExpBigInt);
+    }
+
+    private String createPreMigrationBackup() throws SQLException {
+        String backupTableName = "smart_spawners_backup_" +
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+
+        if (storageMode == StorageMode.SQLITE) {
+            String backupSql = "CREATE TABLE " + backupTableName + " AS SELECT * FROM smart_spawners";
+            try (Connection conn = getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute(backupSql);
+            }
+        } else {
+            try (Connection conn = getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("CREATE TABLE " + backupTableName + " LIKE smart_spawners");
+                stmt.execute("INSERT INTO " + backupTableName + " SELECT * FROM smart_spawners");
+            }
+        }
+
+        return backupTableName;
+    }
+
+    private void migrateMySqlXpColumnsToBigInt() throws SQLException {
+        String alterSql = """
+                ALTER TABLE smart_spawners
+                    MODIFY COLUMN spawner_exp BIGINT NOT NULL DEFAULT 0,
+                    MODIFY COLUMN max_stored_exp BIGINT NOT NULL DEFAULT 1000
+                """;
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(alterSql);
+        }
+    }
+
+    private void migrateSQLiteXpColumnsToBigInt() throws SQLException {
+        String[] migrationSql = {
+                "BEGIN IMMEDIATE TRANSACTION",
+                "ALTER TABLE smart_spawners RENAME TO smart_spawners_pre_bigint",
+                """
+                CREATE TABLE smart_spawners (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    spawner_id VARCHAR(64) NOT NULL,
+                    server_name VARCHAR(64) NOT NULL,
+                    world_name VARCHAR(128) NOT NULL,
+                    loc_x INT NOT NULL,
+                    loc_y INT NOT NULL,
+                    loc_z INT NOT NULL,
+                    entity_type VARCHAR(64) NOT NULL,
+                    item_spawner_material VARCHAR(64) DEFAULT NULL,
+                    spawner_exp BIGINT NOT NULL DEFAULT 0,
+                    spawner_active BOOLEAN NOT NULL DEFAULT 1,
+                    spawner_range INT NOT NULL DEFAULT 16,
+                    spawner_stop BOOLEAN NOT NULL DEFAULT 1,
+                    spawn_delay BIGINT NOT NULL DEFAULT 500,
+                    max_spawner_loot_slots INT NOT NULL DEFAULT 45,
+                    max_stored_exp BIGINT NOT NULL DEFAULT 1000,
+                    min_mobs INT NOT NULL DEFAULT 1,
+                    max_mobs INT NOT NULL DEFAULT 4,
+                    stack_size INT NOT NULL DEFAULT 1,
+                    max_stack_size INT NOT NULL DEFAULT 1000,
+                    last_spawn_time BIGINT NOT NULL DEFAULT 0,
+                    is_at_capacity BOOLEAN NOT NULL DEFAULT 0,
+                    last_interacted_player VARCHAR(64) DEFAULT NULL,
+                    preferred_sort_item VARCHAR(64) DEFAULT NULL,
+                    filtered_items TEXT DEFAULT NULL,
+                    inventory_data TEXT DEFAULT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (server_name, spawner_id),
+                    UNIQUE (server_name, world_name, loc_x, loc_y, loc_z)
+                )
+                """,
+                """
+                INSERT INTO smart_spawners (
+                    id, spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
+                    entity_type, item_spawner_material, spawner_exp, spawner_active,
+                    spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
+                    max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
+                    last_spawn_time, is_at_capacity, last_interacted_player,
+                    preferred_sort_item, filtered_items, inventory_data,
+                    created_at, updated_at
+                )
+                SELECT
+                    id, spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
+                    entity_type, item_spawner_material, spawner_exp, spawner_active,
+                    spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
+                    max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
+                    last_spawn_time, is_at_capacity, last_interacted_player,
+                    preferred_sort_item, filtered_items, inventory_data,
+                    created_at, updated_at
+                FROM smart_spawners_pre_bigint
+                """,
+                "DROP TABLE smart_spawners_pre_bigint",
+                CREATE_INDEX_SERVER_SQLITE,
+                CREATE_INDEX_WORLD_SQLITE,
+                "COMMIT"
+        };
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            for (String sql : migrationSql) {
+                stmt.execute(sql);
+            }
+        } catch (SQLException e) {
+            try (Connection rollbackConn = getConnection();
+                 Statement rollbackStmt = rollbackConn.createStatement()) {
+                rollbackStmt.execute("ROLLBACK");
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Failed to rollback SQLite BIGINT migration", rollbackEx);
+            }
+            throw e;
         }
     }
 
