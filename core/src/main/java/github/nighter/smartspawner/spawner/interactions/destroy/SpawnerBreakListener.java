@@ -184,7 +184,7 @@ public class SpawnerBreakListener implements Listener {
                     giveSpawnersToPlayer(player, 1, spawnerItem);
                     player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
                 } else {
-                    world.dropItemNaturally(findSafeDropLocation(block), spawnerItem);
+                    world.dropItemNaturally(findSafeDropLocation(block, player), spawnerItem);
                 }
 
                 reduceDurability(tool, player, plugin.getConfig().getInt("spawner_break.durability_loss", 1));
@@ -273,7 +273,7 @@ public class SpawnerBreakListener implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
         } else {
             template.setAmount(dropAmount);
-            world.dropItemNaturally(findSafeDropLocation(spawnerBlock), template.clone());
+            world.dropItemNaturally(findSafeDropLocation(spawnerBlock, player), template.clone());
         }
 
         return new SpawnerBreakResult(true, dropAmount, durabilityLoss);
@@ -328,10 +328,10 @@ public class SpawnerBreakListener implements Listener {
 
     /**
      * Finds a safe drop location for spawner items. Scans adjacent faces in priority order
-     * (down → horizontal → up) for a non-solid block to drop into. This prevents items from
-     * teleporting to distant cave pockets when the spawner is encased in solid blocks on most sides.
+     * (down -> horizontal -> up) for true air blocks. If every side is blocked (including
+     * slab/partial-block scenarios), it falls back to dropping at the player's location.
      */
-    private Location findSafeDropLocation(Block block) {
+    private Location findSafeDropLocation(Block block, Player player) {
         BlockFace[] priority = {
             BlockFace.DOWN,
             BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST,
@@ -339,12 +339,18 @@ public class SpawnerBreakListener implements Listener {
         };
         for (BlockFace face : priority) {
             Block neighbor = block.getRelative(face);
-            if (!neighbor.getType().isSolid()) {
+            if (isSafeItemDropSpace(neighbor)) {
                 return neighbor.getLocation().toCenterLocation();
             }
         }
-        // Fully enclosed — fall back to the spawner's own location (now air)
-        return block.getLocation().toCenterLocation();
+
+        // Fully enclosed (including slab/partial-block cases) - drop near player instead.
+        return player.getLocation().toCenterLocation();
+    }
+
+    private boolean isSafeItemDropSpace(Block block) {
+        // Only true air blocks are considered safe. This rejects slabs/partial blocks.
+        return block.getType().isAir();
     }
 
     private boolean isValidTool(ItemStack tool) {

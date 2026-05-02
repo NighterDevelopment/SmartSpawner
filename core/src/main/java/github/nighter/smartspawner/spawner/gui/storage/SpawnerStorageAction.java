@@ -52,7 +52,6 @@ public class SpawnerStorageAction implements Listener {
     private final Map<UUID, Long> lastControlClickTime = new ConcurrentHashMap<>();
     private static final long ITEM_CLICK_DELAY_MS = 150;
     private static final long CONTROL_CLICK_DELAY_MS = 300;
-    private final Random random = new Random();
     private GuiLayout layout;
 
     public SpawnerStorageAction(SmartSpawner plugin) {
@@ -503,17 +502,18 @@ public class SpawnerStorageAction implements Listener {
         Location dropLocation = playerLoc.clone();
         dropLocation.add(sinYaw * 0.3, 1.2, cosYaw * 0.3);
 
+        Vector velocity = new Vector(
+                sinYaw * cosPitch * 0.3,
+                sinPitch * 0.3 + 0.1,
+                cosYaw * cosPitch * 0.3
+        );
+
         for (ItemStack item : items) {
             Item droppedItem = world.dropItem(dropLocation, item, drop -> {
                 drop.setThrower(playerUUID);
                 drop.setPickupDelay(40);
             });
 
-            Vector velocity = new Vector(
-                    sinYaw * cosPitch * 0.3 + (random.nextDouble() - 0.5) * 0.1,
-                    sinPitch * 0.3 + 0.1 + (random.nextDouble() - 0.5) * 0.1,
-                    cosYaw * cosPitch * 0.3 + (random.nextDouble() - 0.5) * 0.1
-            );
 
             droppedItem.setVelocity(velocity);
         }
