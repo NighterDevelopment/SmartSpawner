@@ -78,10 +78,6 @@ dependencies:
       load: BEFORE
       required: false
       join-classpath: true
-    RedProtect:
-      load: BEFORE
-      required: false
-      join-classpath: true
     minePlots:
       load: BEFORE
       required: false

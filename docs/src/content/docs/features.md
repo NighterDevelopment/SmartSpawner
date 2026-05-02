@@ -129,7 +129,6 @@ Fully compatible and integrated with **popular economy/shop plugins**, allowing 
 - [Lands](https://www.spigotmc.org/resources/lands-%E2%AD%95-land-claim-plugin-%E2%9C%85-grief-prevention-protection-gui-management-nations-wars-1-21-support.53313/) - Land claiming with nations and wars
 - [Towny Advanced](https://www.spigotmc.org/resources/towny-advanced.72694/) - Town and nation management
 - [SimpleClaimSystem](https://modrinth.com/plugin/simpleclaimsystem) - Simple land claiming
-- [RedProtect](https://www.spigotmc.org/resources/redprotect-anti-grief-server-protection-region-management-mod-mobs-flag-compat-1-7-1-21.15841/) - Comprehensive protection system
 - [MinePlots](https://builtbybit.com/resources/mineplots.21646/) - Plot-based world management
 
 </details>

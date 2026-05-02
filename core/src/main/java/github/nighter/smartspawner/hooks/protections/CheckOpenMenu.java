@@ -28,7 +28,6 @@ public class CheckOpenMenu {
         if (integrationManager.isHasIridiumSkyblock() && !IridiumSkyblock.canPlayerOpenMenu(player, location)) return false;
         if (integrationManager.isHasPlotSquared() && !PlotSquared.canInteract(player, location)) return false;
         if (integrationManager.isHasResidence() && !Residence.canInteract(player, location)) return false;
-        if (integrationManager.isHasHuskClaims() && !HuskClaims.canPlayerOpenMenu(player, location)) return false;
-        return !integrationManager.isHasRedProtect() || RedProtectAPI.canPlayerOpenMenuOnClaim(player, location);
+        return !integrationManager.isHasHuskClaims() || HuskClaims.canPlayerOpenMenu(player, location);
     }
 }
