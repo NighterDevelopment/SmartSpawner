@@ -22,10 +22,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -33,12 +32,13 @@ import java.util.stream.Collectors;
 public class UpdateChecker implements Listener {
     private final JavaPlugin plugin;
     private final String projectId = "9tQwxSFr";
+    // Only keep supported major.minor branches here. Patch versions are accepted automatically.
+    private static final Set<String> SUPPORTED_MAJOR_VERSIONS = Set.of("1.21", "26.1");
     private boolean updateAvailable = false;
     private final String currentVersion;
     private String latestVersion = "";
     private String downloadUrl = "";
     private boolean serverVersionSupported = true;
-    private JsonArray latestSupportedVersions = null;
 
     // ANSI codes for console output
     private static final String RESET  = "\u001B[0m";
@@ -54,6 +54,7 @@ public class UpdateChecker implements Listener {
     public UpdateChecker(JavaPlugin plugin) {
         this.plugin = plugin;
         this.currentVersion = plugin.getPluginMeta().getVersion();
+        this.serverVersionSupported = isServerVersionSupported();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
 
         checkForUpdates().thenAccept(hasUpdate -> {
@@ -96,30 +97,20 @@ public class UpdateChecker implements Listener {
     }
 
     private String getSupportedVersionsString() {
-        if (latestSupportedVersions == null || latestSupportedVersions.isEmpty()) {
+        if (SUPPORTED_MAJOR_VERSIONS.isEmpty()) {
             return "N/A";
         }
-        List<String> versions = new ArrayList<>();
-        for (JsonElement element : latestSupportedVersions) {
-            versions.add(element.getAsString());
-        }
-        return String.join(", ", versions);
+        return SUPPORTED_MAJOR_VERSIONS.stream()
+                .sorted()
+                .map(major -> major + ".x")
+                .collect(Collectors.joining(", "));
     }
 
-    private boolean isServerVersionSupported(JsonObject latestVersionObj) {
+    private boolean isServerVersionSupported() {
         try {
-            String serverVersion = Bukkit.getVersion();
-            JsonArray gameVersions = latestVersionObj.getAsJsonArray("game_versions");
-            if (gameVersions == null || gameVersions.isEmpty()) {
-                return true;
-            }
-            String cleanServerVersion = extractMinecraftVersion(serverVersion);
-            for (JsonElement versionElement : gameVersions) {
-                if (isVersionCompatible(cleanServerVersion, versionElement.getAsString())) {
-                    return true;
-                }
-            }
-            return false;
+            String cleanServerVersion = extractMinecraftVersion(Bukkit.getVersion());
+            String majorVersion = extractMajorVersion(cleanServerVersion);
+            return majorVersion != null && SUPPORTED_MAJOR_VERSIONS.contains(majorVersion);
         } catch (Exception e) {
             plugin.getLogger().warning("Error checking server version compatibility: " + e.getMessage());
             return true;
@@ -144,21 +135,12 @@ public class UpdateChecker implements Listener {
         return serverVersion;
     }
 
-    private boolean isVersionCompatible(String serverVersion, String supportedVersion) {
-        try {
-            if (serverVersion.equals(supportedVersion)) {
-                return true;
-            }
-            String[] serverParts    = serverVersion.split("\\.");
-            String[] supportedParts = supportedVersion.split("\\.");
-            if (serverParts.length >= 2 && supportedParts.length >= 2) {
-                return Integer.parseInt(serverParts[0]) == Integer.parseInt(supportedParts[0])
-                        && Integer.parseInt(serverParts[1]) == Integer.parseInt(supportedParts[1]);
-            }
-            return false;
-        } catch (NumberFormatException e) {
-            return serverVersion.equals(supportedVersion);
+    private String extractMajorVersion(String minecraftVersion) {
+        String[] parts = minecraftVersion.split("\\.");
+        if (parts.length < 2) {
+            return null;
         }
+        return parts[0] + "." + parts[1];
     }
 
     public CompletableFuture<Boolean> checkForUpdates() {
@@ -210,8 +192,7 @@ public class UpdateChecker implements Listener {
                 latestVersion = latestVersionObj.get("version_number").getAsString();
                 downloadUrl   = "https://modrinth.com/plugin/" + projectId + "/version/" + latestVersion;
 
-                serverVersionSupported  = isServerVersionSupported(latestVersionObj);
-                latestSupportedVersions = latestVersionObj.getAsJsonArray("game_versions");
+                serverVersionSupported = isServerVersionSupported();
 
                 updateAvailable = new Version(latestVersion).compareTo(new Version(currentVersion)) > 0;
                 return updateAvailable;
