@@ -99,7 +99,7 @@ tasks.shadowJar {
     exclude("org/slf4j/**")
     mergeServiceFiles()
 
-    // destinationDirectory.set(file("C:\\Users\\USER\\Desktop\\26_2_TestServer\\plugins"))
+    // destinationDirectory.set(file("C:\\Users\\USER\\Desktop\\TestServer\\plugins"))
 }
 
 tasks.build {

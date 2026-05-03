@@ -6,6 +6,8 @@ import github.nighter.smartspawner.extras.HopperService;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.hooks.protections.CheckBreakBlock;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
+import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuAction;
+import github.nighter.smartspawner.spawner.gui.synchronization.SpawnerGuiViewManager;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.item.SpawnerItemFactory;
 import github.nighter.smartspawner.spawner.utils.SpawnerLocationLockManager;
@@ -26,25 +28,70 @@ import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.logging.Logger;
 
 public class SpawnerBreakListener implements Listener {
     private static final int MAX_STACK_SIZE = 64;
-    private final SmartSpawner plugin;
+    private final BreakPluginContext plugin;
     private final MessageService messageService;
     private final SpawnerManager spawnerManager;
     private final HopperService hopperService;
     private final SpawnerItemFactory spawnerItemFactory;
     private final SpawnerLocationLockManager locationLockManager;
 
+    // Cached config values (reload via loadConfig())
+    private volatile boolean breakEnabled;
+    private volatile boolean directToInventory;
+    private volatile int durabilityLoss;
+    private volatile boolean silkTouchRequired;
+    private volatile int silkTouchLevel;
+    private volatile boolean naturalBreakable;
+    private volatile boolean convertNaturalToSmartSpawner;
+    private volatile boolean autoSellAndClaimExpOnBreak;
+    private volatile Set<Material> requiredTools = Set.of();
+
     public SpawnerBreakListener(SmartSpawner plugin) {
+        this(new SmartSpawnerBreakPluginContext(plugin));
+    }
+
+    SpawnerBreakListener(BreakPluginContext plugin) {
         this.plugin = plugin;
         this.messageService = plugin.getMessageService();
         this.spawnerManager = plugin.getSpawnerManager();
         this.hopperService = plugin.getHopperService();
         this.spawnerItemFactory = plugin.getSpawnerItemFactory();
         this.locationLockManager = plugin.getSpawnerLocationLockManager();
+        loadConfig();
+    }
+
+    public void loadConfig() {
+        this.breakEnabled = plugin.getConfig().getBoolean("spawner_break.enabled", true);
+        this.directToInventory = plugin.getConfig().getBoolean("spawner_break.direct_to_inventory", false);
+        this.durabilityLoss = plugin.getConfig().getInt("spawner_break.durability_loss", 1);
+        this.silkTouchRequired = plugin.getConfig().getBoolean("spawner_break.silk_touch.required", true);
+        this.silkTouchLevel = plugin.getConfig().getInt("spawner_break.silk_touch.level", 1);
+        this.naturalBreakable = plugin.getConfig().getBoolean("natural_spawner.breakable", false);
+        this.convertNaturalToSmartSpawner = plugin.getConfig().getBoolean("natural_spawner.convert_to_smart_spawner", false);
+        this.autoSellAndClaimExpOnBreak = plugin.getConfig().getBoolean("spawner_break.auto_sell_and_claim_exp_on_break", true);
+
+        this.requiredTools = plugin.getConfig().getStringList("spawner_break.required_tools")
+            .stream()
+            .map(toolName -> {
+                try {
+                    return Material.valueOf(toolName.toUpperCase());
+                } catch (IllegalArgumentException ex) {
+                    plugin.getLogger().warning("Invalid material in spawner_break.required_tools: " + toolName);
+                    return null;
+                }
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toUnmodifiableSet());
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -62,14 +109,14 @@ public class SpawnerBreakListener implements Listener {
             return;
         }
 
-        if (!plugin.getConfig().getBoolean("spawner_break.enabled", true)) {
+        if (!breakEnabled) {
             event.setCancelled(true);
             return;
         }
 
         final SpawnerData spawner = spawnerManager.getSpawnerByLocation(location);
 
-        if (!plugin.getConfig().getBoolean("natural_spawner.breakable", false)) {
+        if (!naturalBreakable) {
             if (spawner == null) {
                 block.setType(Material.AIR);
                 event.setCancelled(true);
@@ -130,16 +177,28 @@ public class SpawnerBreakListener implements Listener {
             }
 
             // Track player interaction for last interaction field
-            spawner.updateLastInteractedPlayer(player.getName());
+            currentSpawner.updateLastInteractedPlayer(player.getName());
 
-            plugin.getSpawnerGuiViewManager().closeAllViewersInventory(spawner);
+            plugin.getSpawnerGuiViewManager().closeAllViewersInventory(currentSpawner);
 
-            SpawnerBreakResult result = processDrops(player, location, spawner, player.isSneaking(), block);
+            SpawnerBreakResult result = processDrops(player, location, currentSpawner, player.isSneaking());
+            if (!result.isSuccess()) {
+                return;
+            }
 
-            if (result.isSuccess()) {
-                if (player.getGameMode() != GameMode.CREATIVE) {
-                    reduceDurability(tool, player, result.getDurabilityLoss());
+            if (result.isFullyRemoved()) {
+                // Option B: only trigger break-time auto claim/sell when the spawner is fully removed.
+                boolean cleanupDeferred = maybeAutoSellAndClaimExp(player, currentSpawner,
+                    () -> applyBreakResult(block, currentSpawner, player, result));
+                if (!cleanupDeferred) {
+                    applyBreakResult(block, currentSpawner, player, result);
                 }
+            } else {
+                applyBreakResult(block, currentSpawner, player, result);
+            }
+
+            if (player.getGameMode() != GameMode.CREATIVE) {
+                reduceDurability(tool, player, result.getDurabilityLoss());
             }
         } finally {
             locationLockManager.unlock(location);
@@ -168,13 +227,11 @@ public class SpawnerBreakListener implements Listener {
 
             EntityType entityType = creatureSpawner.getSpawnedType();
             ItemStack spawnerItem;
-            if (plugin.getConfig().getBoolean("natural_spawner.convert_to_smart_spawner", false)) {
+            if (convertNaturalToSmartSpawner) {
                 spawnerItem = spawnerItemFactory.createSmartSpawnerItem(entityType);
             } else {
                 spawnerItem = spawnerItemFactory.createVanillaSpawnerItem(entityType);
             }
-
-            boolean directToInventory = plugin.getConfig().getBoolean("spawner_break.direct_to_inventory", false);
 
             World world = location.getWorld();
             if (world != null) {
@@ -187,7 +244,7 @@ public class SpawnerBreakListener implements Listener {
                     world.dropItemNaturally(findSafeDropLocation(block, player), spawnerItem);
                 }
 
-                reduceDurability(tool, player, plugin.getConfig().getInt("spawner_break.durability_loss", 1));
+                reduceDurability(tool, player, durabilityLoss);
             }
         } finally {
             locationLockManager.unlock(location);
@@ -209,9 +266,8 @@ public class SpawnerBreakListener implements Listener {
             return false;
         }
 
-        if (plugin.getConfig().getBoolean("spawner_break.silk_touch.required", true)) {
-            int requiredLevel = plugin.getConfig().getInt("spawner_break.silk_touch.level", 1);
-            if (tool.getEnchantmentLevel(Enchantment.SILK_TOUCH) < requiredLevel) {
+        if (silkTouchRequired) {
+            if (tool.getEnchantmentLevel(Enchantment.SILK_TOUCH) < silkTouchLevel) {
                 messageService.sendMessage(player, "spawner_break_silk_touch_required");
                 return false;
             }
@@ -220,13 +276,12 @@ public class SpawnerBreakListener implements Listener {
         return true;
     }
 
-    private SpawnerBreakResult processDrops(Player player, Location location, SpawnerData spawner, boolean isCrouching, Block spawnerBlock) {
+    SpawnerBreakResult processDrops(Player player, Location location, SpawnerData spawner, boolean isCrouching) {
         final int currentStackSize = spawner.getStackSize();
-        final int durabilityLoss = plugin.getConfig().getInt("spawner_break.durability_loss", 1);
 
         World world = location.getWorld();
         if (world == null) {
-            return new SpawnerBreakResult(false, 0, durabilityLoss);
+            return new SpawnerBreakResult(false, 0, durabilityLoss, false, new ItemStack(Material.SPAWNER));
         }
 
         // Create the appropriate spawner item based on type
@@ -239,44 +294,58 @@ public class SpawnerBreakListener implements Listener {
         }
 
         int dropAmount;
-        boolean shouldDeleteSpawner = false;
+        boolean shouldDeleteSpawner;
+        int newStackSize = currentStackSize;
 
         if (isCrouching) {
             if (currentStackSize <= MAX_STACK_SIZE) {
                 dropAmount = currentStackSize;
-                if(callAPIEvent(player, location, dropAmount, spawner.getEntityType())) return new SpawnerBreakResult(false, dropAmount, 0);
+                shouldDeleteSpawner = true;
             } else {
                 dropAmount = MAX_STACK_SIZE;
-                if(callAPIEvent(player, location, dropAmount, spawner.getEntityType())) return new SpawnerBreakResult(false, dropAmount, 0);
-                spawner.setStackSize(currentStackSize - MAX_STACK_SIZE);
+                shouldDeleteSpawner = false;
+                newStackSize = currentStackSize - MAX_STACK_SIZE;
             }
         } else {
             dropAmount = 1;
-            if(callAPIEvent(player, location, dropAmount, spawner.getEntityType())) return new SpawnerBreakResult(false, dropAmount, 0);
-            if (currentStackSize <= 1) {
-                shouldDeleteSpawner = true;
-            } else {
-                spawner.setStackSize(currentStackSize - 1);
+            shouldDeleteSpawner = currentStackSize <= 1;
+            if (!shouldDeleteSpawner) {
+                newStackSize = currentStackSize - 1;
             }
         }
 
-        if (dropAmount == currentStackSize || shouldDeleteSpawner) {
+        if(callAPIEvent(player, location, dropAmount, spawner.getEntityType())) {
+            return new SpawnerBreakResult(false, dropAmount, 0, false, template);
+        }
+
+        if (!shouldDeleteSpawner) {
+            spawner.setStackSize(newStackSize);
+        }
+
+        return new SpawnerBreakResult(true, dropAmount, durabilityLoss, shouldDeleteSpawner, template);
+    }
+
+    void applyBreakResult(Block spawnerBlock, SpawnerData spawner, Player player, SpawnerBreakResult result) {
+        if (result.isFullyRemoved()) {
             cleanupSpawner(spawnerBlock, spawner);
         } else {
             spawnerManager.markSpawnerModified(spawner.getSpawnerId());
         }
 
-        boolean directToInventory = plugin.getConfig().getBoolean("spawner_break.direct_to_inventory", false);
-
         if (directToInventory) {
-            giveSpawnersToPlayer(player, dropAmount, template);
+            giveSpawnersToPlayer(player, result.getDroppedAmount(), result.getDropTemplate());
             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
-        } else {
-            template.setAmount(dropAmount);
-            world.dropItemNaturally(findSafeDropLocation(spawnerBlock, player), template.clone());
+            return;
         }
 
-        return new SpawnerBreakResult(true, dropAmount, durabilityLoss);
+        World world = spawnerBlock.getWorld();
+        if (world == null) {
+            return;
+        }
+
+        ItemStack dropItem = result.getDropTemplate().clone();
+        dropItem.setAmount(result.getDroppedAmount());
+        world.dropItemNaturally(findSafeDropLocation(spawnerBlock, player), dropItem);
     }
 
     private boolean callAPIEvent(Player player, Location location, int dropAmount, EntityType entityType) {
@@ -357,7 +426,41 @@ public class SpawnerBreakListener implements Listener {
         if (tool == null) {
             return false;
         }
-        return plugin.getConfig().getStringList("spawner_break.required_tools").contains(tool.getType().name());
+        return requiredTools.contains(tool.getType());
+    }
+
+    boolean maybeAutoSellAndClaimExp(Player player, SpawnerData spawner, Runnable onSellComplete) {
+        if (!autoSellAndClaimExpOnBreak) {
+            return false;
+        }
+
+        SpawnerMenuAction menuAction = plugin.getSpawnerMenuAction();
+        if (menuAction != null && spawner.getSpawnerExp() > 0) {
+            menuAction.collectExpForPlayer(player, spawner);
+        }
+
+        if (!plugin.hasSellIntegration() || !player.hasPermission("smartspawner.sellall")) {
+            return false;
+        }
+
+        if (spawner.getVirtualInventory().getUsedSlots() > 0) {
+            // Serialize final deletion behind sell completion to avoid delete/modify races.
+            // Wrap callback to ensure deletion only happens if sell succeeds:
+            // applySellResult checks if items were actually removed.
+            plugin.getSpawnerSellManager().sellAllItems(player, spawner, () -> {
+                // After sell completes, check if spawner still has items:
+                // If items remain, sell failed (API cancel or economy error), don't cleanup.
+                if (spawner.getVirtualInventory().getUsedSlots() > 0) {
+                    // Sell was cancelled/failed - skip cleanup to avoid item loss
+                    return;
+                }
+                // Safe to cleanup - all items were successfully sold
+                onSellComplete.run();
+            });
+            return true;
+        }
+
+        return false;
     }
 
     private void giveSpawnersToPlayer(Player player, int amount, ItemStack template) {
@@ -378,15 +481,20 @@ public class SpawnerBreakListener implements Listener {
         player.updateInventory();
     }
 
-    private static class SpawnerBreakResult {
+    static class SpawnerBreakResult {
         @Getter private final boolean success;
-        private final int droppedAmount;
+        @Getter private final int droppedAmount;
         private final int baseDurabilityLoss;
+        @Getter private final boolean fullyRemoved;
+        @Getter private final ItemStack dropTemplate;
 
-        public SpawnerBreakResult(boolean success, int droppedAmount, int baseDurabilityLoss) {
+        public SpawnerBreakResult(boolean success, int droppedAmount, int baseDurabilityLoss,
+                                  boolean fullyRemoved, ItemStack dropTemplate) {
             this.success = success;
             this.droppedAmount = droppedAmount;
             this.baseDurabilityLoss = baseDurabilityLoss;
+            this.fullyRemoved = fullyRemoved;
+            this.dropTemplate = dropTemplate.clone();
         }
 
         public int getDurabilityLoss() {
@@ -418,9 +526,8 @@ public class SpawnerBreakListener implements Listener {
         }
 
         if (isValidTool(tool)) {
-            if (plugin.getConfig().getBoolean("spawner_break.silk_touch.required", true)) {
-                int requiredLevel = plugin.getConfig().getInt("spawner_break.silk_touch.level", 1);
-                if (tool.getEnchantmentLevel(Enchantment.SILK_TOUCH) < requiredLevel) {
+            if (silkTouchRequired) {
+                if (tool.getEnchantmentLevel(Enchantment.SILK_TOUCH) < silkTouchLevel) {
                     messageService.sendMessage(player, "spawner_break_silk_touch_required");
                     return;
                 }
@@ -441,5 +548,43 @@ public class SpawnerBreakListener implements Listener {
         if (plugin.getHopperConfig().isHopperEnabled() && blockBelow.getType() == Material.HOPPER) {
             hopperService.getRegistry().remove(new BlockPos(blockBelow.getLocation()));
         }
+    }
+
+    interface BreakPluginContext {
+        FileConfiguration getConfig();
+        MessageService getMessageService();
+        SpawnerManager getSpawnerManager();
+        HopperService getHopperService();
+        SpawnerItemFactory getSpawnerItemFactory();
+        SpawnerLocationLockManager getSpawnerLocationLockManager();
+        SpawnerGuiViewManager getSpawnerGuiViewManager();
+        boolean hasSellIntegration();
+        SpawnerMenuAction getSpawnerMenuAction();
+        github.nighter.smartspawner.spawner.sell.SpawnerSellManager getSpawnerSellManager();
+        github.nighter.smartspawner.spawner.lootgen.SpawnerRangeChecker getRangeChecker();
+        github.nighter.smartspawner.extras.HopperConfig getHopperConfig();
+        Logger getLogger();
+    }
+
+    private static final class SmartSpawnerBreakPluginContext implements BreakPluginContext {
+        private final SmartSpawner plugin;
+
+        private SmartSpawnerBreakPluginContext(SmartSpawner plugin) {
+            this.plugin = plugin;
+        }
+
+        @Override public FileConfiguration getConfig() { return plugin.getConfig(); }
+        @Override public MessageService getMessageService() { return plugin.getMessageService(); }
+        @Override public SpawnerManager getSpawnerManager() { return plugin.getSpawnerManager(); }
+        @Override public HopperService getHopperService() { return plugin.getHopperService(); }
+        @Override public SpawnerItemFactory getSpawnerItemFactory() { return plugin.getSpawnerItemFactory(); }
+        @Override public SpawnerLocationLockManager getSpawnerLocationLockManager() { return plugin.getSpawnerLocationLockManager(); }
+        @Override public SpawnerGuiViewManager getSpawnerGuiViewManager() { return plugin.getSpawnerGuiViewManager(); }
+        @Override public boolean hasSellIntegration() { return plugin.hasSellIntegration(); }
+        @Override public SpawnerMenuAction getSpawnerMenuAction() { return plugin.getSpawnerMenuAction(); }
+        @Override public github.nighter.smartspawner.spawner.sell.SpawnerSellManager getSpawnerSellManager() { return plugin.getSpawnerSellManager(); }
+        @Override public github.nighter.smartspawner.spawner.lootgen.SpawnerRangeChecker getRangeChecker() { return plugin.getRangeChecker(); }
+        @Override public github.nighter.smartspawner.extras.HopperConfig getHopperConfig() { return plugin.getHopperConfig(); }
+        @Override public Logger getLogger() { return plugin.getLogger(); }
     }
 }

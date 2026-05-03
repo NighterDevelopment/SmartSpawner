@@ -514,6 +514,9 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         // reload services
         integrationManager.reload();
         spawnerMenuAction.reload();
+        if (spawnerBreakListener != null) {
+            spawnerBreakListener.loadConfig();
+        }
         timeFormatter.clearCache();
         
         // Reload spawner settings config (includes mob heads and loot)

@@ -481,6 +481,12 @@ public class SpawnerStackerHandler implements Listener {
             return;
         }
 
+        if (scanResult.availableSpawners == 0) {
+            messageService.sendMessage(player, "spawner_insufficient_quantity",
+                Map.of("amountChange", "1", "amountAvailable", "0"));
+            return;
+        }
+
         int actualChange = Math.min(spaceLeft, scanResult.availableSpawners);
 
         if (SpawnerStackEvent.getHandlerList().getRegisteredListeners().length != 0) {

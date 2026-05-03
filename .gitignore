@@ -80,4 +80,3 @@ local.properties
 *.log
 javac.*.args
 *.backup
-LOCK_STRATEGY.md

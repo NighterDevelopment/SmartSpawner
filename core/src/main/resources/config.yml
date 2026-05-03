@@ -62,6 +62,10 @@ spawner_break:
   # Durability impact on tools when breaking a spawner
   durability_loss: 1    # Number of durability points deducted
 
+  # Automatically sell storage items and claim remaining XP only when a Smart Spawner is fully removed
+  # Requires sell integration + smartspawner.sellall (true by default)
+  auto_sell_and_claim_exp_on_break: true
+
   # Enchantment Requirements for successful spawner collection
   silk_touch:
     required: true      # Whether Silk Touch is needed to obtain spawners
