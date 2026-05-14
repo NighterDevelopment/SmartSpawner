@@ -157,6 +157,23 @@ hopper:
   stack_per_transfer: 5 # Number of item stacks transferred in one operation (max 5)
 
 #---------------------------------------------------
+#              Loot Generation Settings
+#---------------------------------------------------
+# Configuration for internal loot generation algorithms
+loot_generation:
+  # Enables the optimized hybrid loot generation system
+  #
+  # When enabled, SmartSpawner dynamically switches between:
+  # - Exact O(n) simulation for rare drops or small mob batches (binomial distribution)
+  # - Fast O(1) expected-value approximation for large mob batches (binomial approximation)
+  #
+  # This significantly improves performance with millions of stacked spawners
+  # while preserving realistic loot distribution and rare drop accuracy.
+  #
+  # Recommended: true
+  optimized_generation: false
+
+#---------------------------------------------------
 #              Bedrock Player Support
 #---------------------------------------------------
 # Configuration for Bedrock Edition player support via Floodgate

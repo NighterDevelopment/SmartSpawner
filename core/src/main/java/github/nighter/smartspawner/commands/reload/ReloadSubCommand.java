@@ -3,6 +3,7 @@ package github.nighter.smartspawner.commands.reload;
 import com.mojang.brigadier.context.CommandContext;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.commands.BaseSubCommand;
+import github.nighter.smartspawner.config.Config;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
 import org.jspecify.annotations.NullMarked;
@@ -54,6 +55,7 @@ public class ReloadSubCommand extends BaseSubCommand {
 
             // Reload all configurations
             plugin.reloadConfig();
+            Config.reload(plugin);
 
             // Reload components in dependency order
             plugin.setUpHopperHandler();

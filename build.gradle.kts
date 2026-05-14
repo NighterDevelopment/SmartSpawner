@@ -10,7 +10,7 @@ allprojects {
     apply(plugin = "maven-publish")
 
     group = "github.nighter"
-    version = "1.6.6"
+    version = "1.6.6-DEV"
 
     repositories {
         mavenCentral()
@@ -98,4 +98,3 @@ tasks.withType<JavaCompile>().configureEach {
         options.release.set(targetJavaVersion)
     }
 }
-

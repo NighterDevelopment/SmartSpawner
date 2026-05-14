@@ -13,6 +13,7 @@ import github.nighter.smartspawner.commands.list.gui.management.SpawnerManagemen
 import github.nighter.smartspawner.commands.list.gui.adminstacker.AdminStackerHandler;
 import github.nighter.smartspawner.commands.list.gui.serverselection.ServerSelectionHandler;
 import github.nighter.smartspawner.commands.prices.PricesGUI;
+import github.nighter.smartspawner.config.Config;
 import github.nighter.smartspawner.extras.HopperConfig;
 import github.nighter.smartspawner.spawner.config.SpawnerSettingsConfig;
 import github.nighter.smartspawner.spawner.config.ItemSpawnerSettingsConfig;
@@ -167,6 +168,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     public void onEnable() {
         long startTime = System.currentTimeMillis();
         instance = this;
+        Config.load(this);
 
         // Initialize version-specific components
         initializeVersionComponents();

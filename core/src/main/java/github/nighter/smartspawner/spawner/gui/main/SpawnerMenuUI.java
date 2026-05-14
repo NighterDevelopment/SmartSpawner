@@ -1,5 +1,6 @@
 package github.nighter.smartspawner.spawner.gui.main;
 
+import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import net.kyori.adventure.text.Component;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.nms.VersionInitializer;
@@ -255,7 +256,7 @@ public class SpawnerMenuUI {
         }
         List<Component> lootComponents = Collections.emptyList();
         if (usedPlaceholders.contains("loot_items")) {
-            Map<VirtualInventory.ItemSignature, Long> storedItems = virtualInventory.getConsolidatedItems();
+            Map<ItemSignature, Long> storedItems = virtualInventory.getConsolidatedItems();
             lootComponents = buildLootItemComponents(spawner.getEntityType(), storedItems);
         }
 
@@ -282,11 +283,11 @@ public class SpawnerMenuUI {
         return chestItem;
     }
 
-    private String buildLootItemsText(EntityType entityType, Map<VirtualInventory.ItemSignature, Long> storedItems) {
+    private String buildLootItemsText(EntityType entityType, Map<ItemSignature, Long> storedItems) {
         // Create material-to-amount map for quick lookups
         Map<Material, Long> materialAmountMap = new HashMap<>();
-        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : storedItems.entrySet()) {
-            Material material = entry.getKey().getTemplateRef().getType();
+        for (Map.Entry<ItemSignature, Long> entry : storedItems.entrySet()) {
+            Material material = entry.getKey().getMaterial();
             materialAmountMap.merge(material, entry.getValue(), Long::sum);
         }
 
@@ -327,13 +328,12 @@ public class SpawnerMenuUI {
             }
         } else if (!storedItems.isEmpty()) {
             // Sort items by name
-            List<Map.Entry<VirtualInventory.ItemSignature, Long>> sortedItems =
+            List<Map.Entry<ItemSignature, Long>> sortedItems =
                     new ArrayList<>(storedItems.entrySet());
             sortedItems.sort(Comparator.comparing(e -> e.getKey().getMaterialName()));
 
-            for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : sortedItems) {
-                ItemStack templateItem = entry.getKey().getTemplateRef();
-                Material material = templateItem.getType();
+            for (Map.Entry<ItemSignature, Long> entry : sortedItems) {
+                Material material = entry.getKey().getMaterial();
                 long amount = entry.getValue();
 
                 String materialName = languageManager.getVanillaItemName(material);
@@ -602,10 +602,10 @@ public class SpawnerMenuUI {
         return maximum > 0 ? (int) ((double) current / maximum * 100) : 0;
     }
 
-    private List<Component> buildLootItemComponents(EntityType entityType, Map<VirtualInventory.ItemSignature, Long> storedItems) {
+    private List<Component> buildLootItemComponents(EntityType entityType, Map<ItemSignature, Long> storedItems) {
         Map<Material, Long> materialAmountMap = new HashMap<>();
-        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : storedItems.entrySet()) {
-            Material material = entry.getKey().getTemplateRef().getType();
+        for (Map.Entry<ItemSignature, Long> entry : storedItems.entrySet()) {
+            Material material = entry.getKey().getMaterial();
             materialAmountMap.merge(material, entry.getValue(), Long::sum);
         }
 
@@ -628,11 +628,11 @@ public class SpawnerMenuUI {
                         LOOT_ITEM_FORMAT_KEY, material, formattedAmount, chance));
             }
         } else {
-            List<Map.Entry<VirtualInventory.ItemSignature, Long>> sortedItems =
+            List<Map.Entry<ItemSignature, Long>> sortedItems =
                     new ArrayList<>(storedItems.entrySet());
             sortedItems.sort(Comparator.comparing(e -> e.getKey().getMaterialName()));
-            for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : sortedItems) {
-                Material material = entry.getKey().getTemplateRef().getType();
+            for (Map.Entry<ItemSignature, Long> entry : sortedItems) {
+                Material material = entry.getKey().getMaterial();
                 long amount = entry.getValue();
                 String formattedAmount = languageManager.formatNumber(amount);
                 components.add(languageManager.buildTranslatableGuiLootLine(

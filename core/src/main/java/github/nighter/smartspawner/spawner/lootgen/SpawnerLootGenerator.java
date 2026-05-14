@@ -1,7 +1,9 @@
 package github.nighter.smartspawner.spawner.lootgen;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.config.Config;
 import github.nighter.smartspawner.spawner.gui.synchronization.SpawnerGuiViewManager;
+import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
@@ -12,19 +14,17 @@ import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SpawnerLootGenerator {
     private final SmartSpawner plugin;
     private final SpawnerGuiViewManager spawnerGuiViewManager;
     private final SpawnerManager spawnerManager;
-    private final Random random;
 
     public SpawnerLootGenerator(SmartSpawner plugin) {
         this.plugin = plugin;
         this.spawnerGuiViewManager = plugin.getSpawnerGuiViewManager();
         this.spawnerManager = plugin.getSpawnerManager();
-        this.random = new Random();
     }
 
     public void spawnLootToSpawner(SpawnerData spawner) {
@@ -60,19 +60,17 @@ public class SpawnerLootGenerator {
             final long spawnTime;
             final int minMobs;
             final int maxMobs;
-            final AtomicInteger usedSlots;
-            final AtomicInteger maxSlots;
-            
+
             try {
                 // Timing is now managed by SpawnerRangeChecker (timer) and SpawnerGuiViewManager (spawn trigger)
                 // No need for time check here since spawn is only called when timer expires
-                
+
                 // Get exact inventory slot usage
-                usedSlots = new AtomicInteger(spawner.getVirtualInventory().getUsedSlots());
-                maxSlots = new AtomicInteger(spawner.getMaxSpawnerLootSlots());
+                int usedSlots = spawner.getVirtualInventory().getUsedSlots();
+                int maxSlots = spawner.getMaxSpawnerLootSlots();
 
                 // Check if both inventory and exp are full, only then skip loot generation
-                if (usedSlots.get() >= maxSlots.get() && spawner.getSpawnerExp() >= spawner.getMaxStoredExp()) {
+                if (usedSlots >= maxSlots && spawner.getSpawnerExp() >= spawner.getMaxStoredExp()) {
                     if (!spawner.getIsAtCapacity()) {
                         spawner.setIsAtCapacity(true);
                     }
@@ -126,24 +124,17 @@ public class SpawnerLootGenerator {
                             }
                         }
 
-                        // Re-check max slots as it could have changed
-                        maxSlots.set(spawner.getMaxSpawnerLootSlots());
-                        usedSlots.set(spawner.getVirtualInventory().getUsedSlots());
+                        if (!loot.items().isEmpty()) {
+                            Map<ItemSignature, Integer> lootToAdd = loot.items();
+                            int maxSlots = spawner.getMaxSpawnerLootSlots();
 
-                        // Process items if there are any to add and inventory isn't completely full
-                        if (!loot.items().isEmpty() && usedSlots.get() < maxSlots.get()) {
-                            List<ItemStack> itemsToAdd = new ArrayList<>(loot.items());
-
-                            // Get exact calculation of slots with the new items
-                            int totalRequiredSlots = calculateRequiredSlots(itemsToAdd, spawner.getVirtualInventory());
-
-                            // If we'll exceed the limit, limit the items we're adding
-                            if (totalRequiredSlots > maxSlots.get()) {
-                                itemsToAdd = limitItemsToAvailableSlots(itemsToAdd, spawner);
+                            int totalRequiredSlots = calculateRequiredSlots(lootToAdd, spawner.getVirtualInventory());
+                            if (totalRequiredSlots > maxSlots) {
+                                lootToAdd = limitLootToAvailableSlots(lootToAdd, spawner);
                             }
 
-                            if (!itemsToAdd.isEmpty()) {
-                                spawner.addItemsAndUpdateSellValue(itemsToAdd);
+                            if (!lootToAdd.isEmpty()) {
+                                spawner.addItemsAndUpdateSellValue(lootToAdd);
                                 changed = true;
                             }
                         }
@@ -183,164 +174,205 @@ public class SpawnerLootGenerator {
     }
 
     public LootResult generateLoot(int minMobs, int maxMobs, SpawnerData spawner) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
 
-        int mobCount = random.nextInt(maxMobs - minMobs + 1) + minMobs;
-        long totalExperienceLong = (long) spawner.getEntityExperienceValue() * mobCount;
-        long totalExperience = Math.min(totalExperienceLong, Long.MAX_VALUE);
+        int mobCount = generateMobCount(minMobs, maxMobs, random);
+        long totalExperience = (long) spawner.getEntityExperienceValue() * mobCount;
 
-        // Get valid items from the spawner's EntityLootConfig
-        List<LootItem> validItems =  spawner.getValidLootItems();
+        List<LootItem> validItems = spawner.getValidLootItems();
 
         if (validItems.isEmpty()) {
-            return new LootResult(Collections.emptyList(), totalExperience);
+            return new LootResult(Collections.emptyMap(), totalExperience);
         }
 
-        // Use a Map to consolidate identical drops instead of List
-        Map<ItemStack, Integer> consolidatedLoot = new HashMap<>();
+        Map<ItemSignature, Integer> consolidatedLoot = new HashMap<>(validItems.size());
 
-        // Process mobs in batch rather than individually
+        boolean optimizedLootgen = Config.get().isOptimizedLootgen();
+
         for (LootItem lootItem : validItems) {
-            // Calculate the probability for the entire mob batch at once
-            int successfulDrops = 0;
+            int totalAmount;
 
-            // Calculate binomial distribution - how many mobs will drop this item
-            for (int i = 0; i < mobCount; i++) {
-                if (random.nextDouble() * 100 <= lootItem.chance()) {
-                    successfulDrops++;
-                }
+            if (optimizedLootgen && shouldApproximate(lootItem.chance(), mobCount)) {
+                totalAmount = generateApproximatedLoot(lootItem, mobCount, random);
+            } else {
+                totalAmount = generateExactLoot(lootItem, mobCount, random);
             }
 
-            if (successfulDrops > 0) {
-                // Create item just once per loot type
-                ItemStack prototype = lootItem.createItemStack(random);
-                if (prototype != null) {
-                    // Total amount across all mobs
-                    int totalAmount = 0;
-                    for (int i = 0; i < successfulDrops; i++) {
-                        totalAmount += lootItem.generateAmount(random);
-                    }
-
-                    if (totalAmount > 0) {
-                        // Add to consolidated map
-                        consolidatedLoot.merge(prototype, totalAmount, (a, b) -> a + b);
-                    }
-                }
+            if (totalAmount <= 0) {
+                continue;
             }
+
+            ItemStack prototype = lootItem.createItemStack(random);
+            if (prototype == null || prototype.getType() == Material.AIR) {
+                continue;
+            }
+
+            ItemSignature signature = VirtualInventory.getSignature(prototype);
+            consolidatedLoot.merge(signature, totalAmount, Integer::sum);
         }
 
-        // Convert consolidated map to item stacks
-        List<ItemStack> finalLoot = new ArrayList<>(consolidatedLoot.size());
-        for (Map.Entry<ItemStack, Integer> entry : consolidatedLoot.entrySet()) {
-            ItemStack item = entry.getKey().clone();
-            item.setAmount(Math.min(entry.getValue(), item.getMaxStackSize()));
-            finalLoot.add(item);
-
-            // Handle amounts exceeding max stack size
-            int remaining = entry.getValue() - item.getMaxStackSize();
-            while (remaining > 0) {
-                ItemStack extraStack = item.clone();
-                extraStack.setAmount(Math.min(remaining, item.getMaxStackSize()));
-                finalLoot.add(extraStack);
-                remaining -= extraStack.getAmount();
-            }
-        }
-
-        return new LootResult(finalLoot, totalExperience);
+        return new LootResult(consolidatedLoot, totalExperience);
     }
 
-    private List<ItemStack> limitItemsToAvailableSlots(List<ItemStack> items, SpawnerData spawner) {
-        VirtualInventory currentInventory = spawner.getVirtualInventory();
+    private int generateMobCount(int minMobs, int maxMobs, ThreadLocalRandom random) {
+        int lowerBound = Math.max(0, Math.min(minMobs, maxMobs));
+        int upperBound = Math.max(0, Math.max(minMobs, maxMobs));
+
+        if (upperBound == lowerBound) {
+            return upperBound;
+        }
+
+        return random.nextInt(lowerBound, upperBound + 1);
+    }
+
+    private int generateExactLoot(LootItem lootItem, int mobCount, ThreadLocalRandom random) {
+        int successfulDrops = 0;
+
+        double p = lootItem.chance() / 100.0;
+
+        for (int i = 0; i < mobCount; i++) {
+            if (random.nextDouble() < p) {
+                successfulDrops++;
+            }
+        }
+
+        if (successfulDrops == 0) {
+            return 0;
+        }
+
+        int totalAmount = 0;
+
+        for (int i = 0; i < successfulDrops; i++) {
+            totalAmount += lootItem.generateAmount(random);
+        }
+
+        return totalAmount;
+    }
+
+    private int generateApproximatedLoot(LootItem lootItem, int mobCount, ThreadLocalRandom random) {
+        double p = lootItem.chance() / 100.0;
+        double expectedDrops = mobCount * p;
+        double avgAmount = lootItem.getAverageAmount();
+
+        double jitter = p != 1.0
+                ? 0.95 + random.nextDouble() * 0.10
+                : 1.0;
+
+        return (int) Math.round(expectedDrops * avgAmount * jitter);
+    }
+
+    private Map<ItemSignature, Integer> limitLootToAvailableSlots(Map<ItemSignature, Integer> loot, SpawnerData spawner) {
+        VirtualInventory inventory = spawner.getVirtualInventory();
+
         int maxSlots = spawner.getMaxSpawnerLootSlots();
 
-        // If already full, return empty list
-        if (currentInventory.getUsedSlots() >= maxSlots) {
-            return Collections.emptyList();
+        if (maxSlots <= 0) {
+            return Collections.emptyMap();
         }
 
-        // Create a simulation inventory
-        Map<VirtualInventory.ItemSignature, Long> simulatedInventory = new HashMap<>(currentInventory.getConsolidatedItems());
-        List<ItemStack> acceptedItems = new ArrayList<>();
+        Map<ItemSignature, Long> simulatedInventory = new HashMap<>(inventory.getConsolidatedItems());
+        Map<ItemSignature, Integer> acceptedLoot = new HashMap<>(loot.size());
 
-        // Sort items by priority (you can change this sorting strategy)
-        items.sort(Comparator.comparing(item -> item.getType().name()));
+        int usedSlots = calculateSlots(simulatedInventory);
 
-        for (ItemStack item : items) {
-            if (item == null || item.getAmount() <= 0) continue;
+        List<Map.Entry<ItemSignature, Integer>> entries = new ArrayList<>(loot.entrySet());
 
-            // Add to simulation and check slot count
-            Map<VirtualInventory.ItemSignature, Long> tempSimulation = new HashMap<>(simulatedInventory);
-            // Use cached signature to avoid excessive cloning
-            VirtualInventory.ItemSignature sig = VirtualInventory.getSignature(item);
-            tempSimulation.merge(sig, (long) item.getAmount(), (a, b) -> a + b);
+        entries.sort(Comparator.comparing(entry -> entry.getKey().getMaterial().name()));
 
-            // Calculate slots needed
-            int slotsNeeded = calculateSlots(tempSimulation);
+        for (Map.Entry<ItemSignature, Integer> entry : entries) {
+            ItemSignature signature = entry.getKey();
 
-            // If we still have room, accept this item
-            if (slotsNeeded <= maxSlots) {
-                acceptedItems.add(item);
-                simulatedInventory = tempSimulation; // Update simulation
-            } else {
-                // Try to accept a partial amount of this item
-                int maxStackSize = item.getMaxStackSize();
-                long currentAmount = simulatedInventory.getOrDefault(sig, 0L);
+            int amount = entry.getValue();
 
-                // Calculate how many we can add without exceeding slot limit
-                int remainingSlots = maxSlots - calculateSlots(simulatedInventory);
-                if (remainingSlots > 0) {
-                    // Maximum items we can add in the remaining slots
-                    long maxAddAmount = (long) remainingSlots * maxStackSize - (currentAmount % maxStackSize);
-                    if (maxAddAmount > 0) {
-                        // Create a partial item
-                        ItemStack partialItem = item.clone();
-                        partialItem.setAmount((int) Math.min(maxAddAmount, item.getAmount()));
-                        acceptedItems.add(partialItem);
+            int maxStackSize = signature.getMaxStackSize();
 
-                        // Update simulation
-                        simulatedInventory.merge(sig, (long) partialItem.getAmount(), (a, b) -> a + b);
-                    }
-                }
+            long currentAmount = simulatedInventory.getOrDefault(signature, 0L);
 
-                // We've filled all slots, stop processing
-                break;
+            int oldSlots = slotsFor(currentAmount, maxStackSize);
+            int newSlots = slotsFor(currentAmount + amount, maxStackSize);
+
+            int slotDelta = newSlots - oldSlots;
+
+            if (usedSlots + slotDelta <= maxSlots) {
+                acceptedLoot.put(signature, amount);
+
+                simulatedInventory.put(signature, currentAmount + amount);
+
+                usedSlots += slotDelta;
+
+                continue;
+            }
+
+            int remainingSlots = Math.max(0, maxSlots - usedSlots);
+            long maxAddAmount = ((long) (oldSlots + remainingSlots) * maxStackSize) - currentAmount;
+
+            if (maxAddAmount <= 0) {
+                continue;
+            }
+
+            int acceptedAmount = (int) Math.min(maxAddAmount, amount);
+
+            if (acceptedAmount > 0) {
+                acceptedLoot.put(signature, acceptedAmount);
+                simulatedInventory.put(signature, currentAmount + acceptedAmount);
+                usedSlots = calculateSlots(simulatedInventory);
             }
         }
 
-        return acceptedItems;
+        return acceptedLoot;
     }
 
-    private int calculateSlots(Map<VirtualInventory.ItemSignature, Long> items) {
-        // Use a more efficient calculation approach
-        return items.entrySet().stream()
-                .mapToInt(entry -> {
-                    long amount = entry.getValue();
-                    int maxStackSize = entry.getKey().getTemplateRef().getMaxStackSize();
-                    // Use integer division with ceiling function
-                    return (int) ((amount + maxStackSize - 1) / maxStackSize);
-                })
-                .sum();
-    }
+    private int calculateRequiredSlots(Map<ItemSignature, Integer> loot, VirtualInventory inventory) {
+        Map<ItemSignature, Long> simulatedItems = new HashMap<>(inventory.getConsolidatedItems());
 
-    private int calculateRequiredSlots(List<ItemStack> items, VirtualInventory inventory) {
-        // Create a temporary map to simulate how items would stack
-        Map<VirtualInventory.ItemSignature, Long> simulatedItems = new HashMap<>();
-
-        // First, get existing items if we need to account for them
-        if (inventory != null) {
-            simulatedItems.putAll(inventory.getConsolidatedItems());
+        for (Map.Entry<ItemSignature, Integer> entry : loot.entrySet()) {
+            simulatedItems.merge(entry.getKey(), (long) entry.getValue(), Long::sum);
         }
 
-        // Add the new items to our simulation
-        for (ItemStack item : items) {
-            if (item == null || item.getAmount() <= 0) continue;
-
-            // Use cached signature to avoid excessive cloning
-            VirtualInventory.ItemSignature sig = VirtualInventory.getSignature(item);
-            simulatedItems.merge(sig, (long) item.getAmount(), (a, b) -> a + b);
-        }
-
-        // Calculate exact slots needed
         return calculateSlots(simulatedItems);
+    }
+
+    private int calculateSlots(Map<ItemSignature, Long> items) {
+        int total = 0;
+
+        for (Map.Entry<ItemSignature, Long> entry : items.entrySet()) {
+            total += slotsFor(entry.getValue(), entry.getKey().getMaxStackSize());
+        }
+
+        return total;
+    }
+
+    private int slotsFor(long amount, int maxStackSize) {
+        if (amount <= 0) {
+            return 0;
+        }
+
+        return (int) ((amount + maxStackSize - 1) / maxStackSize);
+    }
+
+    private Map<ItemSignature, Integer> copyLoot(Map<ItemSignature, Integer> loot) {
+        if (loot == null || loot.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<ItemSignature, Integer> copy = new HashMap<>(loot.size());
+        for (Map.Entry<ItemSignature, Integer> entry : loot.entrySet()) {
+            ItemSignature signature = entry.getKey();
+            Integer amount = entry.getValue();
+            if (signature == null || amount == null || amount <= 0) {
+                continue;
+            }
+            copy.merge(signature, amount, Integer::sum);
+        }
+
+        return copy;
+    }
+
+    // Determines whether to use expected-value approximation
+    private boolean shouldApproximate(double chance, int mobCount) {
+        // simple heuristic: use expected if at least one item can be generated
+        if (chance <= 0D) return false;
+        return mobCount > 97.5D / chance;
     }
 
     /**
@@ -373,11 +405,11 @@ public class SpawnerLootGenerator {
             spawner.updateHologramData();
         }
     }
-    
+
     /**
      * Pre-generates loot asynchronously for improved UX.
      * Loot is calculated in background before timer expires, then added instantly when ready.
-     * 
+     *
      * <p>This method:
      * <ul>
      *   <li>Checks spawner capacity before generation</li>
@@ -385,40 +417,37 @@ public class SpawnerLootGenerator {
      *   <li>Invokes callback with generated items and experience</li>
      *   <li>Handles thread-safety with proper locking</li>
      * </ul>
-     * 
+     *
      * @param spawner The spawner to pre-generate loot for
      * @param callback Callback invoked with generated loot (items, experience)
      */
     public void preGenerateLoot(SpawnerData spawner, LootGenerationCallback callback) {
         if (!spawner.getLootGenerationLock().tryLock()) {
-            callback.onLootGenerated(Collections.emptyList(), 0);
+            callback.onLootGenerated(Collections.emptyMap(), 0);
             return;
         }
 
         try {
             try {
                 if (!spawner.getDataLock().tryLock(50, java.util.concurrent.TimeUnit.MILLISECONDS)) {
-                    callback.onLootGenerated(Collections.emptyList(), 0);
+                    callback.onLootGenerated(Collections.emptyMap(), 0);
                     return;
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                callback.onLootGenerated(Collections.emptyList(), 0);
+                callback.onLootGenerated(Collections.emptyMap(), 0);
                 return;
             }
 
             final int minMobs;
             final int maxMobs;
-            final boolean itemStorageFull;
-            
             try {
                 int usedSlots = spawner.getVirtualInventory().getUsedSlots();
                 int maxSlots = spawner.getMaxSpawnerLootSlots();
-                itemStorageFull = usedSlots >= maxSlots;
-                boolean atCapacity = itemStorageFull && spawner.getSpawnerExp() >= spawner.getMaxStoredExp();
-                
+                boolean atCapacity = usedSlots >= maxSlots && spawner.getSpawnerExp() >= spawner.getMaxStoredExp();
+
                 if (atCapacity) {
-                    callback.onLootGenerated(Collections.emptyList(), 0);
+                    callback.onLootGenerated(Collections.emptyMap(), 0);
                     return;
                 }
 
@@ -429,15 +458,10 @@ public class SpawnerLootGenerator {
             }
 
             Scheduler.runTaskAsync(() -> {
-                LootResult loot;
-                if (itemStorageFull) {
-                    loot = generateExperienceOnlyLoot(minMobs, maxMobs, spawner);
-                } else {
-                    loot = generateLoot(minMobs, maxMobs, spawner);
-                }
+                LootResult loot = generateLoot(minMobs, maxMobs, spawner);
 
                 callback.onLootGenerated(
-                        loot.items() != null ? new ArrayList<>(loot.items()) : Collections.emptyList(),
+                        copyLoot(loot.items()),
                         loot.experience()
                 );
             });
@@ -446,16 +470,9 @@ public class SpawnerLootGenerator {
         }
     }
 
-    private LootResult generateExperienceOnlyLoot(int minMobs, int maxMobs, SpawnerData spawner) {
-        int mobCount = random.nextInt(maxMobs - minMobs + 1) + minMobs;
-        long totalExperienceLong = (long) spawner.getEntityExperienceValue() * mobCount;
-        long totalExperience = Math.min(totalExperienceLong, Long.MAX_VALUE);
-        return new LootResult(Collections.emptyList(), totalExperience);
-    }
-    
     /**
      * Adds pre-generated loot to spawner instantly when timer expires.
-     * 
+     *
      * <p>This method:
      * <ul>
      *   <li>Validates pre-generated loot is not empty</li>
@@ -464,14 +481,14 @@ public class SpawnerLootGenerator {
      *   <li>Updates lastSpawnTime to maintain cycle timing</li>
      *   <li>Triggers GUI updates and marks spawner for persistence</li>
      * </ul>
-     * 
+     *
      * <p><b>Thread Safety:</b> All Bukkit API calls are scheduled on main thread via Scheduler.runLocationTask
-     * 
+     *
      * @param spawner The spawner to add loot to
-     * @param items Pre-generated items list
+     * @param items Pre-generated items map
      * @param experience Pre-generated experience amount
      */
-    public void addPreGeneratedLoot(SpawnerData spawner, List<ItemStack> items, long experience) {
+    public void addPreGeneratedLoot(SpawnerData spawner, Map<ItemSignature, Integer> items, long experience) {
         addPreGeneratedLoot(spawner, items, experience, System.currentTimeMillis());
     }
 
@@ -480,11 +497,11 @@ public class SpawnerLootGenerator {
      * Used for early loot addition to prevent timer stutter.
      *
      * @param spawner The spawner to add loot to
-     * @param items Pre-generated items list
+     * @param items Pre-generated items map
      * @param experience Pre-generated experience amount
      * @param spawnTime The spawn time to set (for timer accuracy)
      */
-    public void addPreGeneratedLoot(SpawnerData spawner, List<ItemStack> items, long experience, long spawnTime) {
+    public void addPreGeneratedLoot(SpawnerData spawner, Map<ItemSignature, Integer> items, long experience, long spawnTime) {
         if ((items == null || items.isEmpty()) && experience == 0) {
             return;
         }
@@ -523,7 +540,7 @@ public class SpawnerLootGenerator {
 
                 Scheduler.runTaskAsync(() -> {
                     boolean changed = false;
-                    
+
                     if (experience > 0 && spawner.getSpawnerExp() < spawner.getMaxStoredExp()) {
                         long currentExp = spawner.getSpawnerExp();
                         long maxExp = spawner.getMaxStoredExp();
@@ -537,29 +554,19 @@ public class SpawnerLootGenerator {
                     }
 
                     if (items != null && !items.isEmpty()) {
-                        List<ItemStack> validItems = new ArrayList<>();
-                        for (ItemStack item : items) {
-                            if (item != null && item.getType() != Material.AIR) {
-                                validItems.add(item.clone());
-                            }
-                        }
+                        Map<ItemSignature, Integer> lootToAdd = copyLoot(items);
 
-                        if (!validItems.isEmpty()) {
-                            int usedSlots = spawner.getVirtualInventory().getUsedSlots();
+                        if (!lootToAdd.isEmpty()) {
                             int maxSlots = spawner.getMaxSpawnerLootSlots();
 
-                            if (usedSlots < maxSlots) {
-                                List<ItemStack> itemsToAdd = validItems;
+                            int totalRequiredSlots = calculateRequiredSlots(lootToAdd, spawner.getVirtualInventory());
+                            if (totalRequiredSlots > maxSlots) {
+                                lootToAdd = limitLootToAvailableSlots(lootToAdd, spawner);
+                            }
 
-                                int totalRequiredSlots = calculateRequiredSlots(itemsToAdd, spawner.getVirtualInventory());
-                                if (totalRequiredSlots > maxSlots) {
-                                    itemsToAdd = limitItemsToAvailableSlots(itemsToAdd, spawner);
-                                }
-
-                                if (!itemsToAdd.isEmpty()) {
-                                    spawner.addItemsAndUpdateSellValue(itemsToAdd);
-                                    changed = true;
-                                }
+                            if (!lootToAdd.isEmpty()) {
+                                spawner.addItemsAndUpdateSellValue(lootToAdd);
+                                changed = true;
                             }
                         }
                     }
@@ -585,7 +592,7 @@ public class SpawnerLootGenerator {
             }
         });
     }
-    
+
     /**
      * Callback interface for asynchronous loot pre-generation.
      * Invoked when loot generation completes with the generated items and experience.
@@ -594,10 +601,10 @@ public class SpawnerLootGenerator {
     public interface LootGenerationCallback {
         /**
          * Called when loot generation completes.
-         * 
-         * @param items Generated items list (never null, may be empty)
+         *
+         * @param items Generated items map (never null, may be empty)
          * @param experience Generated experience amount
          */
-        void onLootGenerated(List<ItemStack> items, long experience);
+        void onLootGenerated(Map<ItemSignature, Integer> items, long experience);
     }
 }

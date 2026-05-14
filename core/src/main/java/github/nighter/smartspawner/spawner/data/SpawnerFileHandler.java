@@ -2,6 +2,7 @@ package github.nighter.smartspawner.spawner.data;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.spawner.data.storage.SpawnerStorage;
+import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
 import github.nighter.smartspawner.Scheduler;
@@ -229,7 +230,7 @@ public class SpawnerFileHandler implements SpawnerStorage {
 
                 VirtualInventory virtualInv = spawner.getVirtualInventory();
                 if (virtualInv != null) {
-                    Map<VirtualInventory.ItemSignature, Long> items = virtualInv.getConsolidatedItems();
+                    Map<ItemSignature, Long> items = virtualInv.getConsolidatedItems();
                     List<String> serializedItems = ItemStackSerializer.serializeInventory(items);
                     spawnerData.set(path + ".inventory", serializedItems);
                 }
@@ -436,13 +437,7 @@ public class SpawnerFileHandler implements SpawnerStorage {
                     int amount = entry.getValue();
 
                     if (item != null && amount > 0) {
-                        while (amount > 0) {
-                            int batchSize = Math.min(amount, item.getMaxStackSize());
-                            ItemStack batch = item.clone();
-                            batch.setAmount(batchSize);
-                            virtualInv.addItems(Collections.singletonList(batch));
-                            amount -= batchSize;
-                        }
+                        virtualInv.addItem(item, amount);
                     }
                 }
             } catch (Exception e) {

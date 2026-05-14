@@ -1,5 +1,6 @@
 package github.nighter.smartspawner.spawner.properties;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.commands.hologram.SpawnerHologram;
 import github.nighter.smartspawner.nms.VersionInitializer;
@@ -15,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -81,7 +83,7 @@ public class SpawnerData {
     // Calculated values based on stackSize
     @Getter
     private int maxStoragePages;
-    @Getter @Setter
+    @Getter
     private int maxSpawnerLootSlots;
     @Getter @Setter
     private long maxStoredExp;
@@ -95,7 +97,7 @@ public class SpawnerData {
     @Getter @Setter
     private int maxStackSize;
 
-    @Getter @Setter
+    @Getter
     private VirtualInventory virtualInventory;
     @Getter
     private final Set<Material> filteredItems = new HashSet<>();
@@ -109,8 +111,7 @@ public class SpawnerData {
     private boolean lastSellProcessed;
 
     // Accumulated sell value for optimization
-    @Getter
-    private volatile double accumulatedSellValue;
+    private AtomicDouble accumulatedSellValue;
 
     @Getter
     private volatile boolean sellValueDirty;
@@ -124,7 +125,7 @@ public class SpawnerData {
     private Material preferredSortItem;
 
     // CRITICAL: Pre-generated loot storage for better UX - access must be synchronized via lootGenerationLock
-    private volatile List<ItemStack> preGeneratedItems;
+    private volatile Map<ItemSignature, Integer> preGeneratedItems;
     private volatile long preGeneratedExperience;
     private volatile boolean isPreGenerating;
 
@@ -168,7 +169,7 @@ public class SpawnerData {
         this.stackSize = 1;
         this.lastSpawnTime = System.currentTimeMillis();
         this.preferredSortItem = null; // Initialize sort preference as null
-        this.accumulatedSellValue = 0.0;
+        this.accumulatedSellValue = new AtomicDouble(0);
         this.sellValueDirty = true;
     }
 
@@ -192,9 +193,7 @@ public class SpawnerData {
 
     public void recalculateAfterConfigReload() {
         calculateStackBasedValues();
-        if (virtualInventory != null && virtualInventory.getMaxSlots() != maxSpawnerLootSlots) {
-            recreateVirtualInventory();
-        }
+        
         // Mark sell value as dirty after config reload since prices may have changed
         this.sellValueDirty = true;
         updateHologramData();
@@ -214,9 +213,7 @@ public class SpawnerData {
      */
     public void recalculateAfterAPIModification() {
         calculateStackBasedValues();
-        if (virtualInventory != null && virtualInventory.getMaxSlots() != maxSpawnerLootSlots) {
-            recreateVirtualInventory();
-        }
+        
         updateHologramData();
 
         // Invalidate GUI cache after API modifications
@@ -231,10 +228,24 @@ public class SpawnerData {
     private void calculateStackBasedValues() {
         this.maxStoredExp = clampToLong(baseMaxStoredExp * stackSize, 0L, Long.MAX_VALUE);
         this.maxStoragePages = clampToInt((long) baseMaxStoragePages * stackSize, 0, Integer.MAX_VALUE);
-        this.maxSpawnerLootSlots = clampToInt((long) maxStoragePages * 45L, 0, Integer.MAX_VALUE);
+        setMaxSpawnerLootSlots(clampToInt((long) maxStoragePages * 45L, 0, Integer.MAX_VALUE));
         this.minMobs = clampToInt((long) baseMinMobs * stackSize, 0, Integer.MAX_VALUE);
         this.maxMobs = clampToInt((long) baseMaxMobs * stackSize, 0, Integer.MAX_VALUE);
         this.spawnerExp = clampToLong(this.spawnerExp, 0L, this.maxStoredExp);
+    }
+
+    public void setMaxSpawnerLootSlots(int maxSpawnerLootSlots) {
+        this.maxSpawnerLootSlots = Math.max(0, maxSpawnerLootSlots);
+        if (virtualInventory != null) {
+            virtualInventory.setMaxSlots(this.maxSpawnerLootSlots);
+        }
+    }
+
+    public void setVirtualInventory(VirtualInventory virtualInventory) {
+        this.virtualInventory = virtualInventory;
+        if (this.virtualInventory != null) {
+            this.virtualInventory.setMaxSlots(this.maxSpawnerLootSlots);
+        }
     }
 
     public void setSpawnDelay(long baseSpawnerDelay) {
@@ -321,9 +332,6 @@ public class SpawnerData {
         this.stackSize = newStackSize;
         calculateStackBasedValues();
 
-        // Resize the existing virtual inventory instead of creating a new one
-        virtualInventory.resize(this.maxSpawnerLootSlots);
-
         // Reset lastSpawnTime to prevent exploit where players break spawners to trigger immediate loot
         this.lastSpawnTime = System.currentTimeMillis();
         updateHologramData();
@@ -335,11 +343,6 @@ public class SpawnerData {
         if (plugin.getSpawnerMenuFormUI() != null) {
             plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(this.spawnerId);
         }
-    }
-
-    private void recreateVirtualInventory() {
-        if (virtualInventory == null) return;
-        virtualInventory.resize(maxSpawnerLootSlots);
     }
 
     public void setSpawnerExp(long exp) {
@@ -373,6 +376,7 @@ public class SpawnerData {
         return (int) value;
     }
 
+    // TODO: this does NOT work :cryo:
     private long clampToLong(long value, long min, long max) {
         if (value < min) {
             return min;
@@ -455,7 +459,7 @@ public class SpawnerData {
     }
 
     private boolean isLootItemValid(LootItem item) {
-        ItemStack example = item.createItemStack(new Random());
+        ItemStack example = item.createItemStack(ThreadLocalRandom.current());
         return example != null && !filteredItems.contains(example.getType());
     }
 
@@ -550,29 +554,38 @@ public class SpawnerData {
         this.sellValueDirty = true;
     }
 
+    public double getAccumulatedSellValue() {
+        return accumulatedSellValue.get();
+    }
+
     /**
      * Updates the accumulated sell value for specific items being added
      * @param itemsAdded Map of item signatures to quantities added
      * @param priceCache Price cache from loot config
      */
-    public void incrementSellValue(Map<VirtualInventory.ItemSignature, Long> itemsAdded,
-                                   Map<String, Double> priceCache) {
+    public void incrementSellValue(Map<ItemSignature, ? extends Number> itemsAdded, Map<String, Double> priceCache) {
         if (itemsAdded == null || itemsAdded.isEmpty()) {
             return;
         }
 
         double addedValue = 0.0;
-        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : itemsAdded.entrySet()) {
+        for (Map.Entry<ItemSignature, ? extends Number> entry : itemsAdded.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) {
+                continue;
+            }
+
             // Use getTemplateRef() to avoid cloning - we only need to read properties
             ItemStack template = entry.getKey().getTemplateRef();
-            long amount = entry.getValue();
+            long amount = entry.getValue().longValue();
             double itemPrice = findItemPrice(template, priceCache);
             if (itemPrice > 0.0) {
                 addedValue += itemPrice * amount;
             }
         }
 
-        this.accumulatedSellValue += addedValue;
+        if (addedValue > 0.0) {
+            this.accumulatedSellValue.addAndGet(addedValue);
+        }
         this.sellValueDirty = false;
     }
 
@@ -586,27 +599,42 @@ public class SpawnerData {
             return;
         }
 
-        // Consolidate removed items
-        Map<VirtualInventory.ItemSignature, Long> consolidated = new java.util.HashMap<>();
+        Map<ItemSignature, Long> consolidated = new java.util.HashMap<>();
         for (ItemStack item : itemsRemoved) {
             if (item == null || item.getAmount() <= 0) continue;
-            // Use cached signature to avoid excessive cloning
-            VirtualInventory.ItemSignature sig = VirtualInventory.getSignature(item);
-            consolidated.merge(sig, (long) item.getAmount(), (a, b) -> a + b);
+            ItemSignature sig = VirtualInventory.getSignature(item);
+            consolidated.merge(sig, (long) item.getAmount(), Long::sum);
+        }
+
+        decrementSellValue(consolidated, priceCache);
+    }
+
+    /**
+     * Decrements the accumulated sell value when already-consolidated items are removed.
+     * @param itemsRemoved Map of item signatures to quantities removed
+     * @param priceCache Price cache from loot config
+     */
+    public void decrementSellValue(Map<ItemSignature, ? extends Number> itemsRemoved, Map<String, Double> priceCache) {
+        if (itemsRemoved == null || itemsRemoved.isEmpty()) {
+            return;
         }
 
         double removedValue = 0.0;
-        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : consolidated.entrySet()) {
+        for (Map.Entry<ItemSignature, ? extends Number> entry : itemsRemoved.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) {
+                continue;
+            }
+
             // Use getTemplateRef() to avoid cloning - we only need to read properties
             ItemStack template = entry.getKey().getTemplateRef();
-            long amount = entry.getValue();
+            long amount = entry.getValue().longValue();
             double itemPrice = findItemPrice(template, priceCache);
             if (itemPrice > 0.0) {
                 removedValue += itemPrice * amount;
             }
         }
 
-        this.accumulatedSellValue = Math.max(0.0, this.accumulatedSellValue - removedValue);
+        subtractAccumulatedSellValue(removedValue);
     }
 
     /**
@@ -615,7 +643,7 @@ public class SpawnerData {
      */
     public void recalculateSellValue() {
         if (lootConfig == null) {
-            this.accumulatedSellValue = 0.0;
+            this.accumulatedSellValue.set(0.0);
             this.sellValueDirty = false;
             return;
         }
@@ -624,10 +652,10 @@ public class SpawnerData {
         Map<String, Double> priceCache = createPriceCache();
 
         // Calculate from current inventory
-        Map<VirtualInventory.ItemSignature, Long> items = virtualInventory.getConsolidatedItems();
+        Map<ItemSignature, Long> items = virtualInventory.getConsolidatedItems();
         double totalValue = 0.0;
 
-        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : items.entrySet()) {
+        for (Map.Entry<ItemSignature, Long> entry : items.entrySet()) {
             // Use getTemplateRef() to avoid cloning - we only need to read properties
             ItemStack template = entry.getKey().getTemplateRef();
             long amount = entry.getValue();
@@ -637,8 +665,21 @@ public class SpawnerData {
             }
         }
 
-        this.accumulatedSellValue = totalValue;
+        this.accumulatedSellValue.set(totalValue);
         this.sellValueDirty = false;
+    }
+
+    private void subtractAccumulatedSellValue(double removedValue) {
+        if (removedValue <= 0.0) {
+            return;
+        }
+
+        double current;
+        double updated;
+        do {
+            current = accumulatedSellValue.get();
+            updated = Math.max(0.0, current - removedValue);
+        } while (!accumulatedSellValue.compareAndSet(current, updated));
     }
 
     /**
@@ -721,35 +762,22 @@ public class SpawnerData {
     }
 
     /**
-     * Adds items to virtual inventory and updates accumulated sell value
-     * This is the preferred method to add items to maintain accurate sell value cache
-     * THREAD-SAFE: Uses inventoryLock to ensure atomicity
-     * @param items Items to add
+     * Adds already-consolidated items to virtual inventory and updates accumulated sell value.
+     * THREAD-SAFE: Uses inventoryLock to ensure atomicity.
+     * @param items Items to add, keyed by the same signature used by VirtualInventory
      */
-    public void addItemsAndUpdateSellValue(List<ItemStack> items) {
+    public void addItemsAndUpdateSellValue(Map<ItemSignature, ? extends Number> items) {
         if (items == null || items.isEmpty()) {
             return;
         }
 
-        // CRITICAL: Acquire inventoryLock to ensure VirtualInventory remains source of truth
         inventoryLock.lock();
         try {
-            // Consolidate items being added for efficient price lookup
-            Map<VirtualInventory.ItemSignature, Long> itemsToAdd = new java.util.HashMap<>();
-            for (ItemStack item : items) {
-                if (item == null || item.getAmount() <= 0) continue;
-                // Use cached signature to avoid excessive cloning
-                VirtualInventory.ItemSignature sig = VirtualInventory.getSignature(item);
-                itemsToAdd.merge(sig, (long) item.getAmount(), (a, b) -> a + b);
-            }
-
-            // Add to VirtualInventory (source of truth) - this operation is atomic within the lock
             virtualInventory.addItems(items);
 
-            // Update sell value atomically
             if (!sellValueDirty) {
                 Map<String, Double> priceCache = createPriceCache();
-                incrementSellValue(itemsToAdd, priceCache);
+                incrementSellValue(items, priceCache);
             }
         } finally {
             inventoryLock.unlock();
@@ -767,13 +795,31 @@ public class SpawnerData {
             return true;
         }
 
-        // CRITICAL: Acquire inventoryLock to ensure VirtualInventory remains source of truth
+        Map<ItemSignature, Long> itemsToRemove = new java.util.HashMap<>();
+        for (ItemStack item : items) {
+            if (item == null || item.getAmount() <= 0) continue;
+            ItemSignature sig = VirtualInventory.getSignature(item);
+            itemsToRemove.merge(sig, (long) item.getAmount(), Long::sum);
+        }
+
+        return removeItemsAndUpdateSellValue(itemsToRemove);
+    }
+
+    /**
+     * Removes already-consolidated items from virtual inventory and updates accumulated sell value.
+     * THREAD-SAFE: Uses inventoryLock to ensure atomicity.
+     * @param items Items to remove, keyed by the same signature used by VirtualInventory
+     * @return true if items were removed successfully
+     */
+    public boolean removeItemsAndUpdateSellValue(Map<ItemSignature, ? extends Number> items) {
+        if (items == null || items.isEmpty()) {
+            return true;
+        }
+
         inventoryLock.lock();
         try {
-            // Remove from VirtualInventory (source of truth) - atomic operation within lock
             boolean removed = virtualInventory.removeItems(items);
 
-            // Update sell value atomically if removal was successful
             if (removed && !sellValueDirty) {
                 Map<String, Double> priceCache = createPriceCache();
                 decrementSellValue(items, priceCache);
@@ -785,13 +831,13 @@ public class SpawnerData {
         }
     }
 
-    public synchronized void storePreGeneratedLoot(List<ItemStack> items, long experience) {
+    public synchronized void storePreGeneratedLoot(Map<ItemSignature, Integer> items, long experience) {
         this.preGeneratedItems = items;
         this.preGeneratedExperience = experience;
     }
 
-    public synchronized List<ItemStack> getAndClearPreGeneratedItems() {
-        List<ItemStack> items = preGeneratedItems;
+    public synchronized Map<ItemSignature, Integer> getAndClearPreGeneratedItems() {
+        Map<ItemSignature, Integer> items = preGeneratedItems;
         preGeneratedItems = null;
         return items;
     }

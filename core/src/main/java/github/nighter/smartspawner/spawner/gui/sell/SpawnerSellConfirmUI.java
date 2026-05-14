@@ -1,5 +1,6 @@
 package github.nighter.smartspawner.spawner.gui.sell;
 
+import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import net.kyori.adventure.text.Component;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.language.LanguageManager;
@@ -164,7 +165,7 @@ public class SpawnerSellConfirmUI {
 
     private ItemStack createSpawnerInfoButton(Player player, SpawnerData spawner, Map<String, String> placeholders) {
         // Build loot item components for {loot_items} placeholder
-        Map<VirtualInventory.ItemSignature, Long> storedItems = spawner.getVirtualInventory().getConsolidatedItems();
+        Map<ItemSignature, Long> storedItems = spawner.getVirtualInventory().getConsolidatedItems();
         List<Component> lootComponents = buildSellInfoLootComponents(spawner, storedItems);
 
         // Prepare the meta modifier consumer
@@ -200,10 +201,10 @@ public class SpawnerSellConfirmUI {
         return spawnerItem;
     }
 
-    private List<Component> buildSellInfoLootComponents(SpawnerData spawner, Map<VirtualInventory.ItemSignature, Long> storedItems) {
+    private List<Component> buildSellInfoLootComponents(SpawnerData spawner, Map<ItemSignature, Long> storedItems) {
         Map<Material, Long> materialAmountMap = new HashMap<>();
-        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : storedItems.entrySet()) {
-            Material material = entry.getKey().getTemplateRef().getType();
+        for (Map.Entry<ItemSignature, Long> entry : storedItems.entrySet()) {
+            Material material = entry.getKey().getMaterial();
             materialAmountMap.merge(material, entry.getValue(), Long::sum);
         }
 
@@ -227,10 +228,10 @@ public class SpawnerSellConfirmUI {
                         "button_sell_info.loot_items", material, formattedAmount, chance));
             }
         } else {
-            List<Map.Entry<VirtualInventory.ItemSignature, Long>> sortedItems = new ArrayList<>(storedItems.entrySet());
+            List<Map.Entry<ItemSignature, Long>> sortedItems = new ArrayList<>(storedItems.entrySet());
             sortedItems.sort(Comparator.comparing(e -> e.getKey().getMaterialName()));
-            for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : sortedItems) {
-                Material material = entry.getKey().getTemplateRef().getType();
+            for (Map.Entry<ItemSignature, Long> entry : sortedItems) {
+                Material material = entry.getKey().getMaterial();
                 long amount = entry.getValue();
                 String formattedAmount = languageManager.formatNumber(amount);
                 components.add(languageManager.buildTranslatableGuiLootLine(

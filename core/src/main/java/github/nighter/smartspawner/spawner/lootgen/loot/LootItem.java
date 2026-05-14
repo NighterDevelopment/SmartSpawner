@@ -45,6 +45,10 @@ public record LootItem(Material material, int minAmount, int maxAmount, double c
         return random.nextInt(maxAmount - minAmount + 1) + minAmount;
     }
 
+    public double getAverageAmount() {
+        return (this.maxAmount + this.minAmount) / 2.0;
+    }
+
     public boolean isAvailable() {
         return material != null;
     }

@@ -7,15 +7,18 @@ import github.nighter.smartspawner.spawner.config.SpawnerMobHeadTexture;
 import github.nighter.smartspawner.spawner.gui.layout.GuiButton;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayout;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayoutConfig;
+import github.nighter.smartspawner.spawner.gui.storage.button.NavigationButtonCache;
+import github.nighter.smartspawner.spawner.gui.storage.button.SortButton;
 import github.nighter.smartspawner.spawner.lootgen.loot.EntityLootConfig;
 import github.nighter.smartspawner.spawner.lootgen.loot.LootItem;
+import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.Scheduler;
-import github.nighter.smartspawner.Scheduler.Task;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
-import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -24,7 +27,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class SpawnerStorageUI {
@@ -38,18 +40,10 @@ public class SpawnerStorageUI {
     // Precomputed buttons to avoid repeated creation
     private final Map<String, ItemStack> staticButtons;
 
-    // Lightweight caches with better eviction strategies
-    private final Map<String, ItemStack> navigationButtonCache;
-    private final Map<String, ItemStack> pageIndicatorCache;
-
-    // Cache expiry time reduced for more responsive updates
-    private static final int MAX_CACHE_SIZE = 100;
+    private final NavigationButtonCache navigationButtons;
     
     // Cache for title format to avoid repeated language lookups
     private String cachedStorageTitleFormat = null;
-
-    // Cleanup task to remove stale entries from caches
-    private Task cleanupTask;
 
     public SpawnerStorageUI(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -58,11 +52,10 @@ public class SpawnerStorageUI {
 
         // Initialize caches with appropriate initial capacity
         this.staticButtons = new HashMap<>(8);
-        this.navigationButtonCache = new ConcurrentHashMap<>(16);
-        this.pageIndicatorCache = new ConcurrentHashMap<>(16);
+        this.navigationButtons = new NavigationButtonCache(data -> createButton(data.material(), data.name(), data.lore()));
 
         initializeStaticButtons();
-        startCleanupTask();
+        initializeNavigationButtons();
     }
 
     public void reload() {
@@ -70,13 +63,14 @@ public class SpawnerStorageUI {
         this.layoutConfig = plugin.getGuiLayoutConfig();
 
         // Clear caches to force reloading of buttons
-        navigationButtonCache.clear();
-        pageIndicatorCache.clear();
         staticButtons.clear();
         cachedStorageTitleFormat = null;
 
         // Reinitialize static buttons
         initializeStaticButtons();
+
+        // Reinitialize navigation buttons
+        initializeNavigationButtons();
     }
 
     private void initializeStaticButtons() {
@@ -234,7 +228,7 @@ public class SpawnerStorageUI {
         }
 
         // Track both changes and slots that need to be emptied
-        Map<Integer, ItemStack> updates = new HashMap<>();
+        Int2ObjectMap<ItemStack> updates = new Int2ObjectOpenHashMap<>();
         Set<Integer> slotsToEmpty = new HashSet<>();
 
         // Clear storage area slots first
@@ -261,8 +255,8 @@ public class SpawnerStorageUI {
             }
         }
 
-        for (Map.Entry<Integer, ItemStack> entry : updates.entrySet()) {
-            inventory.setItem(entry.getKey(), entry.getValue());
+        for (Int2ObjectMap.Entry<ItemStack> entry : updates.int2ObjectEntrySet()) {
+            inventory.setItem(entry.getIntKey(), entry.getValue());
         }
 
         // Update hologram if enabled
@@ -284,34 +278,28 @@ public class SpawnerStorageUI {
         }
     }
 
-    private void addPageItems(Map<Integer, ItemStack> updates, Set<Integer> slotsToEmpty,
-                              SpawnerData spawner, int page) {
+    private void addPageItems(Map<Integer, ItemStack> updates, Set<Integer> slotsToEmpty, SpawnerData spawner, int page) {
         try {
-            // Get display items directly from VirtualInventory (source of truth)
+            // Read only the requested page instead of materializing the full logical inventory.
             VirtualInventory virtualInv = spawner.getVirtualInventory();
-            Map<Integer, ItemStack> displayItems = virtualInv.getDisplayInventory();
+            Int2ObjectMap<ItemStack> displayItems = virtualInv.getDisplayPage(page, StoragePageHolder.MAX_ITEMS_PER_PAGE);
 
             if (displayItems.isEmpty()) {
                 return;
             }
 
-            // Calculate start index for current page
-            int startIndex = (page - 1) * StoragePageHolder.MAX_ITEMS_PER_PAGE;
-
-            // Add items for this page
-            for (Map.Entry<Integer, ItemStack> entry : displayItems.entrySet()) {
-                int globalIndex = entry.getKey();
-
-                // Check if item belongs on this page
-                if (globalIndex >= startIndex && globalIndex < startIndex + StoragePageHolder.MAX_ITEMS_PER_PAGE) {
-                    int displaySlot = globalIndex - startIndex;
-                    updates.put(displaySlot, entry.getValue());
-                    slotsToEmpty.remove(displaySlot);
-                }
+            for (Int2ObjectMap.Entry<ItemStack> entry : displayItems.int2ObjectEntrySet()) {
+                int displaySlot = entry.getIntKey();
+                updates.put(displaySlot, entry.getValue());
+                slotsToEmpty.remove(displaySlot);
             }
         } finally {
             spawner.getInventoryLock().unlock();
         }
+    }
+
+    private void initializeNavigationButtons() {
+        navigationButtons.reload(layoutConfig.getCurrentStorageLayout(), languageManager);
     }
 
     private void addNavigationButtons(Map<Integer, ItemStack> updates, SpawnerData spawner, int page, int totalPages) {
@@ -346,23 +334,29 @@ public class SpawnerStorageUI {
             switch (action) {
                 case "previous_page":
                     if (page > 1) {
-                        String cacheKey = "prev-" + (page - 1);
-                        item = navigationButtonCache.computeIfAbsent(
-                                cacheKey, k -> createNavigationButton("previous", page - 1, button.getMaterial()));
+                        item = navigationButtons.getPreviousButton(page - 1);
                     }
                     break;
+
                 case "next_page":
                     if (page < totalPages) {
-                        String cacheKey = "next-" + (page + 1);
-                        item = navigationButtonCache.computeIfAbsent(
-                                cacheKey, k -> createNavigationButton("next", page + 1, button.getMaterial()));
+                        item = navigationButtons.getNextButton(page + 1);
                     }
                     break;
                 case "take_all":
                     item = staticButtons.get("takeAll");
                     break;
                 case "sort_items":
-                    item = createSortButton(spawner, button.getMaterial());
+                    item = SortButton.getOrBuildSortButton(
+                            spawner,
+                            button.getMaterial(),
+                            languageManager,
+                            data -> createButton(
+                                    data.material(),
+                                    data.name(),
+                                    data.lore()
+                            )
+                    );
                     break;
                 case "drop_page":
                     item = staticButtons.get("dropPage");
@@ -435,25 +429,6 @@ public class SpawnerStorageUI {
         return item;
     }
 
-    private ItemStack createNavigationButton(String type, int targetPage, Material material) {
-        Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("target_page", String.valueOf(targetPage));
-
-        String buttonName;
-        String buttonKey;
-
-        if (type.equals("previous")) {
-            buttonKey = "navigation_button_previous";
-        } else {
-            buttonKey = "navigation_button_next";
-        }
-
-        buttonName = languageManager.getGuiItemName(buttonKey + ".name", placeholders);
-        String[] buttonLore = languageManager.getGuiItemLore(buttonKey + ".lore", placeholders);
-
-        return createButton(material, buttonName, Arrays.asList(buttonLore));
-    }
-
     private ItemStack createSellButton(SpawnerData spawner, Material material) {
         // Create placeholders for total sell price
         Map<String, String> placeholders = new HashMap<>();
@@ -493,50 +468,8 @@ public class SpawnerStorageUI {
         return createButton(material, name, lore);
     }
 
-    private ItemStack createSortButton(SpawnerData spawner, Material material) {
-        Map<String, String> placeholders = new HashMap<>();
-
-        // Get current sort item
-        Material currentSort = spawner.getPreferredSortItem();
-
-        // Get format strings from configuration
-        String selectedItemFormat = languageManager.getGuiItemName("sort_items_button.selected_item");
-        String unselectedItemFormat = languageManager.getGuiItemName("sort_items_button.unselected_item");
-        String noneText = languageManager.getGuiItemName("sort_items_button.no_item");
-
-        // Get available items from spawner drops
-        StringBuilder availableItems = new StringBuilder();
-        if (spawner.getLootConfig() != null && spawner.getLootConfig().getAllItems() != null) {
-            boolean first = true;
-            var sortedLoot = spawner.getLootConfig().getAllItems().stream()
-                .sorted(Comparator.comparing(item -> item.material().name()))
-                .toList();
-
-            for (var lootItem : sortedLoot) {
-                if (!first) availableItems.append("\n");
-                String itemName = languageManager.getVanillaItemName(lootItem.material());
-                String format = currentSort == lootItem.material() ? selectedItemFormat : unselectedItemFormat;
-                
-                // Replace {item_name} placeholder in format string
-                String formattedItem = format.replace("{item_name}", itemName);
-                availableItems.append(formattedItem);
-                first = false;
-            }
-        }
-
-        if (availableItems.isEmpty()) {
-            availableItems.append(noneText);
-        }
-
-        placeholders.put("available_items", availableItems.toString());
-
-        String name = languageManager.getGuiItemName("sort_items_button.name", placeholders);
-        List<String> lore = languageManager.getGuiItemLoreWithMultilinePlaceholders("sort_items_button.lore", placeholders);
-        return createButton(material, name, lore);
-    }
-
     private ItemStack createStorageSpawnerInfoButton(SpawnerData spawner, Material material) {
-        Map<VirtualInventory.ItemSignature, Long> storedItems = spawner.getVirtualInventory().getConsolidatedItems();
+        Map<ItemSignature, Long> storedItems = spawner.getVirtualInventory().getConsolidatedItems();
         List<Component> lootComponents = buildStorageInfoLootComponents(spawner, storedItems);
 
         Map<String, String> placeholders = new HashMap<>();
@@ -588,10 +521,10 @@ public class SpawnerStorageUI {
     }
 
     private List<Component> buildStorageInfoLootComponents(SpawnerData spawner,
-            Map<VirtualInventory.ItemSignature, Long> storedItems) {
+            Map<ItemSignature, Long> storedItems) {
         Map<Material, Long> materialAmountMap = new HashMap<>();
-        for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : storedItems.entrySet()) {
-            Material mat = entry.getKey().getTemplateRef().getType();
+        for (Map.Entry<ItemSignature, Long> entry : storedItems.entrySet()) {
+            Material mat = entry.getKey().getMaterial();
             materialAmountMap.merge(mat, entry.getValue(), Long::sum);
         }
 
@@ -619,10 +552,10 @@ public class SpawnerStorageUI {
                         "storage_spawner_info_button.loot_items", mat, formattedAmount, chance));
             }
         } else {
-            List<Map.Entry<VirtualInventory.ItemSignature, Long>> sortedItems = new ArrayList<>(storedItems.entrySet());
+            List<Map.Entry<ItemSignature, Long>> sortedItems = new ArrayList<>(storedItems.entrySet());
             sortedItems.sort(Comparator.comparing(e -> e.getKey().getMaterialName()));
-            for (Map.Entry<VirtualInventory.ItemSignature, Long> entry : sortedItems) {
-                Material mat = entry.getKey().getTemplateRef().getType();
+            for (Map.Entry<ItemSignature, Long> entry : sortedItems) {
+                Material mat = entry.getKey().getMaterial();
                 long amount = entry.getValue();
                 String formattedAmount = languageManager.formatNumber(amount);
                 components.add(languageManager.buildTranslatableGuiLootLine(
@@ -632,46 +565,11 @@ public class SpawnerStorageUI {
         return components;
     }
 
-    private void startCleanupTask() {
-        cleanupTask = Scheduler.runTaskTimer(this::cleanupCaches, 20L * 30, 20L * 30); // Run every 30 seconds
-    }
-
-    public void cancelTasks() {
-        if (cleanupTask != null) {
-            cleanupTask.cancel();
-            cleanupTask = null;
-        }
-    }
-
-    private void cleanupCaches() {
-        // LRU-like cleanup for navigation buttons
-        if (navigationButtonCache.size() > MAX_CACHE_SIZE) {
-            int toRemove = navigationButtonCache.size() - (MAX_CACHE_SIZE / 2);
-            List<String> keysToRemove = new ArrayList<>(navigationButtonCache.keySet());
-            for (int i = 0; i < Math.min(toRemove, keysToRemove.size()); i++) {
-                navigationButtonCache.remove(keysToRemove.get(i));
-            }
-        }
-
-        // LRU-like cleanup for page indicators
-        if (pageIndicatorCache.size() > MAX_CACHE_SIZE) {
-            int toRemove = pageIndicatorCache.size() - (MAX_CACHE_SIZE / 2);
-            List<String> keysToRemove = new ArrayList<>(pageIndicatorCache.keySet());
-            for (int i = 0; i < Math.min(toRemove, keysToRemove.size()); i++) {
-                pageIndicatorCache.remove(keysToRemove.get(i));
-            }
-        }
-    }
-
     public void cleanup() {
-        navigationButtonCache.clear();
-        pageIndicatorCache.clear();
         cachedStorageTitleFormat = null;
-
-        // Cancel scheduled tasks
-        cancelTasks();
 
         // Re-initialize static buttons (just in case language has changed)
         initializeStaticButtons();
+        initializeNavigationButtons();
     }
 }

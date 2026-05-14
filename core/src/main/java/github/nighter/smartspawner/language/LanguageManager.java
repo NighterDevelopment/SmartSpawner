@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.language;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.utils.LRUCache;
 import lombok.Getter;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -17,7 +18,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.text.Normalizer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
