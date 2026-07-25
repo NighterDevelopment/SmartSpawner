@@ -27,6 +27,7 @@ Operators and players with the `*` wildcard permission (plus `worldguard.region.
 | [Residence](/docs/integrations/protections/residence) | `use` | `build` | `build` |
 | [RedProtect](/docs/integrations/protections/redprotect) | `chest` | `build` | Not checked |
 | [SimpleClaimSystem](/docs/integrations/protections/simpleclaimsystem) | `InteractBlocks` / `interact_spawner` | Same | `Destroy` / spawner perms |
+| [FactionsUUID](/docs/integrations/protections/factionsuuid) | `CONTAINER` | `BUILD` | `DESTROY` |
 
 Outside any region or claim, every action is allowed by default.
 

@@ -30,6 +30,7 @@ Floodgate and Geyser players receive a touch-friendly menu instead of a chest GU
 - [SimpleClaimSystem](/docs/integrations/protections/simpleclaimsystem)
 - [RedProtect](/docs/integrations/protections/redprotect)
 - [MinePlots](/docs/integrations/islands/mineplots)
+- ...and more!
 
 </FeatureCard>
 

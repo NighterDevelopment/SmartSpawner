@@ -23,6 +23,7 @@ Người chơi Floodgate và Geyser nhận menu thân thiện với cảm ứng 
 - [SimpleClaimSystem](/vi/docs/integrations/protections/simpleclaimsystem)
 - [RedProtect](/vi/docs/integrations/protections/redprotect)
 - [MinePlots](/vi/docs/integrations/islands/mineplots)
+- ...và thêm nữa!
 
 </FeatureCard>
 

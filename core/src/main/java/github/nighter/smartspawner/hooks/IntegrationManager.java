@@ -39,6 +39,7 @@ public class IntegrationManager {
     private boolean hasIridiumSkyblock = false;
     private boolean hasPlotSquared = false;
     private boolean hasResidence = false;
+    private boolean hasFactions = false;
 
     // Integration plugin flags
     private boolean hasAuraSkills = false;
@@ -169,6 +170,11 @@ public class IntegrationManager {
         hasResidence = checkPlugin("Residence", () -> {
             Plugin residence = Bukkit.getPluginManager().getPlugin("Residence");
             return residence != null && residence.isEnabled();
+        }, true);
+
+        hasFactions = checkPlugin("FactionsUUID", () -> {
+            Plugin factions = Bukkit.getPluginManager().getPlugin("FactionsUUID");
+            return factions != null && factions.isEnabled();
         }, true);
 
     }

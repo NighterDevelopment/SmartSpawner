@@ -86,6 +86,10 @@ dependencies:
       load: BEFORE
       required: false
       join-classpath: true
+    FactionsUUID:
+      load: BEFORE
+      required: false
+      join-classpath: true
     # World Management Plugins
     Multiverse-Core:
       load: BEFORE

@@ -29,6 +29,7 @@ softdepend:
   - minePlots
   - PlotSquared
   - Residence
+  - FactionsUUID
 
   # World Management Plugins
   - Multiverse-Core

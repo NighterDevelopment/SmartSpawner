@@ -91,6 +91,13 @@ allprojects {
             name = "william278Releases"
             url = uri("https://repo.william278.net/releases")
         }
+        maven {
+            name = "factionsuuid"
+            url = uri("https://dependency.download/releases")
+            content {
+                includeGroup("dev.kitteh")
+            }
+        }
     }
 }
 

@@ -8,7 +8,7 @@ title: Ma trận tương thích
 |---|---|---|
 | Giá cửa hàng | EconomyShopGUI, EconomyShopGUI Premium, ShopGUI+ | Đọc giá bán vật phẩm cho thao tác bán kho |
 | Kinh tế | Vault, ExcellentEconomy | Cộng giá trị bán cuối cùng vào số dư người chơi |
-| Region và claim | WorldGuard, GriefPrevention, Lands, Towny, SimpleClaimSystem, RedProtect, Residence | Kiểm tra quyền trước khi mở, xếp chồng hoặc phá |
+| Region và claim | WorldGuard, GriefPrevention, Lands, Towny, SimpleClaimSystem, RedProtect, Residence, FactionsUUID | Kiểm tra quyền trước khi mở, xếp chồng hoặc phá |
 | Plot và đảo | PlotSquared, minePlots, SuperiorSkyblock2, BentoBox, IridiumSkyblock | Tôn trọng quyền plot/đảo và quyền spawner tùy chỉnh |
 | Bedrock | floodgate, Geyser-Spigot | Phát hiện người chơi Bedrock và bật trải nghiệm FormUI |
 | Kỹ năng | AuraSkills | Trao XP kỹ năng đã cấu hình khi nhận kinh nghiệm spawner |

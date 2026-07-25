@@ -51,6 +51,7 @@ dependencies {
 
     compileOnly("io.lumine:Mythic-Dist:5.13.0")
     compileOnly("com.iridium:IridiumSkyblock:4.1.4")
+    compileOnly("dev.kitteh:factions:4.6.0")
 
     implementation(platform("com.intellectualsites.bom:bom-newest:1.56"))
     compileOnly("com.intellectualsites.plotsquared:plotsquared-core")
@@ -108,8 +109,7 @@ tasks.build {
     dependsOn(tasks.shadowJar)
 }
 
-// Run a real Paper server straight from the repo: ./gradlew :core:runServer
-// Server files (world, plugins, logs) live in the repo-root "run/" folder.
+
 tasks.runServer {
     minecraftVersion("1.21.11")
     runDirectory.set(rootProject.layout.projectDirectory.dir("run"))

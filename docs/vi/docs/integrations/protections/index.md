@@ -27,6 +27,7 @@ Operator và người chơi có quyền wildcard `*` (cùng với `worldguard.re
 | [Residence](/vi/docs/integrations/protections/residence) | `use` | `build` | `build` |
 | [RedProtect](/vi/docs/integrations/protections/redprotect) | `chest` | `build` | Không kiểm tra |
 | [SimpleClaimSystem](/vi/docs/integrations/protections/simpleclaimsystem) | `InteractBlocks` / `interact_spawner` | Như trên | `Destroy` / quyền phá |
+| [FactionsUUID](/vi/docs/integrations/protections/factionsuuid) | `CONTAINER` | `BUILD` | `DESTROY` |
 
 Bên ngoài mọi region hoặc claim, tất cả thao tác đều được cho phép mặc định.
 
