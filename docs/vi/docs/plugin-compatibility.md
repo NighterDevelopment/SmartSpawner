@@ -16,13 +16,13 @@ Người chơi Floodgate và Geyser nhận menu thân thiện với cảm ứng 
 
 <FeatureCard icon="ShieldCheck" title="Bảo Vệ">
 
-- WorldGuard
-- GriefPrevention
-- Lands
-- Towny Advanced
-- SimpleClaimSystem
-- RedProtect
-- MinePlots
+- [WorldGuard](/vi/docs/integrations/protections/worldguard)
+- [GriefPrevention](/vi/docs/integrations/protections/griefprevention)
+- [Lands](/vi/docs/integrations/protections/lands)
+- [Towny Advanced](/vi/docs/integrations/protections/towny)
+- [SimpleClaimSystem](/vi/docs/integrations/protections/simpleclaimsystem)
+- [RedProtect](/vi/docs/integrations/protections/redprotect)
+- [MinePlots](/vi/docs/integrations/islands/mineplots)
 
 </FeatureCard>
 
@@ -30,16 +30,16 @@ Người chơi Floodgate và Geyser nhận menu thân thiện với cảm ứng 
 
 - Multiverse-Core
 - Multiworld
-- SuperiorSkyblock2
-- BentoBox *(cần thiết lập, xem [tài liệu BentoBox](https://docs.bentobox.world))*
-- IridiumSkyblock
+- [SuperiorSkyblock2](/vi/docs/integrations/islands/superiorskyblock2)
+- [BentoBox](/vi/docs/integrations/islands/bentobox) *(cần thiết lập, xem [tài liệu BentoBox](https://docs.bentobox.world))*
+- [IridiumSkyblock](/vi/docs/integrations/islands/iridiumskyblock)
 
 </FeatureCard>
 
 <FeatureCard icon="Swords" title="RPG và Mob">
 
-- **AuraSkills**: XP từ spawner được tính vào kỹ năng
-- **MythicMobs**: Bảng vật phẩm mob tùy chỉnh
+- **[AuraSkills](/vi/docs/integrations/auraskills)**: XP từ spawner được tính vào kỹ năng
+- **[MythicMobs](/vi/docs/integrations/mythicmobs)**: Bảng vật phẩm mob tùy chỉnh
 
 </FeatureCard>
 

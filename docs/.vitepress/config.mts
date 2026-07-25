@@ -16,8 +16,11 @@ const enManualSidebar = [
   {
     text: 'Server Guide',
     items: [
+      { text: 'Plugin Compatibility', link: '/docs/plugin-compatibility' },
       { text: 'Commands', link: '/docs/commands' },
-      { text: 'Permissions', link: '/docs/permissions' }
+      { text: 'Permissions', link: '/docs/permissions' },
+      { text: 'Database Support', link: '/docs/database-support' },
+      { text: 'Action Logging', link: '/docs/action-logging' }
     ]
   },
   {
@@ -27,21 +30,6 @@ const enManualSidebar = [
       { text: 'Spawner Settings', link: '/docs/spawners-settings' },
       { text: 'Item Spawner Settings', link: '/docs/item-spawners-settings' },
       { text: 'GUI Layout', link: '/docs/gui-layout' }
-    ]
-  },
-  {
-    text: 'Features',
-    items: [
-      { text: 'Overview', link: '/docs/features/' },
-      { text: 'Spawner Types', link: '/docs/features/spawner-types' },
-      { text: 'Stacking System', link: '/docs/features/stacking-system' },
-      { text: 'GUI System', link: '/docs/features/gui-system' },
-      { text: 'Mineable Spawners', link: '/docs/features/mineable-spawners' },
-      { text: 'Shop Integration', link: '/docs/features/shop-integration' },
-      { text: 'Plugin Compatibility', link: '/docs/features/plugin-compatibility' },
-      { text: 'Visual Effects', link: '/docs/features/visual-effects' },
-      { text: 'Database Support', link: '/docs/features/database-support' },
-      { text: 'Action Logging', link: '/docs/features/action-logging' }
     ]
   },
   {
@@ -108,8 +96,11 @@ const viManualSidebar = [
   {
     text: 'Hướng dẫn máy chủ',
     items: [
+      { text: 'Tương thích plugin', link: '/vi/docs/plugin-compatibility' },
       { text: 'Lệnh', link: '/vi/docs/commands' },
-      { text: 'Quyền', link: '/vi/docs/permissions' }
+      { text: 'Quyền', link: '/vi/docs/permissions' },
+      { text: 'Hỗ trợ cơ sở dữ liệu', link: '/vi/docs/database-support' },
+      { text: 'Nhật ký thao tác', link: '/vi/docs/action-logging' }
     ]
   },
   {
@@ -119,21 +110,6 @@ const viManualSidebar = [
       { text: 'Thiết lập Spawner', link: '/vi/docs/spawners-settings' },
       { text: 'Thiết lập Item Spawner', link: '/vi/docs/item-spawners-settings' },
       { text: 'Bố cục GUI', link: '/vi/docs/gui-layout' }
-    ]
-  },
-  {
-    text: 'Tính năng',
-    items: [
-      { text: 'Tổng quan', link: '/vi/docs/features/' },
-      { text: 'Các loại Spawner', link: '/vi/docs/features/spawner-types' },
-      { text: 'Hệ thống xếp chồng', link: '/vi/docs/features/stacking-system' },
-      { text: 'Hệ thống GUI', link: '/vi/docs/features/gui-system' },
-      { text: 'Đào Spawner', link: '/vi/docs/features/mineable-spawners' },
-      { text: 'Tích hợp cửa hàng', link: '/vi/docs/features/shop-integration' },
-      { text: 'Tương thích plugin', link: '/vi/docs/features/plugin-compatibility' },
-      { text: 'Hiệu ứng trực quan', link: '/vi/docs/features/visual-effects' },
-      { text: 'Hỗ trợ cơ sở dữ liệu', link: '/vi/docs/features/database-support' },
-      { text: 'Nhật ký thao tác', link: '/vi/docs/features/action-logging' }
     ]
   },
   {
@@ -187,18 +163,48 @@ const viManualSidebar = [
   }
 ]
 
+const enFeaturesSidebar = [
+  {
+    text: 'Features',
+    items: [
+      { text: 'Overview', link: '/features/' },
+      { text: 'Spawner Types', link: '/features/spawner-types' },
+      { text: 'Stacking System', link: '/features/stacking-system' },
+      { text: 'GUI System', link: '/features/gui-system' },
+      { text: 'Mineable Spawners', link: '/features/mineable-spawners' },
+      { text: 'Shop Integration', link: '/features/shop-integration' },
+      { text: 'Visual Effects', link: '/features/visual-effects' }
+    ]
+  }
+]
+
+const viFeaturesSidebar = [
+  {
+    text: 'Tính năng',
+    items: [
+      { text: 'Tổng quan', link: '/vi/features/' },
+      { text: 'Các loại Spawner', link: '/vi/features/spawner-types' },
+      { text: 'Hệ thống xếp chồng', link: '/vi/features/stacking-system' },
+      { text: 'Hệ thống GUI', link: '/vi/features/gui-system' },
+      { text: 'Đào Spawner', link: '/vi/features/mineable-spawners' },
+      { text: 'Tích hợp cửa hàng', link: '/vi/features/shop-integration' },
+      { text: 'Hiệu ứng trực quan', link: '/vi/features/visual-effects' }
+    ]
+  }
+]
+
 const enDeveloperSidebar = [
   {
     text: 'Developer API',
     items: [
-      { text: 'Overview', link: '/docs/developer-api/' },
-      { text: 'Installation', link: '/docs/developer-api/installation' },
-      { text: 'API Creation', link: '/docs/developer-api/creation' },
-      { text: 'Data Access', link: '/docs/developer-api/data-access' },
-      { text: 'Events', link: '/docs/developer-api/events' },
-      { text: 'GUI Layout API', link: '/docs/developer-api/gui-layout' },
-      { text: 'Validation', link: '/docs/developer-api/validation' },
-      { text: 'Examples', link: '/docs/developer-api/examples' }
+      { text: 'Overview', link: '/developer-api/' },
+      { text: 'Installation', link: '/developer-api/installation' },
+      { text: 'API Creation', link: '/developer-api/creation' },
+      { text: 'Data Access', link: '/developer-api/data-access' },
+      { text: 'Events', link: '/developer-api/events' },
+      { text: 'GUI Layout API', link: '/developer-api/gui-layout' },
+      { text: 'Validation', link: '/developer-api/validation' },
+      { text: 'Examples', link: '/developer-api/examples' }
     ]
   }
 ]
@@ -207,26 +213,28 @@ const viDeveloperSidebar = [
   {
     text: 'API dành cho lập trình viên',
     items: [
-      { text: 'Tổng quan', link: '/vi/docs/developer-api/' },
-      { text: 'Cài đặt', link: '/vi/docs/developer-api/installation' },
-      { text: 'Khởi tạo API', link: '/vi/docs/developer-api/creation' },
-      { text: 'Truy cập dữ liệu', link: '/vi/docs/developer-api/data-access' },
-      { text: 'Sự kiện', link: '/vi/docs/developer-api/events' },
-      { text: 'API bố cục GUI', link: '/vi/docs/developer-api/gui-layout' },
-      { text: 'Kiểm tra', link: '/vi/docs/developer-api/validation' },
-      { text: 'Ví dụ', link: '/vi/docs/developer-api/examples' }
+      { text: 'Tổng quan', link: '/vi/developer-api/' },
+      { text: 'Cài đặt', link: '/vi/developer-api/installation' },
+      { text: 'Khởi tạo API', link: '/vi/developer-api/creation' },
+      { text: 'Truy cập dữ liệu', link: '/vi/developer-api/data-access' },
+      { text: 'Sự kiện', link: '/vi/developer-api/events' },
+      { text: 'API bố cục GUI', link: '/vi/developer-api/gui-layout' },
+      { text: 'Kiểm tra', link: '/vi/developer-api/validation' },
+      { text: 'Ví dụ', link: '/vi/developer-api/examples' }
     ]
   }
 ]
 
 const enSidebar = {
-  '/docs/developer-api/': enDeveloperSidebar,
+  '/developer-api/': enDeveloperSidebar,
+  '/features/': enFeaturesSidebar,
   '/docs/changelog': [{ text: 'Changelog', items: [{ text: 'Release History', link: '/docs/changelog' }] }],
   '/docs/': enManualSidebar
 }
 
 const viSidebar = {
-  '/vi/docs/developer-api/': viDeveloperSidebar,
+  '/vi/developer-api/': viDeveloperSidebar,
+  '/vi/features/': viFeaturesSidebar,
   '/vi/docs/changelog': [{ text: 'Nhật ký thay đổi', items: [{ text: 'Lịch sử phát hành', link: '/vi/docs/changelog' }] }],
   '/vi/docs/': viManualSidebar
 }
@@ -262,8 +270,9 @@ export default defineConfig({
       themeConfig: {
         nav: [
           { text: 'Home', link: '/', activeMatch: '^/$' },
-          { text: 'Docs', link: '/docs/', activeMatch: '^/docs/(?!developer-api|changelog)' },
-          { text: 'Developer API', link: '/docs/developer-api/', activeMatch: '^/docs/developer-api' },
+          { text: 'Docs', link: '/docs/', activeMatch: '^/docs/(?!changelog)' },
+          { text: 'Features', link: '/features/', activeMatch: '^/features/' },
+          { text: 'Developer API', link: '/developer-api/', activeMatch: '^/developer-api/' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],
@@ -296,8 +305,9 @@ export default defineConfig({
       themeConfig: {
         nav: [
           { text: 'Trang chủ', link: '/vi/', activeMatch: '^/vi/$' },
-          { text: 'Tài liệu', link: '/vi/docs/', activeMatch: '^/vi/docs/(?!developer-api|changelog)' },
-          { text: 'API lập trình', link: '/vi/docs/developer-api/', activeMatch: '^/vi/docs/developer-api' },
+          { text: 'Tài liệu', link: '/vi/docs/', activeMatch: '^/vi/docs/(?!changelog)' },
+          { text: 'Tính năng', link: '/vi/features/', activeMatch: '^/vi/features/' },
+          { text: 'API lập trình', link: '/vi/developer-api/', activeMatch: '^/vi/developer-api/' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],

@@ -30,7 +30,7 @@
 
 ## API
 
-For developers interested in integrating with SmartSpawner, visit the [Developer API Documentation](https://docs.smartspawner.site/docs/developer-api/).
+For developers interested in integrating with SmartSpawner, visit the [Developer API Documentation](https://docs.smartspawner.site/developer-api/).
 
 ## Building
 

@@ -16,7 +16,7 @@ SmartSpawner replaces mob-heavy farms with direct drop and experience generation
 
 <DocCard icon="Rocket" title="Installation" link="/docs/installation" desc="Install SmartSpawner and verify your first startup." />
 
-<DocCard icon="Sparkles" title="Features" link="/docs/features/" desc="See spawner types, stacking, storage, effects, and database support." />
+<DocCard icon="Sparkles" title="Features" link="/features/" desc="See spawner types, stacking, storage, effects, and database support." />
 
 <DocCard icon="Terminal" title="Commands" link="/docs/commands" desc="Reference every player and administrator command." />
 

@@ -18,10 +18,10 @@ hero:
 features:
   - title: Vật Phẩm Không Gây Lag
     details: Nhận chiến lợi phẩm mà không cần sinh mob.
-    link: /vi/docs/features/
+    link: /vi/features/
   - title: Xây Trang Trại Lớn Hơn
     details: Xếp chồng cả trang trại vào một block.
-    link: /vi/docs/features/stacking-system
+    link: /vi/features/stacking-system
   - title: Bán Chỉ Với Một Lần Nhấn
     details: Đổi toàn bộ vật phẩm đang lưu thành tiền ngay lập tức.
     link: /vi/docs/integrations/shops/
@@ -33,7 +33,7 @@ features:
     link: /vi/docs/integrations/bedrock-support
   - title: Tự Do Mở Rộng
     details: Mở rộng mọi thứ với Java API mã nguồn mở.
-    link: /vi/docs/developer-api/
+    link: /vi/developer-api/
 ---
 
 <UsageStats />

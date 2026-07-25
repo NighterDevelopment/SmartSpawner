@@ -16,7 +16,7 @@ SmartSpawner thay thế các trang trại sinh quá nhiều mob bằng cơ chế
 
 <DocCard icon="Rocket" title="Cài Đặt" link="/vi/docs/installation" desc="Cài SmartSpawner và kiểm tra lần khởi động đầu tiên." />
 
-<DocCard icon="Sparkles" title="Tính Năng" link="/vi/docs/features/" desc="Tìm hiểu loại spawner, xếp chồng, kho, hiệu ứng và cơ sở dữ liệu." />
+<DocCard icon="Sparkles" title="Tính Năng" link="/vi/features/" desc="Tìm hiểu loại spawner, xếp chồng, kho, hiệu ứng và cơ sở dữ liệu." />
 
 <DocCard icon="Terminal" title="Lệnh" link="/vi/docs/commands" desc="Tra cứu toàn bộ lệnh dành cho người chơi và quản trị viên." />
 

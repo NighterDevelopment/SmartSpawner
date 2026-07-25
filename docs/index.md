@@ -18,10 +18,10 @@ hero:
 features:
   - title: Drops Without the Lag
     details: Get the loot. Skip the mobs.
-    link: /docs/features/
+    link: /features/
   - title: Build Bigger
     details: Stack massive farms into one block.
-    link: /docs/features/stacking-system
+    link: /features/stacking-system
   - title: Sell in One Click
     details: Turn stored drops into money instantly.
     link: /docs/integrations/shops/
@@ -33,7 +33,7 @@ features:
     link: /docs/integrations/bedrock-support
   - title: Make It Yours
     details: Extend everything with the open Java API.
-    link: /docs/developer-api/
+    link: /developer-api/
 ---
 
 <UsageStats />

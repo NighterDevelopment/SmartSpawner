@@ -23,13 +23,13 @@ Floodgate and Geyser players receive a touch-friendly menu instead of a chest GU
 
 <FeatureCard icon="ShieldCheck" title="Protections">
 
-- WorldGuard
-- GriefPrevention
-- Lands
-- Towny Advanced
-- SimpleClaimSystem
-- RedProtect
-- MinePlots
+- [WorldGuard](/docs/integrations/protections/worldguard)
+- [GriefPrevention](/docs/integrations/protections/griefprevention)
+- [Lands](/docs/integrations/protections/lands)
+- [Towny Advanced](/docs/integrations/protections/towny)
+- [SimpleClaimSystem](/docs/integrations/protections/simpleclaimsystem)
+- [RedProtect](/docs/integrations/protections/redprotect)
+- [MinePlots](/docs/integrations/islands/mineplots)
 
 </FeatureCard>
 
@@ -37,16 +37,16 @@ Floodgate and Geyser players receive a touch-friendly menu instead of a chest GU
 
 - Multiverse-Core
 - Multiworld
-- SuperiorSkyblock2
-- BentoBox *(requires setup, see [BentoBox docs](https://docs.bentobox.world))*
-- IridiumSkyblock
+- [SuperiorSkyblock2](/docs/integrations/islands/superiorskyblock2)
+- [BentoBox](/docs/integrations/islands/bentobox) *(requires setup, see [BentoBox docs](https://docs.bentobox.world))*
+- [IridiumSkyblock](/docs/integrations/islands/iridiumskyblock)
 
 </FeatureCard>
 
 <FeatureCard icon="Swords" title="RPG and Mobs">
 
-- **AuraSkills**: XP from spawners counts toward skills
-- **MythicMobs**: Custom mob drop tables
+- **[AuraSkills](/docs/integrations/auraskills)**: XP from spawners counts toward skills
+- **[MythicMobs](/docs/integrations/mythicmobs)**: Custom mob drop tables
 
 </FeatureCard>
 
