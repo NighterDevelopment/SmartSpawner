@@ -27,4 +27,4 @@ Prices can also be defined manually in `item_prices.yml`.
 
 </CardGrid>
 
-See [Shops and Economy](/docs/integrations/shops-economy) for configuration, provider selection, and troubleshooting.
+See [Shops and Economy](/docs/integrations/shops/) for configuration, provider selection, and troubleshooting.

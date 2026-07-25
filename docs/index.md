@@ -24,10 +24,10 @@ features:
     link: /docs/features/stacking-system
   - title: Sell in One Click
     details: Turn stored drops into money instantly.
-    link: /docs/integrations/shops-economy
+    link: /docs/integrations/shops/
   - title: Claims Stay Protected
     details: Your region and island rules still apply.
-    link: /docs/integrations/protections-islands
+    link: /docs/integrations/protections/
   - title: Made for Bedrock
     details: Clean native forms, ready for mobile.
     link: /docs/integrations/bedrock-support

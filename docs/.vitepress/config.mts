@@ -21,7 +21,6 @@ const enManualSidebar = [
   },
   {
     text: 'Configuration',
-    collapsed: false,
     items: [
       { text: 'Main Config', link: '/docs/configuration' },
       { text: 'Spawner Settings', link: '/docs/spawners-settings' },
@@ -31,7 +30,6 @@ const enManualSidebar = [
   },
   {
     text: 'Features',
-    collapsed: true,
     items: [
       { text: 'Overview', link: '/docs/features/' },
       { text: 'Spawner Types', link: '/docs/features/spawner-types' },
@@ -47,12 +45,47 @@ const enManualSidebar = [
   },
   {
     text: 'Integrations',
-    collapsed: true,
     items: [
       { text: 'Overview', link: '/docs/integrations/' },
       { text: 'Compatibility Matrix', link: '/docs/integrations/compatibility-matrix' },
-      { text: 'Shops and Economy', link: '/docs/integrations/shops-economy' },
-      { text: 'Protections and Islands', link: '/docs/integrations/protections-islands' },
+      {
+        text: 'Shops and Economy',
+        collapsed: true,
+        items: [
+          { text: 'Overview', link: '/docs/integrations/shops/' },
+          { text: 'EconomyShopGUI', link: '/docs/integrations/shops/economyshopgui' },
+          { text: 'ShopGUI+', link: '/docs/integrations/shops/shopguiplus' },
+          { text: 'zShop', link: '/docs/integrations/shops/zshop' },
+          { text: 'Vault', link: '/docs/integrations/shops/vault' },
+          { text: 'ExcellentEconomy', link: '/docs/integrations/shops/excellenteconomy' }
+        ]
+      },
+      {
+        text: 'Protections and Claims',
+        collapsed: true,
+        items: [
+          { text: 'Overview', link: '/docs/integrations/protections/' },
+          { text: 'WorldGuard', link: '/docs/integrations/protections/worldguard' },
+          { text: 'GriefPrevention', link: '/docs/integrations/protections/griefprevention' },
+          { text: 'Lands', link: '/docs/integrations/protections/lands' },
+          { text: 'Towny', link: '/docs/integrations/protections/towny' },
+          { text: 'Residence', link: '/docs/integrations/protections/residence' },
+          { text: 'RedProtect', link: '/docs/integrations/protections/redprotect' },
+          { text: 'SimpleClaimSystem', link: '/docs/integrations/protections/simpleclaimsystem' }
+        ]
+      },
+      {
+        text: 'Islands and Plots',
+        collapsed: true,
+        items: [
+          { text: 'Overview', link: '/docs/integrations/islands/' },
+          { text: 'PlotSquared', link: '/docs/integrations/islands/plotsquared' },
+          { text: 'minePlots', link: '/docs/integrations/islands/mineplots' },
+          { text: 'SuperiorSkyblock2', link: '/docs/integrations/islands/superiorskyblock2' },
+          { text: 'BentoBox', link: '/docs/integrations/islands/bentobox' },
+          { text: 'IridiumSkyblock', link: '/docs/integrations/islands/iridiumskyblock' }
+        ]
+      },
       { text: 'Bedrock Support', link: '/docs/integrations/bedrock-support' },
       { text: 'AuraSkills', link: '/docs/integrations/auraskills' },
       { text: 'MythicMobs', link: '/docs/integrations/mythicmobs' },
@@ -79,7 +112,6 @@ const viManualSidebar = [
   },
   {
     text: 'Cấu hình',
-    collapsed: false,
     items: [
       { text: 'Cấu hình chính', link: '/vi/docs/configuration' },
       { text: 'Thiết lập Spawner', link: '/vi/docs/spawners-settings' },
@@ -89,7 +121,6 @@ const viManualSidebar = [
   },
   {
     text: 'Tính năng',
-    collapsed: true,
     items: [
       { text: 'Tổng quan', link: '/vi/docs/features/' },
       { text: 'Các loại Spawner', link: '/vi/docs/features/spawner-types' },
@@ -105,12 +136,47 @@ const viManualSidebar = [
   },
   {
     text: 'Tích hợp',
-    collapsed: true,
     items: [
       { text: 'Tổng quan', link: '/vi/docs/integrations/' },
       { text: 'Ma trận tương thích', link: '/vi/docs/integrations/compatibility-matrix' },
-      { text: 'Cửa hàng và kinh tế', link: '/vi/docs/integrations/shops-economy' },
-      { text: 'Bảo vệ và đảo', link: '/vi/docs/integrations/protections-islands' },
+      {
+        text: 'Cửa hàng và kinh tế',
+        collapsed: true,
+        items: [
+          { text: 'Tổng quan', link: '/vi/docs/integrations/shops/' },
+          { text: 'EconomyShopGUI', link: '/vi/docs/integrations/shops/economyshopgui' },
+          { text: 'ShopGUI+', link: '/vi/docs/integrations/shops/shopguiplus' },
+          { text: 'zShop', link: '/vi/docs/integrations/shops/zshop' },
+          { text: 'Vault', link: '/vi/docs/integrations/shops/vault' },
+          { text: 'ExcellentEconomy', link: '/vi/docs/integrations/shops/excellenteconomy' }
+        ]
+      },
+      {
+        text: 'Bảo vệ và claim',
+        collapsed: true,
+        items: [
+          { text: 'Tổng quan', link: '/vi/docs/integrations/protections/' },
+          { text: 'WorldGuard', link: '/vi/docs/integrations/protections/worldguard' },
+          { text: 'GriefPrevention', link: '/vi/docs/integrations/protections/griefprevention' },
+          { text: 'Lands', link: '/vi/docs/integrations/protections/lands' },
+          { text: 'Towny', link: '/vi/docs/integrations/protections/towny' },
+          { text: 'Residence', link: '/vi/docs/integrations/protections/residence' },
+          { text: 'RedProtect', link: '/vi/docs/integrations/protections/redprotect' },
+          { text: 'SimpleClaimSystem', link: '/vi/docs/integrations/protections/simpleclaimsystem' }
+        ]
+      },
+      {
+        text: 'Đảo và plot',
+        collapsed: true,
+        items: [
+          { text: 'Tổng quan', link: '/vi/docs/integrations/islands/' },
+          { text: 'PlotSquared', link: '/vi/docs/integrations/islands/plotsquared' },
+          { text: 'minePlots', link: '/vi/docs/integrations/islands/mineplots' },
+          { text: 'SuperiorSkyblock2', link: '/vi/docs/integrations/islands/superiorskyblock2' },
+          { text: 'BentoBox', link: '/vi/docs/integrations/islands/bentobox' },
+          { text: 'IridiumSkyblock', link: '/vi/docs/integrations/islands/iridiumskyblock' }
+        ]
+      },
       { text: 'Hỗ trợ Bedrock', link: '/vi/docs/integrations/bedrock-support' },
       { text: 'AuraSkills', link: '/vi/docs/integrations/auraskills' },
       { text: 'MythicMobs', link: '/vi/docs/integrations/mythicmobs' },

@@ -10,9 +10,11 @@ SmartSpawner phát hiện plugin tùy chọn khi khởi động và chỉ bật 
 
 <DocCard icon="List" title="Ma Trận Tương Thích" link="/vi/docs/integrations/compatibility-matrix" desc="Xem mọi plugin hỗ trợ và chức năng từng hook cung cấp." />
 
-<DocCard icon="ShoppingCart" title="Cửa Hàng và Kinh Tế" link="/vi/docs/integrations/shops-economy" desc="Kết nối nguồn giá và backend tiền tệ." />
+<DocCard icon="ShoppingCart" title="Cửa Hàng và Kinh Tế" link="/vi/docs/integrations/shops/" desc="Kết nối nguồn giá và backend tiền tệ, mỗi plugin một trang." />
 
-<DocCard icon="ShieldCheck" title="Bảo Vệ và Đảo" link="/vi/docs/integrations/protections-islands" desc="Tôn trọng claim, region, plot và quyền trên đảo." />
+<DocCard icon="ShieldCheck" title="Bảo Vệ và Claim" link="/vi/docs/integrations/protections/" desc="Flag region và claim cho mở, xếp chồng và phá." />
+
+<DocCard icon="Home" title="Đảo và Plot" link="/vi/docs/integrations/islands/" desc="Quyền plot và đảo cho các thao tác spawner." />
 
 <DocCard icon="Gamepad2" title="Hỗ Trợ Bedrock" link="/vi/docs/integrations/bedrock-support" desc="Hiển thị form native cho người chơi được Floodgate phát hiện." />
 

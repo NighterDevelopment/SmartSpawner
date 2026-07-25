@@ -27,4 +27,4 @@ Giá cũng có thể được đặt thủ công trong `item_prices.yml`.
 
 </CardGrid>
 
-Xem [Cửa hàng và Kinh tế](/vi/docs/integrations/shops-economy) để biết cách cấu hình, chọn provider và khắc phục sự cố.
+Xem [Cửa hàng và Kinh tế](/vi/docs/integrations/shops/) để biết cách cấu hình, chọn provider và khắc phục sự cố.

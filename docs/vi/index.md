@@ -24,10 +24,10 @@ features:
     link: /vi/docs/features/stacking-system
   - title: Bán Chỉ Với Một Lần Nhấn
     details: Đổi toàn bộ vật phẩm đang lưu thành tiền ngay lập tức.
-    link: /vi/docs/integrations/shops-economy
+    link: /vi/docs/integrations/shops/
   - title: Khu Vực Luôn Được Bảo Vệ
     details: Quy tắc vùng và đảo hiện có vẫn được áp dụng.
-    link: /vi/docs/integrations/protections-islands
+    link: /vi/docs/integrations/protections/
   - title: Tối Ưu Cho Bedrock
     details: Form native gọn gàng, phù hợp thiết bị di động.
     link: /vi/docs/integrations/bedrock-support

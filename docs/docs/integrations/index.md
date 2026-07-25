@@ -10,9 +10,11 @@ SmartSpawner detects optional plugins at startup and enables only the integratio
 
 <DocCard icon="List" title="Compatibility Matrix" link="/docs/integrations/compatibility-matrix" desc="See every supported plugin and what each hook provides." />
 
-<DocCard icon="ShoppingCart" title="Shops and Economy" link="/docs/integrations/shops-economy" desc="Connect price sources and currency backends." />
+<DocCard icon="ShoppingCart" title="Shops and Economy" link="/docs/integrations/shops/" desc="Connect price sources and currency backends, one page per plugin." />
 
-<DocCard icon="ShieldCheck" title="Protections and Islands" link="/docs/integrations/protections-islands" desc="Respect claims, regions, plots, and island permissions." />
+<DocCard icon="ShieldCheck" title="Protections and Claims" link="/docs/integrations/protections/" desc="Region and claim flags for opening, stacking, and breaking." />
+
+<DocCard icon="Home" title="Islands and Plots" link="/docs/integrations/islands/" desc="Plot and island permissions for spawner actions." />
 
 <DocCard icon="Gamepad2" title="Bedrock Support" link="/docs/integrations/bedrock-support" desc="Serve native forms to players detected by Floodgate." />
 
