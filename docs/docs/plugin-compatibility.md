@@ -21,7 +21,7 @@ Floodgate and Geyser players receive a touch-friendly menu instead of a chest GU
 
 <CardGrid>
 
-<FeatureCard icon="ShieldCheck" title="Protections">
+<FeatureCard icon="ShieldCheck" title="Protections and Claims">
 
 - [WorldGuard](/docs/integrations/protections/worldguard)
 - [GriefPrevention](/docs/integrations/protections/griefprevention)
@@ -29,18 +29,36 @@ Floodgate and Geyser players receive a touch-friendly menu instead of a chest GU
 - [Towny Advanced](/docs/integrations/protections/towny)
 - [SimpleClaimSystem](/docs/integrations/protections/simpleclaimsystem)
 - [RedProtect](/docs/integrations/protections/redprotect)
-- [MinePlots](/docs/integrations/islands/mineplots)
-- ...and more!
+- [Residence](/docs/integrations/protections/residence)
+- [FactionsUUID](/docs/integrations/protections/factionsuuid)
+
+</FeatureCard>
+
+<FeatureCard icon="Home" title="Islands and Plots">
+
+- [PlotSquared](/docs/integrations/islands/plotsquared)
+- [minePlots](/docs/integrations/islands/mineplots)
+- [SuperiorSkyblock2](/docs/integrations/islands/superiorskyblock2)
+- [BentoBox](/docs/integrations/islands/bentobox) *(requires setup, see [BentoBox docs](https://docs.bentobox.world))*
+- [IridiumSkyblock](/docs/integrations/islands/iridiumskyblock)
+
+</FeatureCard>
+
+<FeatureCard icon="ShoppingCart" title="Shops and Economy">
+
+- [EconomyShopGUI](/docs/integrations/shops/economyshopgui) *(free and Premium)*
+- [ShopGUI+](/docs/integrations/shops/shopguiplus)
+- [zShop](/docs/integrations/shops/zshop)
+- [Vault](/docs/integrations/shops/vault)
+- [ExcellentEconomy](/docs/integrations/shops/excellenteconomy)
 
 </FeatureCard>
 
 <FeatureCard icon="Globe2" title="World Management">
 
 - Multiverse-Core
-- Multiworld
-- [SuperiorSkyblock2](/docs/integrations/islands/superiorskyblock2)
-- [BentoBox](/docs/integrations/islands/bentobox) *(requires setup, see [BentoBox docs](https://docs.bentobox.world))*
-- [IridiumSkyblock](/docs/integrations/islands/iridiumskyblock)
+- MultiWorld
+- Worlds
 
 </FeatureCard>
 
@@ -62,5 +80,3 @@ These plugins can override spawner behavior and clash with SmartSpawner. If they
 | WildStacker | Set `spawners: enabled:` to `false` in its `config.yml`. |
 | RoseStacker | Set `stacking-enabled:` to `false` in its `config.yml`. |
 | SpawnerMeta | Remove or disable it. It overrides SmartSpawner features. |
-
-See the [complete compatibility matrix](/docs/integrations/compatibility-matrix) for supported operations and setup notes.

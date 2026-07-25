@@ -7,7 +7,7 @@ title: Integration Troubleshooting
 ## The integration is not detected
 
 1. Confirm the optional plugin is enabled with `/plugins`.
-2. Check that its plugin identifier matches the name in the [compatibility matrix](/docs/integrations/compatibility-matrix).
+2. Check that its plugin identifier matches the name in [Plugin Compatibility](/docs/plugin-compatibility).
 3. Restart the server instead of using Bukkit `/reload`.
 4. Search the startup log for `integration enabled successfully` or the provider-specific warning.
 

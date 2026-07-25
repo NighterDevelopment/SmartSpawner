@@ -8,8 +8,6 @@ SmartSpawner detects optional plugins at startup and enables only the integratio
 
 <CardGrid>
 
-<DocCard icon="List" title="Compatibility Matrix" link="/docs/integrations/compatibility-matrix" desc="See every supported plugin and what each hook provides." />
-
 <DocCard icon="ShoppingCart" title="Shops and Economy" link="/docs/integrations/shops/" desc="Connect price sources and currency backends, one page per plugin." />
 
 <DocCard icon="ShieldCheck" title="Protections and Claims" link="/docs/integrations/protections/" desc="Region and claim flags for opening, stacking, and breaking." />

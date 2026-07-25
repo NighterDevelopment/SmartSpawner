@@ -36,7 +36,6 @@ const enManualSidebar = [
     text: 'Integrations',
     items: [
       { text: 'Overview', link: '/docs/integrations/' },
-      { text: 'Compatibility Matrix', link: '/docs/integrations/compatibility-matrix' },
       {
         text: 'Shops and Economy',
         collapsed: true,
@@ -60,7 +59,8 @@ const enManualSidebar = [
           { text: 'Towny', link: '/docs/integrations/protections/towny' },
           { text: 'Residence', link: '/docs/integrations/protections/residence' },
           { text: 'RedProtect', link: '/docs/integrations/protections/redprotect' },
-          { text: 'SimpleClaimSystem', link: '/docs/integrations/protections/simpleclaimsystem' }
+          { text: 'SimpleClaimSystem', link: '/docs/integrations/protections/simpleclaimsystem' },
+          { text: 'FactionsUUID', link: '/docs/integrations/protections/factionsuuid' }
         ]
       },
       {
@@ -116,7 +116,6 @@ const viManualSidebar = [
     text: 'Tích hợp',
     items: [
       { text: 'Tổng quan', link: '/vi/docs/integrations/' },
-      { text: 'Ma trận tương thích', link: '/vi/docs/integrations/compatibility-matrix' },
       {
         text: 'Cửa hàng và kinh tế',
         collapsed: true,
@@ -140,7 +139,8 @@ const viManualSidebar = [
           { text: 'Towny', link: '/vi/docs/integrations/protections/towny' },
           { text: 'Residence', link: '/vi/docs/integrations/protections/residence' },
           { text: 'RedProtect', link: '/vi/docs/integrations/protections/redprotect' },
-          { text: 'SimpleClaimSystem', link: '/vi/docs/integrations/protections/simpleclaimsystem' }
+          { text: 'SimpleClaimSystem', link: '/vi/docs/integrations/protections/simpleclaimsystem' },
+          { text: 'FactionsUUID', link: '/vi/docs/integrations/protections/factionsuuid' }
         ]
       },
       {

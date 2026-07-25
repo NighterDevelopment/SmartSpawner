@@ -14,7 +14,7 @@ Người chơi Floodgate và Geyser nhận menu thân thiện với cảm ứng 
 
 <CardGrid>
 
-<FeatureCard icon="ShieldCheck" title="Bảo Vệ">
+<FeatureCard icon="ShieldCheck" title="Bảo Vệ và Claim">
 
 - [WorldGuard](/vi/docs/integrations/protections/worldguard)
 - [GriefPrevention](/vi/docs/integrations/protections/griefprevention)
@@ -22,18 +22,36 @@ Người chơi Floodgate và Geyser nhận menu thân thiện với cảm ứng 
 - [Towny Advanced](/vi/docs/integrations/protections/towny)
 - [SimpleClaimSystem](/vi/docs/integrations/protections/simpleclaimsystem)
 - [RedProtect](/vi/docs/integrations/protections/redprotect)
-- [MinePlots](/vi/docs/integrations/islands/mineplots)
-- ...và thêm nữa!
+- [Residence](/vi/docs/integrations/protections/residence)
+- [FactionsUUID](/vi/docs/integrations/protections/factionsuuid)
+
+</FeatureCard>
+
+<FeatureCard icon="Home" title="Đảo và Plot">
+
+- [PlotSquared](/vi/docs/integrations/islands/plotsquared)
+- [minePlots](/vi/docs/integrations/islands/mineplots)
+- [SuperiorSkyblock2](/vi/docs/integrations/islands/superiorskyblock2)
+- [BentoBox](/vi/docs/integrations/islands/bentobox) *(cần thiết lập, xem [tài liệu BentoBox](https://docs.bentobox.world))*
+- [IridiumSkyblock](/vi/docs/integrations/islands/iridiumskyblock)
+
+</FeatureCard>
+
+<FeatureCard icon="ShoppingCart" title="Cửa Hàng và Kinh Tế">
+
+- [EconomyShopGUI](/vi/docs/integrations/shops/economyshopgui) *(bản free và Premium)*
+- [ShopGUI+](/vi/docs/integrations/shops/shopguiplus)
+- [zShop](/vi/docs/integrations/shops/zshop)
+- [Vault](/vi/docs/integrations/shops/vault)
+- [ExcellentEconomy](/vi/docs/integrations/shops/excellenteconomy)
 
 </FeatureCard>
 
 <FeatureCard icon="Globe2" title="Quản Lý Thế Giới">
 
 - Multiverse-Core
-- Multiworld
-- [SuperiorSkyblock2](/vi/docs/integrations/islands/superiorskyblock2)
-- [BentoBox](/vi/docs/integrations/islands/bentobox) *(cần thiết lập, xem [tài liệu BentoBox](https://docs.bentobox.world))*
-- [IridiumSkyblock](/vi/docs/integrations/islands/iridiumskyblock)
+- MultiWorld
+- Worlds
 
 </FeatureCard>
 
@@ -55,5 +73,3 @@ Các plugin sau có thể ghi đè hành vi spawner và xung đột với SmartS
 | WildStacker | Đặt `spawners: enabled:` thành `false` trong `config.yml` của nó. |
 | RoseStacker | Đặt `stacking-enabled:` thành `false` trong `config.yml` của nó. |
 | SpawnerMeta | Gỡ hoặc tắt plugin. Nó ghi đè các tính năng của SmartSpawner. |
-
-Xem [ma trận tương thích đầy đủ](/vi/docs/integrations/compatibility-matrix) để biết thao tác hỗ trợ và lưu ý thiết lập.

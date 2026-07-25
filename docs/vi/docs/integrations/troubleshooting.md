@@ -7,7 +7,7 @@ title: Khắc phục sự cố tích hợp
 ## Không Phát Hiện Tích Hợp
 
 1. Xác nhận plugin tùy chọn đang bật bằng `/plugins`.
-2. Kiểm tra định danh plugin khớp tên trong [ma trận tương thích](/vi/docs/integrations/compatibility-matrix).
+2. Kiểm tra định danh plugin khớp tên trong [Tương thích plugin](/vi/docs/plugin-compatibility).
 3. Khởi động lại máy chủ thay vì dùng Bukkit `/reload`.
 4. Tìm `integration enabled successfully` hoặc cảnh báo provider trong log khởi động.
 
