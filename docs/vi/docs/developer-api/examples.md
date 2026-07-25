@@ -83,7 +83,7 @@ public class SpawnerCommand implements CommandExecutor {
         }
 
         player.sendMessage("§6ID: §f" + spawner.getSpawnerId());
-        player.sendMessage("§6Entity: §f" + spawner.getEntityType());
+        player.sendMessage("§6Mob: §f" + spawner.getEntityType());
         player.sendMessage("§6Stack: §f" + spawner.getStackSize() + " (read-only)");
 
         if (args.length > 0 && args[0].equalsIgnoreCase("upgrade")) {

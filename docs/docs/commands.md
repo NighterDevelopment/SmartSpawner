@@ -22,7 +22,7 @@ All commands require `smartspawner.command.use` as a base permission, plus the s
 Give Smart Spawners to a player.
 <ul>
 <li><code>&lt;player&gt;</code>: Target player or selector (<code>@p</code>, <code>@a</code>, etc.)</li>
-<li><code>&lt;type&gt;</code>: Entity type (e.g. <code>zombie</code>, <code>skeleton</code>, <code>blaze</code>)</li>
+<li><code>&lt;type&gt;</code>: Mob type (e.g. <code>zombie</code>, <code>skeleton</code>, <code>blaze</code>)</li>
 <li><code>[amount]</code>: Optional quantity 1–6400, default: 1</li>
 </ul>
 </CommandRow>
@@ -87,7 +87,7 @@ View or change the active GUI layout. Tab-completes layout names from the <code>
 
 <CommandRow :commands="['/ss clear holograms', '/ss clear ghost_spawners']" permission="smartspawner.command.clear">
 <ul>
-<li><code>holograms</code>: Remove all SmartSpawner hologram entities from the server. Use this to clean up stuck or glitched holograms after a crash or chunk issue.</li>
+<li><code>holograms</code>: Remove all SmartSpawner holograms from the server. Use this to clean up stuck or glitched holograms after a crash or chunk issue.</li>
 <li><code>ghost_spawners</code>: Detect and remove database entries for spawners that no longer have a physical block at their stored location.</li>
 </ul>
 </CommandRow>

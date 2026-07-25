@@ -69,7 +69,7 @@ Allows changing the active GUI layout with <code>/ss gui_layout</code>.
 <BaseTable :columns="['Permission', 'Description', 'Default']" grid="2fr 3fr 0.6fr">
 
 <PermRow permission="smartspawner.changetype" defaultVal="op">
-Allows players to change a spawner's entity type by right-clicking it with a spawn egg.
+Allows players to change a spawner's mob type by right-clicking it with a spawn egg.
 </PermRow>
 
 <PermRow permission="smartspawner.stack" defaultVal="true">

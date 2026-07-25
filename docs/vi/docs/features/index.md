@@ -5,7 +5,7 @@ description: Khám phá vật phẩm ảo, kho, xếp chồng, quản trị, gia
 
 # Tính Năng
 
-SmartSpawner thay thế những trang trại nặng thực thể bằng quy trình nhanh, điều khiển qua GUI. Người chơi quản lý stack, vật phẩm lưu trữ và kinh nghiệm trong game, trong khi nhân viên vẫn có quyền kiểm soát toàn máy chủ.
+SmartSpawner thay thế những trang trại sinh quá nhiều mob bằng quy trình nhanh, điều khiển qua GUI. Người chơi quản lý stack, vật phẩm lưu trữ và kinh nghiệm trong game, trong khi nhân viên vẫn có quyền kiểm soát toàn máy chủ.
 
 Các ảnh dưới đây đến từ [gallery SmartSpawner hiện tại trên Modrinth](https://modrinth.com/plugin/smartspawner/gallery).
 

@@ -4,7 +4,7 @@ title: AuraSkills
 
 # AuraSkills
 
-Khi cài AuraSkills, SmartSpawner tạo `plugins/SmartSpawner/auraskills.yml`. Mỗi entity có thể ánh xạ kinh nghiệm nhận từ spawner sang một kỹ năng và tỷ lệ:
+Khi cài AuraSkills, SmartSpawner tạo `plugins/SmartSpawner/auraskills.yml`. Mỗi mob có thể ánh xạ kinh nghiệm nhận từ spawner sang một kỹ năng và tỷ lệ:
 
 ```yaml
 enabled: true
@@ -18,6 +18,6 @@ entity_skills:
     ratio: 0.3
 ```
 
-Nếu zombie spawner chứa 100 kinh nghiệm và tỷ lệ là `0.5`, người chơi nhận 50 Fighting XP. Entity chưa ánh xạ sẽ không trao AuraSkills XP.
+Nếu zombie spawner chứa 100 kinh nghiệm và tỷ lệ là `0.5`, người chơi nhận 50 Fighting XP. Mob chưa ánh xạ sẽ không trao AuraSkills XP.
 
 Tên kỹ năng hỗ trợ gồm `FIGHTING`, `FARMING`, `MINING`, `FORAGING`, `FISHING`, `EXCAVATION`, `ARCHERY`, `DEFENSE`, `ENDURANCE`, `AGILITY`, `ALCHEMY`, `ENCHANTING`, `SORCERY`, `HEALING` và `FORGING`.

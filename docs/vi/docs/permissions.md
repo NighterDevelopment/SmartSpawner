@@ -37,7 +37,7 @@ SmartSpawner dùng hệ thống quyền nhiều lớp. Nhấp vào node quyền 
 <BaseTable :columns="['Quyền', 'Mô tả', 'Mặc định']" grid="2fr 3fr 0.6fr">
 
 <PermRow permission="smartspawner.changetype" defaultVal="op">
-Cho phép đổi loại entity của spawner bằng cách nhấp phải với spawn egg.
+Cho phép đổi loại mob của spawner bằng cách nhấp phải với spawn egg.
 </PermRow>
 
 <PermRow permission="smartspawner.stack" defaultVal="true">

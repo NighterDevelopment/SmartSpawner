@@ -1,6 +1,6 @@
 # SmartSpawner Documentation
 
-SmartSpawner replaces entity-heavy mob farms with direct drop and experience generation. Players manage stacks, storage, filters, selling, and upgrades from an in-game interface while server owners retain control over every rate and integration.
+SmartSpawner replaces mob-heavy farms with direct drop and experience generation. Players manage stacks, storage, filters, selling, and upgrades from an in-game interface while server owners retain control over every rate and integration.
 
 <img
   class="docs-brand-banner"
@@ -32,7 +32,7 @@ SmartSpawner replaces entity-heavy mob farms with direct drop and experience gen
 
 <CardGrid>
 
-<FeatureCard icon="Zap" title="No Entity Load">
+<FeatureCard icon="Zap" title="No Mob Load">
 Drops are calculated directly instead of ticking spawned mobs. Large farms stay responsive without changing the player progression loop.
 </FeatureCard>
 

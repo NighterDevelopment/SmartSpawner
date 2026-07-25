@@ -54,7 +54,7 @@ SpawnerDataDTO spawnerData = api.getSpawnerByLocation(block.getLocation());
 
 if (spawnerData != null) {
     player.sendMessage("ID: " + spawnerData.getSpawnerId());
-    player.sendMessage("Entity: " + spawnerData.getEntityType());
+    player.sendMessage("Mob: " + spawnerData.getEntityType());
     player.sendMessage("Stack: " + spawnerData.getStackSize());
     player.sendMessage("Delay: " + spawnerData.getBaseSpawnerDelay() + " ticks");
 }

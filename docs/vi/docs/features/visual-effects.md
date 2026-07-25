@@ -4,7 +4,7 @@ title: Hiệu ứng trực quan
 
 # Hiệu Ứng Trực Quan
 
-Cung cấp phản hồi hữu ích cho người chơi mà không cần thêm thực thể mob thật.
+Cung cấp phản hồi hữu ích cho người chơi mà không cần sinh mob thật.
 
 <CardGrid>
 

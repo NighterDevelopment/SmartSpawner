@@ -22,7 +22,7 @@ Mọi lệnh cần quyền gốc `smartspawner.command.use` cùng node cụ th�
 Trao Smart Spawner cho người chơi.
 <ul>
 <li><code>&lt;player&gt;</code>: Người chơi đích hoặc selector (<code>@p</code>, <code>@a</code>, v.v.)</li>
-<li><code>&lt;type&gt;</code>: Loại entity, ví dụ <code>zombie</code>, <code>skeleton</code>, <code>blaze</code></li>
+<li><code>&lt;type&gt;</code>: Loại mob, ví dụ <code>zombie</code>, <code>skeleton</code>, <code>blaze</code></li>
 <li><code>[amount]</code>: Số lượng tùy chọn từ 1–6400, mặc định 1</li>
 </ul>
 </CommandRow>
@@ -87,7 +87,7 @@ Xem hoặc đổi bố cục GUI đang dùng. Tab-complete tên layout từ thư
 
 <CommandRow :commands="['/ss clear holograms', '/ss clear ghost_spawners']" permission="smartspawner.command.clear">
 <ul>
-<li><code>holograms</code>: Xóa mọi entity hologram SmartSpawner. Dùng để dọn hologram bị kẹt sau crash hoặc lỗi chunk.</li>
+<li><code>holograms</code>: Xóa mọi hologram SmartSpawner. Dùng để dọn hologram bị kẹt sau crash hoặc lỗi chunk.</li>
 <li><code>ghost_spawners</code>: Phát hiện và xóa bản ghi cơ sở dữ liệu của spawner không còn block thật tại vị trí đã lưu.</li>
 </ul>
 </CommandRow>

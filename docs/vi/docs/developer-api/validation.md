@@ -9,7 +9,7 @@ Các phương thức xác định và đọc vật phẩm spawner.
 | `isSmartSpawner(ItemStack)` | Kiểm tra Smart Spawner | `boolean` |
 | `isVanillaSpawner(ItemStack)` | Kiểm tra vanilla spawner | `boolean` |
 | `isItemSpawner(ItemStack)` | Kiểm tra item spawner | `boolean` |
-| `getSpawnerEntityType(ItemStack)` | Lấy entity từ bất kỳ spawner nào | `EntityType` |
+| `getSpawnerEntityType(ItemStack)` | Lấy loại mob từ bất kỳ spawner nào | `EntityType` |
 | `getItemSpawnerMaterial(ItemStack)` | Lấy material từ item spawner | `Material` |
 
 ## Ví Dụ
@@ -32,7 +32,7 @@ public void onPlayerInteract(PlayerInteractEvent event) {
 }
 ```
 
-### Lấy Entity Type
+### Lấy Loại Mob
 
 ```java
 EntityType type = api.getSpawnerEntityType(player.getItemInHand());

@@ -9,7 +9,7 @@ Methods for identifying and inspecting spawner items.
 | `isSmartSpawner(ItemStack)` | Check if item is a Smart Spawner | `boolean` |
 | `isVanillaSpawner(ItemStack)` | Check if item is a vanilla spawner | `boolean` |
 | `isItemSpawner(ItemStack)` | Check if item is an item spawner | `boolean` |
-| `getSpawnerEntityType(ItemStack)` | Get the entity type from any spawner | `EntityType` |
+| `getSpawnerEntityType(ItemStack)` | Get the mob type from any spawner | `EntityType` |
 | `getItemSpawnerMaterial(ItemStack)` | Get the material from an item spawner | `Material` |
 
 ## Examples
@@ -32,7 +32,7 @@ public void onPlayerInteract(PlayerInteractEvent event) {
 }
 ```
 
-### Get Entity Type
+### Get Mob Type
 
 ```java
 ItemStack item = player.getItemInHand();

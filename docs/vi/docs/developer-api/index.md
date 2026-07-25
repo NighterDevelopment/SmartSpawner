@@ -11,7 +11,7 @@ SmartSpawner cung cấp Java API để đọc và chỉnh sửa spawner, lắng 
 <DocCard icon="Server" title="Truy Cập Dữ Liệu" link="/vi/docs/developer-api/data-access" desc="Đọc và sửa stack, kho, kinh nghiệm cùng các thuộc tính khác." />
 <DocCard icon="Zap" title="Sự Kiện" link="/vi/docs/developer-api/events" desc="Lắng nghe đặt, phá, bán và các sự kiện vòng đời spawner." />
 <DocCard icon="Palette" title="API Bố Cục GUI" link="/vi/docs/developer-api/gui-layout" desc="Đăng ký và chèn provider bố cục GUI tùy chỉnh." />
-<DocCard icon="Check" title="Kiểm Tra" link="/vi/docs/developer-api/validation" desc="Xác định vật phẩm spawner và loại entity hỗ trợ." />
+<DocCard icon="Check" title="Kiểm Tra" link="/vi/docs/developer-api/validation" desc="Xác định vật phẩm spawner và loại mob hỗ trợ." />
 <DocCard icon="FileCode2" title="Ví Dụ" link="/vi/docs/developer-api/examples" desc="Tham khảo ví dụ hoàn chỉnh cho các mẫu tích hợp phổ biến." />
 
 </CardGrid>
@@ -31,4 +31,4 @@ API hỗ trợ:
 - Tạo và xóa spawner bằng code
 - Lắng nghe sự kiện đặt, phá, tạo vật phẩm và bán
 - Đăng ký provider bố cục GUI tùy chỉnh
-- Kiểm tra loại entity và dữ liệu spawner
+- Kiểm tra loại mob và dữ liệu spawner

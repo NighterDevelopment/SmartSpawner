@@ -5,7 +5,7 @@ description: Explore SmartSpawner's virtual drops, storage, stacking, administra
 
 # Features
 
-SmartSpawner replaces entity-heavy farms with a fast, GUI-driven workflow. Players manage stacks, stored drops, and experience in-game, while staff retain server-wide control.
+SmartSpawner replaces mob-heavy farms with a fast, GUI-driven workflow. Players manage stacks, stored drops, and experience in-game, while staff retain server-wide control.
 
 The screenshots below come from the current [SmartSpawner gallery on Modrinth](https://modrinth.com/plugin/smartspawner/gallery).
 

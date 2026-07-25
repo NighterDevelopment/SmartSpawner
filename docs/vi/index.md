@@ -2,12 +2,8 @@
 layout: home
 
 hero:
-  name: "SmartSpawner"
-  text: "Xây Lại Trang Trại Spawner"
-  tagline: Tạo vật phẩm và kinh nghiệm trực tiếp, quản lý mọi spawner qua GUI hoàn chỉnh và loại bỏ tải thực thể khỏi máy chủ.
-  image:
-    src: /logo.png
-    alt: SmartSpawner
+  name: '<span class="ss-brand-smart">Smart</span><span class="ss-brand-spawner">Spawner</span>'
+  tagline: Tạo vật phẩm và kinh nghiệm trực tiếp, quản lý mọi spawner qua GUI hoàn chỉnh mà không để mob gây nặng máy chủ.
   actions:
     - theme: brand
       text: Bắt đầu

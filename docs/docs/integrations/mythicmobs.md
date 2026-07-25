@@ -19,4 +19,4 @@ Syntax:
 smartspawner <ENTITY_TYPE> [amount|minimum-maximum]
 ```
 
-The entity must be a valid Bukkit entity type. Invalid entity names or ranges are rejected and logged.
+The mob must map to a valid Bukkit `EntityType`. Invalid mob names or ranges are rejected and logged.

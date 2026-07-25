@@ -19,4 +19,4 @@ Cú pháp:
 smartspawner <ENTITY_TYPE> [amount|minimum-maximum]
 ```
 
-Entity phải là loại Bukkit hợp lệ. Tên hoặc khoảng giá trị không hợp lệ sẽ bị từ chối và ghi vào log.
+Mob phải tương ứng với một `EntityType` Bukkit hợp lệ. Tên mob hoặc khoảng giá trị không hợp lệ sẽ bị từ chối và ghi vào log.

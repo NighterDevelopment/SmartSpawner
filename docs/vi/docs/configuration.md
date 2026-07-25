@@ -48,7 +48,7 @@ Bật thêm đầu ra console để chẩn đoán. Nên giữ <code>false</code>
 
 <ConfigGroup name="spawner_properties">
 <template #info>
-Điều khiển hành vi mặc định của mọi Smart Spawner, trừ khi bị ghi đè bởi cấu hình riêng theo entity.
+Điều khiển hành vi mặc định của mọi Smart Spawner, trừ khi bị ghi đè bởi cấu hình riêng theo mob.
 </template>
 
 <ConfigGroup name="default">
@@ -116,7 +116,7 @@ Số điểm độ bền trừ khỏi công cụ khi phá spawner.
 <ConfigProperty name="sneak_break" value="true" type="boolean">
 Khi bật, cúi trong lúc phá một stack sẽ lấy tối đa 64 spawner cùng lúc.<br><br>
 ::: warning Tỷ lệ rơi và phá khi cúi
-Nếu entity có `drop_chance` trong `spawners_settings.yml`, không thể phá theo stack trừ khi người chơi có `smartspawner.break.bypassdropchance`.
+Nếu một loại mob có `drop_chance` trong `spawners_settings.yml`, không thể phá theo stack trừ khi người chơi có `smartspawner.break.bypassdropchance`.
 :::
 </ConfigProperty>
 
@@ -151,7 +151,7 @@ Nếu bật, spawner tự nhiên bị phá sẽ trở thành Smart Spawner; nế
 </ConfigProperty>
 
 <ConfigProperty name="drop_chance" value="(commented out)" type="string">
-Xác suất tùy chọn từ <code>0.0</code> đến <code>100.0</code> để spawner tự nhiên rơi vật phẩm. Dùng khóa <code>default</code> cho mọi loại mob và thêm entity cụ thể để ghi đè. Nếu bỏ comment hoặc không có giá trị phù hợp, tỷ lệ mặc định là 100%.
+Xác suất tùy chọn từ <code>0.0</code> đến <code>100.0</code> để spawner tự nhiên rơi vật phẩm. Dùng khóa <code>default</code> cho mọi loại mob và thêm loại mob cụ thể để ghi đè. Nếu bỏ comment hoặc không có giá trị phù hợp, tỷ lệ mặc định là 100%.
 
 ```yaml
 drop_chance:
@@ -366,7 +366,7 @@ Ngưỡng bắt đầu xấp xỉ khi <code>approximate_loot</code> được b�
 | `SPAWNER_ITEMS_SORT` | Sắp xếp vật phẩm |
 | `SPAWNER_ITEM_FILTER` | Bật/tắt bộ lọc |
 | `SPAWNER_DROP_PAGE_ITEMS` | Thả mọi vật phẩm ở trang hiện tại |
-| `SPAWNER_EGG_CHANGE` | Đổi entity bằng spawn egg |
+| `SPAWNER_EGG_CHANGE` | Đổi mob bằng spawn egg |
 | `COMMAND_EXECUTE_PLAYER` | Người chơi chạy lệnh |
 | `COMMAND_EXECUTE_CONSOLE` | Console chạy lệnh |
 | `COMMAND_EXECUTE_RCON` | RCON chạy lệnh |

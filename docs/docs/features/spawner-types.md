@@ -13,7 +13,7 @@ SmartSpawner introduces three distinct spawner types you can give to players.
 The main spawner type. Generates drops and XP from a mob without actually spawning it. Fully stackable and GUI-controlled.
 
 - **Right-click** to open the spawner GUI
-- **No mobs** are ever spawned. Zero entity lag.
+- **No mobs** are ever spawned. Zero mob lag.
 - Supports stacking up to your configured limit
 - Stores drops in internal paged storage
 
@@ -21,7 +21,7 @@ The main spawner type. Generates drops and XP from a mob without actually spawni
 
 <FeatureCard icon="Package" title="Item Spawner">
 
-Generates raw items such as diamonds, emeralds, and netherite ingots instead of mob drops. The spinning entity inside is replaced with a floating item model.
+Generates raw items such as diamonds, emeralds, and netherite ingots instead of mob drops. The spinning mob preview inside is replaced with a floating item model.
 
 - Configured in `item_spawners_settings.yml`
 - Uses the same GUI and stacking system as Smart Spawners

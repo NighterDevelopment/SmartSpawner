@@ -4,7 +4,7 @@ title: Visual Effects
 
 # Visual Effects
 
-Give players useful feedback without adding real mob entities.
+Give players useful feedback without spawning real mobs.
 
 <CardGrid>
 

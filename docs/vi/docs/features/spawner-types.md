@@ -13,7 +13,7 @@ SmartSpawner cung cấp ba loại spawner riêng biệt để trao cho người 
 Loại spawner chính. Tạo vật phẩm và XP từ mob mà không thực sự sinh mob. Hỗ trợ xếp chồng và quản lý hoàn toàn qua GUI.
 
 - **Nhấp phải** để mở GUI spawner
-- **Không sinh mob**, loại bỏ lag thực thể
+- **Không sinh mob**, loại bỏ lag do mob
 - Hỗ trợ xếp chồng đến giới hạn đã cấu hình
 - Lưu vật phẩm trong kho nội bộ nhiều trang
 
@@ -21,7 +21,7 @@ Loại spawner chính. Tạo vật phẩm và XP từ mob mà không thực sự
 
 <FeatureCard icon="Package" title="Item Spawner">
 
-Tạo nguyên liệu như kim cương, ngọc lục bảo và thỏi netherite thay vì vật phẩm mob. Thực thể quay bên trong được thay bằng mô hình vật phẩm nổi.
+Tạo nguyên liệu như kim cương, ngọc lục bảo và thỏi netherite thay vì vật phẩm mob. Mob hiển thị quay bên trong được thay bằng mô hình vật phẩm nổi.
 
 - Cấu hình trong `item_spawners_settings.yml`
 - Dùng chung GUI và hệ thống xếp chồng với Smart Spawner

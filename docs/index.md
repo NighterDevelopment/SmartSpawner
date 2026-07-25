@@ -2,12 +2,8 @@
 layout: home
 
 hero:
-  name: "SmartSpawner"
-  text: "Spawner Farms, Rebuilt"
-  tagline: Generate drops and experience directly, manage every spawner through a polished GUI, and keep entity load off your server.
-  image:
-    src: /logo.png
-    alt: SmartSpawner
+  name: '<span class="ss-brand-smart">Smart</span><span class="ss-brand-spawner">Spawner</span>'
+  tagline: Generate drops and experience directly, manage every spawner through a polished GUI, and keep mobs from weighing down your server.
   actions:
     - theme: brand
       text: Get Started

@@ -16,7 +16,7 @@ SmartSpawner provides a Java API for reading and modifying spawners, listening t
 
 <DocCard icon="Palette" title="GUI Layout API" link="/docs/developer-api/gui-layout" desc="Register and inject custom GUI layout providers." />
 
-<DocCard icon="Check" title="Validation" link="/docs/developer-api/validation" desc="Validate spawner data and supported entity types." />
+<DocCard icon="Check" title="Validation" link="/docs/developer-api/validation" desc="Validate spawner data and supported mob types." />
 
 <DocCard icon="FileCode2" title="Examples" link="/docs/developer-api/examples" desc="Follow complete examples for common integration patterns." />
 
@@ -37,4 +37,4 @@ It supports:
 - Creating and removing spawners programmatically
 - Listening to placement, break, generation, and selling events
 - Registering custom GUI layout providers
-- Validating entity types and spawner data
+- Validating mob types and spawner data

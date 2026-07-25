@@ -1,6 +1,6 @@
 # Tài Liệu SmartSpawner
 
-SmartSpawner thay thế trang trại mob nặng thực thể bằng cơ chế tạo vật phẩm và kinh nghiệm trực tiếp. Người chơi quản lý stack, kho, bộ lọc, bán vật phẩm và nâng cấp trong game, còn chủ máy chủ vẫn kiểm soát được mọi tỷ lệ và tích hợp.
+SmartSpawner thay thế các trang trại sinh quá nhiều mob bằng cơ chế tạo vật phẩm và kinh nghiệm trực tiếp. Người chơi quản lý stack, kho, bộ lọc, bán vật phẩm và nâng cấp trong game, còn chủ máy chủ vẫn kiểm soát được mọi tỷ lệ và tích hợp.
 
 <img
   class="docs-brand-banner"
