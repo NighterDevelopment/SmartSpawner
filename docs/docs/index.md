@@ -41,4 +41,3 @@ Works with WorldGuard, GriefPrevention, Lands, Towny, SuperiorSkyblock2, MythicM
 </FeatureCard>
 
 </CardGrid>
-
