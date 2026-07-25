@@ -45,4 +45,14 @@ Người chơi Floodgate và Geyser nhận menu thân thiện với cảm ứng 
 
 </CardGrid>
 
+## Xung Đột Đã Biết
+
+Các plugin sau có thể ghi đè hành vi spawner và xung đột với SmartSpawner. Nếu chạy mà không thực hiện thay đổi bên dưới, chúng có thể ghi đè SmartSpawner và gây lỗi.
+
+| Plugin | Việc cần làm |
+| --- | --- |
+| WildStacker | Đặt `spawners: enabled:` thành `false` trong `config.yml` của nó. |
+| RoseStacker | Đặt `stacking-enabled:` thành `false` trong `config.yml` của nó. |
+| SpawnerMeta | Gỡ hoặc tắt plugin. Nó ghi đè các tính năng của SmartSpawner. |
+
 Xem [ma trận tương thích đầy đủ](/vi/docs/integrations/compatibility-matrix) để biết thao tác hỗ trợ và lưu ý thiết lập.

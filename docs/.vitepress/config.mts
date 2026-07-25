@@ -9,7 +9,8 @@ const enManualSidebar = [
     items: [
       { text: 'Overview', link: '/docs/' },
       { text: 'Installation', link: '/docs/installation' },
-      { text: 'Download', link: '/docs/download' }
+      { text: 'Download', link: '/docs/download' },
+      { text: 'FAQ', link: '/docs/faq' }
     ]
   },
   {
@@ -100,7 +101,8 @@ const viManualSidebar = [
     items: [
       { text: 'Tổng quan', link: '/vi/docs/' },
       { text: 'Cài đặt', link: '/vi/docs/installation' },
-      { text: 'Tải xuống', link: '/vi/docs/download' }
+      { text: 'Tải xuống', link: '/vi/docs/download' },
+      { text: 'Câu hỏi thường gặp', link: '/vi/docs/faq' }
     ]
   },
   {
@@ -235,7 +237,6 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['link', { rel: 'icon', type: 'image/png', href: '/logo.png' }],
     ['link', { rel: 'apple-touch-icon', href: '/logo.png' }],
     ['meta', { property: 'og:image', content: 'https://docs.smartspawner.site/banner.png' }],

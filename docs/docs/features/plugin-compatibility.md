@@ -52,4 +52,14 @@ Floodgate and Geyser players receive a touch-friendly menu instead of a chest GU
 
 </CardGrid>
 
+## Known conflicts
+
+These plugins can override spawner behavior and clash with SmartSpawner. If they run without the changes below, they may override SmartSpawner and cause issues.
+
+| Plugin | Action needed |
+| --- | --- |
+| WildStacker | Set `spawners: enabled:` to `false` in its `config.yml`. |
+| RoseStacker | Set `stacking-enabled:` to `false` in its `config.yml`. |
+| SpawnerMeta | Remove or disable it. It overrides SmartSpawner features. |
+
 See the [complete compatibility matrix](/docs/integrations/compatibility-matrix) for supported operations and setup notes.
