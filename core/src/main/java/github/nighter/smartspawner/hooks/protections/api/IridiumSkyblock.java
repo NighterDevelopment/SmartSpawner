@@ -8,7 +8,7 @@ import com.iridium.iridiumskyblock.dependencies.iridiumcore.Item;
 import com.iridium.iridiumskyblock.dependencies.iridiumteams.Permission;
 import com.iridium.iridiumskyblock.dependencies.xseries.XMaterial;
 import github.nighter.smartspawner.language.format.ColorUtil;
-import github.nighter.smartspawner.updates.ConfigVersionService;
+import github.nighter.smartspawner.updates.YamlMigrator;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -23,7 +23,6 @@ import java.util.Optional;
 public class IridiumSkyblock {
     private static final String FILE_NAME = "iridium_skyblock.yml";
     private static final String DEFAULT_LOCALE = "en_US";
-    private static final String VERSION_KEY = "language_version";
     private static YamlConfiguration language = new YamlConfiguration();
 
     public static void init(SmartSpawner plugin) {
@@ -67,7 +66,7 @@ public class IridiumSkyblock {
                 : "language/" + DEFAULT_LOCALE + "/" + FILE_NAME;
         File languageFile = new File(plugin.getDataFolder(), "language/" + locale + "/" + FILE_NAME);
 
-        ConfigVersionService.updateFile(plugin, languageFile, resourcePath, VERSION_KEY);
+        YamlMigrator.migrate(languageFile, plugin.getResource(resourcePath), java.util.List.of(), plugin.getLogger());
         language = YamlConfiguration.loadConfiguration(languageFile);
     }
 

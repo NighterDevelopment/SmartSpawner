@@ -1,5 +1,6 @@
 plugins {
     id("com.gradleup.shadow")
+    id("xyz.jpenilla.run-paper") version "3.0.2"
 }
 
 val shade: Configuration by configurations.creating
@@ -105,6 +106,13 @@ tasks.shadowJar {
 
 tasks.build {
     dependsOn(tasks.shadowJar)
+}
+
+// Run a real Paper server straight from the repo: ./gradlew :core:runServer
+// Server files (world, plugins, logs) live in the repo-root "run/" folder.
+tasks.runServer {
+    minecraftVersion("1.21.11")
+    runDirectory.set(rootProject.layout.projectDirectory.dir("run"))
 }
 
 tasks.processResources {

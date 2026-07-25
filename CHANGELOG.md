@@ -2,6 +2,15 @@
 
 All notable changes to SmartSpawner are documented in this file.
 
+## 1.7.1
+
+### Changed
+- Config and language files now stay up to date on their own. When you update the plugin, any new options are added for you and your own settings and comments are kept exactly as you left them.
+
+### Notes
+- Nothing to do when updating. The plugin no longer drops backup copies of your config files into the folder on each update, since your settings are now kept in place.
+- The old `config_version` line at the top of config files is no longer needed and is removed automatically on the next start.
+
 ## 1.7.0.2
 
 ### Fixed
