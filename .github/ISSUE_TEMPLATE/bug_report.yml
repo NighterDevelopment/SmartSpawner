@@ -1,50 +1,123 @@
-name: "🐞 Bug Report"
-description: "Report a bug or issue with the plugin."
-labels: [bug]
+name: Bug Report
+description: Report a reproducible problem with SmartSpawner
+title: "[Bug]: "
+labels:
+  - bug
 body:
   - type: markdown
     attributes:
-      value: "## 🚨 Please provide as much detail as possible to help us fix the issue quickly!"
+      value: |
+        Thank you for taking the time to report a problem. Complete every required field and attach the full server log so we can investigate efficiently.
+
+        Support questions and configuration help should be directed to the community support channels instead of the issue tracker.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and did not find a duplicate.
+          required: true
+        - label: I tested with the latest available SmartSpawner release.
+          required: true
+        - label: I can reproduce this issue consistently.
+          required: true
+
+  - type: dropdown
+    id: server-software
+    attributes:
+      label: Server software
+      description: Select the server implementation where the issue occurs.
+      options:
+        - Paper
+        - Folia
+        - Other Paper-compatible fork
+    validations:
+      required: true
 
   - type: input
-    id: minecraft-version
+    id: server-version
     attributes:
-      label: "Minecraft Version"
-      description: "Which Minecraft version are you using? (e.g., 1.20.1)"
+      label: Server version
+      description: Paste the complete output of the server version command.
+      placeholder: "Example: Paper 1.21.11 build 42"
     validations:
       required: true
 
   - type: input
     id: plugin-version
     attributes:
-      label: "Plugin Version"
-      description: "Which Smart Spawner version are you using? (e.g., v1.2.3)"
+      label: SmartSpawner version
+      description: Enter the exact SmartSpawner version shown by the plugin.
+      placeholder: "Example: 1.7.0.2"
+    validations:
+      required: true
+
+  - type: input
+    id: java-version
+    attributes:
+      label: Java version
+      description: Paste the version reported by `java -version`.
+      placeholder: "Example: Java 25.0.1"
     validations:
       required: true
 
   - type: textarea
-    id: bug-description
+    id: problem-description
     attributes:
-      label: "📌 Bug Description"
-      description: "What happened? What did you expect to happen?"
+      label: Problem description
+      description: Clearly explain what happened and when the problem began.
+      placeholder: Describe the problem and its impact on the server or players.
     validations:
       required: true
 
   - type: textarea
-    id: steps-to-reproduce
+    id: expected-behavior
     attributes:
-      label: "⚡ Steps to Reproduce"
-      description: "List the steps to reproduce the issue."
+      label: Expected behavior
+      description: Explain what you expected SmartSpawner to do instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest reliable sequence that reproduces the problem.
       value: |
-        1. Start the server
-        2. Place a spawner
-        3. ...
+        1.
+        2.
+        3.
     validations:
       required: true
 
   - type: textarea
-    id: logs
+    id: server-log
     attributes:
-      label: "📜 Logs or Errors (if applicable)"
-      description: "Paste any relevant console logs or error messages here."
-      render: shell
+      label: Complete server log
+      description: Attach the complete latest.log file from server startup through the reproduction, or provide a link from a service such as mclo.gs. A partial stack trace is not sufficient.
+      placeholder: Drag latest.log into this field or paste a public log URL.
+    validations:
+      required: true
+
+  - type: textarea
+    id: installed-plugins
+    attributes:
+      label: Installed plugins
+      description: Paste the output of the plugins command and identify any plugins related to spawners, stacking, protection, economy, or mob behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add relevant configuration excerpts, screenshots, videos, or other details. Remove passwords, database credentials, and private information before uploading files.
+
+  - type: checkboxes
+    id: log-confirmation
+    attributes:
+      label: Log confirmation
+      options:
+        - label: I included the complete server log and removed credentials or other sensitive information.
+          required: true
