@@ -1,6 +1,25 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { useData } from 'vitepress'
 import LucideIcon from '../icon/LucideIcon.vue'
+
+const { lang } = useData()
+const isVi = computed(() => (lang.value || '').startsWith('vi'))
+const copy = computed(() => isVi.value
+  ? {
+      title: 'Người đóng góp',
+      subtitle: 'SmartSpawner là dự án mã nguồn mở được xây dựng cùng cộng đồng.',
+      detail: 'Mọi đóng góp, dù lớn hay nhỏ, đều tạo nên khác biệt.',
+      error: 'Không thể tải danh sách người đóng góp. Xem trên',
+      cta: 'Xem tất cả trên GitHub'
+    }
+  : {
+      title: 'Contributors',
+      subtitle: 'SmartSpawner is open source and built with help from the community.',
+      detail: 'Every contribution, big or small, makes a difference.',
+      error: 'Could not load contributors. View them on',
+      cta: 'View all on GitHub'
+    })
 
 const contributors = ref([])
 const loading = ref(true)
@@ -30,10 +49,10 @@ onMounted(async () => {
 <template>
   <div class="contributors-section">
     <div class="contributors-inner">
-      <h2 class="contributors-title">Contributors</h2>
+      <h2 class="contributors-title">{{ copy.title }}</h2>
       <p class="contributors-sub">
-        SmartSpawner is open source and built with help from the community.<br>
-        Every contribution, big or small, makes a difference.
+        {{ copy.subtitle }}<br>
+        {{ copy.detail }}
       </p>
 
       <div v-if="loading" class="contributors-placeholder">
@@ -41,7 +60,7 @@ onMounted(async () => {
       </div>
 
       <div v-else-if="error" class="contributors-error">
-        Could not load contributors. View them on
+        {{ copy.error }}
         <a href="https://github.com/OpenVdra/SmartSpawner/graphs/contributors" target="_blank" rel="noopener noreferrer">GitHub</a>.
       </div>
 
@@ -66,7 +85,7 @@ onMounted(async () => {
         rel="noopener noreferrer"
         class="contributors-cta"
       >
-        <span>View all on GitHub</span>
+        <span>{{ copy.cta }}</span>
         <LucideIcon name="ArrowUpRight" :size="16" />
       </a>
     </div>

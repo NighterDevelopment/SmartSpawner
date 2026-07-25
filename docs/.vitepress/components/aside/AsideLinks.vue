@@ -3,7 +3,9 @@ import { computed } from 'vue'
 import { useData } from 'vitepress'
 import LucideIcon from '../icon/LucideIcon.vue'
 
-const { page, theme } = useData()
+const { lang, page, theme } = useData()
+const isVi = computed(() => (lang.value || '').startsWith('vi'))
+const t = (en, vi) => (isVi.value ? vi : en)
 
 const editHref = computed(() => {
   const pattern = theme.value.editLink?.pattern
@@ -17,12 +19,12 @@ const editHref = computed(() => {
 const links = computed(() => {
   const items = []
   if (editHref.value) {
-    items.push({ icon: 'Pencil', text: 'Edit this page on GitHub', href: editHref.value })
+    items.push({ icon: 'Pencil', text: t('Edit this page on GitHub', 'Chỉnh sửa trang này trên GitHub'), href: editHref.value })
   }
   items.push(
-    { icon: 'Star', text: 'Star on GitHub', href: 'https://github.com/OpenVdra/SmartSpawner' },
-    { icon: 'MessageCircle', text: 'Chat on Discord', href: 'https://discord.gg/zrnyG4CuuT' },
-    { icon: 'Heart', text: 'Support the project', href: 'https://ko-fi.com/openvdra' }
+    { icon: 'Star', text: t('Star on GitHub', 'Star trên GitHub'), href: 'https://github.com/OpenVdra/SmartSpawner' },
+    { icon: 'MessageCircle', text: t('Chat on Discord', 'Trò chuyện trên Discord'), href: 'https://discord.gg/zrnyG4CuuT' },
+    { icon: 'Heart', text: t('Support the project', 'Ủng hộ dự án'), href: 'https://ko-fi.com/openvdra' }
   )
   return items
 })

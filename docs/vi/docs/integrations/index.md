@@ -1,0 +1,25 @@
+---
+title: Tích hợp Plugin
+---
+
+# Tích Hợp Plugin
+
+SmartSpawner phát hiện plugin tùy chọn khi khởi động và chỉ bật những tích hợp có sẵn. Không plugin nào dưới đây là bắt buộc đối với hệ thống spawner cốt lõi.
+
+<CardGrid>
+
+<DocCard icon="List" title="Ma Trận Tương Thích" link="/vi/docs/integrations/compatibility-matrix" desc="Xem mọi plugin hỗ trợ và chức năng từng hook cung cấp." />
+
+<DocCard icon="ShoppingCart" title="Cửa Hàng và Kinh Tế" link="/vi/docs/integrations/shops-economy" desc="Kết nối nguồn giá và backend tiền tệ." />
+
+<DocCard icon="ShieldCheck" title="Bảo Vệ và Đảo" link="/vi/docs/integrations/protections-islands" desc="Tôn trọng claim, region, plot và quyền trên đảo." />
+
+<DocCard icon="Gamepad2" title="Hỗ Trợ Bedrock" link="/vi/docs/integrations/bedrock-support" desc="Hiển thị form native cho người chơi được Floodgate phát hiện." />
+
+<DocCard icon="Swords" title="AuraSkills" link="/vi/docs/integrations/auraskills" desc="Chuyển kinh nghiệm nhận từ spawner thành XP kỹ năng." />
+
+<DocCard icon="Sparkles" title="MythicMobs" link="/vi/docs/integrations/mythicmobs" desc="Tạo vật phẩm Smart Spawner từ bảng drop mob tùy chỉnh." />
+
+<DocCard icon="Wrench" title="Khắc Phục Sự Cố" link="/vi/docs/integrations/troubleshooting" desc="Chẩn đoán lỗi phát hiện provider, bán vật phẩm và bảo vệ." />
+
+</CardGrid>

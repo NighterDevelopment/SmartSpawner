@@ -19,12 +19,25 @@ docs/
 |   |   `-- *.md             # One page per integration topic
 |   |-- developer-api/       # Developer API pages
 |   `-- *.md                 # General documentation pages
+|-- vi/
+|   |-- docs/                # Vietnamese mirror of every documentation page
+|   `-- index.md             # Vietnamese home page
 |-- public/                  # Static assets
 |-- index.md                 # Home page
 `-- package.json
 ```
 
 Keep feature and integration topics in their matching directories. Each topic should have its own Markdown file and sidebar entry; use each directory's `index.md` only as the overview page.
+
+## Internationalization
+
+VitePress serves English from `/` and Vietnamese from `/vi/`. Locale-specific
+navigation, sidebars, edit links, and UI labels are configured in
+`.vitepress/config.mts`. The language dropdown keeps the equivalent page path
+when switching languages.
+
+Every English page under `docs/` must have a translated counterpart under
+`vi/docs/`. Use `/vi/docs/...` links inside Vietnamese Markdown.
 
 ## Development
 
@@ -52,6 +65,7 @@ All components are registered through the VitePress theme.
 | `<FeatureCard>` | Feature detail card |
 | `<CardGrid>` | Responsive card grid |
 | `<LucideIcon>` | Render an icon from the shared Lucide registry |
+| `<LanguageDropdown>` | Switch between corresponding English and Vietnamese pages |
 
 ## Contributing
 

@@ -18,6 +18,7 @@ import FeatureMediaCard from '../components/card/FeatureMediaCard.vue'
 import Contributors from '../components/home/Contributors.vue'
 import UsageStats from '../components/home/UsageStats.vue'
 import LucideIcon from '../components/icon/LucideIcon.vue'
+import LanguageDropdown from '../components/nav/LanguageDropdown.vue'
 import VersionDropdown from '../components/nav/VersionDropdown.vue'
 
 export default {
@@ -41,6 +42,7 @@ export default {
         app.component('Contributors', Contributors)
         app.component('UsageStats', UsageStats)
         app.component('LucideIcon', LucideIcon)
+        app.component('LanguageDropdown', LanguageDropdown)
         app.component('VersionDropdown', VersionDropdown)
     }
 }

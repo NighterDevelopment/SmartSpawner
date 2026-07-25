@@ -1,4 +1,19 @@
 <script setup>
+import { computed } from 'vue'
+import { useData } from 'vitepress'
+
+const { lang } = useData()
+const isVi = computed(() => (lang.value || '').startsWith('vi'))
+const copy = computed(() => isVi.value
+  ? {
+      title: 'Được tin dùng trên máy chủ thật',
+      subtitle: 'Các máy chủ trên khắp thế giới dùng SmartSpawner để giữ cho những trang trại lớn luôn mượt mà.'
+    }
+  : {
+      title: 'Trusted in Production',
+      subtitle: 'Servers around the world use SmartSpawner to keep large farms responsive.'
+    })
+
 const BSTATS_URL = 'https://bstats.org/plugin/bukkit/SmartSpawner'
 const CHART_SRC = 'https://bstats.org/signatures/bukkit/SmartSpawner.svg'
 </script>
@@ -6,8 +21,8 @@ const CHART_SRC = 'https://bstats.org/signatures/bukkit/SmartSpawner.svg'
 <template>
   <section class="usage-stats">
     <div class="usage-inner">
-      <h2 class="usage-title">Trusted in Production</h2>
-      <p class="usage-sub">Servers around the world use SmartSpawner to keep large farms responsive.</p>
+      <h2 class="usage-title">{{ copy.title }}</h2>
+      <p class="usage-sub">{{ copy.subtitle }}</p>
 
       <a class="usage-chart" :href="BSTATS_URL" target="_blank" rel="noopener noreferrer">
         <img :src="CHART_SRC" alt="SmartSpawner bStats charts" loading="lazy" />
