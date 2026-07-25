@@ -16,7 +16,8 @@ Choose your preferred download source:
     Hangar
   </a>
   <a href="https://github.com/OpenVdra/SmartSpawner/releases" target="_blank" rel="noreferrer" style="display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-border); border-radius: 10px; text-decoration: none; color: var(--vp-c-text-1); font-weight: 600; transition: border-color 0.2s;">
-    🐙 GitHub Releases
+    <LucideIcon name="Github" :size="20" />
+    GitHub Releases
   </a>
 </div>
 

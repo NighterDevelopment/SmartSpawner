@@ -117,7 +117,9 @@ Durability points removed from the tool when a spawner is broken.
 
 <ConfigProperty name="sneak_break" value="true" type="boolean">
 When <code>true</code>, sneaking while breaking a stacked spawner removes up to 64 spawners at once. When <code>false</code>, sneaking has no special effect.<br><br>
-⚠️ If a spawner entity has <code>drop_chance</code> configured in <code>spawners_settings.yml</code>, sneak breaking is blocked for that spawner (one at a time only), unless the player has <code>smartspawner.break.bypassdropchance</code>.
+::: warning Drop chance and sneak breaking
+If a spawner entity has `drop_chance` configured in `spawners_settings.yml`, sneak breaking is blocked for that spawner (one at a time only), unless the player has `smartspawner.break.bypassdropchance`.
+:::
 </ConfigProperty>
 
 <ConfigProperty name="sell_and_xp_break" value="true" type="boolean">

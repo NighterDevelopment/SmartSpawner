@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import LucideIcon from '../icon/LucideIcon.vue'
 
 const contributors = ref([])
 const loading = ref(true)
@@ -9,7 +10,15 @@ onMounted(async () => {
   try {
     const res = await fetch('https://api.github.com/repos/OpenVdra/SmartSpawner/contributors?per_page=50')
     if (!res.ok) throw new Error()
-    contributors.value = await res.json()
+    const data = await res.json()
+    contributors.value = data.filter(contributor => {
+      const login = contributor.login?.toLowerCase() ?? ''
+      return contributor.type !== 'Bot'
+        && !login.includes('copilot')
+        && !login.includes('dependabot')
+        && !login.includes('dependency')
+        && !login.endsWith('[bot]')
+    })
   } catch {
     error.value = true
   } finally {
@@ -57,7 +66,8 @@ onMounted(async () => {
         rel="noopener noreferrer"
         class="contributors-cta"
       >
-        View all on GitHub →
+        <span>View all on GitHub</span>
+        <LucideIcon name="ArrowUpRight" :size="16" />
       </a>
     </div>
   </div>
@@ -65,8 +75,7 @@ onMounted(async () => {
 
 <style scoped>
 .contributors-section {
-  border-top: 1px solid var(--vp-c-border);
-  padding: 64px 24px 80px;
+  padding: var(--home-section-gap) 24px 80px;
 }
 
 .contributors-inner {
@@ -80,6 +89,8 @@ onMounted(async () => {
   font-weight: 700;
   color: var(--vp-c-text-1);
   margin: 0 0 10px;
+  padding-top: 0;
+  border-top: 0;
   letter-spacing: -0.02em;
 }
 
@@ -169,7 +180,9 @@ onMounted(async () => {
 }
 
 .contributors-cta {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--vp-c-brand-1);
   font-size: 0.9rem;
   font-weight: 600;

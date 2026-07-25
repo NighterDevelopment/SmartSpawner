@@ -1,39 +1,40 @@
 # Developer API
 
-SmartSpawner provides a clean Java API that lets you interact with spawners, listen to events, and modify behavior from your own plugins.
+SmartSpawner provides a Java API for reading and modifying spawners, listening to lifecycle events, and extending plugin behavior.
 
 ## Quick Navigation
 
 <CardGrid>
 
-<DocCard icon="📦" title="Installation" link="/docs/developer-api/installation" desc="Add SmartSpawner as a dependency via JitPack (Maven / Gradle)." />
+<DocCard icon="Package" title="Installation" link="/docs/developer-api/installation" desc="Add SmartSpawner as a dependency with JitPack." />
 
-<DocCard icon="🔧" title="API Creation" link="/docs/developer-api/creation" desc="Get the API instance and initialize your integration." />
+<DocCard icon="Wrench" title="API Creation" link="/docs/developer-api/creation" desc="Get the API instance and initialize your integration." />
 
-<DocCard icon="📊" title="Data Access" link="/docs/developer-api/data-access" desc="Read and modify spawner data: stack size, storage, XP, etc." />
+<DocCard icon="Server" title="Data Access" link="/docs/developer-api/data-access" desc="Read and modify stack size, storage, experience, and other properties." />
 
-<DocCard icon="📡" title="Events" link="/docs/developer-api/events" desc="Listen to spawner lifecycle events in your plugin." />
+<DocCard icon="Zap" title="Events" link="/docs/developer-api/events" desc="Listen to spawner placement, removal, generation, selling, and other lifecycle events." />
 
-<DocCard icon="🎨" title="GUI Layout API" link="/docs/developer-api/gui-layout" desc="Register and inject custom GUI layout providers." />
+<DocCard icon="Palette" title="GUI Layout API" link="/docs/developer-api/gui-layout" desc="Register and inject custom GUI layout providers." />
 
-<DocCard icon="✅" title="Validation" link="/docs/developer-api/validation" desc="Validate spawner data and entity types." />
+<DocCard icon="Check" title="Validation" link="/docs/developer-api/validation" desc="Validate spawner data and supported entity types." />
 
-<DocCard icon="💡" title="Examples" link="/docs/developer-api/examples" desc="Complete working examples to get started quickly." />
+<DocCard icon="FileCode2" title="Examples" link="/docs/developer-api/examples" desc="Follow complete examples for common integration patterns." />
 
 </CardGrid>
 
 ## Overview
 
-The API is available via JitPack and follows a provider pattern:
+The API follows a provider pattern:
 
 ```java
 SmartSpawnerAPI api = SmartSpawnerProvider.getAPI();
 ```
 
-The API gives you access to:
-- Reading and modifying spawner properties (stack size, delay, range)
-- Accessing and modifying spawner storage contents
+It supports:
+
+- Reading and modifying spawner properties such as stack size, delay, and range
+- Accessing and changing stored items and experience
 - Creating and removing spawners programmatically
-- Listening to spawner events (place, break, generate, sell, etc.)
+- Listening to placement, break, generation, and selling events
 - Registering custom GUI layout providers
 - Validating entity types and spawner data
