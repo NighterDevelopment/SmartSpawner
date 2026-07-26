@@ -13,7 +13,7 @@
 
 ## Requirements
 
-- **Minecraft Version:** 1.21.5 - 26.1.2
+- **Minecraft Version:** 1.21.5 - 26.2
 - **Server Software:** Paper, Folia or compatible forks
 - **Java Version:** 25+
 
