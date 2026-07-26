@@ -14,7 +14,6 @@ All notable changes to SmartSpawner are documented in this file.
 ### Notes
 - Nothing to do when updating. The plugin no longer drops backup copies of your config files into the folder on each update, since your settings are now kept in place.
 - The old `config_version` line at the top of config files is no longer needed and is removed automatically on the next start.
-- To lock spawners with BlockLocker, add `- minecraft:spawner` to the `protectableContainers` list in `plugins/BlockLocker/config.yml` and restart. BlockLocker does not protect spawners until you do this.
 
 ## 1.7.0.2
 
