@@ -38,6 +38,10 @@ ITEM_MATERIAL:
 | `chance` | `100.0` | Xác suất rơi từ 0.0–100.0 |
 | `potion_type` | `POISON` | Loại potion, chỉ dành cho tipped arrow |
 
+::: tip Tên material
+Mỗi giá trị `material` là một tên material của Bukkit viết hoa, ví dụ `DIAMOND` hoặc `NETHERITE_INGOT`. Xem danh sách đầy đủ các tên hợp lệ tại đây: [Danh sách Bukkit Material](https://jd.papermc.io/paper/26.2/org/bukkit/Material.html).
+:::
+
 ## Ví Dụ
 
 ### Spawner Tài Nguyên Cơ Bản
