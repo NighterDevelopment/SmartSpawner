@@ -4,6 +4,8 @@ title: GriefPrevention
 
 # GriefPrevention
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/griefprevention)
+
 SmartSpawner yêu cầu **Build trust** cho mọi thao tác spawner, kể cả chỉ mở menu. Container trust và access trust là **chưa đủ**.
 
 | Thao tác | Yêu cầu |

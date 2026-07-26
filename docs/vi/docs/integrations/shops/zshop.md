@@ -4,6 +4,8 @@ title: zShop
 
 # zShop
 
+**Tải về:** [SpigotMC](https://www.spigotmc.org/resources/126561/)
+
 ::: warning Thử nghiệm
 Provider zShop đã có nhưng chưa được chọn bởi luồng tự động phát hiện hiện tại. Hãy xem đây là tính năng thử nghiệm và chọn thủ công.
 :::

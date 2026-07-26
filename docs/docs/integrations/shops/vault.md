@@ -4,6 +4,8 @@ title: Vault
 
 # Vault
 
+**Download:** [SpigotMC](https://www.spigotmc.org/resources/34315/)
+
 Vault connects SmartSpawner to the economy provider already used by your server.
 
 ## Configuration

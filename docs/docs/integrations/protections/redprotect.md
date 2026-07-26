@@ -4,6 +4,8 @@ title: RedProtect
 
 # RedProtect
 
+**Download:** [SpigotMC](https://www.spigotmc.org/resources/15841/)
+
 SmartSpawner checks RedProtect region permissions for two of the three actions.
 
 | Action | Permission |

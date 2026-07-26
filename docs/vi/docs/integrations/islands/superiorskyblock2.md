@@ -4,6 +4,8 @@ title: SuperiorSkyblock2
 
 # SuperiorSkyblock2
 
+**Tải về:** [SpigotMC](https://www.spigotmc.org/resources/87411/)
+
 Khi khởi động, SmartSpawner đăng ký hai đặc quyền đảo.
 
 | Thao tác | Đặc quyền |

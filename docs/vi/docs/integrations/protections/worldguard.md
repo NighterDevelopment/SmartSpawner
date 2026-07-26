@@ -4,6 +4,8 @@ title: WorldGuard
 
 # WorldGuard
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/worldguard)
+
 SmartSpawner ánh xạ mỗi thao tác spawner tới một flag region của WorldGuard.
 
 | Thao tác | Flag |

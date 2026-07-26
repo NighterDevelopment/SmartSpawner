@@ -30,6 +30,7 @@ softdepend:
   - PlotSquared
   - Residence
   - FactionsUUID
+  - BlockLocker
 
   # World Management Plugins
   - Multiverse-Core

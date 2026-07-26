@@ -31,6 +31,7 @@ Floodgate and Geyser players receive a touch-friendly menu instead of a chest GU
 - [RedProtect](/docs/integrations/protections/redprotect)
 - [Residence](/docs/integrations/protections/residence)
 - [FactionsUUID](/docs/integrations/protections/factionsuuid)
+- [BlockLocker](/docs/integrations/protections/blocklocker)
 
 </FeatureCard>
 

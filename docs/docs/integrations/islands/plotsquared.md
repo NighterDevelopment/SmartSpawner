@@ -4,6 +4,8 @@ title: PlotSquared
 
 # PlotSquared
 
+**Download:** [Modrinth](https://modrinth.com/plugin/plotsquared)
+
 Access is decided by plot membership. A player may open, stack, or break a spawner only if they are **added or trusted** to the plot.
 
 | Action | Requirement |

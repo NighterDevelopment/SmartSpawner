@@ -4,6 +4,8 @@ title: Vault
 
 # Vault
 
+**Tải về:** [SpigotMC](https://www.spigotmc.org/resources/34315/)
+
 Vault kết nối SmartSpawner với provider kinh tế mà máy chủ của bạn đang dùng.
 
 ## Cấu hình

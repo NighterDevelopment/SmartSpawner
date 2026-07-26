@@ -4,6 +4,8 @@ title: AuraSkills
 
 # AuraSkills
 
+**Download:** [Modrinth](https://modrinth.com/plugin/auraskills)
+
 When AuraSkills is installed, SmartSpawner creates `plugins/SmartSpawner/auraskills.yml`. Each mob can map claimed spawner experience to a skill and ratio:
 
 ```yaml

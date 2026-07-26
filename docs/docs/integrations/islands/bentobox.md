@@ -4,6 +4,8 @@ title: BentoBox
 
 # BentoBox
 
+**Download:** [Modrinth](https://modrinth.com/plugin/bentobox)
+
 SmartSpawner uses the standard BentoBox island flags.
 
 | Action | Flag |

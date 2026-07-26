@@ -29,6 +29,7 @@ public class CheckOpenMenu {
         if (integrationManager.isHasPlotSquared() && !PlotSquared.canInteract(player, location)) return false;
         if (integrationManager.isHasResidence() && !Residence.canInteract(player, location)) return false;
         if (integrationManager.isHasFactions() && !Factions.canPlayerOpenMenu(player, location)) return false;
+        if (integrationManager.isHasBlockLocker() && !BlockLocker.canPlayerOpenMenu(player, location)) return false;
         return !integrationManager.isHasRedProtect() || RedProtectAPI.canPlayerOpenMenuOnClaim(player, location);
     }
 }

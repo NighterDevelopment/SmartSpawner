@@ -4,6 +4,8 @@ title: SuperiorSkyblock2
 
 # SuperiorSkyblock2
 
+**Download:** [SpigotMC](https://www.spigotmc.org/resources/87411/)
+
 On startup SmartSpawner registers two island privileges.
 
 | Action | Privilege |

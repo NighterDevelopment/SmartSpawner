@@ -4,6 +4,8 @@ title: MythicMobs
 
 # MythicMobs
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/mythicmobs)
+
 SmartSpawner đăng ký drop MythicMobs tên `smartspawner`. Dùng nó trong bảng drop MythicMobs để tạo vật phẩm Smart Spawner:
 
 ```yaml

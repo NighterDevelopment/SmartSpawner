@@ -4,6 +4,8 @@ title: IridiumSkyblock
 
 # IridiumSkyblock
 
+**Download:** [Modrinth](https://modrinth.com/plugin/iridiumskyblock)
+
 SmartSpawner adds two permissions to the IridiumSkyblock island permission system.
 
 | Action | Permission |

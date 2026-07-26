@@ -4,6 +4,8 @@ title: FactionsUUID
 
 # FactionsUUID
 
+**Tải về:** [SpigotMC](https://www.spigotmc.org/resources/1035/)
+
 SmartSpawner kiểm tra quyền lãnh thổ của FactionsUUID cho cả ba thao tác.
 
 | Thao tác | Quyền truy cập |

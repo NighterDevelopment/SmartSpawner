@@ -4,6 +4,8 @@ title: minePlots
 
 # minePlots
 
+**Tải về:** [BuiltByBit](https://builtbybit.com/resources/mineplots.21646/)
+
 Quyền truy cập được quyết định bởi quyền plot. Người chơi chỉ có thể mở, xếp chồng hoặc phá spawner nếu họ có quyền trên plot chứa spawner.
 
 | Thao tác | Yêu cầu |

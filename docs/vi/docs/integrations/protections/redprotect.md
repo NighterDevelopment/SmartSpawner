@@ -4,6 +4,8 @@ title: RedProtect
 
 # RedProtect
 
+**Tải về:** [SpigotMC](https://www.spigotmc.org/resources/15841/)
+
 SmartSpawner kiểm tra quyền region của RedProtect cho hai trong ba thao tác.
 
 | Thao tác | Quyền |

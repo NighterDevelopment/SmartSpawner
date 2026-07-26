@@ -60,7 +60,8 @@ const enManualSidebar = [
           { text: 'Residence', link: '/docs/integrations/protections/residence' },
           { text: 'RedProtect', link: '/docs/integrations/protections/redprotect' },
           { text: 'SimpleClaimSystem', link: '/docs/integrations/protections/simpleclaimsystem' },
-          { text: 'FactionsUUID', link: '/docs/integrations/protections/factionsuuid' }
+          { text: 'FactionsUUID', link: '/docs/integrations/protections/factionsuuid' },
+          { text: 'BlockLocker', link: '/docs/integrations/protections/blocklocker' }
         ]
       },
       {
@@ -140,7 +141,8 @@ const viManualSidebar = [
           { text: 'Residence', link: '/vi/docs/integrations/protections/residence' },
           { text: 'RedProtect', link: '/vi/docs/integrations/protections/redprotect' },
           { text: 'SimpleClaimSystem', link: '/vi/docs/integrations/protections/simpleclaimsystem' },
-          { text: 'FactionsUUID', link: '/vi/docs/integrations/protections/factionsuuid' }
+          { text: 'FactionsUUID', link: '/vi/docs/integrations/protections/factionsuuid' },
+          { text: 'BlockLocker', link: '/vi/docs/integrations/protections/blocklocker' }
         ]
       },
       {

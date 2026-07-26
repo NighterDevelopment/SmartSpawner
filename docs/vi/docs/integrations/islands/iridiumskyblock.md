@@ -4,6 +4,8 @@ title: IridiumSkyblock
 
 # IridiumSkyblock
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/iridiumskyblock)
+
 SmartSpawner thêm hai quyền vào hệ thống quyền đảo của IridiumSkyblock.
 
 | Thao tác | Quyền |

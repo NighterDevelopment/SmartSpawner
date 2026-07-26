@@ -4,6 +4,8 @@ title: Towny
 
 # Towny
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/towny)
+
 Ở tích hợp này Towny không có flag riêng cho spawner. Quyền truy cập được quyết định hoàn toàn bởi tư cách thành viên town.
 
 | Thao tác | Yêu cầu |

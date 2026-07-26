@@ -4,6 +4,8 @@ title: FactionsUUID
 
 # FactionsUUID
 
+**Download:** [SpigotMC](https://www.spigotmc.org/resources/1035/)
+
 SmartSpawner checks FactionsUUID territory access for all three actions.
 
 | Action | Access permission |

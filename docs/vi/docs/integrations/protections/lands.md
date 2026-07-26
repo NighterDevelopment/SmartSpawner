@@ -4,6 +4,8 @@ title: Lands
 
 # Lands
 
+**Tải về:** [SpigotMC](https://www.spigotmc.org/resources/53313/)
+
 SmartSpawner kiểm tra flag role của Lands theo material `SPAWNER`.
 
 | Thao tác | Flag |

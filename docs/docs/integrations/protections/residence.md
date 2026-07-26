@@ -4,6 +4,8 @@ title: Residence
 
 # Residence
 
+**Download:** [SpigotMC](https://www.spigotmc.org/resources/11480/)
+
 SmartSpawner maps spawner actions to Residence flags. Note that opening the menu uses the `use` flag, **not** `container`.
 
 | Action | Flag |

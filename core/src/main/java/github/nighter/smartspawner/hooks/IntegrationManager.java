@@ -40,6 +40,7 @@ public class IntegrationManager {
     private boolean hasPlotSquared = false;
     private boolean hasResidence = false;
     private boolean hasFactions = false;
+    private boolean hasBlockLocker = false;
 
     // Integration plugin flags
     private boolean hasAuraSkills = false;
@@ -175,6 +176,11 @@ public class IntegrationManager {
         hasFactions = checkPlugin("FactionsUUID", () -> {
             Plugin factions = Bukkit.getPluginManager().getPlugin("FactionsUUID");
             return factions != null && factions.isEnabled();
+        }, true);
+
+        hasBlockLocker = checkPlugin("BlockLocker", () -> {
+            Plugin blockLocker = Bukkit.getPluginManager().getPlugin("BlockLocker");
+            return blockLocker != null && blockLocker.isEnabled();
         }, true);
 
     }

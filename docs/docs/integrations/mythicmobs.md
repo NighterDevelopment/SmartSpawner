@@ -4,6 +4,8 @@ title: MythicMobs
 
 # MythicMobs
 
+**Download:** [Modrinth](https://modrinth.com/plugin/mythicmobs)
+
 SmartSpawner registers a MythicMobs drop named `smartspawner`. Use it in a MythicMobs drop table to create a Smart Spawner item:
 
 ```yaml

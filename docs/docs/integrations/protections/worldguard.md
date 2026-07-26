@@ -4,6 +4,8 @@ title: WorldGuard
 
 # WorldGuard
 
+**Download:** [Modrinth](https://modrinth.com/plugin/worldguard)
+
 SmartSpawner maps each spawner action to a WorldGuard region flag.
 
 | Action | Flag |

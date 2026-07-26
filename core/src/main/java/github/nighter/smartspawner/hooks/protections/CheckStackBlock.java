@@ -29,6 +29,7 @@ public class CheckStackBlock {
         if (integrationManager.isHasPlotSquared() && !PlotSquared.canInteract(player, location)) return false;
         if (integrationManager.isHasResidence() && !Residence.canStack(player, location)) return false;
         if (integrationManager.isHasFactions() && !Factions.canPlayerStackClaimBlock(player, location)) return false;
+        if (integrationManager.isHasBlockLocker() && !BlockLocker.canPlayerStackClaimBlock(player, location)) return false;
         return !integrationManager.isHasRedProtect() || RedProtectAPI.canPlayerStackClaimBlock(player, location);
     }
 }

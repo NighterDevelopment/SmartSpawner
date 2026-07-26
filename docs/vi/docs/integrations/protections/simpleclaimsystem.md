@@ -4,6 +4,8 @@ title: SimpleClaimSystem
 
 # SimpleClaimSystem
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/simpleclaimsystem)
+
 SmartSpawner hỗ trợ cả hai thế hệ chính của SimpleClaimSystem. Tên quyền khác nhau giữa chúng.
 
 ## SimpleClaimSystem 1.x

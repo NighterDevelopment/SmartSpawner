@@ -52,6 +52,7 @@ dependencies {
     compileOnly("io.lumine:Mythic-Dist:5.13.0")
     compileOnly("com.iridium:IridiumSkyblock:4.1.4")
     compileOnly("dev.kitteh:factions:4.6.0")
+    compileOnly("nl.rutgerkok:blocklocker:1.9")
 
     implementation(platform("com.intellectualsites.bom:bom-newest:1.56"))
     compileOnly("com.intellectualsites.plotsquared:plotsquared-core")
@@ -111,7 +112,7 @@ tasks.build {
 
 
 tasks.runServer {
-    minecraftVersion("1.21.11")
+    minecraftVersion("26.1.2")
     runDirectory.set(rootProject.layout.projectDirectory.dir("run"))
 }
 

@@ -4,6 +4,8 @@ title: ShopGUI+
 
 # ShopGUI+
 
+**Tải về:** [SpigotMC](https://www.spigotmc.org/resources/6515/)
+
 SmartSpawner đọc giá bán ShopGUI+ và đăng ký listener tương thích spawner khi plugin có mặt.
 
 ## Định danh

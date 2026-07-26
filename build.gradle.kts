@@ -98,6 +98,13 @@ allprojects {
                 includeGroup("dev.kitteh")
             }
         }
+        maven {
+            name = "codemc-public"
+            url = uri("https://repo.codemc.org/repository/maven-public/")
+            content {
+                includeGroup("nl.rutgerkok")
+            }
+        }
     }
 }
 

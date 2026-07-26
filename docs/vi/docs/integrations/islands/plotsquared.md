@@ -4,6 +4,8 @@ title: PlotSquared
 
 # PlotSquared
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/plotsquared)
+
 Quyền truy cập được quyết định bởi tư cách thành viên plot. Người chơi chỉ có thể mở, xếp chồng hoặc phá spawner nếu họ được **add hoặc trust** vào plot.
 
 | Thao tác | Yêu cầu |

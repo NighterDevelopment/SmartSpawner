@@ -4,6 +4,8 @@ title: Hỗ trợ Bedrock
 
 # Hỗ Trợ Bedrock
 
+**Tải về:** [Geyser](https://modrinth.com/plugin/geyser) và [Floodgate](https://modrinth.com/plugin/floodgate)
+
 Cài cả Geyser và Floodgate khi người chơi Bedrock kết nối không dùng tài khoản Java. SmartSpawner dùng Floodgate để phát hiện người chơi.
 
 ```yaml

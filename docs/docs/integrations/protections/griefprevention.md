@@ -4,6 +4,8 @@ title: GriefPrevention
 
 # GriefPrevention
 
+**Download:** [Modrinth](https://modrinth.com/plugin/griefprevention)
+
 SmartSpawner requires **Build trust** for every spawner action, including just opening the menu. Container trust and access trust are **not** enough.
 
 | Action | Requirement |

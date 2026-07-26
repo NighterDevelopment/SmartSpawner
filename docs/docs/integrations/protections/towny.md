@@ -4,6 +4,8 @@ title: Towny
 
 # Towny
 
+**Download:** [Modrinth](https://modrinth.com/plugin/towny)
+
 Towny has no per-spawner flag in this integration. Access is decided purely by town membership.
 
 | Action | Requirement |

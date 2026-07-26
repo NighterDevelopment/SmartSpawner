@@ -4,6 +4,8 @@ title: ExcellentEconomy
 
 # ExcellentEconomy
 
+**Download:** [Modrinth](https://modrinth.com/plugin/excellenteconomy)
+
 ExcellentEconomy can be used directly without Vault.
 
 ## Configuration

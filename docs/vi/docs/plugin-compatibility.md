@@ -24,6 +24,7 @@ Người chơi Floodgate và Geyser nhận menu thân thiện với cảm ứng 
 - [RedProtect](/vi/docs/integrations/protections/redprotect)
 - [Residence](/vi/docs/integrations/protections/residence)
 - [FactionsUUID](/vi/docs/integrations/protections/factionsuuid)
+- [BlockLocker](/vi/docs/integrations/protections/blocklocker)
 
 </FeatureCard>
 

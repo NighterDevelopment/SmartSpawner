@@ -4,6 +4,8 @@ title: SimpleClaimSystem
 
 # SimpleClaimSystem
 
+**Download:** [Modrinth](https://modrinth.com/plugin/simpleclaimsystem)
+
 SmartSpawner supports both major SimpleClaimSystem generations. The permission names differ between them.
 
 ## SimpleClaimSystem 1.x

@@ -4,6 +4,8 @@ title: AuraSkills
 
 # AuraSkills
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/auraskills)
+
 Khi cài AuraSkills, SmartSpawner tạo `plugins/SmartSpawner/auraskills.yml`. Mỗi mob có thể ánh xạ kinh nghiệm nhận từ spawner sang một kỹ năng và tỷ lệ:
 
 ```yaml

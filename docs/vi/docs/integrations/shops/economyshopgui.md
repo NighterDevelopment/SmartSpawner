@@ -4,6 +4,8 @@ title: EconomyShopGUI
 
 # EconomyShopGUI
 
+**Tải về:** [SpigotMC](https://www.spigotmc.org/resources/69927/)
+
 SmartSpawner đọc giá bán của EconomyShopGUI cho thao tác bán trong kho spawner.
 
 ## Định danh

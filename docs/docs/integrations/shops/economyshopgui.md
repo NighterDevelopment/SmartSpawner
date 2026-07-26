@@ -4,6 +4,8 @@ title: EconomyShopGUI
 
 # EconomyShopGUI
 
+**Download:** [SpigotMC](https://www.spigotmc.org/resources/69927/)
+
 SmartSpawner reads EconomyShopGUI sell prices for the storage sell action.
 
 ## Identifiers

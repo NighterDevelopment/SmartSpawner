@@ -4,6 +4,8 @@ title: Lands
 
 # Lands
 
+**Download:** [SpigotMC](https://www.spigotmc.org/resources/53313/)
+
 SmartSpawner checks Lands role flags against the `SPAWNER` material.
 
 | Action | Flag |

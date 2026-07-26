@@ -4,6 +4,8 @@ title: Residence
 
 # Residence
 
+**Tải về:** [SpigotMC](https://www.spigotmc.org/resources/11480/)
+
 SmartSpawner ánh xạ thao tác spawner tới flag của Residence. Lưu ý mở menu dùng flag `use`, **không** phải `container`.
 
 | Thao tác | Flag |

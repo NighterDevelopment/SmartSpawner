@@ -4,6 +4,8 @@ title: BentoBox
 
 # BentoBox
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/bentobox)
+
 SmartSpawner dùng các flag đảo tiêu chuẩn của BentoBox.
 
 | Thao tác | Flag |

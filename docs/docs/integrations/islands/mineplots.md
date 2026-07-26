@@ -4,6 +4,8 @@ title: minePlots
 
 # minePlots
 
+**Download:** [BuiltByBit](https://builtbybit.com/resources/mineplots.21646/)
+
 Access is decided by plot access. A player may open, stack, or break a spawner only if they have access to the plot it sits on.
 
 | Action | Requirement |

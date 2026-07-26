@@ -395,7 +395,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
             }
         } else {
             this.spawnerMenuFormUI = null;
-            debug("FormUI components not initialized - Floodgate integration not available");
         }
     }
 

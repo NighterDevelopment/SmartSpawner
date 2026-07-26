@@ -4,6 +4,8 @@ title: ExcellentEconomy
 
 # ExcellentEconomy
 
+**Tải về:** [Modrinth](https://modrinth.com/plugin/excellenteconomy)
+
 ExcellentEconomy có thể dùng trực tiếp mà không cần Vault.
 
 ## Cấu hình
