@@ -54,7 +54,8 @@ public class SpawnerSettingsConfig {
         // section is left alone once the user has one: those entries are a list they curate, so
         // topping it up would resurrect drops they deliberately deleted on every startup.
         YamlMigrator.migrate(configFile, plugin.getResource(RESOURCE), List.of(), null, true,
-                path -> path.endsWith(".loot"), plugin.getLogger());
+                YamlMigrator.OwnedSection.curated((defaults, path) -> path.endsWith(".loot")),
+                plugin.getLogger());
 
         config = YamlConfiguration.loadConfiguration(configFile);
         parseConfig();

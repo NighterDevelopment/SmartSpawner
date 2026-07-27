@@ -52,21 +52,48 @@ public final class YamlMigrator {
         boolean apply(YamlConfiguration user, YamlConfiguration defaults);
     }
 
+    /** Picks out sections in the defaults by path, with the defaults available for shape checks. */
+    @FunctionalInterface
+    public interface SectionMatcher {
+        /**
+         * @param defaults    the bundled defaults, for inspecting a candidate section's own children
+         * @param sectionPath a section path in the defaults, for example {@code BOGGED.loot}
+         */
+        boolean matches(YamlConfiguration defaults, String sectionPath);
+    }
+
     /**
      * Marks sections whose <em>contents</em> belong to the user, not to the defaults.
      *
      * <p>Top-up is right for settings, where a missing key means "this option is new". It is wrong
-     * for a curated list such as a mob's {@code loot} section, where a missing entry usually means
-     * the server owner removed it on purpose. Adding the bundled entries back would resurrect
-     * deleted drops on every startup.</p>
+     * for a curated list such as a mob's {@code loot} section or a single message entry, where a
+     * missing child usually means the server owner removed it on purpose. Adding the bundled
+     * children back would resurrect deleted drops, or put a chat line back under a message the
+     * owner turned into an action bar.</p>
      *
-     * <p>Once the user has such a section, its contents are left alone. A section they do not have
-     * yet is still added in full, so entirely new entries in a future version still arrive.</p>
+     * <p>Either way, once the user has the section its contents are left alone. The two factories
+     * differ only in what an <em>absent</em> section means, which is not the same question for a
+     * drop list as for a message.</p>
      */
-    @FunctionalInterface
-    public interface OwnedSection {
-        /** @param sectionPath a section path in the defaults, for example {@code BOGGED.loot} */
-        boolean matches(String sectionPath);
+    public record OwnedSection(SectionMatcher matcher, boolean keepDeleted) {
+
+        /**
+         * For a list the user curates. A section they removed entirely stays removed, as long as
+         * they still have its parent. Deleting a mob's whole {@code loot} block has to stick.
+         */
+        public static OwnedSection curated(SectionMatcher matcher) {
+            return new OwnedSection(matcher, true);
+        }
+
+        /**
+         * For a section the plugin looks up by name. A section they removed entirely comes back in
+         * full, because code asking for a message key that is not there warns in the console and
+         * shows the player a missing-key notice. Their edits <em>inside</em> a message are still
+         * theirs; only a wholly absent message is refilled.
+         */
+        public static OwnedSection restoredWhenAbsent(SectionMatcher matcher) {
+            return new OwnedSection(matcher, false);
+        }
     }
 
     private YamlMigrator() {}
@@ -220,19 +247,19 @@ public final class YamlMigrator {
      * leaf of a brand new section create that section, after which every remaining leaf of it looks
      * user-owned and gets skipped, leaving the section half filled.</p>
      *
-     * <p>A section counts as owned when the user has it, and also when they do not have it but do
-     * have its parent. The second case is a section they deleted outright, which is an edit to
-     * respect, not a section they have never seen. A parent they do not have at all is genuinely
-     * new, so it is filled in completely.</p>
+     * <p>A section the user has is always owned. A section they do not have is owned only for a
+     * {@link OwnedSection#curated} marker, and then only when they still have its parent, which is
+     * what tells a block they deleted apart from one they have never seen.</p>
      */
     private static Set<String> lockedSections(YamlConfiguration user, YamlConfiguration defaults, OwnedSection owned) {
         Set<String> locked = new HashSet<>();
         for (String path : defaults.getKeys(true)) {
-            if (!defaults.isConfigurationSection(path) || !owned.matches(path)) continue;
+            if (!defaults.isConfigurationSection(path) || !owned.matcher().matches(defaults, path)) continue;
             if (user.isConfigurationSection(path)) {
                 locked.add(path);
                 continue;
             }
+            if (!owned.keepDeleted()) continue;
             int dot = path.lastIndexOf('.');
             if (dot > 0 && user.isConfigurationSection(path.substring(0, dot))) {
                 locked.add(path);
