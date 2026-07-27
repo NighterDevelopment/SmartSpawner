@@ -69,7 +69,6 @@ import github.nighter.smartspawner.spawner.sell.SpawnerSellManager;
 import github.nighter.smartspawner.spawner.utils.SpawnerLocationLockManager;
 import github.nighter.smartspawner.spawner.utils.SpawnerTypeChecker;
 import github.nighter.smartspawner.updates.ConfigUpdater;
-import github.nighter.smartspawner.updates.LanguageChangelogUpdater;
 import github.nighter.smartspawner.updates.LanguageUpdater;
 import github.nighter.smartspawner.updates.UpdateChecker;
 import github.nighter.smartspawner.utils.TimeFormatter;
@@ -240,7 +239,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         configUpdater.checkAndUpdateConfig();
         this.languageManager = new LanguageManager(this);
         this.languageUpdater = new LanguageUpdater(this);
-        new LanguageChangelogUpdater(this).update();
         this.messageService = new MessageService(this, languageManager);
         
         // Initialize new unified spawner settings config (but don't load yet)
