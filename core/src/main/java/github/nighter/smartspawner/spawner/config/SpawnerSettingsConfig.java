@@ -50,8 +50,11 @@ public class SpawnerSettingsConfig {
      * Load or create the spawners settings configuration.
      */
     public void load() {
-        // Creates the file if missing and tops up any keys added by a plugin update.
-        YamlMigrator.migrate(configFile, plugin.getResource(RESOURCE), List.of(), plugin.getLogger());
+        // Creates the file if missing and tops up any keys added by a plugin update. A mob's loot
+        // section is left alone once the user has one: those entries are a list they curate, so
+        // topping it up would resurrect drops they deliberately deleted on every startup.
+        YamlMigrator.migrate(configFile, plugin.getResource(RESOURCE), List.of(), null, true,
+                path -> path.endsWith(".loot"), plugin.getLogger());
 
         config = YamlConfiguration.loadConfiguration(configFile);
         parseConfig();

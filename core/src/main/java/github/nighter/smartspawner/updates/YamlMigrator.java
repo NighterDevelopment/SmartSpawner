@@ -4,7 +4,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,7 +26,8 @@ import java.util.logging.Logger;
  *   <li>Run an optional {@link CustomMigration} for anything renames can't express
  *       (conditional value rewrites, pattern-based key moves, ...).</li>
  *   <li>Add missing keys – fill in any key absent from the user's file with the bundled default,
- *       carrying its comments across too.</li>
+ *       carrying its comments across too. Sections marked by an {@link OwnedSection} are skipped,
+ *       because their contents are a list the user curates.</li>
  *   <li>Write to disk – only when at least one change was made.</li>
  * </ol>
  *
@@ -49,6 +52,23 @@ public final class YamlMigrator {
         boolean apply(YamlConfiguration user, YamlConfiguration defaults);
     }
 
+    /**
+     * Marks sections whose <em>contents</em> belong to the user, not to the defaults.
+     *
+     * <p>Top-up is right for settings, where a missing key means "this option is new". It is wrong
+     * for a curated list such as a mob's {@code loot} section, where a missing entry usually means
+     * the server owner removed it on purpose. Adding the bundled entries back would resurrect
+     * deleted drops on every startup.</p>
+     *
+     * <p>Once the user has such a section, its contents are left alone. A section they do not have
+     * yet is still added in full, so entirely new entries in a future version still arrive.</p>
+     */
+    @FunctionalInterface
+    public interface OwnedSection {
+        /** @param sectionPath a section path in the defaults, for example {@code BOGGED.loot} */
+        boolean matches(String sectionPath);
+    }
+
     private YamlMigrator() {}
 
     public static boolean migrate(File file, InputStream defaultStream, List<Rename> renames, Logger log) {
@@ -58,6 +78,11 @@ public final class YamlMigrator {
     public static boolean migrate(File file, InputStream defaultStream, List<Rename> renames,
                                   CustomMigration custom, Logger log) {
         return migrate(file, defaultStream, renames, custom, true, log);
+    }
+
+    public static boolean migrate(File file, InputStream defaultStream, List<Rename> renames,
+                                  CustomMigration custom, boolean addMissing, Logger log) {
+        return migrate(file, defaultStream, renames, custom, addMissing, null, log);
     }
 
     /**
@@ -70,11 +95,13 @@ public final class YamlMigrator {
      * @param addMissing    when {@code true}, every key present in the defaults but missing from the user's
      *                      file is added; set {@code false} for files where the custom migration decides
      *                      exactly which keys to top up (e.g. items.yml)
+     * @param ownedSections optional marker for sections whose contents the user curates, or {@code null}
      * @param log           logger for summary output
      * @return {@code true} if the file was modified and saved
      */
     public static boolean migrate(File file, InputStream defaultStream, List<Rename> renames,
-                                  CustomMigration custom, boolean addMissing, Logger log) {
+                                  CustomMigration custom, boolean addMissing,
+                                  OwnedSection ownedSections, Logger log) {
         // First install: write the bundled resource verbatim so its formatting/comments are preserved.
         if (!file.exists()) {
             return extract(file, defaultStream, log);
@@ -101,7 +128,7 @@ public final class YamlMigrator {
         int stripped = stripLegacyKeys(user);
         int renamed  = applyRenames(user, renames);
         boolean customChanged = custom != null && custom.apply(user, defaults);
-        int added    = (addMissing && defaults != null) ? addMissingKeys(user, defaults) : 0;
+        int added    = (addMissing && defaults != null) ? addMissingKeys(user, defaults, ownedSections) : 0;
 
         if (stripped == 0 && renamed == 0 && !customChanged && added == 0) {
             return false;
@@ -169,11 +196,13 @@ public final class YamlMigrator {
     }
 
     // Returns the number of keys added, carrying comments across for each new leaf.
-    private static int addMissingKeys(YamlConfiguration user, YamlConfiguration defaults) {
+    private static int addMissingKeys(YamlConfiguration user, YamlConfiguration defaults, OwnedSection owned) {
+        Set<String> locked = owned == null ? Set.of() : lockedSections(user, defaults, owned);
         int count = 0;
         for (String path : defaults.getKeys(true)) {
             // Skip intermediate sections – setting a leaf key auto-creates its parent sections.
             if (defaults.isConfigurationSection(path)) continue;
+            if (isInside(path, locked)) continue;
             if (!user.contains(path)) {
                 user.set(path, defaults.get(path));
                 user.setComments(path, defaults.getComments(path));
@@ -182,5 +211,42 @@ public final class YamlMigrator {
             }
         }
         return count;
+    }
+
+    /**
+     * The owned sections that are off limits for this run, decided <em>before</em> anything is added.
+     *
+     * <p>Snapshotting matters. Deciding per key while the file is being written would let the first
+     * leaf of a brand new section create that section, after which every remaining leaf of it looks
+     * user-owned and gets skipped, leaving the section half filled.</p>
+     *
+     * <p>A section counts as owned when the user has it, and also when they do not have it but do
+     * have its parent. The second case is a section they deleted outright, which is an edit to
+     * respect, not a section they have never seen. A parent they do not have at all is genuinely
+     * new, so it is filled in completely.</p>
+     */
+    private static Set<String> lockedSections(YamlConfiguration user, YamlConfiguration defaults, OwnedSection owned) {
+        Set<String> locked = new HashSet<>();
+        for (String path : defaults.getKeys(true)) {
+            if (!defaults.isConfigurationSection(path) || !owned.matches(path)) continue;
+            if (user.isConfigurationSection(path)) {
+                locked.add(path);
+                continue;
+            }
+            int dot = path.lastIndexOf('.');
+            if (dot > 0 && user.isConfigurationSection(path.substring(0, dot))) {
+                locked.add(path);
+            }
+        }
+        return locked;
+    }
+
+    /** True when any ancestor of {@code path} is a locked section. */
+    private static boolean isInside(String path, Set<String> locked) {
+        if (locked.isEmpty()) return false;
+        for (int dot = path.indexOf('.'); dot >= 0; dot = path.indexOf('.', dot + 1)) {
+            if (locked.contains(path.substring(0, dot))) return true;
+        }
+        return false;
     }
 }

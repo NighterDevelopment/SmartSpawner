@@ -2,6 +2,15 @@
 
 All notable changes to SmartSpawner are documented in this file.
 
+## 1.7.1.1
+
+### Fixed
+- Drops you remove from a mob in `spawners_settings.yml` now stay removed. They were being added back every time the server started or you ran `/ss reload`.
+
+### Notes
+- If a drop already came back before this update, delete it once more after updating and it will stay gone. Removing a whole `loot` block for a mob works too.
+- The drop list of every mob already in your file is now yours alone. When a future update adds a new drop to one of those mobs, it will not appear in your file, so add it by hand if you want it. A mob that is completely new to your file still arrives with its full drop list.
+
 ## 1.7.1
 
 ### Added
