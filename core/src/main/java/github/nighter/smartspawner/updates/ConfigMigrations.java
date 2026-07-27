@@ -46,6 +46,49 @@ public final class ConfigMigrations {
             new YamlMigrator.Rename("spawner_break.auto_sell_and_claim_exp_on_break",    "spawner_break.sell_and_xp_break")
     );
 
+    // ── language files ───────────────────────────────────────────────────────
+
+    /*
+     * Every language file gets a list, empty until it needs one, so the first rename has an obvious
+     * home. These matter more than the config ones: the plugin looks message keys up by name, so a
+     * key renamed without an entry here leaves the owner's wording stranded under the old name while
+     * the new name arrives carrying the shipped default, and their customisation quietly stops being
+     * used. Renaming a whole message entry is enough, its components move with it.
+     */
+
+    /** Renames applied to {@code messages.yml}, whose keys sit at the top level. */
+    public static final List<YamlMigrator.Rename> MESSAGES = List.of();
+
+    /** Renames applied to {@code command_messages.yml}, whose keys nest under a command, for example {@code list.no_spawners_found}. */
+    public static final List<YamlMigrator.Rename> COMMAND_MESSAGES = List.of();
+
+    /** Renames applied to {@code gui.yml}. */
+    public static final List<YamlMigrator.Rename> GUI = List.of();
+
+    /** Renames applied to {@code command_gui.yml}. */
+    public static final List<YamlMigrator.Rename> COMMAND_GUI = List.of();
+
+    /** Renames applied to {@code formatting.yml}. */
+    public static final List<YamlMigrator.Rename> FORMATTING = List.of();
+
+    /** Renames applied to {@code items.yml}. */
+    public static final List<YamlMigrator.Rename> ITEMS = List.of();
+
+    /**
+     * The rename list for a language file. The switch is exhaustive on purpose: a new
+     * {@link LanguageUpdater.LanguageFileType} will not compile until its list is declared here.
+     */
+    public static List<YamlMigrator.Rename> forLanguageFile(LanguageUpdater.LanguageFileType type) {
+        return switch (type) {
+            case MESSAGES         -> MESSAGES;
+            case COMMAND_MESSAGES -> COMMAND_MESSAGES;
+            case GUI              -> GUI;
+            case COMMAND_GUI      -> COMMAND_GUI;
+            case FORMATTING       -> FORMATTING;
+            case ITEMS            -> ITEMS;
+        };
+    }
+
     /** Value rewrites for {@code config.yml} that a plain rename can't express. */
     public static final YamlMigrator.CustomMigration CONFIG_VALUES = (user, defaults) -> {
         boolean changed = false;

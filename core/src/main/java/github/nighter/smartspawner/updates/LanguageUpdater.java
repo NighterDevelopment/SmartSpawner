@@ -56,20 +56,21 @@ public class LanguageUpdater {
             for (LanguageFileType type : activeFileTypes) {
                 File langFile   = new File(langDir, type.getFileName());
                 String resource = "language/" + language + "/" + type.getFileName();
+                List<YamlMigrator.Rename> renames = ConfigMigrations.forLanguageFile(type);
 
                 if (type == LanguageFileType.ITEMS) {
                     // items.yml: only top up the '<section>.default' keys; leave per-mob overrides alone.
-                    YamlMigrator.migrate(langFile, plugin.getResource(resource), List.of(),
+                    YamlMigrator.migrate(langFile, plugin.getResource(resource), renames,
                             ConfigMigrations.ITEM_DEFAULTS, false, plugin.getLogger());
                 } else if (type == LanguageFileType.MESSAGES || type == LanguageFileType.COMMAND_MESSAGES) {
                     // Which parts of a message to send is the owner's choice. Once they have a
                     // message, its components are left alone, so deleting 'message' to leave only
                     // 'action_bar' sticks instead of coming back and sending both.
-                    YamlMigrator.migrate(langFile, plugin.getResource(resource), List.of(), null, true,
+                    YamlMigrator.migrate(langFile, plugin.getResource(resource), renames, null, true,
                             YamlMigrator.OwnedSection.restoredWhenAbsent(LanguageUpdater::isMessageEntry),
                             plugin.getLogger());
                 } else {
-                    YamlMigrator.migrate(langFile, plugin.getResource(resource), List.of(),
+                    YamlMigrator.migrate(langFile, plugin.getResource(resource), renames,
                             plugin.getLogger());
                 }
             }
