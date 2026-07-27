@@ -274,11 +274,13 @@ logging:
 # Database mode provides better performance for large servers
 # and enables cross-server spawner management.
 database:
-  # Storage mode: YAML, MYSQL, or SQLITE
-  # YAML: Default file-based storage (spawners_data.yml)
+  # Storage mode: SQLITE or MYSQL
+  # SQLITE: Local database file, no external server required. The default.
   # MYSQL: MariaDB/MySQL database storage with HikariCP connection pool
-  # SQLITE: Local SQLite database storage (no external server required)
-  mode: YAML
+  #
+  # YAML storage was removed. Servers still set to YAML switch to SQLITE on startup
+  # and their spawners_data.yml is imported once, automatically.
+  mode: SQLITE
 
   # Server identifier for cross-server setups
   # Must be unique per server when using shared database
@@ -313,6 +315,10 @@ database:
   sqlite:
     # Database file name (stored in plugin data folder)
     file: "spawners.db"
+
+    # Number of pooled connections. The database runs in WAL mode, so readers do not block
+    # while a save is in progress. Lower this to 1 only if you suspect lock contention.
+    pool_size: 4
 
   # MySQL/MariaDB connection settings (only for MYSQL mode)
   sql:

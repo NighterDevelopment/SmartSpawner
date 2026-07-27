@@ -116,7 +116,7 @@ Số điểm độ bền trừ khỏi công cụ khi phá spawner.
 <ConfigProperty name="sneak_break" value="true" type="boolean">
 Khi bật, cúi trong lúc phá một stack sẽ lấy tối đa 64 spawner cùng lúc.<br><br>
 ::: warning Tỷ lệ rơi và phá khi cúi
-Nếu một loại mob có `drop_chance` trong `spawners_settings.yml`, không thể phá theo stack trừ khi người chơi có `smartspawner.break.bypassdropchance`.
+Nếu một loại mob có `drop_chance` trong `spawner_mobs.yml`, không thể phá theo stack trừ khi người chơi có `smartspawner.break.bypassdropchance`.
 :::
 </ConfigProperty>
 
@@ -305,8 +305,8 @@ Các sự kiện được ghi khi <code>log_all_events</code> là <code>false</c
 Cấu hình nơi lưu dữ liệu spawner.
 </template>
 
-<ConfigProperty name="mode" value="YAML" type="string">
-Backend lưu trữ: <code>YAML</code>, <code>SQLITE</code> hoặc <code>MYSQL</code>.
+<ConfigProperty name="mode" value="SQLITE" type="string">
+Backend lưu trữ: <code>SQLITE</code> hoặc <code>MYSQL</code>. Cấu hình còn để <code>YAML</code> sẽ tự chuyển sang <code>SQLITE</code> trong lần khởi động kế tiếp.
 </ConfigProperty>
 
 <ConfigProperty name="server_name" value="server1" type="string">

@@ -101,7 +101,7 @@ Compatibility, storage, and auditing live in the Server Guide.
 
 <DocCard icon="Plug" title="Plugin Compatibility" link="/docs/plugin-compatibility" desc="Connect protections, world managers, RPG plugins, and Bedrock." />
 
-<DocCard icon="Server" title="Database Support" link="/docs/database-support" desc="Choose YAML, SQLite, or MySQL storage for your deployment." />
+<DocCard icon="Server" title="Database Support" link="/docs/database-support" desc="Choose SQLite or MySQL storage for your deployment." />
 
 <DocCard icon="List" title="Action Logging" link="/docs/action-logging" desc="Track important actions in log files or a Discord channel." />
 

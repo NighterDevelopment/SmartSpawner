@@ -1,10 +1,16 @@
 package github.nighter.smartspawner.spawner.data.database;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.spawner.data.legacy.LegacyInventoryCodec;
+import github.nighter.smartspawner.spawner.data.storage.SpawnerInventoryCodec;
 import github.nighter.smartspawner.spawner.data.storage.StorageMode;
+import github.nighter.smartspawner.spawner.properties.ItemSignature;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.sql.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,19 +28,21 @@ public class SqliteToMySqlMigration {
 
     // MySQL insert syntax (target)
     private static final String INSERT_SQL_MYSQL = """
-            INSERT INTO smart_spawners (
-                spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
+            INSERT INTO spawner_data (
+                spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity_type, item_spawner_material, spawner_exp, spawner_active,
                 spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
                 max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                 last_spawn_time, is_at_capacity, last_interacted_player,
-                preferred_sort_item, filtered_items, inventory_data
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                preferred_sort_item, filtered_items, items, total_items
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 world_name = VALUES(world_name),
                 loc_x = VALUES(loc_x),
                 loc_y = VALUES(loc_y),
                 loc_z = VALUES(loc_z),
+                chunk_x = VALUES(chunk_x),
+                chunk_z = VALUES(chunk_z),
                 entity_type = VALUES(entity_type),
                 item_spawner_material = VALUES(item_spawner_material),
                 spawner_exp = VALUES(spawner_exp),
@@ -53,18 +61,29 @@ public class SqliteToMySqlMigration {
                 last_interacted_player = VALUES(last_interacted_player),
                 preferred_sort_item = VALUES(preferred_sort_item),
                 filtered_items = VALUES(filtered_items),
-                inventory_data = VALUES(inventory_data)
+                items = VALUES(items),
+                total_items = VALUES(total_items)
             """;
 
-    private static final String SELECT_ALL_SQLITE = """
-            SELECT spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
-                   entity_type, item_spawner_material, spawner_exp, spawner_active,
-                   spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
-                   max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
-                   last_spawn_time, is_at_capacity, last_interacted_player,
-                   preferred_sort_item, filtered_items, inventory_data
-            FROM smart_spawners
+    private static final String LEGACY_TABLE_SPAWNERS = "smart_spawners";
+    private static final String TABLE_PLACEHOLDER = "{table}";
+
+    private static final String SELECT_COMMON_COLUMNS = """
+            spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
+            entity_type, item_spawner_material, spawner_exp, spawner_active,
+            spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
+            max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
+            last_spawn_time, is_at_capacity, last_interacted_player,
+            preferred_sort_item, filtered_items
             """;
+
+    /** Source file already at schema v3. */
+    private static final String SELECT_ALL_SQLITE =
+            "SELECT " + SELECT_COMMON_COLUMNS + ", items, total_items FROM " + TABLE_PLACEHOLDER;
+
+    /** Source file left behind by an older release, still on the string inventory column. */
+    private static final String SELECT_ALL_SQLITE_LEGACY =
+            "SELECT " + SELECT_COMMON_COLUMNS + ", inventory_data FROM " + TABLE_PLACEHOLDER;
 
     public SqliteToMySqlMigration(SmartSpawner plugin, DatabaseManager mysqlManager) {
         this.plugin = plugin;
@@ -103,18 +122,61 @@ public class SqliteToMySqlMigration {
     private boolean hasSqliteData(File sqliteFile) {
         String jdbcUrl = "jdbc:sqlite:" + sqliteFile.getAbsolutePath();
 
-        try (Connection conn = DriverManager.getConnection(jdbcUrl);
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM smart_spawners")) {
+        try (Connection conn = DriverManager.getConnection(jdbcUrl)) {
+            String table = resolveSourceTable(conn);
+            if (table == null) {
+                return false;
+            }
 
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + table)) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
             }
         } catch (SQLException e) {
             // Table might not exist or other error
             plugin.debug("SQLite check failed: " + e.getMessage());
         }
 
+        return false;
+    }
+
+    /**
+     * The leftover SQLite file is never opened by {@link DatabaseManager} in MySQL mode, so it was
+     * never brought up to the current schema. It can still carry the pre-v3 table name.
+     *
+     * @return the spawner table name present in the file, or null when there is none
+     */
+    private String resolveSourceTable(Connection conn) throws SQLException {
+        if (sqliteTableExists(conn, DatabaseManager.TABLE_SPAWNERS)) {
+            return DatabaseManager.TABLE_SPAWNERS;
+        }
+        if (sqliteTableExists(conn, LEGACY_TABLE_SPAWNERS)) {
+            return LEGACY_TABLE_SPAWNERS;
+        }
+        return null;
+    }
+
+    private boolean sqliteTableExists(Connection conn, String tableName) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")) {
+            stmt.setString(1, tableName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    private boolean sqliteColumnExists(Connection conn, String tableName, String columnName) throws SQLException {
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("PRAGMA table_info(" + tableName + ")")) {
+            while (rs.next()) {
+                if (columnName.equalsIgnoreCase(rs.getString("name"))) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -139,10 +201,23 @@ public class SqliteToMySqlMigration {
         int migratedCount = 0;
         int failedCount = 0;
 
-        try (Connection sqliteConn = DriverManager.getConnection(sqliteJdbcUrl);
-             Connection mysqlConn = mysqlManager.getConnection();
-             PreparedStatement selectStmt = sqliteConn.prepareStatement(SELECT_ALL_SQLITE);
-             PreparedStatement insertStmt = mysqlConn.prepareStatement(INSERT_SQL_MYSQL)) {
+        try (Connection sqliteConn = DriverManager.getConnection(sqliteJdbcUrl)) {
+
+            String sourceTable = resolveSourceTable(sqliteConn);
+            if (sourceTable == null) {
+                logger.info("SQLite file has no spawner table, skipping migration.");
+                return true;
+            }
+
+            // A file left behind by an older release still carries the string inventory column.
+            boolean hasItemBlob = sqliteColumnExists(sqliteConn, sourceTable, "items");
+            String selectSql = hasItemBlob
+                    ? SELECT_ALL_SQLITE.replace(TABLE_PLACEHOLDER, sourceTable)
+                    : SELECT_ALL_SQLITE_LEGACY.replace(TABLE_PLACEHOLDER, sourceTable);
+
+            try (Connection mysqlConn = mysqlManager.getConnection();
+                 PreparedStatement selectStmt = sqliteConn.prepareStatement(selectSql);
+                 PreparedStatement insertStmt = mysqlConn.prepareStatement(INSERT_SQL_MYSQL)) {
 
             mysqlConn.setAutoCommit(false);
 
@@ -154,32 +229,45 @@ public class SqliteToMySqlMigration {
                     totalSpawners++;
 
                     try {
+                        int locX = rs.getInt("loc_x");
+                        int locZ = rs.getInt("loc_z");
+
                         // Transfer all columns
                         insertStmt.setString(1, rs.getString("spawner_id"));
                         insertStmt.setString(2, rs.getString("server_name"));
                         insertStmt.setString(3, rs.getString("world_name"));
-                        insertStmt.setInt(4, rs.getInt("loc_x"));
+                        insertStmt.setInt(4, locX);
                         insertStmt.setInt(5, rs.getInt("loc_y"));
-                        insertStmt.setInt(6, rs.getInt("loc_z"));
-                        insertStmt.setString(7, rs.getString("entity_type"));
-                        insertStmt.setString(8, rs.getString("item_spawner_material"));
-                        insertStmt.setInt(9, rs.getInt("spawner_exp"));
-                        insertStmt.setBoolean(10, rs.getBoolean("spawner_active"));
-                        insertStmt.setInt(11, rs.getInt("spawner_range"));
-                        insertStmt.setBoolean(12, rs.getBoolean("spawner_stop"));
-                        insertStmt.setLong(13, rs.getLong("spawn_delay"));
-                        insertStmt.setInt(14, rs.getInt("max_spawner_loot_slots"));
-                        insertStmt.setInt(15, rs.getInt("max_stored_exp"));
-                        insertStmt.setInt(16, rs.getInt("min_mobs"));
-                        insertStmt.setInt(17, rs.getInt("max_mobs"));
-                        insertStmt.setInt(18, rs.getInt("stack_size"));
-                        insertStmt.setInt(19, rs.getInt("max_stack_size"));
-                        insertStmt.setLong(20, rs.getLong("last_spawn_time"));
-                        insertStmt.setBoolean(21, rs.getBoolean("is_at_capacity"));
-                        insertStmt.setString(22, rs.getString("last_interacted_player"));
-                        insertStmt.setString(23, rs.getString("preferred_sort_item"));
-                        insertStmt.setString(24, rs.getString("filtered_items"));
-                        insertStmt.setString(25, rs.getString("inventory_data"));
+                        insertStmt.setInt(6, locZ);
+                        insertStmt.setInt(7, locX >> 4);
+                        insertStmt.setInt(8, locZ >> 4);
+                        insertStmt.setString(9, rs.getString("entity_type"));
+                        insertStmt.setString(10, rs.getString("item_spawner_material"));
+                        insertStmt.setLong(11, rs.getLong("spawner_exp"));
+                        insertStmt.setBoolean(12, rs.getBoolean("spawner_active"));
+                        insertStmt.setInt(13, rs.getInt("spawner_range"));
+                        insertStmt.setBoolean(14, rs.getBoolean("spawner_stop"));
+                        insertStmt.setLong(15, rs.getLong("spawn_delay"));
+                        insertStmt.setInt(16, rs.getInt("max_spawner_loot_slots"));
+                        insertStmt.setLong(17, rs.getLong("max_stored_exp"));
+                        insertStmt.setInt(18, rs.getInt("min_mobs"));
+                        insertStmt.setInt(19, rs.getInt("max_mobs"));
+                        insertStmt.setInt(20, rs.getInt("stack_size"));
+                        insertStmt.setInt(21, rs.getInt("max_stack_size"));
+                        insertStmt.setLong(22, rs.getLong("last_spawn_time"));
+                        insertStmt.setBoolean(23, rs.getBoolean("is_at_capacity"));
+                        insertStmt.setString(24, rs.getString("last_interacted_player"));
+                        insertStmt.setString(25, rs.getString("preferred_sort_item"));
+                        insertStmt.setString(26, rs.getString("filtered_items"));
+
+                        if (hasItemBlob) {
+                            insertStmt.setBytes(27, rs.getBytes("items"));
+                            insertStmt.setLong(28, rs.getLong("total_items"));
+                        } else {
+                            Map<ItemSignature, Long> items = readLegacyInventory(rs.getString("inventory_data"));
+                            insertStmt.setBytes(27, SpawnerInventoryCodec.encode(items));
+                            insertStmt.setLong(28, SpawnerInventoryCodec.totalItems(items));
+                        }
 
                         insertStmt.addBatch();
                         batchCount++;
@@ -218,10 +306,29 @@ public class SqliteToMySqlMigration {
             }
 
             return failedCount == 0;
+            }
 
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Database error during SQLite to MySQL migration", e);
             return false;
         }
+    }
+
+    private Map<ItemSignature, Long> readLegacyInventory(String inventoryData) {
+        if (inventoryData == null || inventoryData.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<ItemStack, Long> legacyItems = LegacyInventoryCodec.deserialize(
+                LegacyInventoryCodec.parseJsonArray(inventoryData));
+        if (legacyItems.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<ItemSignature, Long> items = new LinkedHashMap<>(Math.max(16, legacyItems.size() * 2));
+        for (Map.Entry<ItemStack, Long> entry : legacyItems.entrySet()) {
+            items.merge(new ItemSignature(entry.getKey()), entry.getValue(), Long::sum);
+        }
+        return items;
     }
 }

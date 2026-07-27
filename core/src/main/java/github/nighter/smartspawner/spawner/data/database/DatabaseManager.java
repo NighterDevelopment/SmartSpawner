@@ -3,24 +3,41 @@ package github.nighter.smartspawner.spawner.data.database;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.spawner.data.legacy.LegacyInventoryCodec;
+import github.nighter.smartspawner.spawner.data.storage.SpawnerInventoryCodec;
 import github.nighter.smartspawner.spawner.data.storage.StorageMode;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Manages database connections using HikariCP connection pool.
- * Supports MySQL/MariaDB and SQLite for spawner data storage.
+ * Supports SQLite (default) and MySQL/MariaDB for spawner data storage.
  */
 public class DatabaseManager {
+    /** Spawner rows. Renamed from {@code smart_spawners} in schema v3. */
+    public static final String TABLE_SPAWNERS = "spawner_data";
+    /** Plugin-owned schema metadata. Renamed from {@code smartspawner_meta} in schema v3. */
+    public static final String TABLE_META = "spawner_meta";
+
+    private static final String LEGACY_TABLE_SPAWNERS = "smart_spawners";
+    private static final String LEGACY_TABLE_META = "smartspawner_meta";
+
     private final SmartSpawner plugin;
     private final Logger logger;
     private final StorageMode storageMode;
@@ -34,6 +51,7 @@ public class DatabaseManager {
     private final String password;
     private final String serverName;
     private final String sqliteFile;
+    private final int sqlitePoolSize;
 
     // Pool settings
     private final int maxPoolSize;
@@ -46,7 +64,7 @@ public class DatabaseManager {
 
     // MySQL/MariaDB table creation SQL
     private static final String CREATE_TABLE_MYSQL = """
-            CREATE TABLE IF NOT EXISTS smart_spawners (
+            CREATE TABLE IF NOT EXISTS spawner_data (
                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
                 spawner_id VARCHAR(64) NOT NULL,
                 server_name VARCHAR(64) NOT NULL,
@@ -56,6 +74,10 @@ public class DatabaseManager {
                 loc_x INT NOT NULL,
                 loc_y INT NOT NULL,
                 loc_z INT NOT NULL,
+
+                -- Chunk coordinates, derived from loc_x/loc_z, indexed for per-chunk lookups
+                chunk_x INT NOT NULL DEFAULT 0,
+                chunk_z INT NOT NULL DEFAULT 0,
 
                 -- Entity data
                 entity_type VARCHAR(64) NOT NULL,
@@ -81,8 +103,9 @@ public class DatabaseManager {
                 preferred_sort_item VARCHAR(64) DEFAULT NULL,
                 filtered_items TEXT DEFAULT NULL,
 
-                -- Inventory (JSON blob)
-                inventory_data MEDIUMTEXT DEFAULT NULL,
+                -- Virtual inventory, see SpawnerInventoryCodec
+                items MEDIUMBLOB DEFAULT NULL,
+                total_items BIGINT NOT NULL DEFAULT 0,
 
                 -- Timestamps
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -92,13 +115,14 @@ public class DatabaseManager {
                 UNIQUE KEY uk_server_spawner (server_name, spawner_id),
                 UNIQUE KEY uk_location (server_name, world_name, loc_x, loc_y, loc_z),
                 INDEX idx_server (server_name),
-                INDEX idx_world (server_name, world_name)
+                INDEX idx_world (server_name, world_name),
+                INDEX idx_chunk (server_name, world_name, chunk_x, chunk_z)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             """;
 
     // SQLite table creation SQL (slightly different syntax)
     private static final String CREATE_TABLE_SQLITE = """
-            CREATE TABLE IF NOT EXISTS smart_spawners (
+            CREATE TABLE IF NOT EXISTS spawner_data (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 spawner_id VARCHAR(64) NOT NULL,
                 server_name VARCHAR(64) NOT NULL,
@@ -108,6 +132,10 @@ public class DatabaseManager {
                 loc_x INT NOT NULL,
                 loc_y INT NOT NULL,
                 loc_z INT NOT NULL,
+
+                -- Chunk coordinates, derived from loc_x/loc_z, indexed for per-chunk lookups
+                chunk_x INT NOT NULL DEFAULT 0,
+                chunk_z INT NOT NULL DEFAULT 0,
 
                 -- Entity data
                 entity_type VARCHAR(64) NOT NULL,
@@ -133,8 +161,9 @@ public class DatabaseManager {
                 preferred_sort_item VARCHAR(64) DEFAULT NULL,
                 filtered_items TEXT DEFAULT NULL,
 
-                -- Inventory (JSON blob)
-                inventory_data TEXT DEFAULT NULL,
+                -- Virtual inventory, see SpawnerInventoryCodec
+                items BLOB DEFAULT NULL,
+                total_items BIGINT NOT NULL DEFAULT 0,
 
                 -- Timestamps
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -148,17 +177,21 @@ public class DatabaseManager {
 
     // SQLite index creation (separate statements)
     private static final String CREATE_INDEX_SERVER_SQLITE =
-            "CREATE INDEX IF NOT EXISTS idx_server ON smart_spawners (server_name)";
+            "CREATE INDEX IF NOT EXISTS idx_server ON spawner_data (server_name)";
     private static final String CREATE_INDEX_WORLD_SQLITE =
-            "CREATE INDEX IF NOT EXISTS idx_world ON smart_spawners (server_name, world_name)";
+            "CREATE INDEX IF NOT EXISTS idx_world ON spawner_data (server_name, world_name)";
+    private static final String CREATE_INDEX_CHUNK_SQLITE =
+            "CREATE INDEX IF NOT EXISTS idx_chunk ON spawner_data (server_name, world_name, chunk_x, chunk_z)";
 
-    private static final String SCHEMA_META_TABLE = "smartspawner_meta";
     private static final String SCHEMA_VERSION_KEY = "schema_version";
     private static final int LEGACY_SCHEMA_VERSION = 1;
-    private static final int CURRENT_SCHEMA_VERSION = 2;
+    private static final int CURRENT_SCHEMA_VERSION = 3;
+
+    /** Rows converted per transaction while rewriting inventories during the v3 migration. */
+    private static final int MIGRATION_BATCH_SIZE = 250;
 
     private static final String CREATE_META_TABLE_MYSQL = """
-            CREATE TABLE IF NOT EXISTS smartspawner_meta (
+            CREATE TABLE IF NOT EXISTS spawner_meta (
                 meta_key VARCHAR(64) PRIMARY KEY,
                 meta_value VARCHAR(64) NOT NULL,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -166,7 +199,7 @@ public class DatabaseManager {
             """;
 
     private static final String CREATE_META_TABLE_SQLITE = """
-            CREATE TABLE IF NOT EXISTS smartspawner_meta (
+            CREATE TABLE IF NOT EXISTS spawner_meta (
                 meta_key VARCHAR(64) PRIMARY KEY,
                 meta_value VARCHAR(64) NOT NULL,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -186,6 +219,7 @@ public class DatabaseManager {
         this.password = plugin.getConfig().getString("database.sql.password", "");
         this.serverName = plugin.getConfig().getString("database.server_name", "server1");
         this.sqliteFile = plugin.getConfig().getString("database.sqlite.file", "spawners.db");
+        this.sqlitePoolSize = Math.max(1, plugin.getConfig().getInt("database.sqlite.pool_size", 4));
 
         // Pool settings
         this.maxPoolSize = plugin.getConfig().getInt("database.sql.pool.maximum-size", 10);
@@ -204,6 +238,9 @@ public class DatabaseManager {
     public boolean initialize() {
         try {
             setupDataSource();
+            // Renaming has to happen before anything reads the schema version, because the meta
+            // table holding that version is itself one of the renamed tables.
+            renameLegacyTables();
             createTables();
             createSchemaMetaTable();
             runSchemaMigrations();
@@ -267,26 +304,76 @@ public class DatabaseManager {
             dataFolder.mkdirs();
         }
 
-        // JDBC URL for SQLite (file-based)
+        // Pragmas go in the JDBC URL because the xerial driver builds its SQLiteConfig from the URL
+        // query string. WAL lets readers run while the batched flush holds the write lock, and
+        // busy_timeout is what stops a concurrent reader from failing outright with SQLITE_BUSY.
         File dbFile = new File(dataFolder, sqliteFile);
-        String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+        String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath()
+                + "?journal_mode=WAL"
+                + "&synchronous=NORMAL"
+                + "&busy_timeout=5000"
+                + "&foreign_keys=true"
+                + "&cache_size=-16000"
+                + "&temp_store=MEMORY";
 
         config.setJdbcUrl(jdbcUrl);
         config.setDriverClassName("org.sqlite.JDBC");
 
-        // SQLite-specific pool settings (SQLite doesn't handle multiple connections well)
-        config.setMaximumPoolSize(1);  // SQLite works best with single connection
+        config.setMaximumPoolSize(sqlitePoolSize);
         config.setMinimumIdle(1);
         config.setConnectionTimeout(connectionTimeout);
         config.setMaxLifetime(0);  // Disable max lifetime for SQLite
         config.setIdleTimeout(0);  // Disable idle timeout for SQLite
-
-        // SQLite performance settings
         config.setPoolName("SmartSpawner-SQLite-HikariCP");
-        config.addDataSourceProperty("journal_mode", "WAL");
-        config.addDataSourceProperty("synchronous", "NORMAL");
-        config.addDataSourceProperty("cache_size", "10000");
-        config.addDataSourceProperty("foreign_keys", "ON");
+    }
+
+    /**
+     * Move pre-v3 table names onto the {@code spawner_*} prefix. No-op on a fresh install and on
+     * databases that were already renamed.
+     */
+    private void renameLegacyTables() throws SQLException {
+        renameTableIfNeeded(LEGACY_TABLE_META, TABLE_META);
+        renameTableIfNeeded(LEGACY_TABLE_SPAWNERS, TABLE_SPAWNERS);
+    }
+
+    private void renameTableIfNeeded(String from, String to) throws SQLException {
+        if (!tableExists(from) || tableExists(to)) {
+            return;
+        }
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE " + from + " RENAME TO " + to);
+        }
+        logger.info("Renamed database table " + from + " to " + to + ".");
+    }
+
+    private boolean tableExists(String tableName) throws SQLException {
+        try (Connection conn = getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            try (ResultSet rs = meta.getTables(conn.getCatalog(), null, tableName, new String[]{"TABLE"})) {
+                while (rs.next()) {
+                    if (tableName.equalsIgnoreCase(rs.getString("TABLE_NAME"))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean columnExists(String tableName, String columnName) throws SQLException {
+        try (Connection conn = getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, tableName, null)) {
+                while (rs.next()) {
+                    if (columnName.equalsIgnoreCase(rs.getString("COLUMN_NAME"))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private void createTables() throws SQLException {
@@ -295,13 +382,28 @@ public class DatabaseManager {
 
             if (storageMode == StorageMode.SQLITE) {
                 stmt.execute(CREATE_TABLE_SQLITE);
-                stmt.execute(CREATE_INDEX_SERVER_SQLITE);
-                stmt.execute(CREATE_INDEX_WORLD_SQLITE);
             } else {
                 stmt.execute(CREATE_TABLE_MYSQL);
             }
 
             plugin.debug("Database tables created/verified successfully.");
+        }
+    }
+
+    /**
+     * SQLite indexes are separate statements, and the chunk index can only be created once the
+     * chunk columns exist, so this runs after migrations rather than with the table creation.
+     */
+    private void createSqliteIndexes() throws SQLException {
+        if (storageMode != StorageMode.SQLITE) {
+            return;
+        }
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(CREATE_INDEX_SERVER_SQLITE);
+            stmt.execute(CREATE_INDEX_WORLD_SQLITE);
+            stmt.execute(CREATE_INDEX_CHUNK_SQLITE);
         }
     }
 
@@ -334,10 +436,12 @@ public class DatabaseManager {
             currentVersion = targetVersion;
             logger.info("Database schema migration completed to v" + currentVersion + ".");
         }
+
+        createSqliteIndexes();
     }
 
     private Integer getSchemaVersionFromMeta() throws SQLException {
-        String sql = "SELECT meta_value FROM " + SCHEMA_META_TABLE + " WHERE meta_key = ?";
+        String sql = "SELECT meta_value FROM " + TABLE_META + " WHERE meta_key = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, SCHEMA_VERSION_KEY);
@@ -357,13 +461,16 @@ public class DatabaseManager {
     }
 
     private int detectInitialSchemaVersion() throws SQLException {
-        return xpColumnsRequireMigration() ? LEGACY_SCHEMA_VERSION : CURRENT_SCHEMA_VERSION;
+        if (columnExists(TABLE_SPAWNERS, "items")) {
+            return CURRENT_SCHEMA_VERSION;
+        }
+        return xpColumnsRequireMigration() ? LEGACY_SCHEMA_VERSION : 2;
     }
 
     private void setSchemaVersion(int version) throws SQLException {
         String sql = storageMode == StorageMode.SQLITE
-                ? "INSERT INTO " + SCHEMA_META_TABLE + " (meta_key, meta_value) VALUES (?, ?) ON CONFLICT(meta_key) DO UPDATE SET meta_value = excluded.meta_value"
-                : "INSERT INTO " + SCHEMA_META_TABLE + " (meta_key, meta_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)";
+                ? "INSERT INTO " + TABLE_META + " (meta_key, meta_value) VALUES (?, ?) ON CONFLICT(meta_key) DO UPDATE SET meta_value = excluded.meta_value"
+                : "INSERT INTO " + TABLE_META + " (meta_key, meta_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -374,19 +481,21 @@ public class DatabaseManager {
     }
 
     private void applyMigrationStep(int targetVersion) throws SQLException {
-        if (targetVersion == 2) {
-            migrateXpColumnsToBigIntIfNeeded();
-            return;
+        switch (targetVersion) {
+            case 2 -> migrateXpColumnsToBigIntIfNeeded();
+            case 3 -> migrateToChunkAndItemBlobColumns();
+            default -> throw new SQLException("No database migration handler found for schema version: " + targetVersion);
         }
-        throw new SQLException("No database migration handler found for schema version: " + targetVersion);
     }
+
+    // ============== Schema v2: XP columns to BIGINT ==============
 
     private void migrateXpColumnsToBigIntIfNeeded() throws SQLException {
         if (!xpColumnsRequireMigration()) {
             return;
         }
 
-        String backupName = createPreMigrationBackup();
+        String backupName = createPreMigrationBackup("bigint");
         logger.info("Created database backup before XP BIGINT migration: " + backupName);
 
         if (storageMode == StorageMode.SQLITE) {
@@ -409,7 +518,7 @@ public class DatabaseManager {
                 SELECT column_name, data_type
                 FROM information_schema.columns
                 WHERE table_schema = ?
-                  AND table_name = 'smart_spawners'
+                  AND table_name = ?
                   AND column_name IN ('spawner_exp', 'max_stored_exp')
                 """;
 
@@ -417,6 +526,7 @@ public class DatabaseManager {
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, database);
+            stmt.setString(2, TABLE_SPAWNERS);
             try (ResultSet rs = stmt.executeQuery()) {
                 int seen = 0;
                 while (rs.next()) {
@@ -435,7 +545,7 @@ public class DatabaseManager {
     }
 
     private boolean sqliteXpColumnsRequireMigration() throws SQLException {
-        String sql = "PRAGMA table_info(smart_spawners)";
+        String sql = "PRAGMA table_info(" + TABLE_SPAWNERS + ")";
         boolean spawnerExpBigInt = false;
         boolean maxStoredExpBigInt = false;
 
@@ -458,12 +568,12 @@ public class DatabaseManager {
         return !(spawnerExpBigInt && maxStoredExpBigInt);
     }
 
-    private String createPreMigrationBackup() throws SQLException {
-        String backupTableName = "smart_spawners_backup_" +
+    private String createPreMigrationBackup(String label) throws SQLException {
+        String backupTableName = TABLE_SPAWNERS + "_backup_" + label + "_" +
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
         if (storageMode == StorageMode.SQLITE) {
-            String backupSql = "CREATE TABLE " + backupTableName + " AS SELECT * FROM smart_spawners";
+            String backupSql = "CREATE TABLE " + backupTableName + " AS SELECT * FROM " + TABLE_SPAWNERS;
             try (Connection conn = getConnection();
                  Statement stmt = conn.createStatement()) {
                 stmt.execute(backupSql);
@@ -471,8 +581,8 @@ public class DatabaseManager {
         } else {
             try (Connection conn = getConnection();
                  Statement stmt = conn.createStatement()) {
-                stmt.execute("CREATE TABLE " + backupTableName + " LIKE smart_spawners");
-                stmt.execute("INSERT INTO " + backupTableName + " SELECT * FROM smart_spawners");
+                stmt.execute("CREATE TABLE " + backupTableName + " LIKE " + TABLE_SPAWNERS);
+                stmt.execute("INSERT INTO " + backupTableName + " SELECT * FROM " + TABLE_SPAWNERS);
             }
         }
 
@@ -481,7 +591,7 @@ public class DatabaseManager {
 
     private void migrateMySqlXpColumnsToBigInt() throws SQLException {
         String alterSql = """
-                ALTER TABLE smart_spawners
+                ALTER TABLE spawner_data
                     MODIFY COLUMN spawner_exp BIGINT NOT NULL DEFAULT 0,
                     MODIFY COLUMN max_stored_exp BIGINT NOT NULL DEFAULT 1000
                 """;
@@ -493,11 +603,13 @@ public class DatabaseManager {
     }
 
     private void migrateSQLiteXpColumnsToBigInt() throws SQLException {
+        // Recreates the table in its v2 shape. The v3 step below then adds the chunk and item
+        // columns on top, so this deliberately keeps the old inventory_data column.
         String[] migrationSql = {
                 "BEGIN IMMEDIATE TRANSACTION",
-                "ALTER TABLE smart_spawners RENAME TO smart_spawners_pre_bigint",
+                "ALTER TABLE " + TABLE_SPAWNERS + " RENAME TO spawner_data_pre_bigint",
                 """
-                CREATE TABLE smart_spawners (
+                CREATE TABLE spawner_data (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     spawner_id VARCHAR(64) NOT NULL,
                     server_name VARCHAR(64) NOT NULL,
@@ -531,7 +643,7 @@ public class DatabaseManager {
                 )
                 """,
                 """
-                INSERT INTO smart_spawners (
+                INSERT INTO spawner_data (
                     id, spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
                     entity_type, item_spawner_material, spawner_exp, spawner_active,
                     spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
@@ -548,9 +660,9 @@ public class DatabaseManager {
                     last_spawn_time, is_at_capacity, last_interacted_player,
                     preferred_sort_item, filtered_items, inventory_data,
                     created_at, updated_at
-                FROM smart_spawners_pre_bigint
+                FROM spawner_data_pre_bigint
                 """,
-                "DROP TABLE smart_spawners_pre_bigint",
+                "DROP TABLE spawner_data_pre_bigint",
                 CREATE_INDEX_SERVER_SQLITE,
                 CREATE_INDEX_WORLD_SQLITE,
                 "COMMIT"
@@ -569,6 +681,217 @@ public class DatabaseManager {
                 logger.log(Level.SEVERE, "Failed to rollback SQLite BIGINT migration", rollbackEx);
             }
             throw e;
+        }
+    }
+
+    // ============== Schema v3: chunk columns and item blob ==============
+
+    /**
+     * Adds the chunk coordinates and the binary inventory columns, then rewrites every stored
+     * inventory from the legacy string format into {@link SpawnerInventoryCodec}.
+     */
+    private void migrateToChunkAndItemBlobColumns() throws SQLException {
+        boolean hasLegacyInventory = columnExists(TABLE_SPAWNERS, "inventory_data");
+
+        if (hasLegacyInventory && countRows() > 0) {
+            String backupName = createPreMigrationBackup("items");
+            logger.info("Created database backup before inventory format migration: " + backupName);
+        }
+
+        addColumnIfMissing("chunk_x", "INT NOT NULL DEFAULT 0");
+        addColumnIfMissing("chunk_z", "INT NOT NULL DEFAULT 0");
+        addColumnIfMissing("items", storageMode == StorageMode.SQLITE ? "BLOB DEFAULT NULL" : "MEDIUMBLOB DEFAULT NULL");
+        addColumnIfMissing("total_items", "BIGINT NOT NULL DEFAULT 0");
+
+        backfillChunkColumns();
+
+        if (hasLegacyInventory) {
+            int converted = convertLegacyInventories();
+            logger.info("Converted " + converted + " spawner inventories to the binary item format.");
+            dropLegacyInventoryColumn();
+        }
+
+        if (storageMode != StorageMode.SQLITE) {
+            createMySqlChunkIndexIfMissing();
+        }
+    }
+
+    private long countRows() throws SQLException {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + TABLE_SPAWNERS)) {
+            return rs.next() ? rs.getLong(1) : 0L;
+        }
+    }
+
+    private void addColumnIfMissing(String columnName, String definition) throws SQLException {
+        if (columnExists(TABLE_SPAWNERS, columnName)) {
+            return;
+        }
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE " + TABLE_SPAWNERS + " ADD COLUMN " + columnName + " " + definition);
+        }
+        plugin.debug("Added column " + columnName + " to " + TABLE_SPAWNERS);
+    }
+
+    /**
+     * Derives chunk coordinates from block coordinates. Done in Java rather than SQL because the
+     * arithmetic-shift semantics of {@code >>} on negative values differ between SQLite and MySQL.
+     */
+    private void backfillChunkColumns() throws SQLException {
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement select = conn.prepareStatement(
+                    "SELECT id, loc_x, loc_z FROM " + TABLE_SPAWNERS);
+                 PreparedStatement update = conn.prepareStatement(
+                         "UPDATE " + TABLE_SPAWNERS + " SET chunk_x = ?, chunk_z = ? WHERE id = ?")) {
+
+                int pending = 0;
+                try (ResultSet rs = select.executeQuery()) {
+                    while (rs.next()) {
+                        update.setInt(1, rs.getInt("loc_x") >> 4);
+                        update.setInt(2, rs.getInt("loc_z") >> 4);
+                        update.setLong(3, rs.getLong("id"));
+                        update.addBatch();
+
+                        if (++pending >= MIGRATION_BATCH_SIZE) {
+                            update.executeBatch();
+                            pending = 0;
+                        }
+                    }
+                }
+
+                if (pending > 0) {
+                    update.executeBatch();
+                }
+            }
+
+            conn.commit();
+        }
+    }
+
+    /**
+     * Rewrites {@code inventory_data} into the {@code items} blob. Rows whose legacy payload cannot
+     * be parsed are left with a null blob and logged, rather than failing the whole migration.
+     */
+    private int convertLegacyInventories() throws SQLException {
+        int converted = 0;
+
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement select = conn.prepareStatement(
+                    "SELECT id, spawner_id, inventory_data FROM " + TABLE_SPAWNERS
+                            + " WHERE inventory_data IS NOT NULL AND inventory_data <> ''");
+                 PreparedStatement update = conn.prepareStatement(
+                         "UPDATE " + TABLE_SPAWNERS + " SET items = ?, total_items = ? WHERE id = ?")) {
+
+                int pending = 0;
+                try (ResultSet rs = select.executeQuery()) {
+                    while (rs.next()) {
+                        long rowId = rs.getLong("id");
+                        String spawnerId = rs.getString("spawner_id");
+                        String legacy = rs.getString("inventory_data");
+
+                        byte[] blob;
+                        long total;
+                        try {
+                            Map<ItemStack, Long> items = LegacyInventoryCodec.deserialize(
+                                    LegacyInventoryCodec.parseJsonArray(legacy));
+                            blob = encodeLegacyItems(items);
+                            total = 0L;
+                            for (Long amount : items.values()) {
+                                total += amount;
+                            }
+                        } catch (Exception e) {
+                            logger.warning("Could not convert stored inventory for spawner " + spawnerId
+                                    + ", it will be empty after migration: " + e.getMessage());
+                            blob = null;
+                            total = 0L;
+                        }
+
+                        update.setBytes(1, blob);
+                        update.setLong(2, total);
+                        update.setLong(3, rowId);
+                        update.addBatch();
+                        converted++;
+
+                        if (++pending >= MIGRATION_BATCH_SIZE) {
+                            update.executeBatch();
+                            pending = 0;
+                        }
+                    }
+                }
+
+                if (pending > 0) {
+                    update.executeBatch();
+                }
+            }
+
+            conn.commit();
+        }
+
+        return converted;
+    }
+
+    /**
+     * Encodes legacy item templates. They carry no signature-relevant metadata, so they are wrapped
+     * in the same layout {@link SpawnerInventoryCodec} produces by round-tripping through a
+     * consolidated map keyed on fresh signatures.
+     */
+    private byte[] encodeLegacyItems(Map<ItemStack, Long> items) throws Exception {
+        if (items.isEmpty()) {
+            return null;
+        }
+
+        Map<github.nighter.smartspawner.spawner.properties.ItemSignature, Long> consolidated =
+                new LinkedHashMap<>(Math.max(16, items.size() * 2));
+        for (Map.Entry<ItemStack, Long> entry : items.entrySet()) {
+            consolidated.merge(
+                    new github.nighter.smartspawner.spawner.properties.ItemSignature(entry.getKey()),
+                    entry.getValue(),
+                    Long::sum);
+        }
+
+        return SpawnerInventoryCodec.encode(consolidated);
+    }
+
+    private void dropLegacyInventoryColumn() {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE " + TABLE_SPAWNERS + " DROP COLUMN inventory_data");
+            plugin.debug("Dropped legacy inventory_data column.");
+        } catch (SQLException e) {
+            // Harmless if it stays: nothing reads or writes it any more.
+            logger.warning("Could not drop the legacy inventory_data column, leaving it in place: " + e.getMessage());
+        }
+    }
+
+    private void createMySqlChunkIndexIfMissing() throws SQLException {
+        List<String> existingIndexes = new ArrayList<>();
+        try (Connection conn = getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            try (ResultSet rs = meta.getIndexInfo(conn.getCatalog(), null, TABLE_SPAWNERS, false, false)) {
+                while (rs.next()) {
+                    String name = rs.getString("INDEX_NAME");
+                    if (name != null) {
+                        existingIndexes.add(name.toLowerCase(Locale.ROOT));
+                    }
+                }
+            }
+        }
+
+        if (existingIndexes.contains("idx_chunk")) {
+            return;
+        }
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("CREATE INDEX idx_chunk ON " + TABLE_SPAWNERS
+                    + " (server_name, world_name, chunk_x, chunk_z)");
         }
     }
 

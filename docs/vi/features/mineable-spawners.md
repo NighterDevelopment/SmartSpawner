@@ -24,4 +24,4 @@ spawner_break:
 
 - **`sneak_break`**: Cúi khi phá để lấy tối đa 64 spawner khỏi stack cùng lúc
 - **`silk_touch.required`**: Yêu cầu Silk Touch để nhận vật phẩm spawner
-- **`drop_chance`**: Đặt tỷ lệ rơi riêng theo mob trong `spawners_settings.yml`
+- **`drop_chance`**: Đặt tỷ lệ rơi riêng theo mob trong `spawner_mobs.yml`

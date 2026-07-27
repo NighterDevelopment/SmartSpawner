@@ -127,7 +127,7 @@ slot_14:
 
 - `custom_texture` is the hash from the texture URL (without the `http://textures.minecraft.net/texture/` prefix).
 - Textures can be found at [Minecraft-Heads.com](https://minecraft-heads.com/).
-- If omitted on the info button, the plugin falls back to the mob head from `spawners_settings.yml`.
+- If omitted on the info button, the plugin falls back to the mob head from `spawner_mobs.yml`.
 - Textures are cached after first load with no performance impact on repeated GUI opens.
 
 ::: warning

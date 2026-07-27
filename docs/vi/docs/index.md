@@ -56,4 +56,4 @@ Java API công khai hỗ trợ tạo spawner, truy cập dữ liệu, sự kiệ
 2. Cài SmartSpawner và khởi động máy chủ một lần.
 3. Xem lại [cấu hình chính](/vi/docs/configuration).
 4. Bật các [tích hợp plugin](/vi/docs/integrations/) mà máy chủ sử dụng.
-5. Điều chỉnh [vật phẩm từ spawner](/vi/docs/spawners-settings) và [item spawner](/vi/docs/item-spawners-settings).
+5. Điều chỉnh [vật phẩm từ spawner](/vi/docs/spawner-mobs) và [item spawner](/vi/docs/spawner-items).

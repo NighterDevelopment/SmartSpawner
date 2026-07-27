@@ -55,10 +55,10 @@ The plugin automatically creates its configuration files in `plugins/SmartSpawne
 | File | Description |
 |------|-------------|
 | `config.yml` | Main configuration: spawner behavior, economy, visuals |
-| `spawners_settings.yml` | Drop tables and XP values for each mob type |
-| `item_spawners_settings.yml` | Drop tables for item spawners |
+| `spawner_mobs.yml` | Drop tables and XP values for each mob type |
+| `spawner_items.yml` | Drop tables for item spawners |
 | `item_prices.yml` | Custom sell prices for items |
-| `spawners_data.yml` | Persistent spawner data (YAML mode) |
+| `spawners.db` | Persistent spawner data (SQLite mode) |
 | `language/` | Language folder with translatable message files |
 | `gui_layouts/` | GUI layout folder |
 | `auraskills.yml` | AuraSkills integration settings (if AuraSkills is installed) |

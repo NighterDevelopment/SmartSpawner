@@ -127,7 +127,7 @@ slot_14:
 
 - `custom_texture` là hash trong URL texture, không gồm tiền tố `http://textures.minecraft.net/texture/`.
 - Có thể tìm texture tại [Minecraft-Heads.com](https://minecraft-heads.com/).
-- Nếu bỏ qua trên nút thông tin, plugin dùng head mob từ `spawners_settings.yml`.
+- Nếu bỏ qua trên nút thông tin, plugin dùng head mob từ `spawner_mobs.yml`.
 - Texture được cache sau lần tải đầu, không ảnh hưởng hiệu năng khi mở GUI sau đó.
 
 ::: warning

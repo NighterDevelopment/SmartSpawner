@@ -56,7 +56,7 @@ Trao Item Spawner cho người chơi.
 
 <CommandRow commands="/ss reload" permission="smartspawner.command.reload">
 
-Tải lại toàn bộ cấu hình mà không cần khởi động lại máy chủ. Áp dụng thay đổi trong `config.yml`, `spawners_settings.yml`, `item_spawners_settings.yml`, `item_prices.yml`, file ngôn ngữ và các hook tích hợp.
+Tải lại toàn bộ cấu hình mà không cần khởi động lại máy chủ. Áp dụng thay đổi trong `config.yml`, `spawner_mobs.yml`, `spawner_items.yml`, `item_prices.yml`, file ngôn ngữ và các hook tích hợp.
 
 </CommandRow>
 

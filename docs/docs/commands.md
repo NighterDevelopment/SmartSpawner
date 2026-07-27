@@ -56,7 +56,7 @@ Give Item Spawners to a player.
 
 <CommandRow commands="/ss reload" permission="smartspawner.command.reload">
 
-Reload all configuration files without restarting the server. Applies changes to `config.yml`, `spawners_settings.yml`, `item_spawners_settings.yml`, `item_prices.yml`, language files, and hook integrations.
+Reload all configuration files without restarting the server. Applies changes to `config.yml`, `spawner_mobs.yml`, `spawner_items.yml`, `item_prices.yml`, language files, and hook integrations.
 
 </CommandRow>
 

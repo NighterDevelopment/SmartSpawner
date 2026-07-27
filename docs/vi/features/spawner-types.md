@@ -23,7 +23,7 @@ Loại spawner chính. Tạo vật phẩm và XP từ mob mà không thực sự
 
 Tạo nguyên liệu như kim cương, ngọc lục bảo và thỏi netherite thay vì vật phẩm mob. Mob hiển thị quay bên trong được thay bằng mô hình vật phẩm nổi.
 
-- Cấu hình trong `item_spawners_settings.yml`
+- Cấu hình trong `spawner_items.yml`
 - Dùng chung GUI và hệ thống xếp chồng với Smart Spawner
 - Nhận bằng `/ss give item_spawner <player> <MATERIAL>`
 

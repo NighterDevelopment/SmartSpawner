@@ -118,7 +118,7 @@ Durability points removed from the tool when a spawner is broken.
 <ConfigProperty name="sneak_break" value="true" type="boolean">
 When <code>true</code>, sneaking while breaking a stacked spawner removes up to 64 spawners at once. When <code>false</code>, sneaking has no special effect.<br><br>
 ::: warning Drop chance and sneak breaking
-If a mob type has `drop_chance` configured in `spawners_settings.yml`, sneak breaking is blocked for that spawner (one at a time only), unless the player has `smartspawner.break.bypassdropchance`.
+If a mob type has `drop_chance` configured in `spawner_mobs.yml`, sneak breaking is blocked for that spawner (one at a time only), unless the player has `smartspawner.break.bypassdropchance`.
 :::
 </ConfigProperty>
 
@@ -320,8 +320,8 @@ Events to log when <code>log_all_events</code> is <code>false</code>. See the ta
 Configures where spawner data is stored.
 </template>
 
-<ConfigProperty name="mode" value="YAML" type="string">
-Storage backend. Supported values: <code>YAML</code>, <code>SQLITE</code>, <code>MYSQL</code>.
+<ConfigProperty name="mode" value="SQLITE" type="string">
+Storage backend. Supported values: <code>SQLITE</code>, <code>MYSQL</code>. A config still set to <code>YAML</code> switches to <code>SQLITE</code> on the next start.
 </ConfigProperty>
 
 <ConfigProperty name="server_name" value="server1" type="string">

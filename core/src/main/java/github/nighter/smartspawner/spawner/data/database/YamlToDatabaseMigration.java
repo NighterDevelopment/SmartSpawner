@@ -1,12 +1,17 @@
 package github.nighter.smartspawner.spawner.data.database;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.spawner.data.legacy.LegacyInventoryCodec;
+import github.nighter.smartspawner.spawner.data.storage.SpawnerInventoryCodec;
 import github.nighter.smartspawner.spawner.data.storage.StorageMode;
+import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.ItemStack;
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -30,19 +35,21 @@ public class YamlToDatabaseMigration {
 
     // MySQL/MariaDB insert syntax
     private static final String INSERT_SQL_MYSQL = """
-            INSERT INTO smart_spawners (
-                spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
+            INSERT INTO spawner_data (
+                spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity_type, item_spawner_material, spawner_exp, spawner_active,
                 spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
                 max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                 last_spawn_time, is_at_capacity, last_interacted_player,
-                preferred_sort_item, filtered_items, inventory_data
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                preferred_sort_item, filtered_items, items, total_items
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 world_name = VALUES(world_name),
                 loc_x = VALUES(loc_x),
                 loc_y = VALUES(loc_y),
                 loc_z = VALUES(loc_z),
+                chunk_x = VALUES(chunk_x),
+                chunk_z = VALUES(chunk_z),
                 entity_type = VALUES(entity_type),
                 item_spawner_material = VALUES(item_spawner_material),
                 spawner_exp = VALUES(spawner_exp),
@@ -61,24 +68,27 @@ public class YamlToDatabaseMigration {
                 last_interacted_player = VALUES(last_interacted_player),
                 preferred_sort_item = VALUES(preferred_sort_item),
                 filtered_items = VALUES(filtered_items),
-                inventory_data = VALUES(inventory_data)
+                items = VALUES(items),
+                total_items = VALUES(total_items)
             """;
 
     // SQLite insert syntax
     private static final String INSERT_SQL_SQLITE = """
-            INSERT INTO smart_spawners (
-                spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
+            INSERT INTO spawner_data (
+                spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity_type, item_spawner_material, spawner_exp, spawner_active,
                 spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
                 max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                 last_spawn_time, is_at_capacity, last_interacted_player,
-                preferred_sort_item, filtered_items, inventory_data
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                preferred_sort_item, filtered_items, items, total_items
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(server_name, spawner_id) DO UPDATE SET
                 world_name = excluded.world_name,
                 loc_x = excluded.loc_x,
                 loc_y = excluded.loc_y,
                 loc_z = excluded.loc_z,
+                chunk_x = excluded.chunk_x,
+                chunk_z = excluded.chunk_z,
                 entity_type = excluded.entity_type,
                 item_spawner_material = excluded.item_spawner_material,
                 spawner_exp = excluded.spawner_exp,
@@ -97,7 +107,8 @@ public class YamlToDatabaseMigration {
                 last_interacted_player = excluded.last_interacted_player,
                 preferred_sort_item = excluded.preferred_sort_item,
                 filtered_items = excluded.filtered_items,
-                inventory_data = excluded.inventory_data
+                items = excluded.items,
+                total_items = excluded.total_items
             """;
 
     public YamlToDatabaseMigration(SmartSpawner plugin, DatabaseManager databaseManager) {
@@ -325,9 +336,19 @@ public class YamlToDatabaseMigration {
         // Parse last interacted player
         String lastInteractedPlayer = yamlData.getString(path + ".lastInteractedPlayer");
 
-        // Parse inventory and convert to JSON format
+        // Read the legacy string inventory and re-encode it into the binary item format
         List<String> inventoryData = yamlData.getStringList(path + ".inventory");
-        String inventoryJson = serializeInventoryToJson(inventoryData);
+        Map<ItemSignature, Long> items = readLegacyInventory(inventoryData);
+
+        byte[] itemsBlob;
+        try {
+            itemsBlob = SpawnerInventoryCodec.encode(items);
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Could not encode inventory for spawner " + spawnerId
+                    + ", it will be migrated empty", e);
+            itemsBlob = null;
+            items = Map.of();
+        }
 
         // Set statement parameters
         stmt.setString(1, spawnerId);
@@ -336,42 +357,46 @@ public class YamlToDatabaseMigration {
         stmt.setInt(4, locX);
         stmt.setInt(5, locY);
         stmt.setInt(6, locZ);
-        stmt.setString(7, entityType.name());
-        stmt.setString(8, itemSpawnerMaterial);
-        stmt.setInt(9, spawnerExp);
-        stmt.setBoolean(10, spawnerActive);
-        stmt.setInt(11, spawnerRange);
-        stmt.setBoolean(12, spawnerStop);
-        stmt.setLong(13, spawnDelay);
-        stmt.setInt(14, maxSpawnerLootSlots);
-        stmt.setInt(15, maxStoredExp);
-        stmt.setInt(16, minMobs);
-        stmt.setInt(17, maxMobs);
-        stmt.setInt(18, stackSize);
-        stmt.setInt(19, maxStackSize);
-        stmt.setLong(20, lastSpawnTime);
-        stmt.setBoolean(21, isAtCapacity);
-        stmt.setString(22, lastInteractedPlayer);
-        stmt.setString(23, preferredSortItemStr);
-        stmt.setString(24, filteredItemsStr);
-        stmt.setString(25, inventoryJson);
+        stmt.setInt(7, locX >> 4);
+        stmt.setInt(8, locZ >> 4);
+        stmt.setString(9, entityType.name());
+        stmt.setString(10, itemSpawnerMaterial);
+        stmt.setInt(11, spawnerExp);
+        stmt.setBoolean(12, spawnerActive);
+        stmt.setInt(13, spawnerRange);
+        stmt.setBoolean(14, spawnerStop);
+        stmt.setLong(15, spawnDelay);
+        stmt.setInt(16, maxSpawnerLootSlots);
+        stmt.setInt(17, maxStoredExp);
+        stmt.setInt(18, minMobs);
+        stmt.setInt(19, maxMobs);
+        stmt.setInt(20, stackSize);
+        stmt.setInt(21, maxStackSize);
+        stmt.setLong(22, lastSpawnTime);
+        stmt.setBoolean(23, isAtCapacity);
+        stmt.setString(24, lastInteractedPlayer);
+        stmt.setString(25, preferredSortItemStr);
+        stmt.setString(26, filteredItemsStr);
+        stmt.setBytes(27, itemsBlob);
+        stmt.setLong(28, SpawnerInventoryCodec.totalItems(items));
 
         return true;
     }
 
-    private String serializeInventoryToJson(List<String> inventoryData) {
+    private Map<ItemSignature, Long> readLegacyInventory(List<String> inventoryData) {
         if (inventoryData == null || inventoryData.isEmpty()) {
-            return null;
+            return Map.of();
         }
 
-        // Convert YAML list format to JSON array format
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for (int i = 0; i < inventoryData.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append("\"").append(inventoryData.get(i).replace("\"", "\\\"")).append("\"");
+        Map<ItemStack, Long> legacyItems = LegacyInventoryCodec.deserialize(inventoryData);
+        if (legacyItems.isEmpty()) {
+            return Map.of();
         }
-        sb.append("]");
-        return sb.toString();
+
+        Map<ItemSignature, Long> items = new LinkedHashMap<>(Math.max(16, legacyItems.size() * 2));
+        for (Map.Entry<ItemStack, Long> entry : legacyItems.entrySet()) {
+            items.merge(new ItemSignature(entry.getKey()), entry.getValue(), Long::sum);
+        }
+        return items;
     }
 }

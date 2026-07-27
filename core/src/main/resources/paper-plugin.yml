@@ -1,6 +1,7 @@
 name: SmartSpawner
 version: '${version}'
 main: github.nighter.smartspawner.SmartSpawner
+loader: github.nighter.smartspawner.SmartSpawnerLoader
 api-version: '1.21'
 description: "A GUI-based spawner plugin that generates items and experience without spawning mobs"
 authors: [ https://github.com/OpenVdra/SmartSpawner ]
@@ -170,6 +171,10 @@ permissions:
 
   smartspawner.command.near:
     description: "Allow highlighting nearby spawners through walls"
+    default: op
+
+  smartspawner.command.config:
+    description: "Allow editing spawner and item spawner settings in game"
     default: op
 
   smartspawner.command.set:

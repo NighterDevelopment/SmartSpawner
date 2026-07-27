@@ -59,6 +59,25 @@ public class VirtualInventory {
             sortedEntriesCache = null;
         }
     }
+    /**
+     * Adds an already-consolidated entry: one item template plus its total count.
+     * <p>
+     * Storage backends load items this way. Going through {@link #addItems(List)} would mean
+     * splitting the count into max-stack-sized batches first, which costs one map merge per stack
+     * and turns a single entry of a few million items into millions of merges.
+     *
+     * @param template the item template, its own amount is ignored
+     * @param amount   how many of that item are stored, ignored when not positive
+     */
+    public void addConsolidatedItem(ItemStack template, long amount) {
+        if (template == null || amount <= 0) return;
+
+        consolidatedItems.merge(getSignature(template), amount, Long::sum);
+        displayCacheDirty = true;
+        metricsCacheDirty = true;
+        sortedEntriesCache = null;
+    }
+
     // Remove items in bulk with minimal operations
     public boolean removeItems(List<ItemStack> items) {
         if (items.isEmpty()) return true;

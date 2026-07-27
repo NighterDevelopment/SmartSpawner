@@ -1,26 +1,43 @@
 package github.nighter.smartspawner.spawner.data.storage;
 
+import java.util.Locale;
+
 /**
  * Enumeration of available storage modes for spawner data.
+ *
+ * <p>YAML storage was removed in 1.8. Configs still holding {@code YAML} resolve to
+ * {@link #SQLITE}, and the leftover {@code spawners_data.yml} is imported once on startup.</p>
  */
 public enum StorageMode {
     /**
-     * File-based YAML storage (default).
-     * Spawner data is stored in spawners_data.yml
+     * SQLite database storage with HikariCP connection pool. The default.
+     * Local file-based database, no external server required.
      */
-    YAML,
+    SQLITE,
 
     /**
      * MySQL/MariaDB database storage with HikariCP connection pool.
      * Requires database server configuration in config.yml
      * Supports cross-server spawner management.
      */
-    MYSQL,
+    MYSQL;
 
     /**
-     * SQLite database storage with HikariCP connection pool.
-     * Local file-based database, no external server required.
-     * Good for single-server setups wanting database performance without MariaDB.
+     * Resolve a configured {@code database.mode} value.
+     *
+     * @param raw the raw config value, may be null
+     * @return the matching mode, or {@link #SQLITE} when the value is unknown or the removed
+     *         {@code YAML} mode
      */
-    SQLITE
+    public static StorageMode fromConfig(String raw) {
+        if (raw == null) {
+            return SQLITE;
+        }
+
+        try {
+            return valueOf(raw.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return SQLITE;
+        }
+    }
 }

@@ -24,4 +24,4 @@ spawner_break:
 
 - **`sneak_break`**: Sneak while breaking to remove up to 64 spawners from a stack at once
 - **`silk_touch.required`**: Require Silk Touch to collect the spawner item
-- **`drop_chance`**: Set an optional per-mob chance that a spawner item drops when broken in `spawners_settings.yml`
+- **`drop_chance`**: Set an optional per-mob chance that a spawner item drops when broken in `spawner_mobs.yml`

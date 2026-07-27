@@ -4,6 +4,12 @@ main: github.nighter.smartspawner.SmartSpawner
 api-version: '1.21'
 authors: [ https://github.com/OpenVdra/SmartSpawner ]
 folia-supported: true
+
+# SQLite is the default storage backend. Not shaded: the xerial driver loads a native library from
+# a resource path derived from its package name, which relocation would break.
+# The paper-plugin.yml path uses SmartSpawnerLoader for the same dependency.
+libraries:
+  - org.xerial:sqlite-jdbc:3.53.2.1
 softdepend:
   # Bedrock Support Plugins
   - floodgate
@@ -87,6 +93,10 @@ permissions:
 
   smartspawner.command.near:
     description: Allow highlighting nearby spawners through walls
+    default: op
+
+  smartspawner.command.config:
+    description: Allow editing spawner and item spawner settings in game
     default: op
 
   smartspawner.command.set:

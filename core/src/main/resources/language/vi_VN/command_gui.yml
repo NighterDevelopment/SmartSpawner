@@ -206,3 +206,127 @@ price_item:
     - '  &8• &fNguồn: &e{price_source}'
     - '  &8• &fGiá tùy chỉnh: &a${custom_price}'
     - '  &8• &fGiá cửa hàng: &a${shop_price}'
+
+# --------------------------------------------------
+#            Trinh sua cau hinh (/ss config ...)
+# --------------------------------------------------
+config_editor:
+  mob_list_title: 'CAI DAT MOB ({current}/{total})'
+  item_list_title: 'CAI DAT ITEM SPAWNER ({current}/{total})'
+  loot_title: 'LOOT CUA {entry}'
+  capture_add_title: 'THA VAT PHAM DE THEM'
+  capture_replace_title: 'THA VAT PHAM MOI'
+  capture_new_entry_title: 'THA VAT PHAM DE TAO'
+
+  entry:
+    name: '&#37eb9a{entry}'
+    lore:
+      - '&#2cc483 > &#f8f8ffKinh nghiem: &#37eb9a{experience}'
+      - '&#2cc483 > &#f8f8ffTy le roi: &#37eb9a{drop_chance}%'
+      - '&#2cc483 > &#f8f8ffSo muc loot: &#37eb9a{loot_count}'
+      - ''
+      - '&#2cc483 > &fNhan de sua'
+
+  new_entry:
+    name: '&#37eb9aTAO MUC MOI'
+    lore:
+      - '&#2cc483 > &fNhan roi tha vat pham vao'
+      - '&#2cc483 > &fMob thi can trung spawn'
+
+  loot_entry:
+    name: '&#37eb9a{label}'
+    lore:
+      - '&#2cc483 > &#f8f8ffVat pham: &#37eb9a{item}'
+      - '&#2cc483 > &#f8f8ffSo luong: &#37eb9a{amount}'
+      - '&#2cc483 > &#f8f8ffTy le: &#37eb9a{chance}%'
+      - '&#2cc483 > &#f8f8ffDo ben: &#37eb9a{durability}'
+      - ''
+      - '&#2cc483 > &fChuot trai de sua'
+      - '&#2cc483 > &fChuot phai de doi vat pham'
+
+  loot_broken:
+    name: '&#FF6B6B{label}'
+    lore:
+      - '&#FF6B6B > &fKhong doc duoc vat pham nay'
+      - '&#2cc483 > &#f8f8ffGia tri: &#37eb9a{item}'
+      - '&#2cc483 > &fChuot phai de dat vat pham moi'
+
+  add_loot:
+    name: '&#37eb9aTHEM LOOT'
+    lore:
+      - '&#2cc483 > &fNhan roi tha vat pham vao'
+
+  back:
+    name: '&fQUAY LAI'
+    lore:
+      - '&c > &fNhan de quay lai'
+
+  capture_hint_loot:
+    name: '&#f8f8ffTHA VAT PHAM VAO O GIUA'
+    lore:
+      - '&#2cc483 > &fVat pham duoc luu nguyen ven'
+      - '&#2cc483 > &fBan nhan lai khi dong bang'
+
+  capture_hint_entry:
+    name: '&#f8f8ffTHA VAT PHAM VAO O GIUA'
+    lore:
+      - '&#2cc483 > &fTrung spawn tao muc mob'
+      - '&#2cc483 > &fVat pham bat ky tao item spawner'
+
+  cancel:
+    name: '&#FF6B6BHUY'
+    lore:
+      - '&#FF6B6B > &fNhan de quay lai'
+
+  confirm:
+    name: '&#37eb9aXAC NHAN'
+    lore:
+      - '&#2cc483 > &fNhan de luu'
+
+  # Chu trong dialog. Hien thi trong bang dialog cua client nen giu ngan.
+  dialog_save:
+    name: '&aLuu'
+  dialog_cancel:
+    name: '&cHuy'
+  dialog_back:
+    name: 'Quay lai'
+  dialog_entry_title:
+    name: '{entry}'
+  dialog_entry_body:
+    name: 'Cai dat cua {entry}. Bam luu la ap dung ngay.'
+  dialog_experience_label:
+    name: 'Kinh nghiem'
+  dialog_drop_chance_label:
+    name: 'Ty le roi spawner (%)'
+  dialog_head_material:
+    name: 'Material dau'
+  dialog_head_texture:
+    name: 'Hash texture dau'
+  dialog_loot_button:
+    name: 'Loot ({count})'
+  dialog_delete_entry:
+    name: '&cXoa muc nay'
+  dialog_delete_title:
+    name: 'Xoa {entry}?'
+  dialog_delete_body:
+    name: 'Thao tac nay xoa {entry} va toan bo loot khoi file. Khong the hoan tac.'
+  dialog_delete_confirm:
+    name: '&cXoa'
+  dialog_loot_title:
+    name: 'Loot: {label}'
+  dialog_loot_body:
+    name: 'Vat pham: {item}'
+  dialog_loot_min:
+    name: 'So luong toi thieu'
+  dialog_loot_max:
+    name: 'So luong toi da'
+  dialog_loot_chance:
+    name: 'Ty le (%)'
+  dialog_loot_durability_min:
+    name: 'Do ben tu (-1 la khong dat)'
+  dialog_loot_durability_max:
+    name: 'Do ben den (-1 la khong dat)'
+  dialog_loot_change_item:
+    name: 'Doi vat pham'
+  dialog_loot_remove:
+    name: '&cXoa loot'

@@ -201,3 +201,47 @@ gui_layout:
   error:
     message: "&#FF4444Không thể đổi bố cục GUI. Vui lòng kiểm tra console."
     sound: block.note_block.pling
+
+# --------------------------------------------------
+#                   /ss config
+# --------------------------------------------------
+config_editor:
+  usage:
+    message: '&#FF4444Cach dung: /ss config <mobs|items>'
+    sound: block.note_block.pling
+  entry_missing:
+    message: '&#FF4444Muc nay khong con trong file nua.'
+    sound: block.note_block.bass
+  entry_saved:
+    message: '&#37eb9aDa luu &f{entry}&#37eb9a.'
+    sound: entity.experience_orb.pickup
+  entry_deleted:
+    message: '&#37eb9aDa xoa &f{entry}&#37eb9a khoi file cai dat.'
+    sound: entity.item.break
+  loot_saved:
+    message: '&#37eb9aDa luu muc loot &f{label}&#37eb9a.'
+    sound: entity.experience_orb.pickup
+  loot_added:
+    message: '&#37eb9aDa them muc loot &f{label}&#37eb9a.'
+    sound: entity.experience_orb.pickup
+  loot_replaced:
+    message: '&#37eb9aDa doi vat pham cua &f{label}&#37eb9a.'
+    sound: entity.experience_orb.pickup
+  loot_removed:
+    message: '&#37eb9aDa xoa muc loot &f{label}&#37eb9a.'
+    sound: entity.item.break
+  capture_empty:
+    message: '&#FF4444Hay dat vat pham vao o giua truoc.'
+    sound: block.note_block.bass
+  new_entry_created:
+    message: '&#37eb9aDa tao &f{entry}&#37eb9a. Muc nay chua co loot.'
+    sound: entity.player.levelup
+  new_entry_exists:
+    message: '&#FF4444{entry} da co trong file.'
+    sound: block.note_block.bass
+  new_entry_invalid:
+    message: '&#FF4444{item} khong dung lam item spawner duoc.'
+    sound: block.note_block.bass
+  new_entry_needs_egg:
+    message: '&#FF4444Hay tha trung spawn de tao muc mob. {item} khong phai trung spawn.'
+    sound: block.note_block.bass

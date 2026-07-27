@@ -55,10 +55,10 @@ Plugin tự tạo file trong `plugins/SmartSpawner/`:
 | File | Mô tả |
 |------|-------|
 | `config.yml` | Cấu hình chính: hành vi spawner, kinh tế, hiệu ứng |
-| `spawners_settings.yml` | Bảng vật phẩm và XP cho từng loại mob |
-| `item_spawners_settings.yml` | Bảng vật phẩm cho Item Spawner |
+| `spawner_mobs.yml` | Bảng vật phẩm và XP cho từng loại mob |
+| `spawner_items.yml` | Bảng vật phẩm cho Item Spawner |
 | `item_prices.yml` | Giá bán vật phẩm tùy chỉnh |
-| `spawners_data.yml` | Dữ liệu spawner lâu dài ở chế độ YAML |
+| `spawners.db` | Dữ liệu spawner lâu dài ở chế độ SQLite |
 | `language/` | Thư mục ngôn ngữ và thông báo có thể dịch |
 | `gui_layouts/` | Thư mục bố cục GUI |
 | `auraskills.yml` | Thiết lập AuraSkills nếu plugin này được cài |

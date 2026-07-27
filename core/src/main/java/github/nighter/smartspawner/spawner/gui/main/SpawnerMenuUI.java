@@ -519,7 +519,7 @@ public class SpawnerMenuUI {
             // Use custom texture from GUI layout if provided
             spawnerItem = SpawnerMobHeadTexture.getCustomHeadFromTexture(button.getCustomTexture(), metaModifier);
         } else if (button != null && button.getMaterial() == Material.PLAYER_HEAD) {
-            // Fallback to entity-based custom head (from spawners_settings.yml)
+            // Fallback to entity-based custom head (from spawner_mobs.yml)
             spawnerItem = SpawnerMobHeadTexture.getCustomHead(entityType, player, metaModifier);
         } else if (button != null) {
             // Use the configured material

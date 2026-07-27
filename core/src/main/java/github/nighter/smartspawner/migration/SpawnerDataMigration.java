@@ -35,7 +35,7 @@ public class SpawnerDataMigration {
         File dataFile = new File(dataFolder, DATA_FILE);
 
         if (!dataFile.exists()) {
-            plugin.getLogger().info("Data file does not exist. No migration needed.");
+            plugin.debug("No spawners_data.yml present, nothing to convert.");
             return false;
         }
 

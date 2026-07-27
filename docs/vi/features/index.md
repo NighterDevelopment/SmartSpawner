@@ -101,7 +101,7 @@ Tương thích, lưu trữ và ghi log nằm trong Hướng dẫn máy chủ.
 
 <DocCard icon="Plug" title="Tương Thích Plugin" link="/vi/docs/plugin-compatibility" desc="Kết nối bảo vệ, quản lý thế giới, RPG và Bedrock." />
 
-<DocCard icon="Server" title="Hỗ Trợ Cơ Sở Dữ Liệu" link="/vi/docs/database-support" desc="Chọn YAML, SQLite hoặc MySQL cho mô hình triển khai của bạn." />
+<DocCard icon="Server" title="Hỗ Trợ Cơ Sở Dữ Liệu" link="/vi/docs/database-support" desc="Chọn SQLite hoặc MySQL cho mô hình triển khai của bạn." />
 
 <DocCard icon="List" title="Nhật Ký Thao Tác" link="/vi/docs/action-logging" desc="Theo dõi thao tác quan trọng qua file log hoặc kênh Discord." />
 

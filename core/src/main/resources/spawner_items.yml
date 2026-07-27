@@ -1,0 +1,85 @@
+# Item spawners: which items can be an Item Spawner, and what each one produces.
+# Guide and examples: https://openvdra.github.io/SmartSpawner/spawner-items/
+
+NETHERITE_INGOT:
+  experience: 1
+  loot:
+    1:
+      item: NETHERITE_INGOT
+      amount: 1-1
+      chance: 100.0
+  mob_head:
+    item: "NETHERITE_INGOT"
+    hash_texture: null
+
+# Diamond spawner
+DIAMOND:
+  experience: 1
+  loot:
+    1:
+      item: DIAMOND
+      amount: 1-1
+      chance: 100.0
+  mob_head:
+    item: "DIAMOND"
+    hash_texture: null
+
+# Coal spawner
+COAL:
+  experience: 1
+  loot:
+    1:
+      item: COAL
+      amount: 1-1
+      chance: 100.0
+  mob_head:
+    item: "COAL"
+    hash_texture: null
+
+# Amethyst Shard spawner
+AMETHYST_SHARD:
+  experience: 1
+  loot:
+    1:
+      item: AMETHYST_SHARD
+      amount: 1-1
+      chance: 100.0
+  mob_head:
+    item: "AMETHYST_SHARD"
+    hash_texture: null
+
+# Emerald spawner
+EMERALD:
+  experience: 1
+  loot:
+    1:
+      item: EMERALD
+      amount: 1-1
+      chance: 100.0
+  mob_head:
+    item: "EMERALD"
+    hash_texture: null
+
+# Nether Star spawner
+NETHER_STAR:
+  experience: 1
+  loot:
+    1:
+      item: NETHER_STAR
+      amount: 1-1
+      chance: 100.0
+  mob_head:
+    item: "NETHER_STAR"
+    hash_texture: null
+
+# Totem of Undying spawner
+TOTEM_OF_UNDYING:
+  experience: 1
+  loot:
+    1:
+      item: TOTEM_OF_UNDYING
+      amount: 1-1
+      chance: 100.0
+  mob_head:
+    item: "TOTEM_OF_UNDYING"
+    hash_texture: null

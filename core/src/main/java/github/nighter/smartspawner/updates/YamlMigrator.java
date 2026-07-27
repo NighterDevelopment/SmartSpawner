@@ -67,9 +67,10 @@ public final class YamlMigrator {
      *
      * <p>Top-up is right for settings, where a missing key means "this option is new". It is wrong
      * for a curated list such as a mob's {@code loot} section or a single message entry, where a
-     * missing child usually means the server owner removed it on purpose. Adding the bundled
-     * children back would resurrect deleted drops, or put a chat line back under a message the
-     * owner turned into an action bar.</p>
+     * missing child usually means the server owner removed it on purpose, or renamed it. Adding the
+     * bundled children back would resurrect deleted drops, leave the user holding both the old and
+     * the new name of a relabelled entry so every drop happens twice, or put a chat line back under
+     * a message the owner turned into an action bar.</p>
      *
      * <p>Either way, once the user has the section its contents are left alone. The two factories
      * differ only in what an <em>absent</em> section means, which is not the same question for a

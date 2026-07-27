@@ -56,4 +56,4 @@ The public Java API exposes spawner creation, data access, lifecycle events, val
 2. Install SmartSpawner and start the server once.
 3. Review the [main configuration](/docs/configuration).
 4. Enable the [plugin integrations](/docs/integrations/) used by your server.
-5. Adjust [spawner drops](/docs/spawners-settings) and [item spawners](/docs/item-spawners-settings).
+5. Adjust [spawner drops](/docs/spawner-mobs) and [item spawners](/docs/spawner-items).

@@ -23,7 +23,7 @@ The main spawner type. Generates drops and XP from a mob without actually spawni
 
 Generates raw items such as diamonds, emeralds, and netherite ingots instead of mob drops. The spinning mob preview inside is replaced with a floating item model.
 
-- Configured in `item_spawners_settings.yml`
+- Configured in `spawner_items.yml`
 - Uses the same GUI and stacking system as Smart Spawners
 - Give one with `/ss give item_spawner <player> <MATERIAL>`
 

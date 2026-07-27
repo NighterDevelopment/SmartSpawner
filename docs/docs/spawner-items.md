@@ -1,6 +1,6 @@
-# Item Spawner Settings
+# Item Spawners
 
-The `item_spawners_settings.yml` file in `plugins/SmartSpawner/` configures drop tables, XP values, and textures for **Item Spawners**, the spawner type that generates raw materials instead of mob drops.
+The `spawner_items.yml` file in `plugins/SmartSpawner/` configures drop tables, XP values, and textures for **Item Spawners**, the spawner type that generates raw materials instead of mob drops.
 
 ::: info Drop Multiplier
 Each cycle generates drops between **min_mobs** and **max_mobs** times (default: 1–4). Configured amounts are base values that get multiplied.
@@ -13,31 +13,30 @@ Item spawners do not support potions or enchanted books. Only **tipped arrows** 
 ## Configuration Format
 
 ```yaml
-# Global fallback for unknown item types
-default_material: "SPAWNER"
-
 ITEM_MATERIAL:
-  material: <MATERIAL>
   experience: <number>
   loot:
-    ITEM_ID:
+    1:
+      item: <item>          # Required
       amount: <min>-<max>
       chance: <percentage>
-      potion_type: <TYPE>   # Optional — tipped arrows only
-  head_texture:
-    material: <MATERIAL>
-    custom_texture: <hash>  # null for vanilla materials
+  mob_head:
+    item: <MATERIAL>
+    hash_texture: <hash>  # null for vanilla materials
 ```
 
 ## Properties Reference
 
 | Property | Format | Description |
 |----------|--------|-------------|
-| `material` | `"DIAMOND"` | Primary material this spawner represents |
 | `experience` | `1` | XP generated per spawner trigger |
+| `item` | `DIAMOND` | The item that drops. Omit it to use the entry name. |
 | `amount` | `1-1` | Base item quantity range per cycle |
-| `chance` | `100.0` | Drop probability (0.0–100.0) |
-| `potion_type` | `POISON` | Potion type for tipped arrows only |
+| `chance` | `100.0` | Drop probability (0.0 to 100.0) |
+
+`item` accepts a material name, a `/give` item string such as
+`tipped_arrow[potion_contents={potion:"minecraft:poison"}]`, or an `nbt:` code copied out of the
+game. See [Spawner Settings](/docs/spawner-mobs) for the full explanation.
 
 ::: tip Material names
 Every `material` value is a Bukkit material name in capital letters, for example `DIAMOND` or `NETHERITE_INGOT`. See the full list of valid names here: [Bukkit Material list](https://jd.papermc.io/paper/26.2/org/bukkit/Material.html).
@@ -49,82 +48,77 @@ Every `material` value is a Bukkit material name in capital letters, for example
 
 ```yaml
 DIAMOND:
-  material: "DIAMOND"
   experience: 1
   loot:
-    DIAMOND:
+    1:
       amount: 1-1
       chance: 100.0
-  head_texture:
-    material: "DIAMOND"
-    custom_texture: null
+  mob_head:
+    item: "DIAMOND"
+    hash_texture: null
 ```
 
 ### Multiple Drop Types
 
 ```yaml
 GOLD_INGOT:
-  material: "GOLD_INGOT"
   experience: 1
   loot:
-    GOLD_INGOT:
+    1:
       amount: 1-2
       chance: 100.0
-    GOLD_NUGGET:
+    2:
       amount: 3-5
       chance: 50.0
-  head_texture:
-    material: "GOLD_INGOT"
-    custom_texture: null
+  mob_head:
+    item: "GOLD_INGOT"
+    hash_texture: null
 ```
 
 ### Custom Head Texture
 
 ```yaml
 EMERALD:
-  material: "EMERALD"
   experience: 1
   loot:
-    EMERALD:
+    1:
       amount: 1-1
       chance: 100.0
-  head_texture:
-    material: "PLAYER_HEAD"
-    custom_texture: "abc123def456..."
+  mob_head:
+    item: "PLAYER_HEAD"
+    hash_texture: "abc123def456..."
 ```
 
 ### Tipped Arrow Spawner
 
 ```yaml
 TIPPED_ARROW:
-  material: "TIPPED_ARROW"
   experience: 1
   loot:
-    TIPPED_ARROW:
+    1:
+      item: 'tipped_arrow[potion_contents={potion:"minecraft:poison"}]'
       amount: 8-16
       chance: 100.0
-      potion_type: POISON
-  head_texture:
+  mob_head:
     material: "TIPPED_ARROW"
-    custom_texture: null
+    hash_texture: null
 ```
 
 ### Rare Item with Chance Drop
 
 ```yaml
 TOTEM_OF_UNDYING:
-  material: "TOTEM_OF_UNDYING"
   experience: 2
   loot:
-    TOTEM_OF_UNDYING:
+    1:
       amount: 1-1
       chance: 75.0
-    EMERALD:
+    2:
       amount: 1-3
       chance: 50.0
-  head_texture:
+  mob_head:
     material: "TOTEM_OF_UNDYING"
-    custom_texture: null
+    hash_texture: null
 ```
 
 ## Drop Mechanics
@@ -145,7 +139,7 @@ With defaults (`min_mobs=1`, `max_mobs=4`):
 
 SmartSpawner ships with defaults for common valuable materials.
 
-- **View online:** [GitHub: item_spawners_settings.yml](https://github.com/OpenVdra/SmartSpawner/blob/main/core/src/main/resources/item_spawners_settings.yml)
+- **View online:** [GitHub: spawner_items.yml](https://github.com/OpenVdra/SmartSpawner/blob/main/core/src/main/resources/spawner_items.yml)
 - **Reset:** Delete the file and restart to regenerate it.
 
 ## Give Item Spawners

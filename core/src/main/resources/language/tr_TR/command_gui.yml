@@ -206,3 +206,127 @@ price_item:
     - '  &8• &fKaynak: &e{price_source}'
     - '  &8• &fÖzel fiyat: &a${custom_price}'
     - '  &8• &fMarket fiyatı: &a${shop_price}'
+
+# --------------------------------------------------
+#            Config Editor (/ss config ...)
+# --------------------------------------------------
+config_editor:
+  mob_list_title: 'MOB SETTINGS ({current}/{total})'
+  item_list_title: 'ITEM SPAWNER SETTINGS ({current}/{total})'
+  loot_title: 'LOOT OF {entry}'
+  capture_add_title: 'DROP AN ITEM TO ADD'
+  capture_replace_title: 'DROP THE NEW ITEM'
+  capture_new_entry_title: 'DROP AN ITEM TO CREATE'
+
+  entry:
+    name: '&#37eb9a{entry}'
+    lore:
+      - '&#2cc483 > &#f8f8ffExperience: &#37eb9a{experience}'
+      - '&#2cc483 > &#f8f8ffDrop chance: &#37eb9a{drop_chance}%'
+      - '&#2cc483 > &#f8f8ffLoot entries: &#37eb9a{loot_count}'
+      - ''
+      - '&#2cc483 > &fClick to edit'
+
+  new_entry:
+    name: '&#37eb9aNEW ENTRY'
+    lore:
+      - '&#2cc483 > &fClick, then drop an item in'
+      - '&#2cc483 > &fMobs need a spawn egg'
+
+  loot_entry:
+    name: '&#37eb9a{label}'
+    lore:
+      - '&#2cc483 > &#f8f8ffItem: &#37eb9a{item}'
+      - '&#2cc483 > &#f8f8ffAmount: &#37eb9a{amount}'
+      - '&#2cc483 > &#f8f8ffChance: &#37eb9a{chance}%'
+      - '&#2cc483 > &#f8f8ffDurability: &#37eb9a{durability}'
+      - ''
+      - '&#2cc483 > &fLeft click to edit'
+      - '&#2cc483 > &fRight click to change the item'
+
+  loot_broken:
+    name: '&#FF6B6B{label}'
+    lore:
+      - '&#FF6B6B > &fThis item could not be read'
+      - '&#2cc483 > &#f8f8ffValue: &#37eb9a{item}'
+      - '&#2cc483 > &fRight click to set a new item'
+
+  add_loot:
+    name: '&#37eb9aADD LOOT'
+    lore:
+      - '&#2cc483 > &fClick, then drop an item in'
+
+  back:
+    name: '&fBACK'
+    lore:
+      - '&c > &fClick to go back'
+
+  capture_hint_loot:
+    name: '&#f8f8ffDROP AN ITEM IN THE MIDDLE'
+    lore:
+      - '&#2cc483 > &fThe item is saved exactly as it is'
+      - '&#2cc483 > &fYou get it back when you leave'
+
+  capture_hint_entry:
+    name: '&#f8f8ffDROP AN ITEM IN THE MIDDLE'
+    lore:
+      - '&#2cc483 > &fA spawn egg creates a mob entry'
+      - '&#2cc483 > &fAny item creates an item spawner'
+
+  cancel:
+    name: '&#FF6B6BCANCEL'
+    lore:
+      - '&#FF6B6B > &fClick to go back'
+
+  confirm:
+    name: '&#37eb9aCONFIRM'
+    lore:
+      - '&#2cc483 > &fClick to save'
+
+  # Dialog text. Rendered inside the client dialog, so keep it short.
+  dialog_save:
+    name: '&aSave'
+  dialog_cancel:
+    name: '&cCancel'
+  dialog_back:
+    name: 'Back'
+  dialog_entry_title:
+    name: '{entry}'
+  dialog_entry_body:
+    name: 'Settings for {entry}. Saving applies them right away.'
+  dialog_experience_label:
+    name: 'Experience'
+  dialog_drop_chance_label:
+    name: 'Spawner drop chance (%)'
+  dialog_head_material:
+    name: 'Head material'
+  dialog_head_texture:
+    name: 'Head texture hash'
+  dialog_loot_button:
+    name: 'Loot ({count})'
+  dialog_delete_entry:
+    name: '&cDelete entry'
+  dialog_delete_title:
+    name: 'Delete {entry}?'
+  dialog_delete_body:
+    name: 'This removes {entry} and all of its loot from the file. It cannot be undone.'
+  dialog_delete_confirm:
+    name: '&cDelete'
+  dialog_loot_title:
+    name: 'Loot: {label}'
+  dialog_loot_body:
+    name: 'Item: {item}'
+  dialog_loot_min:
+    name: 'Minimum amount'
+  dialog_loot_max:
+    name: 'Maximum amount'
+  dialog_loot_chance:
+    name: 'Chance (%)'
+  dialog_loot_durability_min:
+    name: 'Durability from (-1 for none)'
+  dialog_loot_durability_max:
+    name: 'Durability to (-1 for none)'
+  dialog_loot_change_item:
+    name: 'Change item'
+  dialog_loot_remove:
+    name: '&cRemove loot'

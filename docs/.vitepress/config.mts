@@ -27,8 +27,8 @@ const enManualSidebar = [
     text: 'Configuration',
     items: [
       { text: 'Main Config', link: '/docs/configuration' },
-      { text: 'Spawner Settings', link: '/docs/spawners-settings' },
-      { text: 'Item Spawner Settings', link: '/docs/item-spawners-settings' },
+      { text: 'Mob Spawners', link: '/docs/spawner-mobs' },
+      { text: 'Item Spawners', link: '/docs/spawner-items' },
       { text: 'GUI Layout', link: '/docs/gui-layout' }
     ]
   },
@@ -108,8 +108,8 @@ const viManualSidebar = [
     text: 'Cấu hình',
     items: [
       { text: 'Cấu hình chính', link: '/vi/docs/configuration' },
-      { text: 'Thiết lập Spawner', link: '/vi/docs/spawners-settings' },
-      { text: 'Thiết lập Item Spawner', link: '/vi/docs/item-spawners-settings' },
+      { text: 'Spawner Mob', link: '/vi/docs/spawner-mobs' },
+      { text: 'Item Spawner', link: '/vi/docs/spawner-items' },
       { text: 'Bố cục GUI', link: '/vi/docs/gui-layout' }
     ]
   },

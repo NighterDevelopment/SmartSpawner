@@ -3,40 +3,39 @@ package github.nighter.smartspawner.spawner.lootgen.loot;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionType;
 
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-public record LootItem(Material material, int minAmount, int maxAmount, double chance, Integer minDurability,
-                       Integer maxDurability, PotionType potionType, double sellPrice) {
+/**
+ * One row of a loot table: an item template plus the distribution that decides when and how much of
+ * it drops.
+ *
+ * <p>The template is built once while the config is parsed, by
+ * {@link github.nighter.smartspawner.spawner.config.ConfiguredItemParser}, so it already carries
+ * every component the entry asked for. Nothing here inspects the item to decide what to build, which
+ * is why supporting a new item property takes no change to this class.</p>
+ *
+ * @param template      the item this row drops, amount 1, or null when the entry could not be resolved
+ * @param material      the template's material, kept for price lookups and GUI display names
+ * @param minDurability start of a random damage range, null when the entry has no range
+ * @param maxDurability end of a random damage range, null when the entry has no range
+ */
+public record LootItem(ItemStack template, Material material, int minAmount, int maxAmount, double chance,
+                       Integer minDurability, Integer maxDurability, double sellPrice) {
 
     public ItemStack createItemStack() {
-        if (material == null) {
-            return null; // Material not available in this version
+        if (template == null) {
+            return null; // Item not available in this version
         }
 
-        ItemStack item = new ItemStack(material, 1);
+        ItemStack item = template.clone();
 
-        // Apply durability if needed
-        if (minDurability != null && maxDurability != null) {
-            ItemMeta meta = item.getItemMeta();
-            if (meta instanceof Damageable) {
-                int durability = ThreadLocalRandom.current().nextInt(maxDurability - minDurability + 1) + minDurability;
-                ((Damageable) meta).setDamage(durability);
-                item.setItemMeta(meta);
-            }
-        }
-
-        // Handle potion effects for tipped arrows using modern API
-        if (material == Material.TIPPED_ARROW && potionType != null) {
-            PotionMeta meta = (PotionMeta) item.getItemMeta();
-            if (meta != null) {
-                meta.setBasePotionType(potionType);
-                item.setItemMeta(meta);
-            }
+        // A single fixed damage value is already baked into the template, so only a range is rolled here.
+        if (minDurability != null && maxDurability != null
+                && item.getItemMeta() instanceof Damageable damageable) {
+            damageable.setDamage(ThreadLocalRandom.current().nextInt(maxDurability - minDurability + 1) + minDurability);
+            item.setItemMeta(damageable);
         }
 
         return item;
@@ -51,6 +50,6 @@ public record LootItem(Material material, int minAmount, int maxAmount, double c
     }
 
     public boolean isAvailable() {
-        return material != null;
+        return template != null;
     }
 }

@@ -100,6 +100,12 @@ public final class ConfigMigrations {
             user.set("database.mode", "MYSQL");
             changed = true;
         }
+        // YAML storage was removed in 1.8. Existing spawners_data.yml files are imported into
+        // SQLite on the next startup by YamlToDatabaseMigration.
+        if ("YAML".equals(user.getString("database.mode"))) {
+            user.set("database.mode", "SQLITE");
+            changed = true;
+        }
         return changed;
     };
 
