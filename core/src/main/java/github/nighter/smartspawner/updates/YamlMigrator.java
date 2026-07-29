@@ -71,18 +71,22 @@ public final class YamlMigrator {
      * children back would resurrect deleted drops, or put a chat line back under a message the
      * owner turned into an action bar.</p>
      *
-     * <p>Either way, once the user has the section its contents are left alone. The two factories
+     * <p>Either way, once the user has the section its contents are left alone. The factories
      * differ only in what an <em>absent</em> section means, which is not the same question for a
-     * drop list as for a message.</p>
+     * drop list, a message, or a fully user-managed GUI button list.</p>
      */
-    public record OwnedSection(SectionMatcher matcher, boolean keepDeleted) {
+    public record OwnedSection(SectionMatcher matcher, boolean keepDeleted, boolean alwaysLocked) {
+
+        public OwnedSection(SectionMatcher matcher, boolean keepDeleted) {
+            this(matcher, keepDeleted, false);
+        }
 
         /**
          * For a list the user curates. A section they removed entirely stays removed, as long as
          * they still have its parent. Deleting a mob's whole {@code loot} block has to stick.
          */
         public static OwnedSection curated(SectionMatcher matcher) {
-            return new OwnedSection(matcher, true);
+            return new OwnedSection(matcher, true, false);
         }
 
         /**
@@ -92,7 +96,15 @@ public final class YamlMigrator {
          * theirs; only a wholly absent message is refilled.
          */
         public static OwnedSection restoredWhenAbsent(SectionMatcher matcher) {
-            return new OwnedSection(matcher, false);
+            return new OwnedSection(matcher, false, false);
+        }
+
+        /**
+         * For sections whose presence and contents are both controlled by the user. Matching
+         * default sections are never topped up, even when the user removed or relocated them.
+         */
+        public static OwnedSection fullyUserManaged(SectionMatcher matcher) {
+            return new OwnedSection(matcher, true, true);
         }
     }
 
@@ -247,14 +259,19 @@ public final class YamlMigrator {
      * leaf of a brand new section create that section, after which every remaining leaf of it looks
      * user-owned and gets skipped, leaving the section half filled.</p>
      *
-     * <p>A section the user has is always owned. A section they do not have is owned only for a
-     * {@link OwnedSection#curated} marker, and then only when they still have its parent, which is
-     * what tells a block they deleted apart from one they have never seen.</p>
+     * <p>A section the user has is always owned. A fully user-managed section is also owned when
+     * absent. Other absent sections are owned only for a {@link OwnedSection#curated} marker, and
+     * then only when they still have its parent, which tells a block they deleted apart from one
+     * they have never seen.</p>
      */
     private static Set<String> lockedSections(YamlConfiguration user, YamlConfiguration defaults, OwnedSection owned) {
         Set<String> locked = new HashSet<>();
         for (String path : defaults.getKeys(true)) {
             if (!defaults.isConfigurationSection(path) || !owned.matcher().matches(defaults, path)) continue;
+            if (owned.alwaysLocked()) {
+                locked.add(path);
+                continue;
+            }
             if (user.isConfigurationSection(path)) {
                 locked.add(path);
                 continue;

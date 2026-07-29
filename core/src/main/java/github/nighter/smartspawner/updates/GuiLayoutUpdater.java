@@ -39,6 +39,9 @@ public class GuiLayoutUpdater {
                         plugin.getResource(resource),
                         java.util.List.of(),
                         ConfigMigrations.GUI_LAYOUT,
+                        true,
+                        YamlMigrator.OwnedSection.fullyUserManaged(
+                                (defaults, path) -> !path.contains(".") && path.startsWith("slot_")),
                         plugin.getLogger());
             }
         }

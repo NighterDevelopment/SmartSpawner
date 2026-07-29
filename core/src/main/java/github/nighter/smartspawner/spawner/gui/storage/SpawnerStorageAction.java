@@ -227,10 +227,10 @@ public class SpawnerStorageAction implements Listener {
 
         // Check if there are items to sell
         if (spawner.getVirtualInventory().getUsedSlots() == 0) {
-            if (collectExp) {
-                // No items to sell but still collect exp
+            if (collectExp && spawner.getSpawnerExp() > 0) {
+                // No items to sell, but collect available exp without leaving the storage GUI
                 boolean success = plugin.getSpawnerMenuAction()
-                        .handleExpBottleAcceptedClick(player, spawner, true);
+                        .tryCollectExpForPlayer(player, spawner);
                 playActionResult(player, sourceButton, sourceClickType, success);
             } else {
                 messageService.sendMessage(player, "spawner_storage_empty");
