@@ -9,6 +9,7 @@ All notable changes to SmartSpawner are documented in this file.
 - Clicking the sell button when the storage is empty no longer sends you back to the main menu. If the spawner still holds experience you now collect it and stay where you are, and if it holds nothing at all you get the storage empty message instead.
 - Fresh installations no longer report `applied value migrations` for every bundled `sell_confirm_gui.yml` on the first `/ss reload`. The shipped layouts now use the current nested click-action format.
 - Storage titles in the DonutSMP language presets now use the singular `Spawner` for a stack size of one and the plural `Spawners` for larger stacks. The correct title is also kept when changing pages or refreshing an open storage.
+- Dynamic placeholders in storage button lore are now replaced correctly. This fixes `{total_sell_price}` when combining a DonutSMP layout with the `en_US` language, and also fixes `{current_exp}` in the collect EXP button.
 
 ### Notes
 - If a button already came back before this update, move or delete it once more and it will stay put.

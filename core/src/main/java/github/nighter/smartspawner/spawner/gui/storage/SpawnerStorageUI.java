@@ -489,7 +489,7 @@ public class SpawnerStorageUI {
         
         return createButtonWithCustomTexture(button, meta -> {
             meta.setDisplayName(languageManager.getGuiItemName("sell_button.name", placeholders));
-            meta.setLore(languageManager.getGuiItemLoreAsList("sell_button.lore"));
+            meta.setLore(languageManager.getGuiItemLoreAsList("sell_button.lore", placeholders));
         });
     }
 
@@ -502,7 +502,7 @@ public class SpawnerStorageUI {
 
         return createButtonWithCustomTexture(button, meta -> {
             meta.setDisplayName(languageManager.getGuiItemName("sell_and_exp_button.name", placeholders));
-            meta.setLore(languageManager.getGuiItemLoreAsList("sell_and_exp_button.lore"));
+            meta.setLore(languageManager.getGuiItemLoreAsList("sell_and_exp_button.lore", placeholders));
         });
     }
 
@@ -512,7 +512,7 @@ public class SpawnerStorageUI {
 
         return createButtonWithCustomTexture(button, meta -> {
             meta.setDisplayName(languageManager.getGuiItemName("collect_exp_button.name", placeholders));
-            meta.setLore(languageManager.getGuiItemLoreAsList("collect_exp_button.lore"));
+            meta.setLore(languageManager.getGuiItemLoreAsList("collect_exp_button.lore", placeholders));
         });
     }
 

@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 const REPO = 'https://github.com/OpenVdra/SmartSpawner'
 const DISCORD = 'https://discord.gg/zrnyG4CuuT'
+const JAVADOCS = 'https://docs.smartspawner.site/javadocs/'
 
 const enManualSidebar = [
   {
@@ -206,7 +207,8 @@ const enDeveloperSidebar = [
       { text: 'Events', link: '/developer-api/events' },
       { text: 'GUI Layout API', link: '/developer-api/gui-layout' },
       { text: 'Validation', link: '/developer-api/validation' },
-      { text: 'Examples', link: '/developer-api/examples' }
+      { text: 'Examples', link: '/developer-api/examples' },
+      { text: 'Javadocs', link: JAVADOCS }
     ]
   }
 ]
@@ -222,7 +224,8 @@ const viDeveloperSidebar = [
       { text: 'Sự kiện', link: '/vi/developer-api/events' },
       { text: 'API bố cục GUI', link: '/vi/developer-api/gui-layout' },
       { text: 'Kiểm tra', link: '/vi/developer-api/validation' },
-      { text: 'Ví dụ', link: '/vi/developer-api/examples' }
+      { text: 'Ví dụ', link: '/vi/developer-api/examples' },
+      { text: 'Javadocs', link: JAVADOCS }
     ]
   }
 ]
