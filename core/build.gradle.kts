@@ -52,7 +52,7 @@ dependencies {
     compileOnly("io.lumine:Mythic-Dist:5.13.0")
     compileOnly("com.iridium:IridiumSkyblock:4.1.4")
     compileOnly("dev.kitteh:factions:4.6.0")
-    compileOnly("nl.rutgerkok:blocklocker:1.9")
+    compileOnly("nl.rutgerkok:blocklocker:1.13")
 
     implementation(platform("com.intellectualsites.bom:bom-newest:1.56"))
     compileOnly("com.intellectualsites.plotsquared:plotsquared-core")

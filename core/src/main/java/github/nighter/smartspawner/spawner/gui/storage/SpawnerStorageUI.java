@@ -29,6 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class SpawnerStorageUI {
+    private static final String STORAGE_TITLE = "gui_title_storage";
+    private static final String SINGLE_STORAGE_TITLE = "gui_title_storage_single_spawner";
+
     private static final int INVENTORY_SIZE = 54;
 
     private final SmartSpawner plugin;
@@ -48,6 +51,7 @@ public class SpawnerStorageUI {
     
     // Cache for title format to avoid repeated language lookups
     private String cachedStorageTitleFormat = null;
+    private String cachedSingleStorageTitleFormat = null;
 
     // Cleanup task to remove stale entries from caches
     private Task cleanupTask;
@@ -75,6 +79,7 @@ public class SpawnerStorageUI {
         pageIndicatorCache.clear();
         staticButtons.clear();
         cachedStorageTitleFormat = null;
+        cachedSingleStorageTitleFormat = null;
 
         // Reinitialize static buttons
         initializeStaticButtons();
@@ -161,10 +166,20 @@ public class SpawnerStorageUI {
      * @param totalPages Total number of pages
      * @return Formatted title with page information
      */
-    private String getStorageTitle(SpawnerData spawner, int page, int totalPages) {
-        // Cache the title format pattern (not the filled title)
-        if (cachedStorageTitleFormat == null) {
-            cachedStorageTitleFormat = languageManager.getGuiTitle("gui_title_storage");
+    public String getStorageTitle(SpawnerData spawner, int page, int totalPages) {
+        String titleKey = STORAGE_TITLE;
+        String titleFormat;
+        if (spawner.getStackSize() == 1 && languageManager.gui().contains(SINGLE_STORAGE_TITLE)) {
+            titleKey = SINGLE_STORAGE_TITLE;
+            if (cachedSingleStorageTitleFormat == null) {
+                cachedSingleStorageTitleFormat = languageManager.getGuiTitle(titleKey);
+            }
+            titleFormat = cachedSingleStorageTitleFormat;
+        } else {
+            if (cachedStorageTitleFormat == null) {
+                cachedStorageTitleFormat = languageManager.getGuiTitle(titleKey);
+            }
+            titleFormat = cachedStorageTitleFormat;
         }
         
         // Build base placeholders (always present)
@@ -173,7 +188,7 @@ public class SpawnerStorageUI {
         placeholders.put("total_pages", String.valueOf(totalPages));
 
         // OPTIMIZATION: Only compute entity placeholders if they exist in the title format
-        if (cachedStorageTitleFormat.contains("{entity}") || cachedStorageTitleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
+        if (titleFormat.contains("{entity}") || titleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
             String entityName;
             if (spawner.isItemSpawner()) {
                 entityName = languageManager.getVanillaItemName(spawner.getSpawnedItemMaterial());
@@ -181,20 +196,20 @@ public class SpawnerStorageUI {
                 entityName = languageManager.getFormattedMobName(spawner.getEntityType());
             }
 
-            if (cachedStorageTitleFormat.contains("{entity}")) {
+            if (titleFormat.contains("{entity}")) {
                 placeholders.put("entity", entityName);
             }
-            if (cachedStorageTitleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
+            if (titleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
                 placeholders.put("ᴇɴᴛɪᴛʏ", languageManager.getSmallCaps(entityName));
             }
         }
 
         // OPTIMIZATION: Only compute amount if it exists in the title format
-        if (cachedStorageTitleFormat.contains("{amount}")) {
+        if (titleFormat.contains("{amount}")) {
             placeholders.put("amount", String.valueOf(spawner.getStackSize()));
         }
 
-        return languageManager.getGuiTitle("gui_title_storage", placeholders);
+        return languageManager.getGuiTitle(titleKey, placeholders);
     }
 
     public Inventory createStorageInventory(Player player, SpawnerData spawner, int page, int totalPages) {
@@ -474,7 +489,7 @@ public class SpawnerStorageUI {
         
         return createButtonWithCustomTexture(button, meta -> {
             meta.setDisplayName(languageManager.getGuiItemName("sell_button.name", placeholders));
-            meta.setLore(languageManager.getGuiItemLoreAsList("sell_button.lore"));
+            meta.setLore(languageManager.getGuiItemLoreAsList("sell_button.lore", placeholders));
         });
     }
 
@@ -487,7 +502,7 @@ public class SpawnerStorageUI {
 
         return createButtonWithCustomTexture(button, meta -> {
             meta.setDisplayName(languageManager.getGuiItemName("sell_and_exp_button.name", placeholders));
-            meta.setLore(languageManager.getGuiItemLoreAsList("sell_and_exp_button.lore"));
+            meta.setLore(languageManager.getGuiItemLoreAsList("sell_and_exp_button.lore", placeholders));
         });
     }
 
@@ -497,7 +512,7 @@ public class SpawnerStorageUI {
 
         return createButtonWithCustomTexture(button, meta -> {
             meta.setDisplayName(languageManager.getGuiItemName("collect_exp_button.name", placeholders));
-            meta.setLore(languageManager.getGuiItemLoreAsList("collect_exp_button.lore"));
+            meta.setLore(languageManager.getGuiItemLoreAsList("collect_exp_button.lore", placeholders));
         });
     }
 
@@ -677,6 +692,7 @@ public class SpawnerStorageUI {
         navigationButtonCache.clear();
         pageIndicatorCache.clear();
         cachedStorageTitleFormat = null;
+        cachedSingleStorageTitleFormat = null;
 
         // Cancel scheduled tasks
         cancelTasks();

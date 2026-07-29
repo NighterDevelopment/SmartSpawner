@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useData, withBase } from 'vitepress'
 import LucideIcon from '../icon/LucideIcon.vue'
 
-const VERSION = 'v1.7.0.2'
+const VERSION = 'v1.7.1.2'
 const REPO = 'https://github.com/OpenVdra/SmartSpawner'
 
 const { lang, page } = useData()

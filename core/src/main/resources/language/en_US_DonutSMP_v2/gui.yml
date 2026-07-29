@@ -179,6 +179,7 @@ button_sell_info:
 # {entity}           - Formatted entity name (e.g., "Zombie")
 # {ᴇɴᴛɪᴛʏ}           - Entity name in small caps (e.g., "ᴢᴏᴍʙɪᴇ")
 # {amount}           - Number of spawners stacked
+gui_title_storage_single_spawner: '&#545454{amount} {ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀ'
 gui_title_storage: '&#545454{amount} {ᴇɴᴛɪᴛʏ} ꜱᴘᴀᴡɴᴇʀꜱ'
 
 navigation_button_previous:

@@ -18,6 +18,14 @@ plugins/SmartSpawner/gui_layouts/
 
 Chọn bố cục bằng `gui_layout` trong `config.yml` hoặc đổi trực tiếp với `/ss gui_layout <name>`.
 
+## Cách Chỉnh Sửa Của Bạn Được Giữ Lại
+
+Các nút trong file bố cục là của bạn. Dời một nút sang slot khác hoặc xóa nó đi, nó sẽ giữ nguyên như vậy qua mỗi lần khởi động lại và `/ss reload`. Không có nút nào bị đặt lại ở slot cũ.
+
+Đổi lại, nút mới thêm trong bản cập nhật sau sẽ không xuất hiện trong file bạn đang có. Hãy xem changelog khi cập nhật và tự chép nút mới vào nếu bạn muốn dùng. Các tùy chọn không phải nút, ví dụ `skip_main_gui` và `open_sound`, vẫn được thêm tự động.
+
+Muốn làm lại từ đầu, xóa file rồi khởi động lại server. File sẽ trở lại đúng như bản gốc, kèm cả phần chú thích.
+
 ## Cooldown Nút
 
 Mọi nút hỗ trợ cooldown tùy chọn riêng cho từng người chơi:

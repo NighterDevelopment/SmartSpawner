@@ -18,6 +18,14 @@ plugins/SmartSpawner/gui_layouts/
 
 Select the active layout with `gui_layout` in `config.yml`, or switch it live using `/ss gui_layout <name>`.
 
+## How Your Edits Are Kept
+
+The buttons in a layout file belong to you. Move one to another slot or delete it, and it stays that way through restarts and `/ss reload`. Nothing is ever put back at the old slot.
+
+The trade is that a button added in a future update will not appear in a file you already have. Check the changelog when you update and copy the new button in by hand if you want it. Settings that are not buttons, such as `skip_main_gui` and `open_sound`, are still added for you.
+
+To start a file over, delete it and restart the server. It comes back exactly as it ships, comments included.
+
 ## Button Cooldowns
 
 Every button supports an optional per-player cooldown:

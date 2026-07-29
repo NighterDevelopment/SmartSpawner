@@ -2,17 +2,30 @@ package github.nighter.smartspawner.updates;
 
 import github.nighter.smartspawner.SmartSpawner;
 
+import org.bukkit.configuration.file.YamlConfiguration;
+
 import java.io.File;
 
 /**
  * Keeps the bundled GUI layout files in sync with the defaults. Version-less: on every startup it
  * migrates legacy click / sound paths and tops up missing keys, preserving user customisations and
  * comments. See {@link YamlMigrator} and {@link ConfigMigrations#GUI_LAYOUT}.
+ *
+ * <p>Buttons are the exception to the top-up. A button's slot is part of its key, so moving one
+ * from {@code slot_15} to {@code slot_17} leaves {@code slot_15} looking merely absent, and topping
+ * it back up would give the user two copies of the same button. Once a layout has any button at
+ * all, its {@code slot_*} sections belong to the user; only the settings around them are topped
+ * up.</p>
  */
 public class GuiLayoutUpdater {
     private static final String GUI_LAYOUTS_DIR = "gui_layouts";
     private static final String[] LAYOUT_FILES  = {"storage_gui.yml", "main_gui.yml", "sell_confirm_gui.yml"};
     private static final String[] LAYOUT_NAMES  = {"default", "DonutSMP", "DonutSMP_v2"};
+    private static final String BUTTON_PREFIX   = "slot_";
+
+    /** Matches the top-level {@code slot_*} button sections, the ones whose key encodes a position. */
+    private static final YamlMigrator.SectionMatcher BUTTON_SECTIONS =
+            (defaults, path) -> path.startsWith(BUTTON_PREFIX) && !path.contains(".");
 
     private final SmartSpawner plugin;
 
@@ -39,8 +52,28 @@ public class GuiLayoutUpdater {
                         plugin.getResource(resource),
                         java.util.List.of(),
                         ConfigMigrations.GUI_LAYOUT,
+                        true,
+                        hasAnyButton(dataFile) ? YamlMigrator.OwnedSection.userManaged(BUTTON_SECTIONS) : null,
                         plugin.getLogger());
             }
         }
+    }
+
+    /**
+     * Whether {@code file} still defines at least one button.
+     *
+     * <p>A layout with no buttons left is not a layout the user is curating, it is one that would
+     * open empty, so the defaults are written back into it. A button turned off with
+     * {@code enabled: false} still counts: the user kept it, they just hid it.</p>
+     *
+     * <p>Deleting the file remains the cleaner way to start over. That path copies the bundled
+     * resource verbatim, comments and all, where this one only refills the keys.</p>
+     */
+    private boolean hasAnyButton(File file) {
+        if (!file.exists()) return false;
+        for (String key : YamlConfiguration.loadConfiguration(file).getKeys(false)) {
+            if (key.startsWith(BUTTON_PREFIX)) return true;
+        }
+        return false;
     }
 }
