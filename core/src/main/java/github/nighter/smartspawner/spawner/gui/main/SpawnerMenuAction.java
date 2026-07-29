@@ -170,9 +170,15 @@ public class SpawnerMenuAction implements Listener {
                             player, button, clickType);
                     return true;
                 }
-                // If no items to sell, still allow exp collection
+                // If no items to sell, still allow exp collection, without leaving the menu
                 if (spawner.getVirtualInventory().getUsedSlots() == 0) {
-                    boolean success = handleExpBottleAcceptedClick(player, spawner, true);
+                    boolean success;
+                    if (spawner.getSpawnerExp() > 0) {
+                        success = tryCollectExpForPlayer(player, spawner);
+                    } else {
+                        messageService.sendMessage(player, "spawner_storage_empty");
+                        success = false;
+                    }
                     playActionResult(player, button, clickType, success);
                     return true;
                 }

@@ -63,6 +63,32 @@ public final class YamlMigrator {
     }
 
     /**
+     * What an <em>absent</em> owned section means. A section the user still has is left alone
+     * whichever value this takes; these only decide whether a missing one is written back.
+     */
+    public enum Ownership {
+        /**
+         * A list the user curates. A section they removed stays removed, as long as they still
+         * have its parent. Deleting a mob's whole {@code loot} block has to stick.
+         */
+        CURATED,
+
+        /**
+         * A section the plugin looks up by name. A section they removed comes back in full,
+         * because code asking for a message key that is not there warns in the console and shows
+         * the player a missing-key notice.
+         */
+        RESTORED_WHEN_ABSENT,
+
+        /**
+         * A top-level section the user places themselves. It is never written back, because the
+         * key encodes where the entry lives, so an absent one usually means the user moved it
+         * rather than that they have never seen it.
+         */
+        USER_MANAGED
+    }
+
+    /**
      * Marks sections whose <em>contents</em> belong to the user, not to the defaults.
      *
      * <p>Top-up is right for settings, where a missing key means "this option is new". It is wrong
@@ -71,28 +97,25 @@ public final class YamlMigrator {
      * children back would resurrect deleted drops, or put a chat line back under a message the
      * owner turned into an action bar.</p>
      *
-     * <p>Either way, once the user has the section its contents are left alone. The two factories
+     * <p>Either way, once the user has the section its contents are left alone. The factories
      * differ only in what an <em>absent</em> section means, which is not the same question for a
-     * drop list as for a message.</p>
+     * drop list, a message, and a GUI button the user can move to another slot.</p>
      */
-    public record OwnedSection(SectionMatcher matcher, boolean keepDeleted) {
+    public record OwnedSection(SectionMatcher matcher, Ownership ownership) {
 
-        /**
-         * For a list the user curates. A section they removed entirely stays removed, as long as
-         * they still have its parent. Deleting a mob's whole {@code loot} block has to stick.
-         */
+        /** @see Ownership#CURATED */
         public static OwnedSection curated(SectionMatcher matcher) {
-            return new OwnedSection(matcher, true);
+            return new OwnedSection(matcher, Ownership.CURATED);
         }
 
-        /**
-         * For a section the plugin looks up by name. A section they removed entirely comes back in
-         * full, because code asking for a message key that is not there warns in the console and
-         * shows the player a missing-key notice. Their edits <em>inside</em> a message are still
-         * theirs; only a wholly absent message is refilled.
-         */
+        /** @see Ownership#RESTORED_WHEN_ABSENT */
         public static OwnedSection restoredWhenAbsent(SectionMatcher matcher) {
-            return new OwnedSection(matcher, false);
+            return new OwnedSection(matcher, Ownership.RESTORED_WHEN_ABSENT);
+        }
+
+        /** @see Ownership#USER_MANAGED */
+        public static OwnedSection userManaged(SectionMatcher matcher) {
+            return new OwnedSection(matcher, Ownership.USER_MANAGED);
         }
     }
 
@@ -247,19 +270,20 @@ public final class YamlMigrator {
      * leaf of a brand new section create that section, after which every remaining leaf of it looks
      * user-owned and gets skipped, leaving the section half filled.</p>
      *
-     * <p>A section the user has is always owned. A section they do not have is owned only for a
-     * {@link OwnedSection#curated} marker, and then only when they still have its parent, which is
-     * what tells a block they deleted apart from one they have never seen.</p>
+     * <p>A section the user has is always owned. A {@link Ownership#USER_MANAGED} section is owned
+     * whether or not they have it. Any other absent section is owned only for
+     * {@link Ownership#CURATED}, and then only when they still have its parent, which is what tells
+     * a block they deleted apart from one they have never seen.</p>
      */
     private static Set<String> lockedSections(YamlConfiguration user, YamlConfiguration defaults, OwnedSection owned) {
         Set<String> locked = new HashSet<>();
         for (String path : defaults.getKeys(true)) {
             if (!defaults.isConfigurationSection(path) || !owned.matcher().matches(defaults, path)) continue;
-            if (user.isConfigurationSection(path)) {
+            if (owned.ownership() == Ownership.USER_MANAGED || user.isConfigurationSection(path)) {
                 locked.add(path);
                 continue;
             }
-            if (!owned.keepDeleted()) continue;
+            if (owned.ownership() != Ownership.CURATED) continue;
             int dot = path.lastIndexOf('.');
             if (dot > 0 && user.isConfigurationSection(path.substring(0, dot))) {
                 locked.add(path);

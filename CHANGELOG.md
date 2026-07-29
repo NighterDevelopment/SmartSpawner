@@ -2,6 +2,17 @@
 
 All notable changes to SmartSpawner are documented in this file.
 
+## 1.7.1.2
+
+### Fixed
+- Buttons you move to another slot in a GUI layout now stay moved. Changing `slot_15` to `slot_17` used to leave a second copy of the button at `slot_15` on the next start or `/ss reload`. Buttons you delete stay deleted for the same reason.
+- Clicking the sell button when the storage is empty no longer sends you back to the main menu. If the spawner still holds experience you now collect it and stay where you are, and if it holds nothing at all you get the storage empty message instead.
+
+### Notes
+- If a button already came back before this update, move or delete it once more and it will stay put.
+- The buttons in a layout file are now yours alone. When a future update adds a new button, it will not appear in your file, so copy it in by hand if you want it. The settings around the buttons, such as `skip_main_gui` and `open_sound`, are still filled in for you.
+- To start a layout over, delete the file and restart. It comes back exactly as it ships, comments included.
+
 ## 1.7.1.1
 
 ### Fixed
