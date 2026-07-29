@@ -566,37 +566,7 @@ public class SpawnerStorageAction implements Listener {
     }
 
     private void updateInventoryTitle(Player player, SpawnerData spawner, int page, int totalPages) {
-        // Build placeholders map with all supported placeholders
-        Map<String, String> placeholders = new HashMap<>(5);
-        placeholders.put("current_page", String.valueOf(page));
-        placeholders.put("total_pages", String.valueOf(totalPages));
-
-        // Get cached title format to check which placeholders are used
-        String titleFormat = languageManager.getGuiTitle("gui_title_storage");
-
-        // Add entity placeholders if used in title
-        if (titleFormat.contains("{entity}") || titleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
-            String entityName;
-            if (spawner.isItemSpawner()) {
-                entityName = languageManager.getVanillaItemName(spawner.getSpawnedItemMaterial());
-            } else {
-                entityName = languageManager.getFormattedMobName(spawner.getEntityType());
-            }
-
-            if (titleFormat.contains("{entity}")) {
-                placeholders.put("entity", entityName);
-            }
-            if (titleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
-                placeholders.put("ᴇɴᴛɪᴛʏ", languageManager.getSmallCaps(entityName));
-            }
-        }
-
-        // Add amount placeholder if used in title
-        if (titleFormat.contains("{amount}")) {
-            placeholders.put("amount", String.valueOf(spawner.getStackSize()));
-        }
-
-        String newTitle = languageManager.getGuiTitle("gui_title_storage", placeholders);
+        String newTitle = plugin.getSpawnerStorageUI().getStorageTitle(spawner, page, totalPages);
 
         try {
             player.getOpenInventory().setTitle(newTitle);

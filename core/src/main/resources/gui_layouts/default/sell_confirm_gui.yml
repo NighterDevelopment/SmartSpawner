@@ -41,7 +41,8 @@ slot_14:
   material: PLAYER_HEAD
   enabled: true
   info_button: true
-  click: "none"
+  click:
+    action: "none"
 
 # Confirm button
 slot_17:
