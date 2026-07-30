@@ -15,7 +15,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 
     shade("com.zaxxer:HikariCP:7.1.0")
-    shade("org.mariadb.jdbc:mariadb-java-client:3.5.9")
+    shade("org.mariadb.jdbc:mariadb-java-client:3.5.10")
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.1")
 
     compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
