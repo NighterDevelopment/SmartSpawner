@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.logging.discord;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.logging.ActivityLogConfigUpdater;
 import github.nighter.smartspawner.logging.SpawnerEventType;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -10,14 +11,15 @@ import java.io.File;
 import java.util.EnumMap;
 
 /**
- * Reads per-event Discord embed configurations directly from
- * {@code discord_logging.yml} in the plugin data folder.
+ * Reads per-event Discord embed configurations from the {@code embeds} section of
+ * {@code activity_log.yml} in the plugin data folder.
  *
  * <p>Configs are loaded lazily on first use and cached in an {@link EnumMap}.</p>
  */
 public class DiscordEmbedConfigManager {
 
-    private static final String CONFIG_FILE = "discord_logging.yml";
+    private static final String CONFIG_FILE = ActivityLogConfigUpdater.FILE_NAME;
+    private static final String SECTION = "embeds.";
 
     private final SmartSpawner plugin;
 
@@ -50,7 +52,7 @@ public class DiscordEmbedConfigManager {
         if (!configFile.exists()) return DiscordEventEmbedConfig.defaults();
 
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(configFile);
-        ConfigurationSection section = cfg.getConfigurationSection(eventType.name());
+        ConfigurationSection section = cfg.getConfigurationSection(SECTION + eventType.name());
         if (section == null) {
             plugin.debug("No embed config found for event: " + eventType.name());
             return DiscordEventEmbedConfig.defaults();

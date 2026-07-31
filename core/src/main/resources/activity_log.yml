@@ -1,79 +1,67 @@
-# ──────────────────────────────────────────────────────────────────────────────
-#   SmartSpawner – Discord Logging Configuration
-#   File: discord_logging.yml
-# ──────────────────────────────────────────────────────────────────────────────
-#
-#   This single file centralises every Discord-related setting:
-#     • Connection & global webhook settings  (top-level keys, lines 30–60)
-#     • Event filtering                       (logged_events section, lines 62–100)
-#     • Per-event embed templates             (event_defaults section, lines 102+)
-#
-#   HOW TO CREATE A WEBHOOK:
-#     1. Open your Discord server settings.
-#     2. Go to "Integrations" → "Webhooks" → "New Webhook".
-#     3. Choose the target channel, copy the URL and paste into webhook_url below.
-#
-# ──────────────────────────────────────────────────────────────────────────────
+# Records who did what to a spawner, where and when.
+# Full guide: https://docs.smartspawner.site/docs/action-logging
+# The event names are listed in the docs.
 
-# ── Connection ────────────────────────────────────────────────────────────────
+# Log files written to the logs folder.
+file:
+  enabled: true
 
-# Enable / disable Discord webhook delivery entirely.
-enabled: false
+  # true writes JSON, false writes plain text.
+  json_format: false
+  console_output: false
 
-# The webhook URL obtained from Discord (required when enabled: true).
-webhook_url: ""
+  # Log files kept before the oldest is deleted, and the size at which each one rotates.
+  max_log_files: 10
+  max_log_size_mb: 10
 
-# Show the acting player's Minecraft head as the embed thumbnail.
-show_player_head: true
+  # true logs everything and ignores the list below.
+  log_all_events: false
+  logged_events:
+    - SPAWNER_PLACE
+    - SPAWNER_BREAK
+    - SPAWNER_EXPLODE
+    - SPAWNER_STACK_HAND
+    - SPAWNER_STACK_GUI
+    - SPAWNER_DESTACK_GUI
+    - SPAWNER_EXP_CLAIM
+    - SPAWNER_SELL_ALL
+    - SPAWNER_ITEM_TAKE_ALL
+    - SPAWNER_ITEMS_SORT
+    - SPAWNER_ITEM_FILTER
+    - SPAWNER_DROP_PAGE_ITEMS
+    - COMMAND_EXECUTE_PLAYER
+    - COMMAND_EXECUTE_CONSOLE
+    - COMMAND_EXECUTE_RCON
 
-# ── Event Filtering ───────────────────────────────────────────────────────────
+# The same events sent to a Discord channel. Works with or without file logging.
+discord:
+  enabled: false
 
-# If true, every logged event is forwarded to Discord (logged_events list is
-# ignored when this is true).
-log_all_events: false
+  # Discord server settings, Integrations, Webhooks, New Webhook, then copy the URL.
+  webhook_url: ""
 
-# Specific events to forward when log_all_events is false.
-# Available event names:
-#   SPAWNER_PLACE, SPAWNER_BREAK, SPAWNER_EXPLODE
-#   SPAWNER_STACK_HAND, SPAWNER_STACK_GUI, SPAWNER_DESTACK_GUI
-#   SPAWNER_GUI_OPEN, SPAWNER_STORAGE_OPEN, SPAWNER_STACKER_OPEN
-#   SPAWNER_EXP_CLAIM, SPAWNER_SELL_ALL
-#   SPAWNER_ITEM_TAKE_ALL, SPAWNER_ITEM_DROP, SPAWNER_ITEMS_SORT
-#   SPAWNER_ITEM_FILTER, SPAWNER_DROP_PAGE_ITEMS
-#   SPAWNER_EGG_CHANGE
-#   COMMAND_EXECUTE_PLAYER, COMMAND_EXECUTE_CONSOLE, COMMAND_EXECUTE_RCON
-logged_events:
-  - SPAWNER_PLACE
-  - SPAWNER_BREAK
-  - SPAWNER_EXPLODE
-  - SPAWNER_STACK_HAND
-  - SPAWNER_STACK_GUI
-  - SPAWNER_DESTACK_GUI
-  - SPAWNER_GUI_OPEN
-  - COMMAND_EXECUTE_PLAYER
-  - COMMAND_EXECUTE_CONSOLE
-  - COMMAND_EXECUTE_RCON
+  # Show the acting player's head as the message thumbnail.
+  show_player_head: true
 
-# ── Per-Event Embed Configuration ──────────────────────────────────────────────────
-#
-#   Edit the embed blocks below to customise each event's appearance.
-#
-#   Supported placeholders (common to all events):
-#     {player}        – Player name  (N/A for console / explosion events)
-#     {player_uuid}   – Player UUID
-#     {description}   – Human-readable event description
-#     {event_type}    – Raw event name (e.g. SPAWNER_PLACE)
-#     {time}          – HH:mm:ss
-#     {timestamp}     – ISO 8601  (Discord native date field)
-#     {location}      – "world (x, y, z)"
-#     {world} {x} {y} {z}
-#     {entity}        – Mob / entity name
-#     {color}         – Decimal colour integer for this event
-#     + any metadata key logged by the event (see each event block for specifics)
-#
+  # true forwards everything and ignores the list below.
+  log_all_events: false
+  logged_events:
+    - SPAWNER_PLACE
+    - SPAWNER_BREAK
+    - SPAWNER_EXPLODE
+    - SPAWNER_STACK_HAND
+    - SPAWNER_STACK_GUI
+    - SPAWNER_DESTACK_GUI
+    - SPAWNER_GUI_OPEN
+    - COMMAND_EXECUTE_PLAYER
+    - COMMAND_EXECUTE_CONSOLE
+    - COMMAND_EXECUTE_RCON
 
-SPAWNER_PLACE:
-  embed:
+# The Discord message for each event. An event with no block here falls back to a plain message.
+# Placeholders: {player}, {player_uuid}, {entity}, {location}, {world}, {x}, {y}, {z},
+# {time}, {timestamp}, {event_type}, {description}, plus the ones used in each block below.
+embeds:
+  SPAWNER_PLACE:
     title: "✅ Spawner Placed"
     description: "**{player}** placed a **{entity}** spawner"
     color: "57F287"
@@ -89,8 +77,7 @@ SPAWNER_PLACE:
         value: "`{quantity}`"
         inline: true
 
-SPAWNER_BREAK:
-  embed:
+  SPAWNER_BREAK:
     title: "❌ Spawner Broken"
     description: "**{player}** broke a **{entity}** spawner"
     color: "ED4245"
@@ -103,8 +90,7 @@ SPAWNER_BREAK:
         value: "`{quantity}`"
         inline: true
 
-SPAWNER_EXPLODE:
-  embed:
+  SPAWNER_EXPLODE:
     title: "💥 Spawner Destroyed by Explosion"
     description: "A **{entity}** spawner was destroyed by an explosion"
     color: "FF6B6B"
@@ -117,8 +103,7 @@ SPAWNER_EXPLODE:
         value: "`{quantity}`"
         inline: true
 
-SPAWNER_STACK_HAND:
-  embed:
+  SPAWNER_STACK_HAND:
     title: "✋ Spawner Stacked by Hand"
     description: "**{player}** stacked a **{entity}** spawner by hand"
     color: "FEE75C"
@@ -134,8 +119,7 @@ SPAWNER_STACK_HAND:
         value: "`{new_stack_size}`"
         inline: true
 
-SPAWNER_STACK_GUI:
-  embed:
+  SPAWNER_STACK_GUI:
     title: "📦 Spawner Stacked via GUI"
     description: "**{player}** stacked a **{entity}** spawner via GUI"
     color: "F1C40F"
@@ -151,8 +135,7 @@ SPAWNER_STACK_GUI:
         value: "`{new_stack_size}`"
         inline: true
 
-SPAWNER_DESTACK_GUI:
-  embed:
+  SPAWNER_DESTACK_GUI:
     title: "📤 Spawner Destacked via GUI"
     description: "**{player}** destacked a **{entity}** spawner"
     color: "E67E22"
@@ -165,8 +148,7 @@ SPAWNER_DESTACK_GUI:
         value: "`{entity}`"
         inline: true
 
-SPAWNER_GUI_OPEN:
-  embed:
+  SPAWNER_GUI_OPEN:
     title: "📋 Spawner GUI Opened"
     description: "**{player}** opened the spawner GUI"
     color: "9B59B6"
@@ -179,8 +161,7 @@ SPAWNER_GUI_OPEN:
         value: "`{entity}`"
         inline: true
 
-SPAWNER_STORAGE_OPEN:
-  embed:
+  SPAWNER_STORAGE_OPEN:
     title: "📦 Storage GUI Opened"
     description: "**{player}** opened the storage GUI"
     color: "8E44AD"
@@ -193,8 +174,7 @@ SPAWNER_STORAGE_OPEN:
         value: "`{page}/{total_pages}`"
         inline: true
 
-SPAWNER_STACKER_OPEN:
-  embed:
+  SPAWNER_STACKER_OPEN:
     title: "🔢 Stacker GUI Opened"
     description: "**{player}** opened the stacker GUI"
     color: "BB8FCE"
@@ -207,8 +187,7 @@ SPAWNER_STACKER_OPEN:
         value: "`{entity}`"
         inline: true
 
-SPAWNER_EXP_CLAIM:
-  embed:
+  SPAWNER_EXP_CLAIM:
     title: "✨ Experience Claimed"
     description: "**{player}** collected experience from a spawner"
     color: "2ECC71"
@@ -221,8 +200,7 @@ SPAWNER_EXP_CLAIM:
         value: "`{exp_amount}`"
         inline: true
 
-SPAWNER_SELL_ALL:
-  embed:
+  SPAWNER_SELL_ALL:
     title: "💰 Items Sold"
     description: "**{player}** sold items from a spawner"
     color: "27AE60"
@@ -238,8 +216,7 @@ SPAWNER_SELL_ALL:
         value: "`{items_sold}`"
         inline: true
 
-SPAWNER_ITEM_TAKE_ALL:
-  embed:
+  SPAWNER_ITEM_TAKE_ALL:
     title: "🎒 Items Taken from Storage"
     description: "**{player}** took all items from a spawner"
     color: "1ABC9C"
@@ -255,8 +232,7 @@ SPAWNER_ITEM_TAKE_ALL:
         value: "`{items_left}`"
         inline: true
 
-SPAWNER_ITEM_DROP:
-  embed:
+  SPAWNER_ITEM_DROP:
     title: "🗑️ Item Dropped from Storage"
     description: "**{player}** dropped an item from storage"
     color: "16A085"
@@ -266,8 +242,7 @@ SPAWNER_ITEM_DROP:
         value: "`{location}`"
         inline: false
 
-SPAWNER_ITEMS_SORT:
-  embed:
+  SPAWNER_ITEMS_SORT:
     title: "🔃 Storage Items Sorted"
     description: "**{player}** sorted items in storage"
     color: "48C9B0"
@@ -280,8 +255,7 @@ SPAWNER_ITEMS_SORT:
         value: "`{sort_item}`"
         inline: true
 
-SPAWNER_ITEM_FILTER:
-  embed:
+  SPAWNER_ITEM_FILTER:
     title: "🔍 Item Filter Toggled"
     description: "**{player}** changed the item filter"
     color: "45B7AF"
@@ -291,8 +265,7 @@ SPAWNER_ITEM_FILTER:
         value: "`{location}`"
         inline: false
 
-SPAWNER_DROP_PAGE_ITEMS:
-  embed:
+  SPAWNER_DROP_PAGE_ITEMS:
     title: "📄 Page Items Dropped"
     description: "**{player}** dropped all items from a storage page"
     color: "138D75"
@@ -308,8 +281,7 @@ SPAWNER_DROP_PAGE_ITEMS:
         value: "`{page_number}`"
         inline: true
 
-SPAWNER_EGG_CHANGE:
-  embed:
+  SPAWNER_EGG_CHANGE:
     title: "🥚 Spawner Entity Changed"
     description: "**{player}** changed a spawner's entity type"
     color: "E91E63"
@@ -322,8 +294,7 @@ SPAWNER_EGG_CHANGE:
         value: "`{entity}`"
         inline: true
 
-COMMAND_EXECUTE_PLAYER:
-  embed:
+  COMMAND_EXECUTE_PLAYER:
     title: "👤 Command Executed by Player"
     description: "**{player}** ran a SmartSpawner command"
     color: "5865F2"
@@ -333,8 +304,7 @@ COMMAND_EXECUTE_PLAYER:
         value: "`{full_command}`"
         inline: false
 
-COMMAND_EXECUTE_CONSOLE:
-  embed:
+  COMMAND_EXECUTE_CONSOLE:
     title: "🖥️ Command Executed by Console"
     description: "Console ran a SmartSpawner command"
     color: "3B5998"
@@ -344,8 +314,7 @@ COMMAND_EXECUTE_CONSOLE:
         value: "`{full_command}`"
         inline: false
 
-COMMAND_EXECUTE_RCON:
-  embed:
+  COMMAND_EXECUTE_RCON:
     title: "🔌 Command Executed via RCON"
     description: "RCON ran a SmartSpawner command"
     color: "7289DA"
@@ -354,4 +323,3 @@ COMMAND_EXECUTE_RCON:
       - name: "⚙️ Command"
         value: "`{full_command}`"
         inline: false
-

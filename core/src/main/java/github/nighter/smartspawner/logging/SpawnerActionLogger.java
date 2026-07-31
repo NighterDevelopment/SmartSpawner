@@ -218,7 +218,7 @@ public class SpawnerActionLogger {
     }
     
     /**
-     * Reloads the Discord webhook logger from {@code discord_logging.yml}.
+     * Reloads the Discord webhook logger from {@code activity_log.yml}.
      * The file-logging task is NOT interrupted; only the Discord side is restarted.
      */
     public void reloadDiscord() {

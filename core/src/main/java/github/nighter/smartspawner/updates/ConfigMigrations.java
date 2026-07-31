@@ -46,6 +46,51 @@ public final class ConfigMigrations {
             new YamlMigrator.Rename("spawner_break.auto_sell_and_claim_exp_on_break",    "spawner_break.sell_and_xp_break")
     );
 
+    // ── activity_log.yml ─────────────────────────────────────────────────────
+
+    /**
+     * Renames applied to {@code activity_log.yml}. The Discord settings used to sit at the top level
+     * of {@code discord_logging.yml}, which is now this file, so they move under {@code discord}.
+     * The other half of that move, {@code config.yml}'s {@code logging} section becoming the
+     * {@code file} section here, spans two files and lives in {@code ActivityLogConfigUpdater}.
+     */
+    public static final List<YamlMigrator.Rename> ACTIVITY_LOG = List.of(
+            new YamlMigrator.Rename("enabled",          "discord.enabled"),
+            new YamlMigrator.Rename("webhook_url",      "discord.webhook_url"),
+            new YamlMigrator.Rename("show_player_head", "discord.show_player_head"),
+            new YamlMigrator.Rename("log_all_events",   "discord.log_all_events"),
+            new YamlMigrator.Rename("logged_events",    "discord.logged_events")
+    );
+
+    /**
+     * Moves the per-event embed blocks of {@code activity_log.yml} into the {@code embeds} section
+     * and drops their redundant {@code embed} level, so {@code SPAWNER_PLACE.embed.title} becomes
+     * {@code embeds.SPAWNER_PLACE.title}.
+     *
+     * <p>Matched by shape rather than by event name: any top-level section holding an {@code embed}
+     * child is a legacy block, which also catches events that no longer exist instead of stranding
+     * them at the top level.</p>
+     */
+    public static final YamlMigrator.CustomMigration ACTIVITY_LOG_LAYOUT = (user, defaults) -> {
+        boolean changed = false;
+        for (String key : new ArrayList<>(user.getKeys(false))) {
+            ConfigurationSection legacy = user.getConfigurationSection(key + ".embed");
+            if (legacy == null) continue;
+
+            String target = "embeds." + key;
+            // A value already at the new path is the user's; only fill in an empty one.
+            if (!user.contains(target)) {
+                for (String path : legacy.getKeys(true)) {
+                    if (legacy.isConfigurationSection(path)) continue;
+                    user.set(target + "." + path, legacy.get(path));
+                }
+            }
+            user.set(key, null);
+            changed = true;
+        }
+        return changed;
+    };
+
     // ── language files ───────────────────────────────────────────────────────
 
     /*

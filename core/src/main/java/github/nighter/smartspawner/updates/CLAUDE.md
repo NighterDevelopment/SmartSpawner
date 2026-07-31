@@ -111,3 +111,19 @@ next rename has an obvious home.
 Every one of these must run **before** the component that reads the file is constructed.
 `configUpdater.checkAndUpdateConfig()` is called at the top of `initializeServices()` for exactly this
 reason.
+
+## Moving keys between files, and the one file that is rewritten
+
+`YamlMigrator` only ever sees one file, so a key moving from one file to another cannot be a
+`Rename`. `ActivityLogConfigUpdater` is the worked example: in 1.8.0 `discord_logging.yml` became
+`activity_log.yml` and the `logging` section of `config.yml` became its `file` section. It renames the
+file on disk, copies the old section across, deletes it from `config.yml`, and only then calls the
+migrator, because a top-up that ran first would fill those keys with the shipped defaults and the
+user's values would have nowhere to land.
+
+That same class is also the one place that breaks the "only ever add" contract. Because *every* key of
+that file moved, a migrated file would keep comments describing keys that are no longer there, under a
+header naming a file that no longer exists. So when it sees the old layout it writes the user's values
+into a fresh copy of the bundled file instead, once. The trigger is a shape check
+(`isLegacyLayout`, no `discord` section), never a version number, and it must stay one that cannot
+match a file that has already been converted, or the file would be rewritten on every startup.

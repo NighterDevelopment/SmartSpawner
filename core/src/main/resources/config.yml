@@ -129,35 +129,7 @@ particle:
   spawner_activate: true
   spawner_generate_loot: true
 
-logging:
-  enabled: true
-
-  # true writes JSON, false writes plain text.
-  json_format: false
-  console_output: false
-
-  # Log files kept before the oldest is deleted, and the size at which each one rotates.
-  max_log_files: 10
-  max_log_size_mb: 10
-
-  # true logs everything and ignores the list below. The event names are listed in the docs.
-  log_all_events: false
-  logged_events:
-    - SPAWNER_PLACE
-    - SPAWNER_BREAK
-    - SPAWNER_EXPLODE
-    - SPAWNER_STACK_HAND
-    - SPAWNER_STACK_GUI
-    - SPAWNER_DESTACK_GUI
-    - SPAWNER_EXP_CLAIM
-    - SPAWNER_SELL_ALL
-    - SPAWNER_ITEM_TAKE_ALL
-    - SPAWNER_ITEMS_SORT
-    - SPAWNER_ITEM_FILTER
-    - SPAWNER_DROP_PAGE_ITEMS
-    - COMMAND_EXECUTE_PLAYER
-    - COMMAND_EXECUTE_CONSOLE
-    - COMMAND_EXECUTE_RCON
+# Action logging, file and Discord, lives in activity_log.yml.
 
 database:
   # Storage backend: SQLITE or MYSQL. A config still set to YAML switches to SQLITE on startup

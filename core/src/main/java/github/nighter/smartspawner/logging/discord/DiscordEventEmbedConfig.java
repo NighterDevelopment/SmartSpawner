@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * Immutable embed configuration for a single Discord event type.
- * Loaded from a section of {@code discord_logging.yml} in the plugin data folder.
+ * Loaded from one {@code embeds} entry of {@code activity_log.yml} in the plugin data folder.
  */
 @Getter
 public final class DiscordEventEmbedConfig {
@@ -35,13 +35,13 @@ public final class DiscordEventEmbedConfig {
     }
 
     public static DiscordEventEmbedConfig fromSection(ConfigurationSection cfg) {
-        String title  = cfg.getString("embed.title",       "{description}");
-        String desc   = cfg.getString("embed.description", "{description}");
-        String footer = cfg.getString("embed.footer",      "SmartSpawner \u2022 {time}");
-        int    color  = parseColor(cfg.getString("embed.color", "99AAB5"));
+        String title  = cfg.getString("title",       "{description}");
+        String desc   = cfg.getString("description", "{description}");
+        String footer = cfg.getString("footer",      "SmartSpawner • {time}");
+        int    color  = parseColor(cfg.getString("color", "99AAB5"));
 
         List<DiscordWebhookConfig.EmbedField> fields = new ArrayList<>();
-        for (Map<?, ?> fm : cfg.getMapList("embed.fields")) {
+        for (Map<?, ?> fm : cfg.getMapList("fields")) {
             String name    = (String) fm.get("name");
             String value   = (String) fm.get("value");
             boolean inline = Boolean.TRUE.equals(fm.get("inline"));
@@ -58,7 +58,7 @@ public final class DiscordEventEmbedConfig {
                 "{event_type}",
                 "{description}",
                 0x5865F2,
-                "SmartSpawner \u2022 {time}",
+                "SmartSpawner • {time}",
                 List.of()
         );
     }
@@ -73,4 +73,3 @@ public final class DiscordEventEmbedConfig {
         }
     }
 }
-

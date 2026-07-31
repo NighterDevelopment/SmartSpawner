@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.logging.discord;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.logging.ActivityLogConfigUpdater;
 import github.nighter.smartspawner.logging.SpawnerEventType;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -10,15 +11,13 @@ import java.io.File;
 import java.util.*;
 
 /**
- * Global Discord webhook settings loaded from {@code discord_logging.yml}.
- *
- * <p>This file merges the former {@code discord.yml} (connection settings) and
- * {@code discord/event_defaults.yml} (embed templates) into a single source of truth.
- * Embed appearance per event is still extracted to
- * {@code discord/events/<EVENT>.yml} and managed by {@link DiscordEmbedConfigManager}.</p>
+ * Global Discord webhook settings, read from the {@code discord} section of
+ * {@code activity_log.yml}. Embed appearance per event lives in the {@code embeds} section of the
+ * same file and is managed by {@link DiscordEmbedConfigManager}.
  */
 public class DiscordWebhookConfig {
-    private static final String FILE_NAME = "discord_logging.yml";
+    private static final String FILE_NAME = ActivityLogConfigUpdater.FILE_NAME;
+    private static final String SECTION = "discord.";
 
     private final SmartSpawner plugin;
 
@@ -30,23 +29,22 @@ public class DiscordWebhookConfig {
 
     public DiscordWebhookConfig(SmartSpawner plugin) {
         this.plugin = plugin;
-        new DiscordConfigUpdater(plugin).checkAndUpdate();
         loadConfig();
     }
 
     public void loadConfig() {
-        File discordFile = new File(plugin.getDataFolder(), FILE_NAME);
-        if (!discordFile.exists()) {
+        File activityLogFile = new File(plugin.getDataFolder(), FILE_NAME);
+        if (!activityLogFile.exists()) {
             this.enabled = false;
             return;
         }
 
-        FileConfiguration cfg = YamlConfiguration.loadConfiguration(discordFile);
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(activityLogFile);
 
-        this.enabled        = cfg.getBoolean("enabled", false);
-        this.webhookUrl     = cfg.getString("webhook_url", "");
-        this.showPlayerHead = cfg.getBoolean("show_player_head", true);
-        this.logAllEvents   = cfg.getBoolean("log_all_events", false);
+        this.enabled        = cfg.getBoolean(SECTION + "enabled", false);
+        this.webhookUrl     = cfg.getString(SECTION + "webhook_url", "");
+        this.showPlayerHead = cfg.getBoolean(SECTION + "show_player_head", true);
+        this.logAllEvents   = cfg.getBoolean(SECTION + "log_all_events", false);
         this.enabledEvents  = parseEnabledEvents(cfg);
     }
 
@@ -55,7 +53,7 @@ public class DiscordWebhookConfig {
     private Set<SpawnerEventType> parseEnabledEvents(FileConfiguration cfg) {
         if (logAllEvents) return EnumSet.allOf(SpawnerEventType.class);
 
-        List<String> list = cfg.getStringList("logged_events");
+        List<String> list = cfg.getStringList(SECTION + "logged_events");
         if (list.isEmpty()) {
             Set<SpawnerEventType> defaults = EnumSet.noneOf(SpawnerEventType.class);
             defaults.add(SpawnerEventType.SPAWNER_PLACE);
@@ -75,7 +73,7 @@ public class DiscordWebhookConfig {
             try {
                 events.add(SpawnerEventType.valueOf(name.trim().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("discord_logging.yml: unknown event type '" + name + "', skipping.");
+                plugin.getLogger().warning(FILE_NAME + ": unknown event type '" + name + "', skipping.");
             }
         }
         return events;

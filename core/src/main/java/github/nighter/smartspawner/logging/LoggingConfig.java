@@ -2,18 +2,22 @@ package github.nighter.smartspawner.logging;
 
 import github.nighter.smartspawner.SmartSpawner;
 import lombok.Getter;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Configuration for the spawner logging system.
+ * File logging settings, read from the {@code file} section of {@code activity_log.yml}.
  * Controls what events are logged and how they're formatted.
  */
 public class LoggingConfig {
     private static final String LOG_DIRECTORY = "logs";
+    private static final String SECTION = "file.";
 
     private final SmartSpawner plugin;
     @Getter
@@ -33,34 +37,37 @@ public class LoggingConfig {
     private boolean logAllEvents;
     @Getter
     private List<String> loggedEvents;
-    
+
     public LoggingConfig(SmartSpawner plugin) {
         this.plugin = plugin;
         loadConfig();
     }
-    
+
     public void loadConfig() {
-        this.enabled = plugin.getConfig().getBoolean("logging.enabled", true);
-        this.jsonFormat = plugin.getConfig().getBoolean("logging.json_format", false);
-        this.consoleOutput = plugin.getConfig().getBoolean("logging.console_output", false);
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(
+                new File(plugin.getDataFolder(), ActivityLogConfigUpdater.FILE_NAME));
+
+        this.enabled = cfg.getBoolean(SECTION + "enabled", true);
+        this.jsonFormat = cfg.getBoolean(SECTION + "json_format", false);
+        this.consoleOutput = cfg.getBoolean(SECTION + "console_output", false);
         this.logDirectory = LOG_DIRECTORY;
-        this.maxLogFiles = plugin.getConfig().getInt("logging.max_log_files", 10);
-        this.maxLogSizeMB = plugin.getConfig().getLong("logging.max_log_size_mb", 10);
-        this.logAllEvents = plugin.getConfig().getBoolean("logging.log_all_events", false);
-        this.loggedEvents = plugin.getConfig().getStringList("logging.logged_events");
+        this.maxLogFiles = cfg.getInt(SECTION + "max_log_files", 10);
+        this.maxLogSizeMB = cfg.getLong(SECTION + "max_log_size_mb", 10);
+        this.logAllEvents = cfg.getBoolean(SECTION + "log_all_events", false);
+        this.loggedEvents = cfg.getStringList(SECTION + "logged_events");
 
         // Parse enabled events
         this.enabledEvents = parseEnabledEvents();
     }
-    
+
     private Set<SpawnerEventType> parseEnabledEvents() {
         Set<SpawnerEventType> events = EnumSet.noneOf(SpawnerEventType.class);
-        
+
         // Check if we should log all events
         if (logAllEvents) {
             return EnumSet.allOf(SpawnerEventType.class);
         }
-        
+
         // Parse specific event types
         if (loggedEvents == null || loggedEvents.isEmpty()) {
             // Default to logging major events
@@ -81,7 +88,7 @@ public class LoggingConfig {
             events.add(SpawnerEventType.COMMAND_EXECUTE_RCON);
             return events;
         }
-        
+
         for (String eventName : loggedEvents) {
             try {
                 events.add(SpawnerEventType.valueOf(eventName.trim().toUpperCase()));
@@ -89,7 +96,7 @@ public class LoggingConfig {
                 // Invalid event type, skip
             }
         }
-        
+
         return events;
     }
 

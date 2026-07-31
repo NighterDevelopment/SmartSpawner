@@ -69,7 +69,7 @@ implementation batches the write. GUIs read the same `SpawnerData` and are kept 
 | Messages, GUI text, number formatting | `language/` (see `language/CLAUDE.md`) |
 | Renaming a config key without breaking users | `updates/` (see `updates/CLAUDE.md`) |
 | Hopper pulling from spawner storage | `extras/` |
-| Action logging and Discord webhooks | `logging/` |
+| Action logging and Discord webhooks | `logging/`, configured by `activity_log.yml` |
 | Folia-safe scheduling | [Scheduler.java](core/src/main/java/github/nighter/smartspawner/Scheduler.java) |
 | Public API surface for addons | `api/` module |
 | Break, particle, natural-spawner and loot-performance config | [Config.java](core/src/main/java/github/nighter/smartspawner/config/Config.java), a parsed snapshot via `Config.get()`. Most other components read `plugin.getConfig()` directly |

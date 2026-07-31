@@ -17,6 +17,7 @@ All notable changes to SmartSpawner are documented in this file.
 - SQLite is now the default storage mode and is faster than the old YAML files on servers of any size. MySQL and MariaDB work as before, including cross-server spawner listing.
 - SQLite reads and saves at the same time, so `/ss list` no longer waits for a save to finish.
 - The two spawner settings files were renamed, and loot entries use a new format. See the details below.
+- Action logging is now in one file, `activity_log.yml`. It replaces `discord_logging.yml` and the `logging` section of `config.yml`, and your settings move across on the first start.
 
 ### Removed
 - YAML storage was removed. Servers still set to `YAML` are switched to `SQLITE` automatically.
@@ -39,6 +40,8 @@ All notable changes to SmartSpawner are documented in this file.
 - The `default_material` line was removed. The fallback head is now built in.
 - A loot entry the server cannot read is skipped, and the console names the mob and the entry.
 - The guide in the comments at the top of both files was replaced with a link to the documentation site.
+- `discord_logging.yml` is now `activity_log.yml`, and the `logging` section of `config.yml` became its `file` section. Both moves happen on the first start and keep your values.
+- Inside that file the Discord settings sit under `discord`, and the per-event message templates sit under `embeds`, one block per event with the `embed` line removed.
 
 </details>
 

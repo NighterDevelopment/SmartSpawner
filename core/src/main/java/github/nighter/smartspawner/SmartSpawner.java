@@ -28,6 +28,7 @@ import github.nighter.smartspawner.hooks.economy.ItemPriceManager;
 import github.nighter.smartspawner.hooks.economy.shops.providers.shopguiplus.SpawnerProvider;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.language.MessageService;
+import github.nighter.smartspawner.logging.ActivityLogConfigUpdater;
 import github.nighter.smartspawner.logging.LoggingConfig;
 import github.nighter.smartspawner.logging.SpawnerActionLogger;
 import github.nighter.smartspawner.logging.SpawnerAuditListener;
@@ -261,7 +262,8 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         this.spawnerSettingsConfig = new SpawnerSettingsConfig(this);
         this.itemSpawnerSettingsConfig = new ItemSpawnerSettingsConfig(this);
         
-        // Initialize logging system
+        // Initialize logging system. The updater has to run first, it owns activity_log.yml.
+        new ActivityLogConfigUpdater(this).checkAndUpdate();
         this.loggingConfig = new LoggingConfig(this);
         this.spawnerActionLogger = new SpawnerActionLogger(this, loggingConfig);
         this.spawnerAuditListener = new SpawnerAuditListener(spawnerActionLogger);
