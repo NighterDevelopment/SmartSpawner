@@ -16,17 +16,15 @@ import java.util.Locale;
 public enum ConfigEditorTarget {
 
     /** {@code spawner_mobs.yml}, keyed by {@link EntityType}. */
-    SMART_SPAWNER("mobs", "spawner_mobs.yml", "config_editor.mob_list"),
+    SMART_SPAWNER("spawner_mobs.yml", "config_editor.mob_list"),
 
     /** {@code spawner_items.yml}, keyed by {@link Material}. */
-    ITEM_SPAWNER("items", "spawner_items.yml", "config_editor.item_list");
+    ITEM_SPAWNER("spawner_items.yml", "config_editor.item_list");
 
-    private final String commandArgument;
     private final String fileName;
     private final String titleKey;
 
-    ConfigEditorTarget(String commandArgument, String fileName, String titleKey) {
-        this.commandArgument = commandArgument;
+    ConfigEditorTarget(String fileName, String titleKey) {
         this.fileName = fileName;
         this.titleKey = titleKey;
     }
@@ -56,12 +54,7 @@ public enum ConfigEditorTarget {
         }
     }
 
-    public static ConfigEditorTarget fromArgument(String argument) {
-        for (ConfigEditorTarget target : values()) {
-            if (target.commandArgument.equalsIgnoreCase(argument)) {
-                return target;
-            }
-        }
-        return null;
+    public ConfigEditorTarget other() {
+        return this == SMART_SPAWNER ? ITEM_SPAWNER : SMART_SPAWNER;
     }
 }

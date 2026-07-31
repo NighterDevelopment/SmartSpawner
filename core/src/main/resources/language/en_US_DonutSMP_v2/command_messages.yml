@@ -207,7 +207,7 @@ gui_layout:
 # --------------------------------------------------
 config_editor:
   usage:
-    message: '&#FF4444Usage: /ss config <mobs|items>'
+    message: '&#FF4444Usage: /ss config spawnerloot'
     sound: block.note_block.pling
   entry_missing:
     message: '&#FF4444That entry is no longer in the file.'

@@ -35,7 +35,7 @@ public class YamlToDatabaseMigration {
 
     // MySQL/MariaDB insert syntax
     private static final String INSERT_SQL_MYSQL = """
-            INSERT INTO spawner_data (
+            INSERT INTO %s (
                 spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity_type, item_spawner_material, spawner_exp, spawner_active,
                 spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
@@ -74,7 +74,7 @@ public class YamlToDatabaseMigration {
 
     // SQLite insert syntax
     private static final String INSERT_SQL_SQLITE = """
-            INSERT INTO spawner_data (
+            INSERT INTO %s (
                 spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity_type, item_spawner_material, spawner_exp, spawner_active,
                 spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
@@ -169,9 +169,9 @@ public class YamlToDatabaseMigration {
         logger.info("Found " + totalSpawners + " spawners to migrate.");
 
         // Select appropriate SQL based on storage mode
-        String insertSql = databaseManager.getStorageMode() == StorageMode.SQLITE
+        String insertSql = (databaseManager.getStorageMode() == StorageMode.SQLITE
                 ? INSERT_SQL_SQLITE
-                : INSERT_SQL_MYSQL;
+                : INSERT_SQL_MYSQL).formatted(databaseManager.getTableSpawners());
 
         try (Connection conn = databaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(insertSql)) {

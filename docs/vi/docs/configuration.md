@@ -309,6 +309,12 @@ Cấu hình nơi lưu dữ liệu spawner.
 Backend lưu trữ: <code>SQLITE</code> hoặc <code>MYSQL</code>. Cấu hình còn để <code>YAML</code> sẽ tự chuyển sang <code>SQLITE</code> trong lần khởi động kế tiếp.
 </ConfigProperty>
 
+<ConfigProperty name="table_prefix" value="sspawner_" type="string">
+Tiền tố cho hai bảng plugin tạo ra là <code>sspawner_data</code> và <code>sspawner_schema_meta</code>. Chỉ giữ lại chữ cái, chữ số và dấu gạch dưới, ký tự khác bị loại bỏ. Đổi khi có plugin khác đã dùng tên đó trong cùng cơ sở dữ liệu, hoặc để tách hai bản cài SmartSpawner trong cùng một cơ sở dữ liệu MySQL.
+
+Hãy đặt trước lần khởi động đầu tiên. Đổi về sau sẽ để lại bảng cũ và plugin khởi động với cơ sở dữ liệu rỗng, nên cần đổi tên bảng thủ công trước.
+</ConfigProperty>
+
 <ConfigProperty name="server_name" value="server1" type="string">
 Tên máy chủ duy nhất cho mô hình MySQL liên máy chủ.
 </ConfigProperty>
@@ -320,6 +326,83 @@ Hiển thị trang chọn máy chủ trong <code>/ss list</code> để xem spawn
 <ConfigProperty name="migrate_from_local" value="true" type="boolean">
 Tự chuyển dữ liệu local khi đổi chế độ. File đã chuyển được thêm hậu tố <code>.migrated</code>.
 </ConfigProperty>
+
+<ConfigProperty name="database" value="smartspawner" type="string">
+Tên cơ sở dữ liệu MySQL hoặc MariaDB cần dùng. Bỏ qua ở chế độ <code>SQLITE</code>.
+</ConfigProperty>
+
+<ConfigGroup name="sqlite">
+<template #info>
+Chỉ dùng ở chế độ <code>SQLITE</code>.
+</template>
+
+<ConfigProperty name="file" value="spawners.db" type="string">
+Tên file cơ sở dữ liệu, nằm trong <code>plugins/SmartSpawner/</code>.
+</ConfigProperty>
+
+<ConfigProperty name="pool_size" value="4" type="number">
+Số kết nối trong pool. Cơ sở dữ liệu chạy chế độ WAL nên việc đọc không bị chặn trong lúc lưu. Chỉ hạ xuống <code>1</code> khi thấy lỗi khoá trong console.
+</ConfigProperty>
+
+</ConfigGroup>
+
+<ConfigGroup name="sql">
+<template #info>
+Thông tin kết nối MySQL và MariaDB. Chỉ dùng ở chế độ <code>MYSQL</code>.
+</template>
+
+<ConfigProperty name="host" value="localhost" type="string">
+Địa chỉ máy chủ cơ sở dữ liệu.
+</ConfigProperty>
+
+<ConfigProperty name="port" value="3306" type="number">
+Cổng máy chủ cơ sở dữ liệu.
+</ConfigProperty>
+
+<ConfigProperty name="username" value="root" type="string">
+Người dùng cơ sở dữ liệu.
+</ConfigProperty>
+
+<ConfigProperty name="password" value="" type="string">
+Mật khẩu của người dùng đó.
+</ConfigProperty>
+
+<ConfigGroup name="pool">
+<template #info>
+Tinh chỉnh pool kết nối. Giá trị mặc định phù hợp với hầu hết máy chủ, chỉ đổi khi cần xử lý một vấn đề cụ thể.
+</template>
+
+<ConfigProperty name="maximum-size" value="10" type="number">
+Số kết nối tối đa pool được phép mở.
+</ConfigProperty>
+
+<ConfigProperty name="minimum-idle" value="2" type="number">
+Số kết nối giữ mở khi rảnh.
+</ConfigProperty>
+
+<ConfigProperty name="connection-timeout" value="10000" type="number">
+Số mili giây chờ một kết nối rảnh trước khi bỏ cuộc.
+</ConfigProperty>
+
+<ConfigProperty name="max-lifetime" value="1800000" type="number">
+Số mili giây một kết nối tồn tại trước khi bị thay mới. Hãy giữ thấp hơn thời gian chờ của chính cơ sở dữ liệu.
+</ConfigProperty>
+
+<ConfigProperty name="idle-timeout" value="600000" type="number">
+Số mili giây giữ một kết nối rảnh trước khi đóng. Phải nhỏ hơn <code>max-lifetime</code>. <code>0</code> nghĩa là bằng <code>max-lifetime</code>.
+</ConfigProperty>
+
+<ConfigProperty name="keepalive-time" value="30000" type="number">
+Số mili giây giữa các truy vấn keepalive giúp cơ sở dữ liệu không ngắt kết nối rảnh. <code>0</code> để tắt.
+</ConfigProperty>
+
+<ConfigProperty name="leak-detection-threshold" value="0" type="number">
+Số mili giây một kết nối được giữ trước khi ghi cảnh báo. <code>0</code> để tắt cảnh báo.
+</ConfigProperty>
+
+</ConfigGroup>
+
+</ConfigGroup>
 
 </ConfigGroup>
 

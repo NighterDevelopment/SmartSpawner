@@ -30,18 +30,29 @@ import java.util.logging.Logger;
  * Supports SQLite (default) and MySQL/MariaDB for spawner data storage.
  */
 public class DatabaseManager {
-    /** Spawner rows. Renamed from {@code smart_spawners} in schema v3. */
-    public static final String TABLE_SPAWNERS = "spawner_data";
-    /** Plugin-owned schema metadata. Renamed from {@code smartspawner_meta} in schema v3. */
-    public static final String TABLE_META = "spawner_meta";
+    /** Used when {@code database.table_prefix} is absent or sanitizes to nothing. */
+    public static final String DEFAULT_TABLE_PREFIX = "sspawner_";
 
+    /** Appended to the prefix for the spawner rows table. */
+    private static final String SUFFIX_SPAWNERS = "data";
+    /** Appended to the prefix for the plugin-owned schema metadata table. */
+    private static final String SUFFIX_META = "schema_meta";
+
+    /** Fixed names used before {@code database.table_prefix} existed (1.7.x and earlier). */
     private static final String LEGACY_TABLE_SPAWNERS = "smart_spawners";
     private static final String LEGACY_TABLE_META = "smartspawner_meta";
+    /** Index names that travelled with the legacy tables, dropped once those tables are renamed. */
+    private static final String[] LEGACY_INDEXES = {"idx_server", "idx_world", "idx_chunk"};
 
     private final SmartSpawner plugin;
     private final Logger logger;
     private final StorageMode storageMode;
     private HikariDataSource dataSource;
+
+    // Table and index names, all derived from database.table_prefix
+    private final String tablePrefix;
+    private final String tableSpawners;
+    private final String tableMeta;
 
     // Configuration values
     private final String host;
@@ -62,9 +73,9 @@ public class DatabaseManager {
     private final long keepaliveTime;
     private final long leakDetectionThreshold;
 
-    // MySQL/MariaDB table creation SQL
+    // MySQL/MariaDB table creation SQL. %1$s is the spawner table, %2$s the configured prefix.
     private static final String CREATE_TABLE_MYSQL = """
-            CREATE TABLE IF NOT EXISTS spawner_data (
+            CREATE TABLE IF NOT EXISTS %1$s (
                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
                 spawner_id VARCHAR(64) NOT NULL,
                 server_name VARCHAR(64) NOT NULL,
@@ -114,15 +125,15 @@ public class DatabaseManager {
                 -- Indexes
                 UNIQUE KEY uk_server_spawner (server_name, spawner_id),
                 UNIQUE KEY uk_location (server_name, world_name, loc_x, loc_y, loc_z),
-                INDEX idx_server (server_name),
-                INDEX idx_world (server_name, world_name),
-                INDEX idx_chunk (server_name, world_name, chunk_x, chunk_z)
+                INDEX %2$sidx_server (server_name),
+                INDEX %2$sidx_world (server_name, world_name),
+                INDEX %2$sidx_chunk (server_name, world_name, chunk_x, chunk_z)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             """;
 
     // SQLite table creation SQL (slightly different syntax)
     private static final String CREATE_TABLE_SQLITE = """
-            CREATE TABLE IF NOT EXISTS spawner_data (
+            CREATE TABLE IF NOT EXISTS %1$s (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 spawner_id VARCHAR(64) NOT NULL,
                 server_name VARCHAR(64) NOT NULL,
@@ -175,13 +186,14 @@ public class DatabaseManager {
             )
             """;
 
-    // SQLite index creation (separate statements)
+    // SQLite index creation (separate statements). SQLite index names are database-scoped, not
+    // table-scoped, so these carry the prefix as well.
     private static final String CREATE_INDEX_SERVER_SQLITE =
-            "CREATE INDEX IF NOT EXISTS idx_server ON spawner_data (server_name)";
+            "CREATE INDEX IF NOT EXISTS %2$sidx_server ON %1$s (server_name)";
     private static final String CREATE_INDEX_WORLD_SQLITE =
-            "CREATE INDEX IF NOT EXISTS idx_world ON spawner_data (server_name, world_name)";
+            "CREATE INDEX IF NOT EXISTS %2$sidx_world ON %1$s (server_name, world_name)";
     private static final String CREATE_INDEX_CHUNK_SQLITE =
-            "CREATE INDEX IF NOT EXISTS idx_chunk ON spawner_data (server_name, world_name, chunk_x, chunk_z)";
+            "CREATE INDEX IF NOT EXISTS %2$sidx_chunk ON %1$s (server_name, world_name, chunk_x, chunk_z)";
 
     private static final String SCHEMA_VERSION_KEY = "schema_version";
     private static final int LEGACY_SCHEMA_VERSION = 1;
@@ -191,7 +203,7 @@ public class DatabaseManager {
     private static final int MIGRATION_BATCH_SIZE = 250;
 
     private static final String CREATE_META_TABLE_MYSQL = """
-            CREATE TABLE IF NOT EXISTS spawner_meta (
+            CREATE TABLE IF NOT EXISTS %1$s (
                 meta_key VARCHAR(64) PRIMARY KEY,
                 meta_value VARCHAR(64) NOT NULL,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -199,7 +211,7 @@ public class DatabaseManager {
             """;
 
     private static final String CREATE_META_TABLE_SQLITE = """
-            CREATE TABLE IF NOT EXISTS spawner_meta (
+            CREATE TABLE IF NOT EXISTS %1$s (
                 meta_key VARCHAR(64) PRIMARY KEY,
                 meta_value VARCHAR(64) NOT NULL,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -210,6 +222,10 @@ public class DatabaseManager {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.storageMode = storageMode;
+
+        this.tablePrefix = sanitizeTablePrefix(plugin.getConfig().getString("database.table_prefix", DEFAULT_TABLE_PREFIX));
+        this.tableSpawners = tablePrefix + SUFFIX_SPAWNERS;
+        this.tableMeta = tablePrefix + SUFFIX_META;
 
         // Load configuration
         this.host = plugin.getConfig().getString("database.sql.host", "localhost");
@@ -229,6 +245,21 @@ public class DatabaseManager {
         this.idleTimeout = plugin.getConfig().getLong("database.sql.pool.idle-timeout", 600000);
         this.keepaliveTime = plugin.getConfig().getLong("database.sql.pool.keepalive-time", 30000);
         this.leakDetectionThreshold = plugin.getConfig().getLong("database.sql.pool.leak-detection-threshold", 0);
+    }
+
+    /**
+     * Table names are concatenated straight into SQL rather than bound as JDBC parameters, which
+     * SQL does not allow for identifiers, so anything outside {@code [A-Za-z0-9_]} is stripped
+     * instead of trusted.
+     */
+    private static String sanitizeTablePrefix(String value) {
+        String cleaned = value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "");
+        return cleaned.isEmpty() ? DEFAULT_TABLE_PREFIX : cleaned;
+    }
+
+    /** Fills the table name and prefix placeholders in the DDL templates above. */
+    private String sql(String template) {
+        return String.format(template, tableSpawners, tablePrefix);
     }
 
     /**
@@ -328,17 +359,19 @@ public class DatabaseManager {
     }
 
     /**
-     * Move pre-v3 table names onto the {@code spawner_*} prefix. No-op on a fresh install and on
-     * databases that were already renamed.
+     * Move the fixed pre-prefix table names onto {@code database.table_prefix}. No-op on a fresh
+     * install and on databases that were already renamed.
      */
     private void renameLegacyTables() throws SQLException {
-        renameTableIfNeeded(LEGACY_TABLE_META, TABLE_META);
-        renameTableIfNeeded(LEGACY_TABLE_SPAWNERS, TABLE_SPAWNERS);
+        renameTableIfNeeded(LEGACY_TABLE_META, tableMeta);
+        if (renameTableIfNeeded(LEGACY_TABLE_SPAWNERS, tableSpawners)) {
+            dropLegacyIndexes();
+        }
     }
 
-    private void renameTableIfNeeded(String from, String to) throws SQLException {
+    private boolean renameTableIfNeeded(String from, String to) throws SQLException {
         if (!tableExists(from) || tableExists(to)) {
-            return;
+            return false;
         }
 
         try (Connection conn = getConnection();
@@ -346,6 +379,29 @@ public class DatabaseManager {
             stmt.execute("ALTER TABLE " + from + " RENAME TO " + to);
         }
         logger.info("Renamed database table " + from + " to " + to + ".");
+        return true;
+    }
+
+    /**
+     * An index follows its table across a rename, keeping its old name. In SQLite index names are
+     * database-scoped, so leaving them would make {@link #createSqliteIndexes()} build a second,
+     * redundant set under the prefixed names. MySQL scopes index names per table, where the old
+     * names stay valid and cost nothing.
+     */
+    private void dropLegacyIndexes() {
+        if (storageMode != StorageMode.SQLITE) {
+            return;
+        }
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            for (String index : LEGACY_INDEXES) {
+                stmt.execute("DROP INDEX IF EXISTS " + index);
+            }
+        } catch (SQLException e) {
+            // The prefixed indexes are created regardless, so a stale duplicate is not worth failing over.
+            logger.warning("Could not drop the pre-prefix indexes, leaving them in place: " + e.getMessage());
+        }
     }
 
     private boolean tableExists(String tableName) throws SQLException {
@@ -381,9 +437,9 @@ public class DatabaseManager {
              Statement stmt = conn.createStatement()) {
 
             if (storageMode == StorageMode.SQLITE) {
-                stmt.execute(CREATE_TABLE_SQLITE);
+                stmt.execute(sql(CREATE_TABLE_SQLITE));
             } else {
-                stmt.execute(CREATE_TABLE_MYSQL);
+                stmt.execute(sql(CREATE_TABLE_MYSQL));
             }
 
             plugin.debug("Database tables created/verified successfully.");
@@ -401,17 +457,17 @@ public class DatabaseManager {
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute(CREATE_INDEX_SERVER_SQLITE);
-            stmt.execute(CREATE_INDEX_WORLD_SQLITE);
-            stmt.execute(CREATE_INDEX_CHUNK_SQLITE);
+            stmt.execute(sql(CREATE_INDEX_SERVER_SQLITE));
+            stmt.execute(sql(CREATE_INDEX_WORLD_SQLITE));
+            stmt.execute(sql(CREATE_INDEX_CHUNK_SQLITE));
         }
     }
 
     private void createSchemaMetaTable() throws SQLException {
-        String createSql = storageMode == StorageMode.SQLITE ? CREATE_META_TABLE_SQLITE : CREATE_META_TABLE_MYSQL;
+        String template = storageMode == StorageMode.SQLITE ? CREATE_META_TABLE_SQLITE : CREATE_META_TABLE_MYSQL;
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute(createSql);
+            stmt.execute(String.format(template, tableMeta));
         }
     }
 
@@ -441,7 +497,7 @@ public class DatabaseManager {
     }
 
     private Integer getSchemaVersionFromMeta() throws SQLException {
-        String sql = "SELECT meta_value FROM " + TABLE_META + " WHERE meta_key = ?";
+        String sql = "SELECT meta_value FROM " + tableMeta + " WHERE meta_key = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, SCHEMA_VERSION_KEY);
@@ -461,7 +517,7 @@ public class DatabaseManager {
     }
 
     private int detectInitialSchemaVersion() throws SQLException {
-        if (columnExists(TABLE_SPAWNERS, "items")) {
+        if (columnExists(tableSpawners, "items")) {
             return CURRENT_SCHEMA_VERSION;
         }
         return xpColumnsRequireMigration() ? LEGACY_SCHEMA_VERSION : 2;
@@ -469,8 +525,8 @@ public class DatabaseManager {
 
     private void setSchemaVersion(int version) throws SQLException {
         String sql = storageMode == StorageMode.SQLITE
-                ? "INSERT INTO " + TABLE_META + " (meta_key, meta_value) VALUES (?, ?) ON CONFLICT(meta_key) DO UPDATE SET meta_value = excluded.meta_value"
-                : "INSERT INTO " + TABLE_META + " (meta_key, meta_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)";
+                ? "INSERT INTO " + tableMeta + " (meta_key, meta_value) VALUES (?, ?) ON CONFLICT(meta_key) DO UPDATE SET meta_value = excluded.meta_value"
+                : "INSERT INTO " + tableMeta + " (meta_key, meta_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -526,7 +582,7 @@ public class DatabaseManager {
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, database);
-            stmt.setString(2, TABLE_SPAWNERS);
+            stmt.setString(2, tableSpawners);
             try (ResultSet rs = stmt.executeQuery()) {
                 int seen = 0;
                 while (rs.next()) {
@@ -545,7 +601,7 @@ public class DatabaseManager {
     }
 
     private boolean sqliteXpColumnsRequireMigration() throws SQLException {
-        String sql = "PRAGMA table_info(" + TABLE_SPAWNERS + ")";
+        String sql = "PRAGMA table_info(" + tableSpawners + ")";
         boolean spawnerExpBigInt = false;
         boolean maxStoredExpBigInt = false;
 
@@ -569,11 +625,11 @@ public class DatabaseManager {
     }
 
     private String createPreMigrationBackup(String label) throws SQLException {
-        String backupTableName = TABLE_SPAWNERS + "_backup_" + label + "_" +
+        String backupTableName = tableSpawners + "_backup_" + label + "_" +
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
         if (storageMode == StorageMode.SQLITE) {
-            String backupSql = "CREATE TABLE " + backupTableName + " AS SELECT * FROM " + TABLE_SPAWNERS;
+            String backupSql = "CREATE TABLE " + backupTableName + " AS SELECT * FROM " + tableSpawners;
             try (Connection conn = getConnection();
                  Statement stmt = conn.createStatement()) {
                 stmt.execute(backupSql);
@@ -581,8 +637,8 @@ public class DatabaseManager {
         } else {
             try (Connection conn = getConnection();
                  Statement stmt = conn.createStatement()) {
-                stmt.execute("CREATE TABLE " + backupTableName + " LIKE " + TABLE_SPAWNERS);
-                stmt.execute("INSERT INTO " + backupTableName + " SELECT * FROM " + TABLE_SPAWNERS);
+                stmt.execute("CREATE TABLE " + backupTableName + " LIKE " + tableSpawners);
+                stmt.execute("INSERT INTO " + backupTableName + " SELECT * FROM " + tableSpawners);
             }
         }
 
@@ -591,10 +647,10 @@ public class DatabaseManager {
 
     private void migrateMySqlXpColumnsToBigInt() throws SQLException {
         String alterSql = """
-                ALTER TABLE spawner_data
+                ALTER TABLE %1$s
                     MODIFY COLUMN spawner_exp BIGINT NOT NULL DEFAULT 0,
                     MODIFY COLUMN max_stored_exp BIGINT NOT NULL DEFAULT 1000
-                """;
+                """.formatted(tableSpawners);
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
@@ -605,11 +661,12 @@ public class DatabaseManager {
     private void migrateSQLiteXpColumnsToBigInt() throws SQLException {
         // Recreates the table in its v2 shape. The v3 step below then adds the chunk and item
         // columns on top, so this deliberately keeps the old inventory_data column.
+        String scratchTable = tableSpawners + "_pre_bigint";
         String[] migrationSql = {
                 "BEGIN IMMEDIATE TRANSACTION",
-                "ALTER TABLE " + TABLE_SPAWNERS + " RENAME TO spawner_data_pre_bigint",
+                "ALTER TABLE " + tableSpawners + " RENAME TO " + scratchTable,
                 """
-                CREATE TABLE spawner_data (
+                CREATE TABLE %1$s (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     spawner_id VARCHAR(64) NOT NULL,
                     server_name VARCHAR(64) NOT NULL,
@@ -641,9 +698,9 @@ public class DatabaseManager {
                     UNIQUE (server_name, spawner_id),
                     UNIQUE (server_name, world_name, loc_x, loc_y, loc_z)
                 )
-                """,
+                """.formatted(tableSpawners),
                 """
-                INSERT INTO spawner_data (
+                INSERT INTO %1$s (
                     id, spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
                     entity_type, item_spawner_material, spawner_exp, spawner_active,
                     spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
@@ -660,11 +717,11 @@ public class DatabaseManager {
                     last_spawn_time, is_at_capacity, last_interacted_player,
                     preferred_sort_item, filtered_items, inventory_data,
                     created_at, updated_at
-                FROM spawner_data_pre_bigint
-                """,
-                "DROP TABLE spawner_data_pre_bigint",
-                CREATE_INDEX_SERVER_SQLITE,
-                CREATE_INDEX_WORLD_SQLITE,
+                FROM %2$s
+                """.formatted(tableSpawners, scratchTable),
+                "DROP TABLE " + scratchTable,
+                sql(CREATE_INDEX_SERVER_SQLITE),
+                sql(CREATE_INDEX_WORLD_SQLITE),
                 "COMMIT"
         };
 
@@ -691,7 +748,7 @@ public class DatabaseManager {
      * inventory from the legacy string format into {@link SpawnerInventoryCodec}.
      */
     private void migrateToChunkAndItemBlobColumns() throws SQLException {
-        boolean hasLegacyInventory = columnExists(TABLE_SPAWNERS, "inventory_data");
+        boolean hasLegacyInventory = columnExists(tableSpawners, "inventory_data");
 
         if (hasLegacyInventory && countRows() > 0) {
             String backupName = createPreMigrationBackup("items");
@@ -719,21 +776,21 @@ public class DatabaseManager {
     private long countRows() throws SQLException {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + TABLE_SPAWNERS)) {
+             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableSpawners)) {
             return rs.next() ? rs.getLong(1) : 0L;
         }
     }
 
     private void addColumnIfMissing(String columnName, String definition) throws SQLException {
-        if (columnExists(TABLE_SPAWNERS, columnName)) {
+        if (columnExists(tableSpawners, columnName)) {
             return;
         }
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("ALTER TABLE " + TABLE_SPAWNERS + " ADD COLUMN " + columnName + " " + definition);
+            stmt.execute("ALTER TABLE " + tableSpawners + " ADD COLUMN " + columnName + " " + definition);
         }
-        plugin.debug("Added column " + columnName + " to " + TABLE_SPAWNERS);
+        plugin.debug("Added column " + columnName + " to " + tableSpawners);
     }
 
     /**
@@ -745,9 +802,9 @@ public class DatabaseManager {
             conn.setAutoCommit(false);
 
             try (PreparedStatement select = conn.prepareStatement(
-                    "SELECT id, loc_x, loc_z FROM " + TABLE_SPAWNERS);
+                    "SELECT id, loc_x, loc_z FROM " + tableSpawners);
                  PreparedStatement update = conn.prepareStatement(
-                         "UPDATE " + TABLE_SPAWNERS + " SET chunk_x = ?, chunk_z = ? WHERE id = ?")) {
+                         "UPDATE " + tableSpawners + " SET chunk_x = ?, chunk_z = ? WHERE id = ?")) {
 
                 int pending = 0;
                 try (ResultSet rs = select.executeQuery()) {
@@ -784,10 +841,10 @@ public class DatabaseManager {
             conn.setAutoCommit(false);
 
             try (PreparedStatement select = conn.prepareStatement(
-                    "SELECT id, spawner_id, inventory_data FROM " + TABLE_SPAWNERS
+                    "SELECT id, spawner_id, inventory_data FROM " + tableSpawners
                             + " WHERE inventory_data IS NOT NULL AND inventory_data <> ''");
                  PreparedStatement update = conn.prepareStatement(
-                         "UPDATE " + TABLE_SPAWNERS + " SET items = ?, total_items = ? WHERE id = ?")) {
+                         "UPDATE " + tableSpawners + " SET items = ?, total_items = ? WHERE id = ?")) {
 
                 int pending = 0;
                 try (ResultSet rs = select.executeQuery()) {
@@ -862,7 +919,7 @@ public class DatabaseManager {
     private void dropLegacyInventoryColumn() {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("ALTER TABLE " + TABLE_SPAWNERS + " DROP COLUMN inventory_data");
+            stmt.execute("ALTER TABLE " + tableSpawners + " DROP COLUMN inventory_data");
             plugin.debug("Dropped legacy inventory_data column.");
         } catch (SQLException e) {
             // Harmless if it stays: nothing reads or writes it any more.
@@ -874,7 +931,7 @@ public class DatabaseManager {
         List<String> existingIndexes = new ArrayList<>();
         try (Connection conn = getConnection()) {
             DatabaseMetaData meta = conn.getMetaData();
-            try (ResultSet rs = meta.getIndexInfo(conn.getCatalog(), null, TABLE_SPAWNERS, false, false)) {
+            try (ResultSet rs = meta.getIndexInfo(conn.getCatalog(), null, tableSpawners, false, false)) {
                 while (rs.next()) {
                     String name = rs.getString("INDEX_NAME");
                     if (name != null) {
@@ -884,13 +941,14 @@ public class DatabaseManager {
             }
         }
 
-        if (existingIndexes.contains("idx_chunk")) {
+        String indexName = tablePrefix + "idx_chunk";
+        if (existingIndexes.contains(indexName.toLowerCase(Locale.ROOT))) {
             return;
         }
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE INDEX idx_chunk ON " + TABLE_SPAWNERS
+            stmt.execute("CREATE INDEX " + indexName + " ON " + tableSpawners
                     + " (server_name, world_name, chunk_x, chunk_z)");
         }
     }
@@ -913,6 +971,22 @@ public class DatabaseManager {
      */
     public String getServerName() {
         return serverName;
+    }
+
+    /**
+     * Name of the spawner rows table, {@code database.table_prefix} included.
+     * @return The table name to concatenate into SQL
+     */
+    public String getTableSpawners() {
+        return tableSpawners;
+    }
+
+    /**
+     * Name of the plugin-owned schema metadata table, {@code database.table_prefix} included.
+     * @return The table name to concatenate into SQL
+     */
+    public String getTableMeta() {
+        return tableMeta;
     }
 
     /**

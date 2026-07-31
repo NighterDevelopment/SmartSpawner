@@ -12,8 +12,9 @@ spawning mobs; players interact through GUIs. Java 25, Gradle Kotlin DSL, ~36k L
 
 `core` shades HikariCP, MariaDB driver and bStats (relocated under `github.nighter.smartspawner.libs`).
 The SQLite driver is **not** shaded: it extracts a native library from a resource path derived from
-its own package name, so relocation breaks it. It is resolved at load time by `SmartSpawnerLoader`
-(`loader:` in `paper-plugin.yml`) and by `libraries:` in `plugin.yml`.
+its own package name, so relocation breaks it. It is `compileOnly` and comes from the server
+classpath at runtime, because Paper bundles `org.xerial:sqlite-jdbc` itself. Do not add it back as a
+`libraries:` entry or a `PluginLoader`.
 Every protection/shop/economy plugin is `compileOnly` or `implementation`, never required at runtime.
 
 ## Build and run

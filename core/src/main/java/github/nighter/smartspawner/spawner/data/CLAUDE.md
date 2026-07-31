@@ -34,11 +34,11 @@ true) and each migration's own `needsMigration()`.
 
 ## Database schema
 
-Two tables, both on the `spawner_` prefix: `spawner_data` and `spawner_meta`
+Two tables, both on the `spawner_` prefix: `spawner_data` and `spawner_schema_meta`
 (renamed from `smart_spawners` / `smartspawner_meta` in schema v3). Names live in
 `DatabaseManager.TABLE_SPAWNERS` / `TABLE_META`, not as literals in queries.
 
-`spawner_meta.schema_version` drives `runSchemaMigrations()`. Adding a step means bumping
+`spawner_schema_meta.schema_version` drives `runSchemaMigrations()`. Adding a step means bumping
 `CURRENT_SCHEMA_VERSION` and adding a case to `applyMigrationStep`. Two ordering rules:
 
 - Renaming legacy tables happens in `renameLegacyTables()` **before** anything reads the version, because the meta table is itself one of the renamed tables.

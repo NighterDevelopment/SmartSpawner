@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
 
 /**
- * {@code /ss config smartspawner} and {@code /ss config itemspawner}.
+ * {@code /ss config spawnerloot}.
  *
  * <p>Opens the in-game editor for the matching settings file. Player only: the whole command is a
  * GUI, so there is nothing for console to do, and it says so rather than failing silently.</p>
@@ -38,7 +38,7 @@ public class SpawnerConfigSubCommand extends BaseSubCommand {
 
     @Override
     public String getDescription() {
-        return "Edit spawner and item spawner settings in game";
+        return "Edit mob and item spawner loot in game";
     }
 
     @Override
@@ -46,19 +46,17 @@ public class SpawnerConfigSubCommand extends BaseSubCommand {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal(getName());
         builder.requires(source -> hasPermission(source.getSender()));
 
-        // No bare /ss config: without a target there is nothing to open.
+        // No bare /ss config: keep the intended command visible in the usage message.
         builder.executes(context -> {
             logCommandExecution(context);
             plugin.getMessageService().sendMessage(context.getSource().getSender(), "config_editor.usage");
             return 0;
         });
 
-        for (ConfigEditorTarget target : ConfigEditorTarget.values()) {
-            builder.then(Commands.literal(target.getCommandArgument()).executes(context -> {
-                logCommandExecution(context);
-                return open(context, target);
-            }));
-        }
+        builder.then(Commands.literal("spawnerloot").executes(context -> {
+            logCommandExecution(context);
+            return open(context);
+        }));
 
         return builder;
     }
@@ -69,14 +67,14 @@ public class SpawnerConfigSubCommand extends BaseSubCommand {
         return 0;
     }
 
-    private int open(CommandContext<CommandSourceStack> context, ConfigEditorTarget target) {
+    private int open(CommandContext<CommandSourceStack> context) {
         CommandSender sender = context.getSource().getSender();
         if (!(sender instanceof Player player)) {
             plugin.getMessageService().sendMessage(sender, "player_only");
             return 0;
         }
 
-        ui.openEntryList(player, target, 1);
+        ui.openEntryList(player, ConfigEditorTarget.SMART_SPAWNER, 1);
         return 1;
     }
 }

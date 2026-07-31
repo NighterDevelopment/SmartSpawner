@@ -53,20 +53,9 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             preferred_sort_item, filtered_items, items
             """;
 
-    private static final String SELECT_ALL_SQL =
-            "SELECT " + SELECT_COLUMNS + " FROM " + DatabaseManager.TABLE_SPAWNERS + " WHERE server_name = ?";
-
-    private static final String SELECT_ONE_SQL =
-            "SELECT " + SELECT_COLUMNS + " FROM " + DatabaseManager.TABLE_SPAWNERS
-                    + " WHERE server_name = ? AND spawner_id = ?";
-
-    private static final String SELECT_LOCATION_SQL =
-            "SELECT world_name, loc_x, loc_y, loc_z FROM " + DatabaseManager.TABLE_SPAWNERS
-                    + " WHERE server_name = ? AND spawner_id = ?";
-
     // MySQL/MariaDB upsert syntax
     private static final String UPSERT_SQL_MYSQL = """
-            INSERT INTO spawner_data (
+            INSERT INTO %s (
                 spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity_type, item_spawner_material, spawner_exp, spawner_active,
                 spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
@@ -105,7 +94,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
     // SQLite upsert syntax (ON CONFLICT)
     private static final String UPSERT_SQL_SQLITE = """
-            INSERT INTO spawner_data (
+            INSERT INTO %s (
                 spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity_type, item_spawner_material, spawner_exp, spawner_active,
                 spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
@@ -142,9 +131,6 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 total_items = excluded.total_items
             """;
 
-    private static final String DELETE_SQL =
-            "DELETE FROM " + DatabaseManager.TABLE_SPAWNERS + " WHERE server_name = ? AND spawner_id = ?";
-
     /** Columns the cross-server list GUI needs. Deliberately excludes the item blob. */
     private static final String CROSS_SERVER_COLUMNS = """
             spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
@@ -152,11 +138,26 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             spawner_exp, total_items
             """;
 
+    // Statements carrying the table name, which is only known once database.table_prefix is read
+    private final String tableSpawners;
+    private final String selectAllSql;
+    private final String selectOneSql;
+    private final String selectLocationSql;
+    private final String deleteSql;
+
     public SpawnerDatabaseHandler(SmartSpawner plugin, DatabaseManager databaseManager) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.databaseManager = databaseManager;
         this.serverName = databaseManager.getServerName();
+        this.tableSpawners = databaseManager.getTableSpawners();
+
+        this.selectAllSql = "SELECT " + SELECT_COLUMNS + " FROM " + tableSpawners + " WHERE server_name = ?";
+        this.selectOneSql = "SELECT " + SELECT_COLUMNS + " FROM " + tableSpawners
+                + " WHERE server_name = ? AND spawner_id = ?";
+        this.selectLocationSql = "SELECT world_name, loc_x, loc_y, loc_z FROM " + tableSpawners
+                + " WHERE server_name = ? AND spawner_id = ?";
+        this.deleteSql = "DELETE FROM " + tableSpawners + " WHERE server_name = ? AND spawner_id = ?";
     }
 
     @Override
@@ -254,9 +255,9 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         if (spawnerIds.isEmpty()) return;
 
         // Select appropriate SQL based on storage mode
-        String upsertSql = databaseManager.getStorageMode() == StorageMode.SQLITE
+        String upsertSql = (databaseManager.getStorageMode() == StorageMode.SQLITE
                 ? UPSERT_SQL_SQLITE
-                : UPSERT_SQL_MYSQL;
+                : UPSERT_SQL_MYSQL).formatted(tableSpawners);
 
         try (Connection conn = databaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(upsertSql)) {
@@ -287,7 +288,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         if (spawnerIds.isEmpty()) return;
 
         try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(DELETE_SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
 
             conn.setAutoCommit(false);
 
@@ -372,7 +373,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         Map<String, SpawnerData> loadedSpawners = new HashMap<>();
 
         try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(SELECT_ALL_SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(selectAllSql)) {
 
             stmt.setString(1, serverName);
 
@@ -408,7 +409,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     @Override
     public SpawnerData loadSpecificSpawner(String spawnerId) {
         try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(SELECT_ONE_SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(selectOneSql)) {
 
             stmt.setString(1, serverName);
             stmt.setString(2, spawnerId);
@@ -436,7 +437,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
         // Query database
         try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(SELECT_LOCATION_SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(selectLocationSql)) {
 
             stmt.setString(1, serverName);
             stmt.setString(2, spawnerId);
@@ -650,7 +651,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     public void getDistinctServerNamesAsync(Consumer<List<String>> callback) {
         Scheduler.runTaskAsync(() -> {
             List<String> servers = new ArrayList<>();
-            String sql = "SELECT DISTINCT server_name FROM " + DatabaseManager.TABLE_SPAWNERS + " ORDER BY server_name";
+            String sql = "SELECT DISTINCT server_name FROM " + tableSpawners + " ORDER BY server_name";
 
             try (Connection conn = databaseManager.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql);
@@ -678,7 +679,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         Scheduler.runTaskAsync(() -> {
             Map<String, WorldSpawnerStats> worlds = new LinkedHashMap<>();
             String sql = "SELECT world_name, COUNT(*) AS total, COALESCE(SUM(stack_size), 0) AS total_stacked " +
-                    "FROM " + DatabaseManager.TABLE_SPAWNERS + " WHERE server_name = ? GROUP BY world_name ORDER BY world_name";
+                    "FROM " + tableSpawners + " WHERE server_name = ? GROUP BY world_name ORDER BY world_name";
 
             try (Connection conn = databaseManager.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -713,7 +714,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     public void getTotalStacksForWorldAsync(String targetServer, String worldName, Consumer<Integer> callback) {
         Scheduler.runTaskAsync(() -> {
             int total = 0;
-            String sql = "SELECT SUM(stack_size) as total FROM " + DatabaseManager.TABLE_SPAWNERS + " WHERE server_name = ? AND world_name = ?";
+            String sql = "SELECT SUM(stack_size) as total FROM " + tableSpawners + " WHERE server_name = ? AND world_name = ?";
 
             try (Connection conn = databaseManager.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -747,7 +748,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         Scheduler.runTaskAsync(() -> {
             List<CrossServerSpawnerData> spawners = new ArrayList<>();
             String sql = "SELECT " + CROSS_SERVER_COLUMNS
-                    + " FROM " + DatabaseManager.TABLE_SPAWNERS
+                    + " FROM " + tableSpawners
                     + " WHERE server_name = ? AND world_name = ?"
                     + " ORDER BY stack_size DESC";
 
@@ -804,7 +805,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     public void getSpawnerCountForServerAsync(String targetServer, Consumer<Integer> callback) {
         Scheduler.runTaskAsync(() -> {
             int count = 0;
-            String sql = "SELECT COUNT(*) as count FROM " + DatabaseManager.TABLE_SPAWNERS + " WHERE server_name = ?";
+            String sql = "SELECT COUNT(*) as count FROM " + tableSpawners + " WHERE server_name = ?";
 
             try (Connection conn = databaseManager.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -842,7 +843,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
             // Build dynamic SQL based on filter and sort
             StringBuilder sql = new StringBuilder("SELECT " + CROSS_SERVER_COLUMNS
-                    + " FROM " + DatabaseManager.TABLE_SPAWNERS
+                    + " FROM " + tableSpawners
                     + " WHERE server_name = ? AND world_name = ?");
 
             // Add filter condition

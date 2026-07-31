@@ -26,6 +26,7 @@ public class ConfigEditorUI {
     static final int LIST_SIZE = 54;
     static final int LIST_CONTENT = 45;
     static final int LIST_PREVIOUS = 45;
+    static final int LIST_SWITCH = 47;
     static final int LIST_NEW_ENTRY = 49;
     static final int LIST_NEXT = 53;
 
@@ -55,9 +56,9 @@ public class ConfigEditorUI {
     // ============== Entry list ==============
 
     public void openEntryList(Player player, ConfigEditorTarget target, int page) {
-        List<String> entries = service.listEntries(target);
-        int totalPages = Math.max(1, (int) Math.ceil(entries.size() / (double) LIST_CONTENT));
-        int shownPage = Math.max(1, Math.min(page, totalPages));
+        ConfigEditorService.EntryPage entryPage = service.readEntryPage(target, page, LIST_CONTENT);
+        int totalPages = entryPage.totalPages();
+        int shownPage = entryPage.currentPage();
 
         Map<String, String> titlePlaceholders = new HashMap<>();
         titlePlaceholders.put("current", String.valueOf(shownPage));
@@ -67,10 +68,8 @@ public class ConfigEditorUI {
                 new EntryListHolder(target, shownPage), LIST_SIZE,
                 lang().commandGui().title(target.getTitleKey() + "_title", titlePlaceholders));
 
-        int first = (shownPage - 1) * LIST_CONTENT;
-        for (int i = 0; i < LIST_CONTENT && first + i < entries.size(); i++) {
-            String key = entries.get(first + i);
-            inventory.setItem(i, buildEntryIcon(target, key));
+        for (int i = 0; i < entryPage.entries().size(); i++) {
+            inventory.setItem(i, buildEntryIcon(target, entryPage.entries().get(i)));
         }
 
         if (shownPage > 1) {
@@ -79,19 +78,24 @@ public class ConfigEditorUI {
         if (shownPage < totalPages) {
             inventory.setItem(LIST_NEXT, navigationItem("next_page", shownPage + 1));
         }
+        boolean showingMobs = target == ConfigEditorTarget.SMART_SPAWNER;
+        inventory.setItem(LIST_SWITCH, simpleItem(
+                showingMobs ? Material.CHEST : Material.ZOMBIE_SPAWN_EGG,
+                showingMobs ? "config_editor.switch_to_items" : "config_editor.switch_to_mobs",
+                Map.of()));
         inventory.setItem(LIST_NEW_ENTRY, simpleItem(Material.NETHER_STAR, "config_editor.new_entry", Map.of()));
 
         player.openInventory(inventory);
     }
 
-    private ItemStack buildEntryIcon(ConfigEditorTarget target, String key) {
-        Material icon = iconFor(target, key);
+    private ItemStack buildEntryIcon(ConfigEditorTarget target, ConfigEditorService.EntryView entry) {
+        Material icon = iconFor(target, entry.key());
         Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("entry", key);
-        placeholders.put("experience", String.valueOf(service.getExperience(target, key)));
-        placeholders.put("loot_count", String.valueOf(service.listLootKeys(target, key).size()));
+        placeholders.put("entry", entry.key());
+        placeholders.put("experience", String.valueOf(entry.experience()));
+        placeholders.put("loot_count", String.valueOf(entry.lootCount()));
 
-        Double dropChance = service.getDropChance(target, key);
+        Double dropChance = entry.dropChance();
         placeholders.put("drop_chance", dropChance == null ? "100" : trim(dropChance));
 
         return simpleItem(icon, "config_editor.entry", placeholders);
@@ -124,16 +128,12 @@ public class ConfigEditorUI {
                 new LootListHolder(target, entryKey, listPage), LOOT_SIZE,
                 lang().commandGui().title("config_editor.loot_title", titlePlaceholders));
 
-        List<String> lootKeys = service.listLootKeys(target, entryKey);
         int slot = LOOT_START;
-        for (String lootKey : lootKeys) {
+        for (ConfigEditorService.LootView loot : service.readLootList(target, entryKey)) {
             if (slot > LOOT_END) {
                 break;
             }
-            ConfigEditorService.LootView loot = service.readLoot(target, entryKey, lootKey);
-            if (loot != null) {
-                inventory.setItem(slot++, buildLootIcon(loot));
-            }
+            inventory.setItem(slot++, buildLootIcon(loot));
         }
 
         inventory.setItem(LOOT_ADD, simpleItem(Material.HOPPER, "config_editor.add_loot", Map.of()));

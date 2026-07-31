@@ -614,6 +614,11 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         if (itemSpawnerSettingsConfig != null) {
             itemSpawnerSettingsConfig.reload();
         }
+
+        // Keep config-editor navigation entirely in memory after a full plugin reload.
+        if (configEditorService != null) {
+            configEditorService.reload();
+        }
         
         // Reload logging system (file logging + discord webhook)
         loggingConfig.loadConfig();

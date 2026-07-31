@@ -1,255 +1,147 @@
-# TIME FORMAT GUIDE
-# Simple formats: 20s (20 seconds), 5m (5 minutes), 1h (1 hour)
-# Complex format: 1d_2h_30m_15s (1 day, 2 hours, 30 minutes, 15 seconds)
-# Units: s = seconds, m = minutes, h = hours, d = days, w = weeks, mo = months, y = years
+# SmartSpawner configuration
+# Full guide: https://docs.smartspawner.site/docs/configuration
+# Time format: 20s, 5m, 1h, or 1d_2h_30m_15s. Units: s m h d w mo y.
 
-# ADDING CUSTOM LANGUAGE
-# 1. Create a new folder in the language directory
-# 2. Use the files from en_US folder as a template
-# 3. Modify those files as needed (messages.yml, formatting.yml,...)
-# 4. Set language to your custom folder name
-
-#---------------------------------------------------
-#               Language Settings
-#---------------------------------------------------
-# Language setting (available: en_US, en_US_DonutSMP, en_US_DonutSMP_v2, tr_TR, vi_VN)
+# Language folder under language/. Bundled: en_US, en_US_DonutSMP, en_US_DonutSMP_v2, tr_TR, vi_VN.
 language: en_US
 
-# Spawner GUI layout configuration (available: default, DonutSMP, DonutSMP_v2)
+# GUI layout folder under gui_layouts/. Bundled: default, DonutSMP, DonutSMP_v2.
 gui_layout: default
 
-# Enable or disable debug mode (provides verbose console output)
+# Verbose console output, for troubleshooting only.
 debug: false
 
-#---------------------------------------------------
-#             Core Spawner Properties
-#---------------------------------------------------
-# These settings control the fundamental behavior of all spawners
 spawner_properties:
   default:
-    # Spawn Parameters - Controls mob generation frequency and amounts
-    min_mobs: 1         # Minimum mobs spawned per cycle
-    max_mobs: 4         # Maximum mobs spawned per cycle
-    range: 16           # Player proximity required for activation (in blocks)
-    delay: 25s          # Base delay between spawn cycles (see time format guide above)
+    # Mobs generated per cycle, rolled between the two values.
+    min_mobs: 1
+    max_mobs: 4
 
-    # Storage Settings - Defines internal inventory capacity
-    max_storage_pages: 1  # Each page provides 45 inventory slots
-    max_stored_exp: 1000  # Maximum experience points that can be stored
-    max_stack_size: 10000  # Maximum number of spawners that can be stacked
+    # Player distance in blocks that keeps the spawner running.
+    range: 16
 
-    # Behavior Settings - Controls special spawner functionality
-    allow_exp_mending: true   # Allow spawners to repair items with stored XP
-    protect_from_explosions: true   # Protect spawner blocks from explosion
+    # Time between generation cycles.
+    delay: 25s
 
-#---------------------------------------------------
-#           Spawner Breaking Mechanics
-#---------------------------------------------------
-# Controls how players can break and collect spawners
+    # Storage size. Each page holds 45 slots.
+    max_storage_pages: 1
+    max_stored_exp: 1000
+    max_stack_size: 10000
+
+    # Let players repair held items with the XP stored in a spawner.
+    allow_exp_mending: true
+    protect_from_explosions: true
+
 spawner_break:
-  enabled: true         # Master switch for spawner breaking feature
+  enabled: true
 
-  # Whether to directly add spawner items to player inventory instead of dropping them on the ground
+  # Put broken spawners straight into the inventory instead of dropping them.
   direct_to_inventory: false
 
-  # Tool Requirements - Which tools can break spawners
   required_tools:
     - IRON_PICKAXE
     - GOLDEN_PICKAXE
     - DIAMOND_PICKAXE
     - NETHERITE_PICKAXE
 
-  # Durability impact on tools when breaking a spawner
-  durability_loss: 1    # Number of durability points deducted
+  # Durability taken off the tool per spawner broken.
+  durability_loss: 1
 
-  # Allow sneaking while breaking a Smart Spawner stack to remove up to 64 spawners at once.
-  # If disabled, sneaking breaks only one spawner, the same as a normal break.
+  # Sneak to break up to 64 spawners off a stack at once. Off breaks one at a time.
   sneak_break: true
 
-  # Automatically sell storage items and claim remaining XP only when a Smart Spawner is fully removed
-  # Requires sell integration + smartspawner.sellall (true by default)
+  # Sell the storage and claim the XP when the last spawner of a stack is removed.
+  # Needs sell integration and the smartspawner.sellall permission.
   sell_and_xp_break: true
 
-  # Enchantment Requirements for successful spawner collection
   silk_touch:
-    required: true      # Whether Silk Touch is needed to obtain spawners
-    level: 1            # Minimum level of Silk Touch required
+    required: true
+    level: 1
 
-#---------------------------------------------------
-#           Natural/Vanilla Spawner Settings
-#---------------------------------------------------
-# Controls behavior of naturally generated dungeon spawners
 natural_spawner:
-  # Whether natural spawners can be broken and collected
+  # Whether dungeon spawners can be broken and collected.
   breakable: false
 
-  # Convert natural spawners to smart spawners when broken
-  # If false, natural spawners will drop vanilla spawner items
+  # Off makes them drop a vanilla spawner instead of a smart one.
   convert_to_smart_spawner: false
 
-  # Optional spawner item drop chance when natural spawners are broken.
-  # Values must be percentages from 0.0 to 100.0.
-  #
-  # Use the "default" key to set the drop chance for ALL spawner types at once.
-  # Add specific entity types only when you want to override that default.
-  # If "default" is omitted, any unspecified entity falls back to 100.0.
+  # Drop chance per type, 0.0 to 100.0. "default" covers every type, entity names override it.
+  # Types left out fall back to 100.0.
   # drop_chance:
-  #   default: 80.0   # applies to every spawner type
-  #   ZOMBIE: 75.0    # override for a specific type
-  #   SKELETON: 50.0
-  #   BLAZE: 25.0
+  #   default: 80.0
+  #   ZOMBIE: 75.0
 
-  # Whether natural spawners will spawn mobs
+  # Whether natural spawners still spawn mobs.
   spawn_mobs: true
-
-  # Whether natural spawner block will be protected from explosions
   protect_from_explosions: false
 
-#---------------------------------------------------
-#            Storage Selling Settings
-#---------------------------------------------------
-# Sell integration for items stored inside Smart Spawner storage
 sell_integration:
-
-  # Enable or disable selling items from spawner storage
   enabled: true
 
-  # Supported types: VAULT, EXCELLENTECONOMY (more will be added in the future)
+  # Economy plugin: VAULT or EXCELLENTECONOMY.
   currency: VAULT
 
-  # Specifies the name of the currency used by EXCELLENTECONOMY
-  # This setting is only required when using EXCELLENTECONOMY as the economy currency
+  # Currency name, EXCELLENTECONOMY only.
   excellenteconomy_currency: money
 
-  # SHOP_ONLY:
-  #   - Uses ONLY shop integration prices (e.g., ShopGUI+, EconomyShopGUI, etc.)
-  #   - Custom prices are completely ignored, even if enabled
-  #   - Items without shop prices cannot be sold
-  #   - Requires valid shop integration to function
-  #
-  # SHOP_PRIORITY: (Recommended for most servers)
-  #   - Primary: Shop integration prices
-  #   - Fallback: Custom prices (if shop price not found)
-  #   - Best for servers that primarily use shop plugins but want
-  #     custom prices as backup for items not in the shop
-  #
-  # CUSTOM_ONLY:
-  #   - Uses ONLY custom prices from the price configuration file
-  #   - Shop integration prices are completely ignored
-  #   - Items without custom prices will use the default price
-  #   - Requires custom prices to be configured
-  #
-  # CUSTOM_PRIORITY:
-  #   - Primary: Custom prices from configuration file
-  #   - Fallback: Shop integration prices (if custom price not found)
-  #   - Ideal for servers that want full control over spawner item prices
-  #     while still benefiting from shop integration for unconfigured items
+  # Where prices come from: SHOP_ONLY, SHOP_PRIORITY, CUSTOM_ONLY or CUSTOM_PRIORITY.
   price_source_mode: SHOP_PRIORITY
 
-  # Shop plugin integration
   shop_integration:
     enabled: true
-    # Supported shop plugins: auto, EconomyShopGUI, EconomyShopGUI-Premium, ShopGUIPlus, zShop
-    # 'auto' will attempt to detect your installed shop plugin automatically
+    # auto, EconomyShopGUI, EconomyShopGUI-Premium, ShopGUIPlus or zShop.
     preferred_plugin: auto
 
-  # Custom sell price configuration
   custom_prices:
     enabled: true
-
-    # Default price for items without specific custom prices
-    # Set to 0.0 to disable selling items without custom prices
+    # Price for items with no custom price. 0.0 stops them being sold.
     default_price: 1.0
 
-#---------------------------------------------------
-#              Item Collection System
-#---------------------------------------------------
-# Configuration for automated item collection
 hopper:
   enabled: false
-  check_delay: 3s       # Time between collection checks (see time format guide above)
-  stack_per_transfer: 5 # Number of item stacks transferred in one operation (max 5)
+  # Time between collection checks.
+  check_delay: 3s
+  # Item stacks moved per collection. Maximum 5.
+  stack_per_transfer: 5
 
-#---------------------------------------------------
-#              Bedrock Player Support
-#---------------------------------------------------
-# Configuration for Bedrock Edition player support via Floodgate
 bedrock_support:
-  # Enable FormUI (form-based menus) for Bedrock players
-  # When enabled, Bedrock players will see mobile-friendly form menus instead of chest GUIs
-  # Requires Floodgate plugin to be installed and enabled
+  # Show Bedrock players a form menu instead of a chest GUI. Needs Floodgate.
   enable_formui: true
 
-#---------------------------------------------------
-#                 Visual Effects
-#---------------------------------------------------
-# Configure visual indicators and effects for spawners
 hologram:
-  enabled: false        # Show floating text above spawners
+  # Floating text above spawners.
+  enabled: false
 
-  # Position Offset from spawner block center
+  # Offset from the centre of the spawner block.
   offset_x: 0.5
   offset_y: 1.6
   offset_z: 0.5
 
-  # Display Settings
-  alignment: CENTER     # Text alignment (CENTER, LEFT, or RIGHT)
-  shadowed_text: true   # Apply shadow effect to text
-  see_through: false    # Hologram visible through blocks
-  transparent_background: false  # Make background fully transparent
+  # CENTER, LEFT or RIGHT.
+  alignment: CENTER
+  shadowed_text: true
+  # Visible through blocks.
+  see_through: false
+  transparent_background: false
 
-# Particle effect toggles for visual feedback
 particle:
-  spawner_stack: true           # Show effects when spawners are stacked
-  spawner_activate: true        # Show effects when spawner activates
-  spawner_generate_loot: true   # Show effects when items are generated
+  spawner_stack: true
+  spawner_activate: true
+  spawner_generate_loot: true
 
-#---------------------------------------------------
-#              Spawner Action Logging
-#---------------------------------------------------
-# Comprehensive logging system for tracking spawner interactions and events
-# Provides audit trail and debugging capabilities with minimal performance impact
 logging:
-  # Enable/disable the logging system
   enabled: true
-  
-  # Output format: false for human-readable, true for JSON structured logs
+
+  # true writes JSON, false writes plain text.
   json_format: false
-  
-  # Also output logs to console (useful for debugging)
   console_output: false
-  
-  # Maximum number of log files to keep (oldest files deleted first)
+
+  # Log files kept before the oldest is deleted, and the size at which each one rotates.
   max_log_files: 10
-  
-  # Maximum size of each log file in MB before rotation
   max_log_size_mb: 10
-  
-  # Log all events (if true, logged_events list is ignored)
+
+  # true logs everything and ignores the list below. The event names are listed in the docs.
   log_all_events: false
-  
-  # Specific events to log (only used if log_all_events is false)
-  # Available events:
-  # - SPAWNER_PLACE: Spawner placement
-  # - SPAWNER_BREAK: Spawner breaking
-  # - SPAWNER_EXPLODE: Spawner destroyed by explosion
-  # - SPAWNER_STACK_HAND: Spawner stacked by hand
-  # - SPAWNER_STACK_GUI: Spawner stacked via GUI
-  # - SPAWNER_DESTACK_GUI: Spawner destacked via GUI
-  # - SPAWNER_GUI_OPEN: Main spawner GUI opened
-  # - SPAWNER_STORAGE_OPEN: Storage GUI opened
-  # - SPAWNER_STACKER_OPEN: Stacker GUI opened
-  # - SPAWNER_EXP_CLAIM: Experience claimed
-  # - SPAWNER_SELL_ALL: Items sold
-  # - SPAWNER_ITEM_TAKE_ALL: All items taken from storage
-  # - SPAWNER_ITEM_DROP: Item dropped from storage (using Q key)
-  # - SPAWNER_ITEMS_SORT: Items sorted in storage
-  # - SPAWNER_ITEM_FILTER: Item filter toggled in storage
-  # - SPAWNER_DROP_PAGE_ITEMS: All items on current page dropped from storage
-  # - COMMAND_EXECUTE_PLAYER: Command executed by player
-  # - COMMAND_EXECUTE_CONSOLE: Command executed by console
-  # - COMMAND_EXECUTE_RCON: Command executed by RCON
-  # - SPAWNER_EGG_CHANGE: Entity type changed
   logged_events:
     - SPAWNER_PLACE
     - SPAWNER_BREAK
@@ -267,115 +159,56 @@ logging:
     - COMMAND_EXECUTE_CONSOLE
     - COMMAND_EXECUTE_RCON
 
-#---------------------------------------------------
-#               Database Settings
-#---------------------------------------------------
-# Configure database storage for spawner data.
-# Database mode provides better performance for large servers
-# and enables cross-server spawner management.
 database:
-  # Storage mode: SQLITE or MYSQL
-  # SQLITE: Local database file, no external server required. The default.
-  # MYSQL: MariaDB/MySQL database storage with HikariCP connection pool
-  #
-  # YAML storage was removed. Servers still set to YAML switch to SQLITE on startup
-  # and their spawners_data.yml is imported once, automatically.
+  # Storage backend: SQLITE or MYSQL. A config still set to YAML switches to SQLITE on startup
+  # and imports spawners_data.yml once.
   mode: SQLITE
 
-  # Server identifier for cross-server setups
-  # Must be unique per server when using shared database
-  # Used to distinguish spawners from different servers
+  # Prefix for this plugin's tables. Letters, digits and underscore.
+  # Set it before the first start, changing it later leaves the old tables behind.
+  table_prefix: "sspawner_"
+
+  # A name unique to this server, used when several servers share one MySQL database.
   server_name: "server1"
 
-  # Enable cross-server spawner viewing in /smartspawner list
-  # When true, shows a server selection page before world selection
-  # Allows viewing spawners from all servers in the shared database
-  # Only works when mode is MYSQL (SQLite is local only)
+  # Add a server picker to /ss list showing spawners from every server in the shared database.
+  # MYSQL only.
   sync_across_servers: false
 
-  # Automatic migration from local storage formats
-  # When enabled, the plugin will automatically migrate data on startup:
-  #
-  # 1. If mode is MYSQL or SQLITE:
-  #    - Checks for spawners_data.yml and migrates to target database
-  #    - File is renamed to spawners_data.yml.migrated after success
-  #
-  # 2. If mode is MYSQL (additional step):
-  #    - Checks for spawners.db (SQLite) and migrates to MySQL
-  #    - File is renamed to spawners.db.migrated after success
-  #
-  # The .migrated suffix prevents re-migration on subsequent restarts.
-  # Set to false if you want to manually manage your data migration.
+  # Import spawners_data.yml on startup, and spawners.db as well when switching to MYSQL.
+  # Imported files get a .migrated suffix so they are never read twice.
   migrate_from_local: true
 
-  # Database name to use (only for MYSQL mode)
+  # Database name, MYSQL only.
   database: "smartspawner"
 
-  # SQLite settings (only for SQLITE mode)
   sqlite:
-    # Database file name (stored in plugin data folder)
     file: "spawners.db"
-
-    # Number of pooled connections. The database runs in WAL mode, so readers do not block
-    # while a save is in progress. Lower this to 1 only if you suspect lock contention.
+    # Pooled connections. Lower this to 1 only if lock errors appear in the console.
     pool_size: 4
 
-  # MySQL/MariaDB connection settings (only for MYSQL mode)
   sql:
     host: "localhost"
     port: 3306
     username: "root"
     password: ""
 
-    # Connection pool settings
+    # Connection pool tuning. Milliseconds, except the first two.
     pool:
-      # Maximum number of connections in the pool
       maximum-size: 10
-      # Minimum number of idle connections to maintain
       minimum-idle: 2
-      # Maximum time (ms) to wait for a connection from the pool
       connection-timeout: 10000
-      # Maximum lifetime (ms) of a connection in the pool
       max-lifetime: 1800000
-      # Maximum time (ms) a connection can sit idle before being removed
-      # Must be less than max-lifetime (0 = same as max-lifetime)
       idle-timeout: 600000
-      # Interval (ms) for keepalive queries to prevent connection timeouts
-      # Must be less than max-lifetime (0 = disabled)
       keepalive-time: 30000
-      # Time (ms) before logging a potential connection leak warning
-      # Useful for debugging connection issues (0 = disabled)
       leak-detection-threshold: 0
 
-#---------------------------------------------------
-#              Performance Settings
-#---------------------------------------------------
-# Internal performance tuning for large stacked spawners.
-#
-# These settings can be reloaded without restarting.
-# Please check the docs for more details.
 performance:
   loot_generation:
-
-    # true:
-    #   Uses exact loot simulation for small batches, then switches to
-    #   a fast average-based calculation for very large batches.
-    #   Recommended for most servers because it keeps large stacks smooth.
-    #
-    # false:
-    #   Always rolls loot exactly, one mob at a time.
-    #   This is the closest behavior to vanilla randomness, but very large
-    #   stacks can cost more CPU during loot generation.
+    # true switches very large batches to an average-based calculation, which keeps big stacks
+    # smooth. false always rolls each mob exactly, closest to vanilla but heavier on CPU.
     approximate_loot: true
 
-    # Controls how late the plugin switches to approximation mode.
-    #
-    # Lower values:
-    #   Switch earlier, use less CPU, and trade a little precision on huge drops.
-    #
-    # Higher values:
-    #   Stay exact for longer, which preserves randomness more closely but costs
-    #   more CPU when a spawner stack generates loot for many mobs at once.
-    #
-    # Recommended: 1000-10000
+    # How long to stay exact before approximating. Lower is cheaper, higher is more precise.
+    # Recommended: 1000-10000.
     approximation_threshold: 1000

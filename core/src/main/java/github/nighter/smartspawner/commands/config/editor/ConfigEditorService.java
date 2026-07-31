@@ -10,8 +10,10 @@ import org.bukkit.inventory.ItemStack;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Every read and write the in-game config editor performs.
@@ -27,9 +29,12 @@ import java.util.Locale;
 public class ConfigEditorService {
 
     private final SmartSpawner plugin;
+    private final Map<ConfigEditorTarget, YamlConfiguration> snapshots =
+            new EnumMap<>(ConfigEditorTarget.class);
 
     public ConfigEditorService(SmartSpawner plugin) {
         this.plugin = plugin;
+        reload();
     }
 
     // ============== Reading ==============
@@ -38,13 +43,24 @@ public class ConfigEditorService {
         return new File(plugin.getDataFolder(), target.getFileName());
     }
 
-    private YamlConfiguration load(ConfigEditorTarget target) {
+    private YamlConfiguration loadFromDisk(ConfigEditorTarget target) {
         return YamlConfiguration.loadConfiguration(fileOf(target));
+    }
+
+    /** Refreshes the editor's in-memory snapshots. GUI navigation never reads from disk. */
+    public synchronized void reload() {
+        for (ConfigEditorTarget target : ConfigEditorTarget.values()) {
+            snapshots.put(target, loadFromDisk(target));
+        }
+    }
+
+    private synchronized YamlConfiguration snapshot(ConfigEditorTarget target) {
+        return snapshots.get(target);
     }
 
     /** Entry keys, sorted. Every entry is a section, so a stray scalar is not one. */
     public List<String> listEntries(ConfigEditorTarget target) {
-        YamlConfiguration config = load(target);
+        YamlConfiguration config = snapshot(target);
         List<String> keys = new ArrayList<>();
         for (String key : config.getKeys(false)) {
             if (!config.isConfigurationSection(key)) {
@@ -56,37 +72,89 @@ public class ConfigEditorService {
         return keys;
     }
 
+    /**
+     * Reads all data needed for one list page from one parsed YAML snapshot. Previously each icon
+     * loaded the file three times, which made a 45-entry page perform well over a hundred disk reads.
+     */
+    public EntryPage readEntryPage(ConfigEditorTarget target, int requestedPage, int pageSize) {
+        YamlConfiguration config = snapshot(target);
+        List<String> keys = new ArrayList<>();
+        for (String key : config.getKeys(false)) {
+            if (config.isConfigurationSection(key)) {
+                keys.add(key);
+            }
+        }
+        keys.sort(String::compareToIgnoreCase);
+
+        int totalPages = Math.max(1, (int) Math.ceil(keys.size() / (double) pageSize));
+        int currentPage = Math.max(1, Math.min(requestedPage, totalPages));
+        int from = (currentPage - 1) * pageSize;
+        int to = Math.min(from + pageSize, keys.size());
+        List<EntryView> entries = new ArrayList<>(to - from);
+
+        for (int i = from; i < to; i++) {
+            String key = keys.get(i);
+            String dropPath = key + ".drop_chance";
+            ConfigurationSection loot = config.getConfigurationSection(key + ".loot");
+            entries.add(new EntryView(key, config.getInt(key + ".experience", 0),
+                    config.contains(dropPath) ? config.getDouble(dropPath) : null,
+                    loot == null ? 0 : loot.getKeys(false).size()));
+        }
+        return new EntryPage(List.copyOf(entries), currentPage, totalPages);
+    }
+
     public boolean hasEntry(ConfigEditorTarget target, String key) {
-        return load(target).isConfigurationSection(key);
+        return snapshot(target).isConfigurationSection(key);
     }
 
     public int getExperience(ConfigEditorTarget target, String key) {
-        return load(target).getInt(key + ".experience", 0);
+        return snapshot(target).getInt(key + ".experience", 0);
     }
 
     /** @return the configured drop chance, or null when the entry leaves it out (meaning 100). */
     public Double getDropChance(ConfigEditorTarget target, String key) {
-        YamlConfiguration config = load(target);
+        YamlConfiguration config = snapshot(target);
         String path = key + ".drop_chance";
         return config.contains(path) ? config.getDouble(path) : null;
     }
 
     public String getHeadMaterial(ConfigEditorTarget target, String key) {
-        return load(target).getString(key + ".mob_head.item");
+        return snapshot(target).getString(key + ".mob_head.item");
     }
 
     public String getHeadTexture(ConfigEditorTarget target, String key) {
-        return load(target).getString(key + ".mob_head.hash_texture");
+        return snapshot(target).getString(key + ".mob_head.hash_texture");
     }
 
     /** Loot entry labels for one entry, in file order. */
     public List<String> listLootKeys(ConfigEditorTarget target, String key) {
-        ConfigurationSection loot = load(target).getConfigurationSection(key + ".loot");
+        ConfigurationSection loot = snapshot(target).getConfigurationSection(key + ".loot");
         return loot == null ? List.of() : new ArrayList<>(loot.getKeys(false));
     }
 
     public LootView readLoot(ConfigEditorTarget target, String key, String lootKey) {
-        ConfigurationSection section = load(target).getConfigurationSection(key + ".loot." + lootKey);
+        ConfigurationSection section = snapshot(target).getConfigurationSection(key + ".loot." + lootKey);
+        return readLootSection(lootKey, section);
+    }
+
+    /** Reads a whole loot screen from one YAML snapshot. */
+    public List<LootView> readLootList(ConfigEditorTarget target, String key) {
+        ConfigurationSection loot = snapshot(target).getConfigurationSection(key + ".loot");
+        if (loot == null) {
+            return List.of();
+        }
+
+        List<LootView> result = new ArrayList<>();
+        for (String lootKey : loot.getKeys(false)) {
+            LootView view = readLootSection(lootKey, loot.getConfigurationSection(lootKey));
+            if (view != null) {
+                result.add(view);
+            }
+        }
+        return result;
+    }
+
+    private LootView readLootSection(String lootKey, ConfigurationSection section) {
         if (section == null) {
             return null;
         }
@@ -223,7 +291,7 @@ public class ConfigEditorService {
     }
 
     /** Load, change, save, reload. The one place this file is written. */
-    private void mutate(ConfigEditorTarget target, Mutation mutation) {
+    private synchronized void mutate(ConfigEditorTarget target, Mutation mutation) {
         File file = fileOf(target);
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         mutation.apply(config);
@@ -235,6 +303,7 @@ public class ConfigEditorService {
             return;
         }
 
+        snapshots.put(target, config);
         applyReload(target);
     }
 
@@ -315,6 +384,10 @@ public class ConfigEditorService {
     }
 
     /** A loot entry as the GUI needs to show it. */
+    public record EntryView(String key, int experience, Double dropChance, int lootCount) {}
+
+    public record EntryPage(List<EntryView> entries, int currentPage, int totalPages) {}
+
     public record LootView(String key, String rawItem, ItemStack preview,
                            int minAmount, int maxAmount, double chance,
                            Integer minDurability, Integer maxDurability) {

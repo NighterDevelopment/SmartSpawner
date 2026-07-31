@@ -70,6 +70,11 @@ public class ConfigEditorHandler implements Listener {
                     ItemCaptureHolder.Purpose.NEW_ENTRY, null, null, holder.getPage()));
             return;
         }
+        if (slot == ConfigEditorUI.LIST_SWITCH) {
+            click(player);
+            ui.openEntryList(player, target.other(), 1);
+            return;
+        }
         if (slot >= ConfigEditorUI.LIST_CONTENT) return;
 
         List<String> entries = service.listEntries(target);

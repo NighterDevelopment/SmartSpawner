@@ -28,7 +28,7 @@ public class SqliteToMySqlMigration {
 
     // MySQL insert syntax (target)
     private static final String INSERT_SQL_MYSQL = """
-            INSERT INTO spawner_data (
+            INSERT INTO %s (
                 spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity_type, item_spawner_material, spawner_exp, spawner_active,
                 spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
@@ -149,8 +149,8 @@ public class SqliteToMySqlMigration {
      * @return the spawner table name present in the file, or null when there is none
      */
     private String resolveSourceTable(Connection conn) throws SQLException {
-        if (sqliteTableExists(conn, DatabaseManager.TABLE_SPAWNERS)) {
-            return DatabaseManager.TABLE_SPAWNERS;
+        if (sqliteTableExists(conn, mysqlManager.getTableSpawners())) {
+            return mysqlManager.getTableSpawners();
         }
         if (sqliteTableExists(conn, LEGACY_TABLE_SPAWNERS)) {
             return LEGACY_TABLE_SPAWNERS;
@@ -217,7 +217,8 @@ public class SqliteToMySqlMigration {
 
             try (Connection mysqlConn = mysqlManager.getConnection();
                  PreparedStatement selectStmt = sqliteConn.prepareStatement(selectSql);
-                 PreparedStatement insertStmt = mysqlConn.prepareStatement(INSERT_SQL_MYSQL)) {
+                 PreparedStatement insertStmt = mysqlConn.prepareStatement(
+                         INSERT_SQL_MYSQL.formatted(mysqlManager.getTableSpawners()))) {
 
             mysqlConn.setAutoCommit(false);
 

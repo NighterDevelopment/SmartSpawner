@@ -16,6 +16,9 @@ dependencies {
 
     shade("com.zaxxer:HikariCP:7.1.0")
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.10")
+    // Paper bundles sqlite-jdbc on the server classpath, so compileOnly is enough: the driver is
+    // never shaded (it extracts a native library from a resource path derived from its own package
+    // name, which relocation breaks) and never declared as a runtime library.
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.1")
 
     compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")

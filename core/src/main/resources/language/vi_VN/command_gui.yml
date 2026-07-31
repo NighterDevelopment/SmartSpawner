@@ -208,125 +208,174 @@ price_item:
     - '  &8• &fGiá cửa hàng: &a${shop_price}'
 
 # --------------------------------------------------
-#            Trinh sua cau hinh (/ss config ...)
+#            Trình sửa cấu hình (/ss config spawnerloot)
 # --------------------------------------------------
 config_editor:
-  mob_list_title: 'CAI DAT MOB ({current}/{total})'
-  item_list_title: 'CAI DAT ITEM SPAWNER ({current}/{total})'
-  loot_title: 'LOOT CUA {entry}'
-  capture_add_title: 'THA VAT PHAM DE THEM'
-  capture_replace_title: 'THA VAT PHAM MOI'
-  capture_new_entry_title: 'THA VAT PHAM DE TAO'
+  mob_list_title: 'ᴄàɪ đặᴛ ʟᴏᴏᴛ ᴍᴏʙ ({current}/{total})'
+  item_list_title: 'ᴄàɪ đặᴛ ʟᴏᴏᴛ ɪᴛᴇᴍ ꜱᴘᴀᴡɴᴇʀ ({current}/{total})'
+  loot_title: 'ʟᴏᴏᴛ • {entry}'
+  capture_add_title: 'ᴛʜả ᴠậᴛ ᴘʜẩᴍ để ᴛʜêᴍ'
+  capture_replace_title: 'ᴛʜả ᴠậᴛ ᴘʜẩᴍ ᴍớɪ'
+  capture_new_entry_title: 'ᴛʜả ᴠậᴛ ᴘʜẩᴍ để ᴛạᴏ'
 
   entry:
-    name: '&#37eb9a{entry}'
+    name: '&fᴍụᴄ &#37eb9a{entry}'
     lore:
-      - '&#2cc483 > &#f8f8ffKinh nghiem: &#37eb9a{experience}'
-      - '&#2cc483 > &#f8f8ffTy le roi: &#37eb9a{drop_chance}%'
-      - '&#2cc483 > &#f8f8ffSo muc loot: &#37eb9a{loot_count}'
       - ''
-      - '&#2cc483 > &fNhan de sua'
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fKinh nghiệm: &e{experience}'
+      - '  &8• &fTỷ lệ rơi: &e{drop_chance}%'
+      - '  &8• &fSố mục loot: &e{loot_count}'
+      - ''
+      - '&#37eb9a ▸ &fNhấn để chỉnh sửa!'
 
   new_entry:
-    name: '&#37eb9aTAO MUC MOI'
+    name: '&fᴛạᴏ &#37eb9aᴍụᴄ ᴍớɪ'
     lore:
-      - '&#2cc483 > &fNhan roi tha vat pham vao'
-      - '&#2cc483 > &fMob thi can trung spawn'
+      - ''
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fMob cần dùng trứng spawn.'
+      - '  &8• &fItem dùng material được thả vào.'
+      - ''
+      - '&#37eb9a ▸ &fNhấn để tạo mục mới!'
+
+  switch_to_items:
+    name: '&fɪᴛᴇᴍ ꜱᴘᴀᴡɴᴇʀ &#37eb9aʟᴏᴏᴛ'
+    lore:
+      - ''
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fXem loot của item spawner.'
+      - ''
+      - '&#37eb9a ▸ &fNhấn để chuyển!'
+
+  switch_to_mobs:
+    name: '&fᴍᴏʙ ꜱᴘᴀᴡɴᴇʀ &#37eb9aʟᴏᴏᴛ'
+    lore:
+      - ''
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fXem loot của mob spawner.'
+      - ''
+      - '&#37eb9a ▸ &fNhấn để chuyển!'
 
   loot_entry:
-    name: '&#37eb9a{label}'
+    name: '&fʟᴏᴏᴛ &#37eb9a{label}'
     lore:
-      - '&#2cc483 > &#f8f8ffVat pham: &#37eb9a{item}'
-      - '&#2cc483 > &#f8f8ffSo luong: &#37eb9a{amount}'
-      - '&#2cc483 > &#f8f8ffTy le: &#37eb9a{chance}%'
-      - '&#2cc483 > &#f8f8ffDo ben: &#37eb9a{durability}'
       - ''
-      - '&#2cc483 > &fChuot trai de sua'
-      - '&#2cc483 > &fChuot phai de doi vat pham'
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fVật phẩm: &e{item}'
+      - '  &8• &fSố lượng: &e{amount}'
+      - '  &8• &fTỷ lệ: &e{chance}%'
+      - '  &8• &fĐộ bền: &e{durability}'
+      - ''
+      - '&#37eb9a ▸ &fChuột trái để chỉnh sửa!'
+      - '&#37eb9a ▸ &fChuột phải để đổi vật phẩm!'
 
   loot_broken:
-    name: '&#FF6B6B{label}'
+    name: '&fʟᴏᴏᴛ &#FF6B6B{label}'
     lore:
-      - '&#FF6B6B > &fKhong doc duoc vat pham nay'
-      - '&#2cc483 > &#f8f8ffGia tri: &#37eb9a{item}'
-      - '&#2cc483 > &fChuot phai de dat vat pham moi'
+      - ''
+      - ' &#FF6B6B⚠ ᴄảɴʜ ʙáᴏ:'
+      - '  &8• &fKhông thể đọc vật phẩm này.'
+      - '  &8• &fGiá trị: &e{item}'
+      - ''
+      - '&#FF6B6B ▸ &fChuột phải để đặt vật phẩm mới!'
 
   add_loot:
-    name: '&#37eb9aTHEM LOOT'
+    name: '&fᴛʜêᴍ &#37eb9aʟᴏᴏᴛ'
     lore:
-      - '&#2cc483 > &fNhan roi tha vat pham vao'
+      - ''
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fThêm một vật phẩm loot mới.'
+      - ''
+      - '&#37eb9a ▸ &fNhấn để chọn vật phẩm!'
 
   back:
-    name: '&fQUAY LAI'
+    name: '&fǫᴜᴀʏ &#FF6B6Bʟạɪ'
     lore:
-      - '&c > &fNhan de quay lai'
+      - ''
+      - ' &#FF6B6Bℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fTrở về phần cài đặt mục.'
+      - ''
+      - '&#FF6B6B ▸ &fNhấn để quay lại!'
 
   capture_hint_loot:
-    name: '&#f8f8ffTHA VAT PHAM VAO O GIUA'
+    name: '&fᴛʜả ᴠậᴛ ᴘʜẩᴍ &#5DB5F1ᴠàᴏ ô ɢɪữᴀ'
     lore:
-      - '&#2cc483 > &fVat pham duoc luu nguyen ven'
-      - '&#2cc483 > &fBan nhan lai khi dong bang'
+      - ''
+      - ' &#5DB5F1ℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fVật phẩm được lưu nguyên vẹn.'
+      - '  &8• &fBạn nhận lại khi đóng bảng.'
 
   capture_hint_entry:
-    name: '&#f8f8ffTHA VAT PHAM VAO O GIUA'
+    name: '&fᴛʜả ᴠậᴛ ᴘʜẩᴍ &#5DB5F1ᴠàᴏ ô ɢɪữᴀ'
     lore:
-      - '&#2cc483 > &fTrung spawn tao muc mob'
-      - '&#2cc483 > &fVat pham bat ky tao item spawner'
+      - ''
+      - ' &#5DB5F1ℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fTrứng spawn sẽ tạo mục mob.'
+      - '  &8• &fVật phẩm bất kỳ tạo item spawner.'
 
   cancel:
-    name: '&#FF6B6BHUY'
+    name: '&fʜủʏ &#FF6B6Bᴛʜᴀᴏ ᴛáᴄ'
     lore:
-      - '&#FF6B6B > &fNhan de quay lai'
+      - ''
+      - ' &#FF6B6Bℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fHủy thao tác chọn vật phẩm.'
+      - ''
+      - '&#FF6B6B ▸ &fNhấn để hủy!'
 
   confirm:
-    name: '&#37eb9aXAC NHAN'
+    name: '&fxáᴄ &#37eb9aɴʜậɴ'
     lore:
-      - '&#2cc483 > &fNhan de luu'
+      - ''
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fLưu vật phẩm đã chọn.'
+      - ''
+      - '&#37eb9a ▸ &fNhấn để lưu!'
 
-  # Chu trong dialog. Hien thi trong bang dialog cua client nen giu ngan.
+  # Chữ trong dialog. Hiển thị trong bảng dialog của client nên giữ ngắn.
   dialog_save:
-    name: '&aLuu'
+    name: '&aLưu'
   dialog_cancel:
-    name: '&cHuy'
+    name: '&cHủy'
   dialog_back:
-    name: 'Quay lai'
+    name: 'Quay lại'
   dialog_entry_title:
     name: '{entry}'
   dialog_entry_body:
-    name: 'Cai dat cua {entry}. Bam luu la ap dung ngay.'
+    name: 'Cài đặt của {entry}. Bấm lưu để áp dụng ngay.'
   dialog_experience_label:
-    name: 'Kinh nghiem'
+    name: 'Kinh nghiệm'
   dialog_drop_chance_label:
-    name: 'Ty le roi spawner (%)'
+    name: 'Tỷ lệ rơi spawner (%)'
   dialog_head_material:
-    name: 'Material dau'
+    name: 'Material đầu'
   dialog_head_texture:
-    name: 'Hash texture dau'
+    name: 'Hash texture đầu'
   dialog_loot_button:
     name: 'Loot ({count})'
   dialog_delete_entry:
-    name: '&cXoa muc nay'
+    name: '&cXóa mục này'
   dialog_delete_title:
-    name: 'Xoa {entry}?'
+    name: 'Xóa {entry}?'
   dialog_delete_body:
-    name: 'Thao tac nay xoa {entry} va toan bo loot khoi file. Khong the hoan tac.'
+    name: 'Thao tác này xóa {entry} và toàn bộ loot khỏi file. Không thể hoàn tác.'
   dialog_delete_confirm:
-    name: '&cXoa'
+    name: '&cXóa'
   dialog_loot_title:
     name: 'Loot: {label}'
   dialog_loot_body:
-    name: 'Vat pham: {item}'
+    name: 'Vật phẩm: {item}'
   dialog_loot_min:
-    name: 'So luong toi thieu'
+    name: 'Số lượng tối thiểu'
   dialog_loot_max:
-    name: 'So luong toi da'
+    name: 'Số lượng tối đa'
   dialog_loot_chance:
-    name: 'Ty le (%)'
+    name: 'Tỷ lệ (%)'
   dialog_loot_durability_min:
-    name: 'Do ben tu (-1 la khong dat)'
+    name: 'Độ bền từ (-1 là không đặt)'
   dialog_loot_durability_max:
-    name: 'Do ben den (-1 la khong dat)'
+    name: 'Độ bền đến (-1 là không đặt)'
   dialog_loot_change_item:
-    name: 'Doi vat pham'
+    name: 'Đổi vật phẩm'
   dialog_loot_remove:
-    name: '&cXoa loot'
+    name: '&cXóa loot'

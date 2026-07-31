@@ -324,6 +324,12 @@ Configures where spawner data is stored.
 Storage backend. Supported values: <code>SQLITE</code>, <code>MYSQL</code>. A config still set to <code>YAML</code> switches to <code>SQLITE</code> on the next start.
 </ConfigProperty>
 
+<ConfigProperty name="table_prefix" value="sspawner_" type="string">
+Prefix for the two tables this plugin creates, <code>sspawner_data</code> and <code>sspawner_schema_meta</code>. Only letters, digits and underscore are kept, anything else is removed. Change it when another plugin already uses those names in the same database, or to keep two SmartSpawner installs apart in one MySQL database.
+
+Set it before the first start. Changing it later leaves the old tables in place and the plugin starts with an empty database, so rename the tables by hand first.
+</ConfigProperty>
+
 <ConfigProperty name="server_name" value="server1" type="string">
 Unique server name used for cross-server MySQL setups.
 </ConfigProperty>
@@ -335,6 +341,83 @@ Shows a server selection page in <code>/ss list</code> to view spawners from all
 <ConfigProperty name="migrate_from_local" value="true" type="boolean">
 Automatically migrates local data on startup when switching database modes. Migrated files are renamed with a <code>.migrated</code> suffix.
 </ConfigProperty>
+
+<ConfigProperty name="database" value="smartspawner" type="string">
+Name of the MySQL or MariaDB database to use. Ignored in <code>SQLITE</code> mode.
+</ConfigProperty>
+
+<ConfigGroup name="sqlite">
+<template #info>
+Used in <code>SQLITE</code> mode only.
+</template>
+
+<ConfigProperty name="file" value="spawners.db" type="string">
+Database file name, stored in <code>plugins/SmartSpawner/</code>.
+</ConfigProperty>
+
+<ConfigProperty name="pool_size" value="4" type="number">
+Number of pooled connections. The database runs in WAL mode, so reads are not blocked while a save runs. Lower this to <code>1</code> only if lock errors appear in the console.
+</ConfigProperty>
+
+</ConfigGroup>
+
+<ConfigGroup name="sql">
+<template #info>
+MySQL and MariaDB connection details. Used in <code>MYSQL</code> mode only.
+</template>
+
+<ConfigProperty name="host" value="localhost" type="string">
+Database server address.
+</ConfigProperty>
+
+<ConfigProperty name="port" value="3306" type="number">
+Database server port.
+</ConfigProperty>
+
+<ConfigProperty name="username" value="root" type="string">
+Database user.
+</ConfigProperty>
+
+<ConfigProperty name="password" value="" type="string">
+Password for that user.
+</ConfigProperty>
+
+<ConfigGroup name="pool">
+<template #info>
+Connection pool tuning. The defaults suit most servers, change them only to solve a known problem.
+</template>
+
+<ConfigProperty name="maximum-size" value="10" type="number">
+Largest number of connections the pool may open.
+</ConfigProperty>
+
+<ConfigProperty name="minimum-idle" value="2" type="number">
+Connections kept open while idle.
+</ConfigProperty>
+
+<ConfigProperty name="connection-timeout" value="10000" type="number">
+Milliseconds to wait for a free connection before giving up.
+</ConfigProperty>
+
+<ConfigProperty name="max-lifetime" value="1800000" type="number">
+Milliseconds a connection may live before it is replaced. Keep it below the database's own timeout.
+</ConfigProperty>
+
+<ConfigProperty name="idle-timeout" value="600000" type="number">
+Milliseconds an idle connection is kept before it is closed. Must be lower than <code>max-lifetime</code>. <code>0</code> matches <code>max-lifetime</code>.
+</ConfigProperty>
+
+<ConfigProperty name="keepalive-time" value="30000" type="number">
+Milliseconds between keepalive queries that stop the database dropping idle connections. <code>0</code> disables them.
+</ConfigProperty>
+
+<ConfigProperty name="leak-detection-threshold" value="0" type="number">
+Milliseconds a connection may stay checked out before a warning is logged. <code>0</code> disables the warning.
+</ConfigProperty>
+
+</ConfigGroup>
+
+</ConfigGroup>
 
 </ConfigGroup>
 
