@@ -6,6 +6,13 @@ plugins {
 val shade: Configuration by configurations.creating
 configurations {
     implementation.get().extendsFrom(shade)
+
+    // The tests need paper-api and nothing else. Left to inherit `implementation`, they would pull
+    // in the protection plugins, several of which ship their own relocated Guava, Gson and WorldGuard
+    // and fail to resolve against paper-api. Main's compiled classes stay on the classpath either
+    // way, which is all the tests actually exercise.
+    testImplementation.get().setExtendsFrom(emptyList())
+    testRuntimeOnly.get().setExtendsFrom(emptyList())
 }
 
 dependencies {
@@ -16,9 +23,7 @@ dependencies {
 
     shade("com.zaxxer:HikariCP:7.1.0")
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.10")
-    // Paper bundles sqlite-jdbc on the server classpath, so compileOnly is enough: the driver is
-    // never shaded (it extracts a native library from a resource path derived from its own package
-    // name, which relocation breaks) and never declared as a runtime library.
+    // Paper bundles sqlite-jdbc on the server classpath, so compileOnly is enough
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.1")
 
     compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
@@ -63,6 +68,21 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.46")
     annotationProcessor("org.projectlombok:lombok:1.18.46")
     shade("org.bstats:bstats-bukkit:3.2.1")
+
+    // Tests run without a server. paper-api is on the test classpath for YamlConfiguration, which
+    // parses and writes YAML on its own; anything needing a live Bukkit instance is out of scope.
+    testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    testImplementation(platform("org.junit:junit-bom:6.1.1"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -106,7 +126,7 @@ tasks.shadowJar {
     relocate("org.bstats", project.group.toString())
     mergeServiceFiles()
 
-    // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
+    destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
 }
 
 tasks.build {

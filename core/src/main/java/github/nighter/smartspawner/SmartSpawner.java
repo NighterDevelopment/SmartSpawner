@@ -25,6 +25,7 @@ import github.nighter.smartspawner.extras.HopperConfig;
 import github.nighter.smartspawner.extras.HopperService;
 import github.nighter.smartspawner.hooks.IntegrationManager;
 import github.nighter.smartspawner.hooks.economy.ItemPriceManager;
+import github.nighter.smartspawner.hooks.economy.SellIntegrationConfigUpdater;
 import github.nighter.smartspawner.hooks.economy.shops.providers.shopguiplus.SpawnerProvider;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.language.MessageService;
@@ -262,6 +263,9 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         this.spawnerSettingsConfig = new SpawnerSettingsConfig(this);
         this.itemSpawnerSettingsConfig = new ItemSpawnerSettingsConfig(this);
         
+        // sell_integration.yml, before ItemPriceManager reads it in initializeEconomyComponents().
+        new SellIntegrationConfigUpdater(this).checkAndUpdate();
+
         // Initialize logging system. The updater has to run first, it owns activity_log.yml.
         new ActivityLogConfigUpdater(this).checkAndUpdate();
         this.loggingConfig = new LoggingConfig(this);
@@ -329,7 +333,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
      * @return true when spawner storage is ready to use
      */
     private boolean initializeStorage() {
-        String modeStr = getConfig().getString("database.mode", "SQLITE");
+        String modeStr = getConfig().getString("database.type", "SQLITE");
         StorageMode mode = StorageMode.fromConfig(modeStr);
         if (!mode.name().equalsIgnoreCase(modeStr == null ? "" : modeStr.trim())) {
             getLogger().warning("Storage mode '" + modeStr + "' is not available, using " + mode + " instead.");
@@ -357,7 +361,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         this.spawnerStorage = dbHandler;
 
         // Check if migration is enabled in config
-        boolean migrateFromLocal = getConfig().getBoolean("database.migrate_from_local", true);
+        boolean migrateFromLocal = getConfig().getBoolean("database.migrate-from-local", true);
 
         if (migrateFromLocal) {
             // Check for YAML migration (YAML -> MySQL or YAML -> SQLite)
@@ -393,7 +397,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
 
     private void initializeFormUIComponents() {
         // Check if FormUI is enabled in config
-        boolean formUIEnabled = getConfig().getBoolean("bedrock_support.enable_formui", true);
+        boolean formUIEnabled = getConfig().getBoolean("bedrock_support.enable_formui", false);
         
         if (!formUIEnabled) {
             this.spawnerMenuFormUI = null;
@@ -530,7 +534,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
 
         // --- Storage backend ---
         metrics.addCustomChart(new SimplePie("storage_mode", () ->
-                getConfig().getString("database.mode", "SQLITE")));
+                getConfig().getString("database.type", "SQLITE")));
 
         // --- Language & GUI layout ---
         metrics.addCustomChart(new SimplePie("language", () ->

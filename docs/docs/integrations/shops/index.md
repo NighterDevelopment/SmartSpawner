@@ -6,20 +6,21 @@ title: Shops and Economy
 
 Selling from a spawner needs two independent pieces:
 
-1. A **price source** (a supported shop plugin, or `item_prices.yml`).
+1. A **price source** (a supported shop plugin, or the price list in `sell_integration.yml`).
 2. A **currency backend** (Vault or ExcellentEconomy).
 
+Both are configured in `sell_integration.yml`. See [Sell Integration](/docs/sell-integration) for every option.
+
 ```yaml
-sell_integration:
+enabled: true
+currency: VAULT
+price_source_mode: SHOP_PRIORITY
+shop_integration:
   enabled: true
-  currency: VAULT
-  price_source_mode: SHOP_PRIORITY
-  shop_integration:
-    enabled: true
-    preferred_plugin: auto
-  custom_prices:
-    enabled: true
-    default_price: 1.0
+  preferred_plugin: auto
+custom_prices:
+  enabled: true
+  default_price: 1.0
 ```
 
 ## Price source plugins
@@ -43,7 +44,7 @@ sell_integration:
 |---|---|
 | `SHOP_ONLY` | Supported shop price only |
 | `SHOP_PRIORITY` | Shop price, then custom price |
-| `CUSTOM_ONLY` | `item_prices.yml` only |
+| `CUSTOM_ONLY` | The `custom_prices.prices` list only |
 | `CUSTOM_PRIORITY` | Custom price, then shop price |
 
 Run `/ss prices` to inspect the active providers and resolved values after setup.

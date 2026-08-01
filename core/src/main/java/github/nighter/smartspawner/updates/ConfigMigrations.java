@@ -1,9 +1,12 @@
 package github.nighter.smartspawner.updates;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,7 +24,13 @@ public final class ConfigMigrations {
 
     // ── config.yml ───────────────────────────────────────────────────────────
 
-    /** Renames applied to {@code config.yml}. */
+    /**
+     * Renames applied to {@code config.yml}.
+     *
+     * <p>The database keys have moved twice, so both hops are present and must stay in this order:
+     * {@code database.standalone.*} became {@code database.sql.*} in 1.7.x, and in 1.8.0 the whole
+     * section was flattened onto {@code database.*}.</p>
+     */
     public static final List<YamlMigrator.Rename> CONFIG = List.of(
             new YamlMigrator.Rename("database.standalone.host",     "database.sql.host"),
             new YamlMigrator.Rename("database.standalone.port",     "database.sql.port"),
@@ -34,6 +43,17 @@ public final class ConfigMigrations {
             new YamlMigrator.Rename("database.standalone.pool.idle-timeout",             "database.sql.pool.idle-timeout"),
             new YamlMigrator.Rename("database.standalone.pool.keepalive-time",           "database.sql.pool.keepalive-time"),
             new YamlMigrator.Rename("database.standalone.pool.leak-detection-threshold", "database.sql.pool.leak-detection-threshold"),
+            new YamlMigrator.Rename("database.mode",                    "database.type"),
+            new YamlMigrator.Rename("database.table_prefix",            "database.table-prefix"),
+            new YamlMigrator.Rename("database.server_name",             "database.server-name"),
+            new YamlMigrator.Rename("database.sync_across_servers",     "database.sync-across-servers"),
+            new YamlMigrator.Rename("database.migrate_from_local",      "database.migrate-from-local"),
+            new YamlMigrator.Rename("database.sqlite.file",             "database.sqlite-file"),
+            new YamlMigrator.Rename("database.sql.host",                "database.host"),
+            new YamlMigrator.Rename("database.sql.port",                "database.port"),
+            new YamlMigrator.Rename("database.sql.username",            "database.username"),
+            new YamlMigrator.Rename("database.sql.password",            "database.password"),
+            new YamlMigrator.Rename("database.sql.pool.maximum-size",   "database.pool-size"),
             new YamlMigrator.Rename("custom_economy.enabled",                        "sell_integration.enabled"),
             new YamlMigrator.Rename("custom_economy.currency",                       "sell_integration.currency"),
             new YamlMigrator.Rename("custom_economy.coinsengine_currency",           "sell_integration.excellenteconomy_currency"),
@@ -91,6 +111,23 @@ public final class ConfigMigrations {
         return changed;
     };
 
+    // ── sell_integration.yml ─────────────────────────────────────────────────
+
+    /**
+     * Renames applied to {@code sell_integration.yml}. The settings themselves came from the
+     * {@code sell_integration} section of {@code config.yml} and the prices from
+     * {@code item_prices.yml}, both of which span two files, so that move lives in
+     * {@code SellIntegrationConfigUpdater} instead.
+     */
+    public static final List<YamlMigrator.Rename> SELL_INTEGRATION = List.of();
+
+    /**
+     * The price list is the user's. A material they removed stays removed, and a fresh install still
+     * gets the whole shipped list because {@code custom_prices} is its parent.
+     */
+    public static final YamlMigrator.OwnedSection SELL_INTEGRATION_PRICES =
+            YamlMigrator.OwnedSection.curated((defaults, path) -> path.equals("custom_prices.prices"));
+
     // ── language files ───────────────────────────────────────────────────────
 
     /*
@@ -134,25 +171,93 @@ public final class ConfigMigrations {
         };
     }
 
-    /** Value rewrites for {@code config.yml} that a plain rename can't express. */
+    /** Sub-sections of {@code database} that 1.8.0 flattened away, dropped once their keys have moved. */
+    private static final String[] LEGACY_DATABASE_SECTIONS = {"database.sql", "database.sqlite"};
+
+    private static final String DATABASE_SECTION = "database";
+
+    /** Added in 1.8.0, so its absence marks a {@code database} section that still has the old layout. */
+    private static final String AUTOSAVE_KEY = "autosave-interval";
+
+    /**
+     * Value rewrites for {@code config.yml} that a plain rename can't express. Runs after
+     * {@link #CONFIG}, so the database keys are already at their flattened names here.
+     */
     public static final YamlMigrator.CustomMigration CONFIG_VALUES = (user, defaults) -> {
         boolean changed = false;
         if ("COINSENGINE".equals(user.getString("sell_integration.currency"))) {
             user.set("sell_integration.currency", "EXCELLENTECONOMY");
             changed = true;
         }
-        if ("DATABASE".equals(user.getString("database.mode"))) {
-            user.set("database.mode", "MYSQL");
+        if ("DATABASE".equals(user.getString("database.type"))) {
+            user.set("database.type", "MYSQL");
             changed = true;
         }
         // YAML storage was removed in 1.8. Existing spawners_data.yml files are imported into
         // SQLite on the next startup by YamlToDatabaseMigration.
-        if ("YAML".equals(user.getString("database.mode"))) {
-            user.set("database.mode", "SQLITE");
+        if ("YAML".equals(user.getString("database.type"))) {
+            user.set("database.type", "SQLITE");
             changed = true;
         }
-        return changed;
+        // Everything worth keeping in these was moved by the renames above, so what is left is the
+        // old nesting plus the HikariCP knobs 1.8.0 stopped exposing. Removing them keeps the
+        // section from carrying two spellings of the same setting.
+        for (String section : LEGACY_DATABASE_SECTIONS) {
+            if (user.contains(section)) {
+                user.set(section, null);
+                changed = true;
+            }
+        }
+        return rebuildDatabaseSection(user, defaults) || changed;
     };
+
+    /**
+     * Rewrites the {@code database} section in the shipped order, with the shipped comments and the
+     * user's values.
+     *
+     * <p>The migrator's usual contract is to leave the user's file alone and only add to it, which is
+     * right when a key is renamed but wrong here: 1.8.0 renamed, flattened and dropped keys across the
+     * whole section at once, so honouring it would leave a section whose keys are in rename order,
+     * whose comments describe the old nesting, and whose only documented key is the one just added.</p>
+     *
+     * <p>Only the contents are replaced, so the section keeps its place in the file. A value the user
+     * set is kept, and a key of theirs the defaults do not have is carried over rather than dropped.
+     * The trigger is the absence of {@code autosave-interval}, which is a key no pre-1.8.0 file has and
+     * every converted one does, so this cannot run twice.</p>
+     */
+    private static boolean rebuildDatabaseSection(YamlConfiguration user, YamlConfiguration defaults) {
+        if (defaults == null) return false;
+
+        ConfigurationSection userDb = user.getConfigurationSection(DATABASE_SECTION);
+        ConfigurationSection defaultDb = defaults.getConfigurationSection(DATABASE_SECTION);
+        if (userDb == null || defaultDb == null || userDb.contains(AUTOSAVE_KEY)) {
+            return false;
+        }
+
+        Map<String, Object> existing = new LinkedHashMap<>();
+        for (String key : userDb.getKeys(true)) {
+            if (!userDb.isConfigurationSection(key)) {
+                existing.put(key, userDb.get(key));
+            }
+        }
+
+        for (String key : new ArrayList<>(userDb.getKeys(false))) {
+            userDb.set(key, null);
+        }
+
+        for (String key : defaultDb.getKeys(true)) {
+            if (defaultDb.isConfigurationSection(key)) continue;
+            String path = DATABASE_SECTION + "." + key;
+            user.set(path, existing.containsKey(key) ? existing.remove(key) : defaults.get(path));
+            user.setComments(path, defaults.getComments(path));
+            user.setInlineComments(path, defaults.getInlineComments(path));
+        }
+
+        // Anything left is a key the user added themselves. It goes back untouched, after the
+        // documented ones, rather than being silently discarded.
+        existing.forEach((key, value) -> user.set(DATABASE_SECTION + "." + key, value));
+        return true;
+    }
 
     // ── gui_layouts/**/*.yml ───────────────────────────────────────────────────
 

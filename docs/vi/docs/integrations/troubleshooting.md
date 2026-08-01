@@ -15,7 +15,7 @@ title: Khắc phục sự cố tích hợp
 
 Xác nhận mọi điều kiện:
 
-- `sell_integration.enabled` là `true`.
+- `enabled` trong `sell_integration.yml` là `true`.
 - Có backend tiền tệ hoạt động.
 - Chế độ nguồn giá đã chọn có ít nhất một nguồn giá hợp lệ.
 - Người chơi có `smartspawner.sellall`.

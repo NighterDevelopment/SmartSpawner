@@ -30,15 +30,22 @@ import java.util.logging.Logger;
  * Supports SQLite (default) and MySQL/MariaDB for spawner data storage.
  */
 public class DatabaseManager {
-    /** Used when {@code database.table_prefix} is absent or sanitizes to nothing. */
+    /** Used when {@code database.table-prefix} is absent or sanitizes to nothing. */
     public static final String DEFAULT_TABLE_PREFIX = "sspawner_";
+
+    // HikariCP tuning, in milliseconds. Not exposed in config.yml: the pool size is the only knob
+    // that a server owner has a reason to change, and these defaults suit both backends.
+    private static final long CONNECTION_TIMEOUT_MS = 10_000L;
+    private static final long MAX_LIFETIME_MS = 1_800_000L;
+    private static final long IDLE_TIMEOUT_MS = 600_000L;
+    private static final long KEEPALIVE_TIME_MS = 30_000L;
 
     /** Appended to the prefix for the spawner rows table. */
     private static final String SUFFIX_SPAWNERS = "data";
     /** Appended to the prefix for the plugin-owned schema metadata table. */
     private static final String SUFFIX_META = "schema_meta";
 
-    /** Fixed names used before {@code database.table_prefix} existed (1.7.x and earlier). */
+    /** Fixed names used before {@code database.table-prefix} existed (1.7.x and earlier). */
     private static final String LEGACY_TABLE_SPAWNERS = "smart_spawners";
     private static final String LEGACY_TABLE_META = "smartspawner_meta";
     /** Index names that travelled with the legacy tables, dropped once those tables are renamed. */
@@ -49,7 +56,7 @@ public class DatabaseManager {
     private final StorageMode storageMode;
     private HikariDataSource dataSource;
 
-    // Table and index names, all derived from database.table_prefix
+    // Table and index names, all derived from database.table-prefix
     private final String tablePrefix;
     private final String tableSpawners;
     private final String tableMeta;
@@ -62,16 +69,7 @@ public class DatabaseManager {
     private final String password;
     private final String serverName;
     private final String sqliteFile;
-    private final int sqlitePoolSize;
-
-    // Pool settings
-    private final int maxPoolSize;
-    private final int minIdle;
-    private final long connectionTimeout;
-    private final long maxLifetime;
-    private final long idleTimeout;
-    private final long keepaliveTime;
-    private final long leakDetectionThreshold;
+    private final int poolSize;
 
     // MySQL/MariaDB table creation SQL. %1$s is the spawner table, %2$s the configured prefix.
     private static final String CREATE_TABLE_MYSQL = """
@@ -223,28 +221,19 @@ public class DatabaseManager {
         this.logger = plugin.getLogger();
         this.storageMode = storageMode;
 
-        this.tablePrefix = sanitizeTablePrefix(plugin.getConfig().getString("database.table_prefix", DEFAULT_TABLE_PREFIX));
+        this.tablePrefix = sanitizeTablePrefix(plugin.getConfig().getString("database.table-prefix", DEFAULT_TABLE_PREFIX));
         this.tableSpawners = tablePrefix + SUFFIX_SPAWNERS;
         this.tableMeta = tablePrefix + SUFFIX_META;
 
         // Load configuration
-        this.host = plugin.getConfig().getString("database.sql.host", "localhost");
-        this.port = plugin.getConfig().getInt("database.sql.port", 3306);
+        this.host = plugin.getConfig().getString("database.host", "localhost");
+        this.port = plugin.getConfig().getInt("database.port", 3306);
         this.database = plugin.getConfig().getString("database.database", "smartspawner");
-        this.username = plugin.getConfig().getString("database.sql.username", "root");
-        this.password = plugin.getConfig().getString("database.sql.password", "");
-        this.serverName = plugin.getConfig().getString("database.server_name", "server1");
-        this.sqliteFile = plugin.getConfig().getString("database.sqlite.file", "spawners.db");
-        this.sqlitePoolSize = Math.max(1, plugin.getConfig().getInt("database.sqlite.pool_size", 4));
-
-        // Pool settings
-        this.maxPoolSize = plugin.getConfig().getInt("database.sql.pool.maximum-size", 10);
-        this.minIdle = plugin.getConfig().getInt("database.sql.pool.minimum-idle", 2);
-        this.connectionTimeout = plugin.getConfig().getLong("database.sql.pool.connection-timeout", 10000);
-        this.maxLifetime = plugin.getConfig().getLong("database.sql.pool.max-lifetime", 1800000);
-        this.idleTimeout = plugin.getConfig().getLong("database.sql.pool.idle-timeout", 600000);
-        this.keepaliveTime = plugin.getConfig().getLong("database.sql.pool.keepalive-time", 30000);
-        this.leakDetectionThreshold = plugin.getConfig().getLong("database.sql.pool.leak-detection-threshold", 0);
+        this.username = plugin.getConfig().getString("database.username", "root");
+        this.password = plugin.getConfig().getString("database.password", "");
+        this.serverName = plugin.getConfig().getString("database.server-name", "server1");
+        this.sqliteFile = plugin.getConfig().getString("database.sqlite-file", "spawners.db");
+        this.poolSize = Math.max(1, plugin.getConfig().getInt("database.pool-size", 10));
     }
 
     /**
@@ -252,7 +241,7 @@ public class DatabaseManager {
      * SQL does not allow for identifiers, so anything outside {@code [A-Za-z0-9_]} is stripped
      * instead of trusted.
      */
-    private static String sanitizeTablePrefix(String value) {
+    static String sanitizeTablePrefix(String value) {
         String cleaned = value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "");
         return cleaned.isEmpty() ? DEFAULT_TABLE_PREFIX : cleaned;
     }
@@ -306,13 +295,12 @@ public class DatabaseManager {
         config.setPassword(password);
 
         // Pool settings
-        config.setMaximumPoolSize(maxPoolSize);
-        config.setMinimumIdle(minIdle);
-        config.setConnectionTimeout(connectionTimeout);
-        config.setMaxLifetime(maxLifetime);
-        config.setIdleTimeout(idleTimeout);
-        config.setKeepaliveTime(keepaliveTime);
-        config.setLeakDetectionThreshold(leakDetectionThreshold);
+        config.setMaximumPoolSize(poolSize);
+        config.setMinimumIdle(Math.min(2, poolSize));
+        config.setConnectionTimeout(CONNECTION_TIMEOUT_MS);
+        config.setMaxLifetime(MAX_LIFETIME_MS);
+        config.setIdleTimeout(IDLE_TIMEOUT_MS);
+        config.setKeepaliveTime(KEEPALIVE_TIME_MS);
 
         // Performance settings for MySQL/MariaDB
         config.setPoolName("SmartSpawner-HikariCP");
@@ -350,16 +338,16 @@ public class DatabaseManager {
         config.setJdbcUrl(jdbcUrl);
         config.setDriverClassName("org.sqlite.JDBC");
 
-        config.setMaximumPoolSize(sqlitePoolSize);
+        config.setMaximumPoolSize(poolSize);
         config.setMinimumIdle(1);
-        config.setConnectionTimeout(connectionTimeout);
+        config.setConnectionTimeout(CONNECTION_TIMEOUT_MS);
         config.setMaxLifetime(0);  // Disable max lifetime for SQLite
         config.setIdleTimeout(0);  // Disable idle timeout for SQLite
         config.setPoolName("SmartSpawner-SQLite-HikariCP");
     }
 
     /**
-     * Move the fixed pre-prefix table names onto {@code database.table_prefix}. No-op on a fresh
+     * Move the fixed pre-prefix table names onto {@code database.table-prefix}. No-op on a fresh
      * install and on databases that were already renamed.
      */
     private void renameLegacyTables() throws SQLException {
@@ -974,7 +962,7 @@ public class DatabaseManager {
     }
 
     /**
-     * Name of the spawner rows table, {@code database.table_prefix} included.
+     * Name of the spawner rows table, {@code database.table-prefix} included.
      * @return The table name to concatenate into SQL
      */
     public String getTableSpawners() {
@@ -982,7 +970,7 @@ public class DatabaseManager {
     }
 
     /**
-     * Name of the plugin-owned schema metadata table, {@code database.table_prefix} included.
+     * Name of the plugin-owned schema metadata table, {@code database.table-prefix} included.
      * @return The table name to concatenate into SQL
      */
     public String getTableMeta() {

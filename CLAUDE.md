@@ -65,7 +65,7 @@ implementation batches the write. GUIs read the same `SpawnerData` and are kept 
 | Spawner state, stacking, loot, break/place | `spawner/` (see `spawner/CLAUDE.md`) |
 | Any inventory GUI on a spawner | `spawner/gui/` (see `spawner/gui/CLAUDE.md`) |
 | Saving and loading spawners, SQLite and MySQL | `spawner/data/` (see `spawner/data/CLAUDE.md`) |
-| Protection, shop, economy, RPG plugin support | `hooks/` (see `hooks/CLAUDE.md`) |
+| Protection, shop, economy, RPG plugin support | `hooks/` (see `hooks/CLAUDE.md`), configured by `sell_integration.yml` |
 | Messages, GUI text, number formatting | `language/` (see `language/CLAUDE.md`) |
 | Renaming a config key without breaking users | `updates/` (see `updates/CLAUDE.md`) |
 | Hopper pulling from spawner storage | `extras/` |

@@ -21,7 +21,7 @@ Bán vật phẩm trực tiếp từ GUI kho spawner với hỗ trợ đầy đ�
 - ShopGUI+
 - zShop
 
-Giá cũng có thể được đặt thủ công trong `item_prices.yml`.
+Giá cũng có thể được đặt thủ công trong `sell_integration.yml`.
 
 </FeatureCard>
 

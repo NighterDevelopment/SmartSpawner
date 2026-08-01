@@ -1,5 +1,6 @@
 package github.nighter.smartspawner.updates;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.*;
@@ -241,9 +242,27 @@ public final class YamlMigrator {
                 user.set(r.newPath(), user.get(r.oldPath()));
             }
             user.set(r.oldPath(), null);
+            pruneEmptyParents(user, r.oldPath());
             count++;
         }
         return count;
+    }
+
+    /**
+     * Drops the sections a rename just emptied, walking up from the old key.
+     *
+     * <p>Renaming every key out of a section leaves the section itself behind, which serialises as a
+     * bare {@code old_section: {}} that nothing reads and nothing else will ever remove. A section
+     * with no keys left in it carries no user setting, so there is nothing to lose by removing it,
+     * and one the defaults still describe is put back by the top-up that runs afterwards.</p>
+     */
+    private static void pruneEmptyParents(YamlConfiguration user, String path) {
+        for (int dot = path.lastIndexOf('.'); dot > 0; dot = path.lastIndexOf('.', dot - 1)) {
+            String parent = path.substring(0, dot);
+            ConfigurationSection section = user.getConfigurationSection(parent);
+            if (section == null || !section.getKeys(false).isEmpty()) return;
+            user.set(parent, null);
+        }
     }
 
     // Returns the number of keys added, carrying comments across for each new leaf.

@@ -23,7 +23,7 @@ public enum StorageMode {
     MYSQL;
 
     /**
-     * Resolve a configured {@code database.mode} value.
+     * Resolve a configured {@code database.type} value.
      *
      * @param raw the raw config value, may be null
      * @return the matching mode, or {@link #SQLITE} when the value is unknown or the removed

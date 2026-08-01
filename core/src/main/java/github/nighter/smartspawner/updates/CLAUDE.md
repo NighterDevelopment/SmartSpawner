@@ -115,7 +115,16 @@ reason.
 ## Moving keys between files, and the one file that is rewritten
 
 `YamlMigrator` only ever sees one file, so a key moving from one file to another cannot be a
-`Rename`. `ActivityLogConfigUpdater` is the worked example: in 1.8.0 `discord_logging.yml` became
+`Rename`. There are two of these, both from 1.8.0, and both live outside this package next to the
+component that reads the file.
+
+`SellIntegrationConfigUpdater` (in `hooks/economy/`) is the simpler one: the `sell_integration` section
+of `config.yml` and the whole of `item_prices.yml` became `sell_integration.yml`. It copies each source
+in, deletes it, and only then calls the migrator, for the same reason as below. `item_prices.yml` is
+deleted rather than left behind, so a price the owner removes later cannot be re-imported on the next
+start.
+
+`ActivityLogConfigUpdater` is the harder one: in 1.8.0 `discord_logging.yml` became
 `activity_log.yml` and the `logging` section of `config.yml` became its `file` section. It renames the
 file on disk, copies the old section across, deletes it from `config.yml`, and only then calls the
 migrator, because a top-up that ran first would fill those keys with the shipped defaults and the

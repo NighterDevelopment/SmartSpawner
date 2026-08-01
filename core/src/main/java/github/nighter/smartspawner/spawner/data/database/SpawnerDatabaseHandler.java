@@ -29,6 +29,13 @@ import java.util.stream.Collectors;
  * Implements SpawnerStorage interface with MariaDB operations.
  */
 public class SpawnerDatabaseHandler implements SpawnerStorage {
+    /** Used when {@code database.autosave-interval} is absent or unparseable. */
+    private static final String DEFAULT_AUTOSAVE_INTERVAL = "3m";
+    private static final long DEFAULT_AUTOSAVE_TICKS = 3L * 60L * 20L;
+
+    /** Floor on the configured interval. Flushing more often than this buys nothing and costs I/O. */
+    private static final long MIN_AUTOSAVE_TICKS = 30L * 20L;
+
     private final SmartSpawner plugin;
     private final Logger logger;
     private final DatabaseManager databaseManager;
@@ -172,9 +179,14 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         return true;
     }
 
+    /**
+     * (Re)starts the batched save timer from {@code database.autosave-interval}.
+     *
+     * <p>Called again by {@link #reloadSettings()}, so a changed interval takes effect on
+     * {@code /ss reload} rather than needing a restart like the rest of the database section.</p>
+     */
     private void startSaveTask() {
-        // Hardcoded 5-minute interval (5 * 60 * 20 = 6000 ticks)
-        long intervalTicks = 6000L;
+        long intervalTicks = Math.max(MIN_AUTOSAVE_TICKS, configuredAutosaveTicks());
 
         if (saveTask != null) {
             saveTask.cancel();
@@ -185,6 +197,29 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             plugin.debug("Running scheduled database save task");
             flushChanges();
         }, intervalTicks, intervalTicks);
+        plugin.debug("Database autosave runs every " + (intervalTicks / 20L) + "s");
+    }
+
+    /**
+     * Parses {@code database.autosave-interval} directly rather than through
+     * {@code plugin.getTimeFromConfig}, whose fallback for an unreadable value is one hour. An hour
+     * of unsaved spawner data is the wrong answer to a typo; the shipped default is.
+     */
+    private long configuredAutosaveTicks() {
+        String configured = plugin.getConfig().getString("database.autosave-interval", DEFAULT_AUTOSAVE_INTERVAL);
+        long ticks = plugin.getTimeFormatter().parseTimeToTicks(configured, -1L);
+        if (ticks > 0) {
+            return ticks;
+        }
+
+        logger.warning("Could not read database.autosave-interval ('" + configured + "'), using "
+                + DEFAULT_AUTOSAVE_INTERVAL + " instead.");
+        return DEFAULT_AUTOSAVE_TICKS;
+    }
+
+    @Override
+    public void reloadSettings() {
+        startSaveTask();
     }
 
     @Override

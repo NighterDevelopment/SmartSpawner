@@ -1,6 +1,7 @@
 # SmartSpawner configuration
 # Full guide: https://docs.smartspawner.site/docs/configuration
 # Time format: 20s, 5m, 1h, or 1d_2h_30m_15s. Units: s m h d w mo y.
+# Most settings apply on /ss reload. Ones marked RESTART need a full server restart.
 
 # Language folder under language/. Bundled: en_US, en_US_DonutSMP, en_US_DonutSMP_v2, tr_TR, vi_VN.
 language: en_US
@@ -75,28 +76,6 @@ natural_spawner:
   spawn_mobs: true
   protect_from_explosions: false
 
-sell_integration:
-  enabled: true
-
-  # Economy plugin: VAULT or EXCELLENTECONOMY.
-  currency: VAULT
-
-  # Currency name, EXCELLENTECONOMY only.
-  excellenteconomy_currency: money
-
-  # Where prices come from: SHOP_ONLY, SHOP_PRIORITY, CUSTOM_ONLY or CUSTOM_PRIORITY.
-  price_source_mode: SHOP_PRIORITY
-
-  shop_integration:
-    enabled: true
-    # auto, EconomyShopGUI, EconomyShopGUI-Premium, ShopGUIPlus or zShop.
-    preferred_plugin: auto
-
-  custom_prices:
-    enabled: true
-    # Price for items with no custom price. 0.0 stops them being sold.
-    default_price: 1.0
-
 hopper:
   enabled: false
   # Time between collection checks.
@@ -105,8 +84,8 @@ hopper:
   stack_per_transfer: 5
 
 bedrock_support:
-  # Show Bedrock players a form menu instead of a chest GUI. Needs Floodgate.
-  enable_formui: true
+  # RESTART. Show Bedrock players a form menu instead of a chest GUI. Needs Floodgate.
+  enable_formui: false
 
 hologram:
   # Floating text above spawners.
@@ -129,51 +108,40 @@ particle:
   spawner_activate: true
   spawner_generate_loot: true
 
-# Action logging, file and Discord, lives in activity_log.yml.
-
 database:
-  # Storage backend: SQLITE or MYSQL. A config still set to YAML switches to SQLITE on startup
-  # and imports spawners_data.yml once.
-  mode: SQLITE
+  # RESTART: every setting here except autosave-interval.
+  # Backend: SQLITE or MYSQL. A config still set to YAML switches to SQLITE on startup and imports
+  # spawners_data.yml once.
+  type: SQLITE
 
-  # Prefix for this plugin's tables. Letters, digits and underscore.
-  # Set it before the first start, changing it later leaves the old tables behind.
-  table_prefix: "sspawner_"
+  # Prefix for this plugin's tables. Letters, digits and underscore. Existing tables are renamed
+  # automatically if you change it.
+  table-prefix: sspawner_
+
+  # How often unsaved spawner changes are written to the database. Minimum 30s.
+  autosave-interval: 3m
+
+  # SQLite: file name inside the plugin folder.
+  sqlite-file: spawners.db
+
+  # MySQL/MariaDB only. Default port: 3306.
+  host: localhost
+  port: 3306
+  database: smartspawner
+  username: root
+  password: ""
+  pool-size: 10
 
   # A name unique to this server, used when several servers share one MySQL database.
-  server_name: "server1"
+  server-name: server1
 
   # Add a server picker to /ss list showing spawners from every server in the shared database.
   # MYSQL only.
-  sync_across_servers: false
+  sync-across-servers: false
 
   # Import spawners_data.yml on startup, and spawners.db as well when switching to MYSQL.
   # Imported files get a .migrated suffix so they are never read twice.
-  migrate_from_local: true
-
-  # Database name, MYSQL only.
-  database: "smartspawner"
-
-  sqlite:
-    file: "spawners.db"
-    # Pooled connections. Lower this to 1 only if lock errors appear in the console.
-    pool_size: 4
-
-  sql:
-    host: "localhost"
-    port: 3306
-    username: "root"
-    password: ""
-
-    # Connection pool tuning. Milliseconds, except the first two.
-    pool:
-      maximum-size: 10
-      minimum-idle: 2
-      connection-timeout: 10000
-      max-lifetime: 1800000
-      idle-timeout: 600000
-      keepalive-time: 30000
-      leak-detection-threshold: 0
+  migrate-from-local: true
 
 performance:
   loot_generation:

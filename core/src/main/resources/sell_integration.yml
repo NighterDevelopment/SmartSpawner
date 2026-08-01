@@ -1,0 +1,101 @@
+# SmartSpawner sell integration
+# Full guide: https://docs.smartspawner.site/docs/configuration
+# Everything here applies on /ss reload.
+
+enabled: true
+
+# Economy plugin: VAULT or EXCELLENTECONOMY.
+currency: VAULT
+
+# Currency name, EXCELLENTECONOMY only.
+excellenteconomy_currency: money
+
+# Where prices come from: SHOP_ONLY, SHOP_PRIORITY, CUSTOM_ONLY or CUSTOM_PRIORITY.
+price_source_mode: SHOP_PRIORITY
+
+shop_integration:
+  enabled: true
+  # auto, EconomyShopGUI, EconomyShopGUI-Premium, ShopGUIPlus or zShop.
+  preferred_plugin: auto
+
+custom_prices:
+  enabled: true
+
+  # Price for items with no entry below. 0.0 stops them being sold.
+  default_price: 1.0
+
+  # Sell price per material, in currency units. Add or remove entries freely, a material you delete
+  # is not added back.
+  prices:
+    # Animal and fish drops
+    LEATHER: 4.0
+    STRING: 0.75
+    FEATHER: 1.0
+    CHICKEN: 1.5
+    COD: 1.0
+    SALMON: 1.5
+    BEEF: 2.0
+    PORKCHOP: 2.0
+    MUTTON: 1.5
+    RABBIT: 2.0
+    WHITE_WOOL: 1.0
+    RABBIT_HIDE: 1.5
+    RABBIT_FOOT: 8.0
+    PUFFERFISH: 2.5
+    TROPICAL_FISH: 3.0
+
+    # Hostile mob drops
+    BONE: 1.0
+    BONE_MEAL: 0.5
+    ARROW: 0.5
+    SPIDER_EYE: 2.0
+    GUNPOWDER: 3.0
+    ROTTEN_FLESH: 0.5
+    ENDER_PEARL: 10.0
+    GHAST_TEAR: 15.0
+    MAGMA_CREAM: 8.0
+    PHANTOM_MEMBRANE: 12.0
+    SHULKER_SHELL: 25.0
+    SLIME_BALL: 2.5
+    BLAZE_ROD: 12.0
+    BREEZE_ROD: 15.0
+    WITHER_SKELETON_SKULL: 100.0
+
+    # Weapons and tools
+    BOW: 5.0
+    CROSSBOW: 8.0
+    GOLDEN_SWORD: 15.0
+    GOLDEN_AXE: 18.0
+    STONE_SWORD: 3.0
+    IRON_AXE: 15.0
+    TRIDENT: 50.0
+    TIPPED_ARROW: 2.0
+    TOTEM_OF_UNDYING: 150.0
+    SADDLE: 20.0
+
+    # Materials and resources
+    COPPER_INGOT: 3.0
+    PRISMARINE_SHARD: 5.0
+    PRISMARINE_CRYSTALS: 8.0
+    WET_SPONGE: 20.0
+    EMERALD: 25.0
+    IRON_INGOT: 10.0
+    GOLD_NUGGET: 1.5
+    GOLD_INGOT: 15.0
+    REDSTONE: 2.0
+    GLOWSTONE_DUST: 2.5
+    COAL: 1.5
+
+    # Miscellaneous items
+    GLOW_INK_SAC: 4.0
+    INK_SAC: 1.5
+    CARROT: 1.0
+    POTATO: 1.0
+    POPPY: 0.5
+    SNOWBALL: 0.2
+    SEAGRASS: 0.5
+    SUGAR: 0.5
+    GLASS_BOTTLE: 1.0
+    STICK: 0.2
+    SCULK_CATALYST: 30.0
+    TIDE_ARMOR_TRIM_SMITHING_TEMPLATE: 75.0

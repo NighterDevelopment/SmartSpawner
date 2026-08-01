@@ -28,6 +28,7 @@ const enManualSidebar = [
     text: 'Configuration',
     items: [
       { text: 'Main Config', link: '/docs/configuration' },
+      { text: 'Sell Integration', link: '/docs/sell-integration' },
       { text: 'Mob Spawners', link: '/docs/spawner-mobs' },
       { text: 'Item Spawners', link: '/docs/spawner-items' },
       { text: 'GUI Layout', link: '/docs/gui-layout' }
@@ -109,6 +110,7 @@ const viManualSidebar = [
     text: 'Cấu hình',
     items: [
       { text: 'Cấu hình chính', link: '/vi/docs/configuration' },
+      { text: 'Tích hợp bán', link: '/vi/docs/sell-integration' },
       { text: 'Spawner Mob', link: '/vi/docs/spawner-mobs' },
       { text: 'Item Spawner', link: '/vi/docs/spawner-items' },
       { text: 'Bố cục GUI', link: '/vi/docs/gui-layout' }

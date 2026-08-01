@@ -18,6 +18,16 @@ public interface SpawnerStorage {
     boolean initialize();
 
     /**
+     * Re-read the settings a running backend can change without reconnecting.
+     * <p>
+     * Only {@code database.autosave-interval} qualifies: the connection pool, the table names and the
+     * backend itself are all fixed at startup. Called from the reload command after the time cache has
+     * been cleared.
+     */
+    default void reloadSettings() {
+    }
+
+    /**
      * Shutdown the storage system gracefully.
      * Should flush all pending changes before returning.
      */

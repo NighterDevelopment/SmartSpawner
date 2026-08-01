@@ -54,10 +54,11 @@ The plugin automatically creates its configuration files in `plugins/SmartSpawne
 
 | File | Description |
 |------|-------------|
-| `config.yml` | Main configuration: spawner behavior, economy, visuals |
+| `config.yml` | Main configuration: spawner behavior, visuals, database |
 | `spawner_mobs.yml` | Drop tables and XP values for each mob type |
 | `spawner_items.yml` | Drop tables for item spawners |
-| `item_prices.yml` | Custom sell prices for items |
+| `sell_integration.yml` | Economy, shop integration and custom sell prices |
+| `activity_log.yml` | Action logging to file and Discord |
 | `spawners.db` | Persistent spawner data (SQLite mode) |
 | `language/` | Language folder with translatable message files |
 | `gui_layouts/` | GUI layout folder |

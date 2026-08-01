@@ -102,7 +102,7 @@ public class SqliteToMySqlMigration {
             return false;
         }
 
-        String sqliteFileName = plugin.getConfig().getString("database.sqlite.file", "spawners.db");
+        String sqliteFileName = plugin.getConfig().getString("database.sqlite-file", "spawners.db");
         File sqliteFile = new File(plugin.getDataFolder(), sqliteFileName);
 
         if (!sqliteFile.exists()) {
@@ -187,7 +187,7 @@ public class SqliteToMySqlMigration {
     public boolean migrate() {
         logger.info("Starting SQLite to MySQL migration...");
 
-        String sqliteFileName = plugin.getConfig().getString("database.sqlite.file", "spawners.db");
+        String sqliteFileName = plugin.getConfig().getString("database.sqlite-file", "spawners.db");
         File sqliteFile = new File(plugin.getDataFolder(), sqliteFileName);
 
         if (!sqliteFile.exists()) {

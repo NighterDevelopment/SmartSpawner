@@ -6,20 +6,21 @@ title: Cửa hàng và Kinh tế
 
 Tính năng bán từ spawner cần hai phần độc lập:
 
-1. **Nguồn giá** (một plugin cửa hàng được hỗ trợ, hoặc `item_prices.yml`).
+1. **Nguồn giá** (một plugin cửa hàng được hỗ trợ, hoặc bảng giá trong `sell_integration.yml`).
 2. **Backend tiền tệ** (Vault hoặc ExcellentEconomy).
 
+Cả hai đều được cấu hình trong `sell_integration.yml`. Xem [Tích hợp bán](/vi/docs/sell-integration) để biết mọi tùy chọn.
+
 ```yaml
-sell_integration:
+enabled: true
+currency: VAULT
+price_source_mode: SHOP_PRIORITY
+shop_integration:
   enabled: true
-  currency: VAULT
-  price_source_mode: SHOP_PRIORITY
-  shop_integration:
-    enabled: true
-    preferred_plugin: auto
-  custom_prices:
-    enabled: true
-    default_price: 1.0
+  preferred_plugin: auto
+custom_prices:
+  enabled: true
+  default_price: 1.0
 ```
 
 ## Plugin nguồn giá
@@ -43,7 +44,7 @@ sell_integration:
 |---|---|
 | `SHOP_ONLY` | Chỉ giá từ cửa hàng hỗ trợ |
 | `SHOP_PRIORITY` | Giá cửa hàng, sau đó giá tùy chỉnh |
-| `CUSTOM_ONLY` | Chỉ `item_prices.yml` |
+| `CUSTOM_ONLY` | Chỉ bảng giá `custom_prices.prices` |
 | `CUSTOM_PRIORITY` | Giá tùy chỉnh, sau đó giá cửa hàng |
 
 Dùng `/ss prices` để kiểm tra provider đang hoạt động và giá đã phân giải sau khi thiết lập.

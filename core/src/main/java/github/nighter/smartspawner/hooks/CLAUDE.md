@@ -70,18 +70,26 @@ throw `NoClassDefFoundError`.
 
 ## Economy
 
+Every sell setting lives in **`sell_integration.yml`**, not in `config.yml`. In 1.8.0 the
+`sell_integration` section of `config.yml` and the whole of `item_prices.yml` were merged into it, so
+paths lost their `sell_integration.` prefix and the prices became its `custom_prices.prices` section.
+`SellIntegrationConfigUpdater` owns the file and replays both moves for upgrading servers; it must run
+before `ItemPriceManager` is constructed, which is why it sits in `initializeServices()`.
+
+Do not read these keys off `plugin.getConfig()`. `ItemPriceManager` loads the file and exposes it as
+`getSellConfig()`; `CurrencyManager` and `ShopIntegrationManager` both go through that.
+
 `ItemPriceManager` is the single entry point for "what is this item worth". It initializes **before**
 spawner settings, because loot config reads prices.
 
-Everything is gated on `sell_integration.enabled`. When false, `currencyManager` and
-`shopIntegrationManager` are never constructed and stay **null**. `SmartSpawner.hasSellIntegration()`
-is the safe question to ask.
+Everything is gated on `enabled`. When false, `currencyManager` and `shopIntegrationManager` are never
+constructed and stay **null**. `SmartSpawner.hasSellIntegration()` is the safe question to ask.
 
-Prices come from two sources combined by `sell_integration.price_source_mode`:
+Prices come from two sources combined by `price_source_mode`:
 
 | Mode | Meaning |
 |---|---|
-| `CUSTOM_ONLY` | `item_prices.yml` only |
+| `CUSTOM_ONLY` | `custom_prices.prices` only |
 | `SHOP_ONLY` | the shop plugin only |
 | `CUSTOM_PRIORITY` | custom price wins, shop as fallback |
 | `SHOP_PRIORITY` | shop wins, custom as fallback (default) |
@@ -89,14 +97,18 @@ Prices come from two sources combined by `sell_integration.price_source_mode`:
 `validatePriceSourceMode()` downgrades a mode that cannot be satisfied, so the effective mode may
 differ from the configured one.
 
-`ShopIntegrationManager` picks one `activeProvider` from `providers/`: EconomyShopGUI, ShopGUI+,
-zShop. Either honours `sell_integration.shop_integration.preferred_plugin` or auto-detects the first
-available. A new shop plugin means implementing `ShopProvider` (`getPluginName`, `isAvailable`,
-`getSellPrice`) and adding a case to that switch.
+`custom_prices.prices` is a curated section (`ConfigMigrations.SELL_INTEGRATION_PRICES`), so a
+material the owner deletes is not added back on the next start. It is also the one section the plugin
+writes to at runtime, through `setPrice` / `removePrice`.
 
-`CurrencyManager` handles the payout side (Vault, ExcellentEconomy, and the
-`sell_integration.currency` key). Note the historical rename: `COINSENGINE` migrates to
-`EXCELLENTECONOMY`, handled in `updates/ConfigMigrations.CONFIG_VALUES`.
+`ShopIntegrationManager` picks one `activeProvider` from `providers/`: EconomyShopGUI, ShopGUI+,
+zShop. Either honours `shop_integration.preferred_plugin` or auto-detects the first available. A new
+shop plugin means implementing `ShopProvider` (`getPluginName`, `isAvailable`, `getSellPrice`) and
+adding a case to that switch.
+
+`CurrencyManager` handles the payout side (Vault, ExcellentEconomy, and the `currency` key). Note the
+historical rename: `COINSENGINE` migrates to `EXCELLENTECONOMY`, handled in
+`updates/ConfigMigrations.CONFIG_VALUES` while that key was still in `config.yml`.
 
 `providers/shopguiplus/SpawnerProvider` runs the other direction: ShopGUI+ asks *us* for spawner
 items. It is exposed via `SmartSpawner.getSpawnerProvider()` and constructs a fresh instance per call.
@@ -105,5 +117,6 @@ items. It is exposed via `SmartSpawner.getSpawnerProvider()` and constructs a fr
 
 `FloodgateHook` decides whether a player is on Bedrock. The FormUI classes
 (`SpawnerMenuFormUI`) are only constructed when Floodgate is present **and**
-`bedrock_support.enable_formui` is true, so treat them as nullable everywhere. Java-edition
-behaviour must never depend on Floodgate being loaded.
+`bedrock_support.enable_formui` is true, so treat them as nullable everywhere. That key defaults to
+**false** and is only read in `onEnable`, so turning it on needs a restart, not `/ss reload`.
+Java-edition behaviour must never depend on Floodgate being loaded.

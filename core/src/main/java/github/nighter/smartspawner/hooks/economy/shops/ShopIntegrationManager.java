@@ -33,7 +33,9 @@ public class ShopIntegrationManager {
 
     private void detectAndRegisterActiveProviders() {
         // Check configuration for preferred plugin first
-        String configuredShop = plugin.getConfig().getString("sell_integration.shop_integration.preferred_plugin", "auto");
+        // sell_integration.yml, held by ItemPriceManager, which builds this class.
+        String configuredShop = plugin.getItemPriceManager().getSellConfig()
+                .getString("shop_integration.preferred_plugin", "auto");
         boolean autoDetect = "auto".equalsIgnoreCase(configuredShop);
 
         // If a specific shop is configured, only try to load that one

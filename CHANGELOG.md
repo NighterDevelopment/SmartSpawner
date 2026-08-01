@@ -16,8 +16,13 @@ All notable changes to SmartSpawner are documented in this file.
 ### Changed
 - SQLite is now the default storage mode and is faster than the old YAML files on servers of any size. MySQL and MariaDB work as before, including cross-server spawner listing.
 - SQLite reads and saves at the same time, so `/ss list` no longer waits for a save to finish.
+- How often spawner data is saved can now be set with `database.autosave-interval`, which defaults to 3 minutes. It was previously fixed at 5 minutes.
+- Selling is now in its own file, `sell_integration.yml`. It replaces the `sell_integration` section of `config.yml` and `item_prices.yml`, and existing settings and prices move across on the first start.
+- Action logging is now in one file, `activity_log.yml`. It replaces `discord_logging.yml` and the `logging` section of `config.yml`, and existing settings move across on the first start.
+- The `database` section of `config.yml` was simplified. Every setting sits at one level and the connection pool has a single size option.
+- Settings that only take effect after a full restart are now marked RESTART in `config.yml`.
+- Bedrock form menus are off by default. Set `bedrock_support.enable_formui` to `true` and restart to use them.
 - The two spawner settings files were renamed, and loot entries use a new format. See the details below.
-- Action logging is now in one file, `activity_log.yml`. It replaces `discord_logging.yml` and the `logging` section of `config.yml`, and your settings move across on the first start.
 
 ### Removed
 - YAML storage was removed. Servers still set to `YAML` are switched to `SQLITE` automatically.
@@ -27,6 +32,7 @@ All notable changes to SmartSpawner are documented in this file.
 - Spawner data is migrated automatically. `spawners_data.yml` is renamed to `spawners_data.yml.migrated` so nothing is imported twice.
 - Back up the `plugins/SmartSpawner/` folder before updating. The plugin also copies the old data inside the database before converting it.
 - If the database cannot be opened, the plugin stops instead of running without saving. The console reports the reason.
+- Every renamed config key is migrated on the first start, so no config file needs editing by hand after updating.
 
 <details>
 <summary>Configuration file details</summary>
@@ -40,8 +46,13 @@ All notable changes to SmartSpawner are documented in this file.
 - The `default_material` line was removed. The fallback head is now built in.
 - A loot entry the server cannot read is skipped, and the console names the mob and the entry.
 - The guide in the comments at the top of both files was replaced with a link to the documentation site.
-- `discord_logging.yml` is now `activity_log.yml`, and the `logging` section of `config.yml` became its `file` section. Both moves happen on the first start and keep your values.
+- `discord_logging.yml` is now `activity_log.yml`, and the `logging` section of `config.yml` became its `file` section. Both moves happen on the first start and keep the configured values.
 - Inside that file the Discord settings sit under `discord`, and the per-event message templates sit under `embeds`, one block per event with the `embed` line removed.
+- The `sell_integration` section of `config.yml` became the top level of `sell_integration.yml`, so its keys lost the `sell_integration.` prefix. `item_prices.yml` became the `custom_prices.prices` section of that file and is deleted once its prices have been copied across.
+- A price removed from `custom_prices.prices` stays removed and is not added back on the next start.
+- The `database` section was flattened and its keys now use hyphens. `mode` is `type`, `table_prefix` is `table-prefix`, `server_name` is `server-name`, `sync_across_servers` is `sync-across-servers`, `migrate_from_local` is `migrate-from-local`, `sqlite.file` is `sqlite-file`, and the four `sql` connection keys moved up a level.
+- `sql.pool.maximum-size` is now `pool-size` and covers both storage modes. The other pool tuning keys and `sqlite.pool_size` were removed and are set internally.
+- The new `database.autosave-interval` accepts the usual time format, with a minimum of 30 seconds. It is the only setting in the section that `/ss reload` applies.
 
 </details>
 

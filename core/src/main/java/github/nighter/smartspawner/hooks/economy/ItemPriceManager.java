@@ -6,6 +6,7 @@ import github.nighter.smartspawner.hooks.economy.shops.ShopIntegrationManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -18,12 +19,22 @@ import java.util.logging.Level;
 
 @RequiredArgsConstructor
 public class ItemPriceManager {
-    private static final String PRICE_FILE_NAME = "item_prices.yml";
+    /** Every sell setting, prices included, lives in this file since 1.8.0. */
+    private static final String SELL_FILE_NAME = SellIntegrationConfigUpdater.FILE_NAME;
+
+    /** Section holding one price per material name. */
+    private static final String PRICES_SECTION = "custom_prices.prices";
 
     private final SmartSpawner plugin;
     private final Map<String, Double> itemPrices = new ConcurrentHashMap<>();
-    private File priceFile;
-    private FileConfiguration priceConfig;
+    private File sellFile;
+
+    /**
+     * The loaded {@code sell_integration.yml}. Read it rather than {@code plugin.getConfig()} for
+     * anything under this file; {@link CurrencyManager} and {@link ShopIntegrationManager} both do.
+     */
+    @Getter
+    private FileConfiguration sellConfig;
 
     @Getter
     private ShopIntegrationManager shopIntegrationManager;
@@ -48,15 +59,8 @@ public class ItemPriceManager {
             plugin.getDataFolder().mkdirs();
         }
 
-        loadConfiguration(); // Load configuration first to get the file name
-
-        priceFile = new File(plugin.getDataFolder(), PRICE_FILE_NAME);
-
-        if (!priceFile.exists()) {
-            plugin.saveResource(PRICE_FILE_NAME, false);
-        }
-
-        priceConfig = YamlConfiguration.loadConfiguration(priceFile);
+        // SellIntegrationConfigUpdater has already created and migrated the file by this point.
+        loadConfiguration();
 
         // Only initialize components if economy is enabled
         if (economyEnabled) {
@@ -83,14 +87,19 @@ public class ItemPriceManager {
     }
 
     private void loadConfiguration() {
-        FileConfiguration config = plugin.getConfig();
+        sellFile = new File(plugin.getDataFolder(), SELL_FILE_NAME);
+        if (!sellFile.exists()) {
+            plugin.saveResource(SELL_FILE_NAME, false);
+        }
+        sellConfig = YamlConfiguration.loadConfiguration(sellFile);
+        FileConfiguration config = sellConfig;
 
-        this.economyEnabled = config.getBoolean("sell_integration.enabled", true);
-        this.defaultPrice = config.getDouble("sell_integration.custom_prices.default_price", 1.0);
-        this.customPricesEnabled = config.getBoolean("sell_integration.custom_prices.enabled", true);
-        this.shopIntegrationEnabled = config.getBoolean("sell_integration.shop_integration.enabled", true);
+        this.economyEnabled = config.getBoolean("enabled", true);
+        this.defaultPrice = config.getDouble("custom_prices.default_price", 1.0);
+        this.customPricesEnabled = config.getBoolean("custom_prices.enabled", true);
+        this.shopIntegrationEnabled = config.getBoolean("shop_integration.enabled", true);
 
-        String modeString = config.getString("sell_integration.price_source_mode", "SHOP_PRIORITY");
+        String modeString = config.getString("price_source_mode", "SHOP_PRIORITY");
         try {
             this.priceSourceMode = PriceSourceMode.valueOf(modeString.toUpperCase());
         } catch (IllegalArgumentException e) {
@@ -137,9 +146,12 @@ public class ItemPriceManager {
 
     private void loadPrices() {
         itemPrices.clear();
-        for (String key : priceConfig.getKeys(false)) {
-            double price = priceConfig.getDouble(key, defaultPrice);
-            itemPrices.put(key, price);
+        ConfigurationSection prices = sellConfig.getConfigurationSection(PRICES_SECTION);
+        if (prices == null) {
+            return;
+        }
+        for (String key : prices.getKeys(false)) {
+            itemPrices.put(key, prices.getDouble(key, defaultPrice));
         }
     }
 
@@ -176,7 +188,7 @@ public class ItemPriceManager {
         if (material == null || !economyEnabled || !customPricesEnabled) return;
 
         itemPrices.put(material.name(), price);
-        priceConfig.set(material.name(), price);
+        sellConfig.set(PRICES_SECTION + "." + material.name(), price);
         saveConfig();
     }
 
@@ -185,9 +197,6 @@ public class ItemPriceManager {
 
         // Only reload components if economy is enabled
         if (economyEnabled) {
-            // Update price file path in case it changed
-            priceFile = new File(plugin.getDataFolder(), PRICE_FILE_NAME);
-
             // Reload currency manager
             if (currencyManager != null) {
                 currencyManager.reload();
@@ -208,7 +217,6 @@ public class ItemPriceManager {
 
             // Reload custom prices
             if (customPricesEnabled) {
-                priceConfig = YamlConfiguration.loadConfiguration(priceFile);
                 loadPrices();
             } else {
                 itemPrices.clear();
@@ -286,7 +294,7 @@ public class ItemPriceManager {
         if (material == null || !economyEnabled || !customPricesEnabled) return;
 
         itemPrices.remove(material.name());
-        priceConfig.set(material.name(), null);
+        sellConfig.set(PRICES_SECTION + "." + material.name(), null);
         saveConfig();
     }
 
@@ -382,9 +390,9 @@ public class ItemPriceManager {
         if (!economyEnabled) return;
 
         try {
-            priceConfig.save(priceFile);
+            sellConfig.save(sellFile);
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not save item prices configuration", e);
+            plugin.getLogger().log(Level.SEVERE, "Could not save " + SELL_FILE_NAME, e);
         }
     }
 

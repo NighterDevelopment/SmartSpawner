@@ -85,6 +85,11 @@ public class ReloadSubCommand extends BaseSubCommand {
             plugin.getSpawnerManager().reloadAllHolograms();
             plugin.reload();
 
+            // After plugin.reload(), which clears the parsed-time cache the autosave interval uses.
+            if (plugin.getSpawnerStorage() != null) {
+                plugin.getSpawnerStorage().reloadSettings();
+            }
+
             // Log new cache stats after reload if in debug mode
             if (plugin.getConfig().getBoolean("debug", false)) {
                 logCacheStats();

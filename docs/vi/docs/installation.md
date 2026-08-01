@@ -57,7 +57,8 @@ Plugin tự tạo file trong `plugins/SmartSpawner/`:
 | `config.yml` | Cấu hình chính: hành vi spawner, kinh tế, hiệu ứng |
 | `spawner_mobs.yml` | Bảng vật phẩm và XP cho từng loại mob |
 | `spawner_items.yml` | Bảng vật phẩm cho Item Spawner |
-| `item_prices.yml` | Giá bán vật phẩm tùy chỉnh |
+| `sell_integration.yml` | Kinh tế, tích hợp cửa hàng và giá bán tùy chỉnh |
+| `activity_log.yml` | Ghi nhật ký thao tác ra file và Discord |
 | `spawners.db` | Dữ liệu spawner lâu dài ở chế độ SQLite |
 | `language/` | Thư mục ngôn ngữ và thông báo có thể dịch |
 | `gui_layouts/` | Thư mục bố cục GUI |

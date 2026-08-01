@@ -19,7 +19,7 @@ The in-memory registry of spawners and the SQL persistence layer behind one inte
 
 ## Backend selection
 
-YAML storage was removed in 1.8. `SmartSpawner.initializeStorage()` reads `database.mode` and
+YAML storage was removed in 1.8. `SmartSpawner.initializeStorage()` reads `database.type` and
 **has no fallback**: if the pool or the handler fails to come up it returns false and `onEnable`
 disables the plugin. Running without persistence would discard every spawner on the next restart,
 which is worse than not starting. A config still set to `YAML` resolves to `SQLITE`
@@ -29,8 +29,14 @@ which is worse than not starting. A config still set to `YAML` resolves to `SQLI
 `plugin.getDatabaseManager()` and `plugin.getSpawnerStorage()` are both non-null whenever the plugin
 is enabled. Still go through `getSpawnerStorage()` rather than the handler.
 
-Migrations run right after a successful init, gated on `database.migrate_from_local` (default
+Migrations run right after a successful init, gated on `database.migrate-from-local` (default
 true) and each migration's own `needsMigration()`.
+
+The whole `database` section is flat and read once in `DatabaseManager`'s constructor, so every key in
+it needs a restart. The one exception is `database.autosave-interval`, which `reloadSettings()` picks
+up on `/ss reload`. The section was flattened and switched to kebab-case in 1.8.0; the two rename hops
+(`database.standalone.*`, then `database.sql.*`) are both in `ConfigMigrations.CONFIG` and must stay
+in that order.
 
 ## Database schema
 
@@ -93,9 +99,9 @@ Mutating a spawner does not write to disk. The flow is:
 mutate SpawnerData -> markSpawnerModified(id) / queueSpawnerForSaving(id) -> flushChanges() later
 ```
 
-`SpawnerDatabaseHandler` keeps `dirtySpawners` and `deletedSpawners` sets and flushes on a
-**hardcoded 5-minute** async timer (6000 ticks, `startSaveTask()`), plus on `WorldSaveEvent` and on
-shutdown. `shutdown()` is contractually required to flush before returning, and
+`SpawnerDatabaseHandler` keeps `dirtySpawners` and `deletedSpawners` sets and flushes on an async
+timer (`startSaveTask()`, `database.autosave-interval`, default 3m, floored at 30s), plus on
+`WorldSaveEvent` and on shutdown. `shutdown()` is contractually required to flush before returning, and
 `SmartSpawner.saveAndCleanup()` calls `spawnerStorage.shutdown()` before `databaseManager.shutdown()`.
 Keep that order: closing the pool first would lose the final flush.
 

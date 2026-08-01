@@ -21,7 +21,7 @@ Sell items directly from the spawner storage GUI with full economy support.
 - ShopGUI+
 - zShop
 
-Prices can also be defined manually in `item_prices.yml`.
+Prices can also be defined manually in `sell_integration.yml`.
 
 </FeatureCard>
 

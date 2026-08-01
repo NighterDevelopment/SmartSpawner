@@ -15,7 +15,7 @@ title: Integration Troubleshooting
 
 Confirm all of the following:
 
-- `sell_integration.enabled` is `true`.
+- `enabled` is `true` in `sell_integration.yml`.
 - A currency backend is available.
 - The selected price mode has at least one valid price source.
 - The player has `smartspawner.sellall`.

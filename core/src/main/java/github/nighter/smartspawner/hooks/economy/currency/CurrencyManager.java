@@ -3,6 +3,7 @@ package github.nighter.smartspawner.hooks.economy.currency;
 import github.nighter.smartspawner.SmartSpawner;
 import lombok.Getter;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import su.nightexpress.excellenteconomy.api.ExcellentEconomyAPI;
@@ -45,8 +46,10 @@ public class CurrencyManager {
     }
 
     private void loadConfiguration() {
-        this.configuredCurrencyType = plugin.getConfig().getString("sell_integration.currency", "VAULT");
-        this.configuredExcellentEconomyCurrency = plugin.getConfig().getString("sell_integration.excellenteconomy_currency", "coins");
+        // sell_integration.yml, held by ItemPriceManager, which builds this class.
+        FileConfiguration config = plugin.getItemPriceManager().getSellConfig();
+        this.configuredCurrencyType = config.getString("currency", "VAULT");
+        this.configuredExcellentEconomyCurrency = config.getString("excellenteconomy_currency", "coins");
     }
 
     private void setupCurrency() {

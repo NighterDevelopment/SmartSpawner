@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Ensures {@code activity_log.yml} exists and is up-to-date. Version-less: delegates to
@@ -39,8 +40,10 @@ public class ActivityLogConfigUpdater {
     /** Call this before anything reads {@code activity_log.yml}. */
     public void checkAndUpdate() {
         File file = new File(plugin.getDataFolder(), FILE_NAME);
-        renameLegacyFile(file);
-        importFileLoggingFromConfig(file);
+        if (importLegacySources(plugin.getDataFolder(), plugin.getLogger())) {
+            // config.yml was rewritten on disk, so Bukkit's cached copy is stale.
+            plugin.reloadConfig();
+        }
 
         boolean legacyLayout = isLegacyLayout(file);
         YamlMigrator.migrate(
@@ -50,26 +53,38 @@ public class ActivityLogConfigUpdater {
                 ConfigMigrations.ACTIVITY_LOG_LAYOUT,
                 plugin.getLogger());
         if (legacyLayout) {
-            rebuildFromDefaults(file);
+            rebuildFromDefaults(file, plugin.getResource(FILE_NAME), plugin.getLogger());
         }
     }
 
+    /**
+     * Replays both 1.8.0 file moves. Takes the data folder rather than the plugin so it can be
+     * exercised without a server.
+     *
+     * @return true when {@code config.yml} was rewritten and the caller must reload it
+     */
+    static boolean importLegacySources(File dataFolder, Logger log) {
+        File file = new File(dataFolder, FILE_NAME);
+        renameLegacyFile(dataFolder, file, log);
+        return importFileLoggingFromConfig(dataFolder, file, log);
+    }
+
     // Every key of this file moved in 1.8.0, so a file without a 'discord' section is a pre-1.8.0 one.
-    private boolean isLegacyLayout(File file) {
+    static boolean isLegacyLayout(File file) {
         return file.exists() && !YamlConfiguration.loadConfiguration(file).contains("discord");
     }
 
     // discord_logging.yml -> activity_log.yml. The keys inside are moved by the migrator afterwards.
-    private void renameLegacyFile(File file) {
+    private static void renameLegacyFile(File dataFolder, File file, Logger log) {
         if (file.exists()) return;
 
-        File legacy = new File(plugin.getDataFolder(), LEGACY_FILE_NAME);
+        File legacy = new File(dataFolder, LEGACY_FILE_NAME);
         if (!legacy.exists()) return;
 
         if (legacy.renameTo(file)) {
-            plugin.getLogger().info("Renamed " + LEGACY_FILE_NAME + " to " + FILE_NAME);
+            log.info("Renamed " + LEGACY_FILE_NAME + " to " + FILE_NAME);
         } else {
-            plugin.getLogger().warning("Could not rename " + LEGACY_FILE_NAME + " to " + FILE_NAME
+            log.warning("Could not rename " + LEGACY_FILE_NAME + " to " + FILE_NAME
                     + ", the Discord settings in it will be ignored.");
         }
     }
@@ -84,15 +99,14 @@ public class ActivityLogConfigUpdater {
      * worth more than the old file's formatting. Values are still the user's, and a key they added
      * that the defaults do not have is carried over.</p>
      */
-    private void rebuildFromDefaults(File file) {
-        InputStream resource = plugin.getResource(FILE_NAME);
+    static void rebuildFromDefaults(File file, InputStream resource, Logger log) {
         if (resource == null) return;
 
         YamlConfiguration rebuilt;
         try (InputStreamReader reader = new InputStreamReader(resource, StandardCharsets.UTF_8)) {
             rebuilt = YamlConfiguration.loadConfiguration(reader);
         } catch (IOException e) {
-            plugin.getLogger().log(Level.WARNING, "Could not read the bundled " + FILE_NAME, e);
+            log.log(Level.WARNING, "Could not read the bundled " + FILE_NAME, e);
             return;
         }
 
@@ -105,18 +119,18 @@ public class ActivityLogConfigUpdater {
         try {
             rebuilt.save(file);
         } catch (IOException e) {
-            plugin.getLogger().log(Level.WARNING, "Failed to rewrite " + FILE_NAME, e);
+            log.log(Level.WARNING, "Failed to rewrite " + FILE_NAME, e);
         }
     }
 
     // config.yml 'logging' -> activity_log.yml 'file', then drops the section from config.yml.
-    private void importFileLoggingFromConfig(File file) {
-        File configFile = new File(plugin.getDataFolder(), "config.yml");
-        if (!configFile.exists()) return;
+    private static boolean importFileLoggingFromConfig(File dataFolder, File file, Logger log) {
+        File configFile = new File(dataFolder, "config.yml");
+        if (!configFile.exists()) return false;
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         ConfigurationSection logging = config.getConfigurationSection(LEGACY_CONFIG_SECTION);
-        if (logging == null) return;
+        if (logging == null) return false;
 
         YamlConfiguration activityLog = YamlConfiguration.loadConfiguration(file);
         for (String key : logging.getKeys(true)) {
@@ -130,18 +144,18 @@ public class ActivityLogConfigUpdater {
         try {
             activityLog.save(file);
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to move the logging settings into " + FILE_NAME, e);
-            return;
+            log.log(Level.SEVERE, "Failed to move the logging settings into " + FILE_NAME, e);
+            return false;
         }
 
         config.set(LEGACY_CONFIG_SECTION, null);
         try {
             config.save(configFile);
         } catch (IOException e) {
-            plugin.getLogger().log(Level.WARNING, "Failed to remove the old logging section from config.yml", e);
-            return;
+            log.log(Level.WARNING, "Failed to remove the old logging section from config.yml", e);
+            return false;
         }
-        plugin.reloadConfig();
-        plugin.getLogger().info("Moved the logging settings from config.yml into " + FILE_NAME);
+        log.info("Moved the logging settings from config.yml into " + FILE_NAME);
+        return true;
     }
 }
