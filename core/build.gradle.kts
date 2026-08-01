@@ -1,16 +1,14 @@
 plugins {
-    id("com.gradleup.shadow")
-    id("xyz.jpenilla.run-paper") version "3.0.2"
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.run.paper)
 }
 
 val shade: Configuration by configurations.creating
 configurations {
     implementation.get().extendsFrom(shade)
 
-    // The tests need paper-api and nothing else. Left to inherit `implementation`, they would pull
-    // in the protection plugins, several of which ship their own relocated Guava, Gson and WorldGuard
-    // and fail to resolve against paper-api. Main's compiled classes stay on the classpath either
-    // way, which is all the tests actually exercise.
+    // Tests need paper-api alone. Inheriting `implementation` drags in the protection plugins,
+    // several of which fail to resolve against paper-api.
     testImplementation.get().setExtendsFrom(emptyList())
     testRuntimeOnly.get().setExtendsFrom(emptyList())
 }
@@ -19,62 +17,68 @@ dependencies {
     api(project(":api"))
 
     @Suppress("GradleDependency")
-    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly(libs.paper.api)
 
-    shade("com.zaxxer:HikariCP:7.1.0")
-    shade("org.mariadb.jdbc:mariadb-java-client:3.5.10")
-    // Paper bundles sqlite-jdbc on the server classpath, so compileOnly is enough
-    compileOnly("org.xerial:sqlite-jdbc:3.53.2.1")
+    // The only configuration packaged into the plugin jar, see `tasks.shadowJar` below.
+    shade(libs.hikaricp)
+    shade(libs.mariadb)
+    shade(libs.bstats)
+    compileOnly(libs.sqlite)
 
-    compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
-    compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.1.0-SNAPSHOT")
-    compileOnly("com.github.brcdev-minecraft:shopgui-api:3.2.0") {
+    compileOnly(libs.floodgate)
+    compileOnly(libs.worldguard) // also supplies WorldEdit, for BukkitAdapter
+    compileOnly(libs.shopgui) {
         exclude(group = "*")
     }
-    compileOnly("com.palmergames.bukkit.towny:towny:0.103.0.7")
-    compileOnly("com.bgsoftware:SuperiorSkyblockAPI:2026.2")
-    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
-    compileOnly("su.nightexpress.excellenteconomy:ExcellentEconomy:2.8.0")
-    compileOnly("su.nightexpress.nightcore:main:2.16.4")
-    compileOnly("com.github.Gypopo:EconomyShopGUI-API:1.10.1")
-    compileOnly("world.bentobox:bentobox:3.21.0")
-    compileOnly("io.github.fabiozumbi12.RedProtect:RedProtect-Core:8.1.2") {
+    compileOnly(libs.towny)
+    compileOnly(libs.superiorskyblock)
+    compileOnly(libs.vault)
+    compileOnly(libs.excellenteconomy)
+    compileOnly(libs.nightcore)
+    compileOnly(libs.economyshopgui)
+    compileOnly(libs.bentobox)
+    compileOnly(libs.redprotect.core) {
         exclude(group = "*")
     }
-    compileOnly("io.github.fabiozumbi12.RedProtect:RedProtect-Spigot:8.1.2") {
+    compileOnly(libs.redprotect.spigot) {
         exclude(group = "*")
     }
-    compileOnly("dev.aurelium:auraskills-api-bukkit:2.3.12")
-    compileOnly("pl.minecodes.plots:plugin-api:4.6.2")
-    compileOnly("fr.maxlego08.shop:zshop-api:3.3.4")
-    compileOnly("fr.maxlego08.menu:zmenu-api:1.1.1.6")
+    // slate drags in adventure-platform-bukkit and five transitives; nothing here compiles against it.
+    compileOnly(libs.auraskills) {
+        exclude(group = "dev.aurelium", module = "slate")
+    }
+    compileOnly(libs.minecodes.plots)
+    compileOnly(libs.zshop)
+    compileOnly(libs.zmenu)
 
-    implementation("com.github.GriefPrevention:GriefPrevention:18.0.0")
-    implementation("com.github.IncrediblePlugins:LandsAPI:7.25.4")
-    implementation("com.github.Xyness:SimpleClaimSystem-API:v2.5.10")
-    implementation("com.github.Xyness:SimpleClaimSystem:1.13.1")
-    implementation("com.github.Zrips:Residence:6.0.2.3") {
-        exclude(group = "org.bukkit")
+    implementation(libs.griefprevention)
+    implementation(libs.lands)
+    implementation(libs.simpleclaimsystem.api)
+    implementation(libs.simpleclaimsystem)
+    // Otherwise pulls BigDoors, dynmap-api and an older WorldEdit/WorldGuard pair.
+    implementation(libs.residence) {
+        isTransitive = false
     }
 
-    compileOnly("io.lumine:Mythic-Dist:5.13.0")
-    compileOnly("com.iridium:IridiumSkyblock:4.1.4")
-    compileOnly("dev.kitteh:factions:4.6.0")
-    compileOnly("nl.rutgerkok:blocklocker:1.13")
+    compileOnly(libs.mythicmobs)
+    compileOnly(libs.iridiumskyblock)
+    compileOnly(libs.factions)
+    compileOnly(libs.blocklocker)
 
-    implementation(platform("com.intellectualsites.bom:bom-newest:1.56"))
-    compileOnly("com.intellectualsites.plotsquared:plotsquared-core")
+    // Pinned directly: com.intellectualsites.bom:bom-newest would downgrade paper-api and guava.
+    // adventure comes from paper-api.
+    compileOnly(libs.plotsquared) {
+        exclude(group = "net.kyori")
+    }
 
-    compileOnly("org.projectlombok:lombok:1.18.46")
-    annotationProcessor("org.projectlombok:lombok:1.18.46")
-    shade("org.bstats:bstats-bukkit:3.2.1")
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
 
-    // Tests run without a server. paper-api is on the test classpath for YamlConfiguration, which
-    // parses and writes YAML on its own; anything needing a live Bukkit instance is out of scope.
-    testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-    testImplementation(platform("org.junit:junit-bom:6.1.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // paper-api is here for YamlConfiguration only; nothing under test needs a live server.
+    testImplementation(libs.paper.api)
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.launcher)
 }
 
 tasks.test {
@@ -86,7 +90,6 @@ tasks.test {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.encoding = "UTF-8"
     options.compilerArgs.addAll(listOf("-nowarn", "-Xlint:-deprecation"))
 }
 
