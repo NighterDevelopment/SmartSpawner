@@ -53,22 +53,21 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
     // SQL Statements
     private static final String SELECT_COLUMNS = """
-            spawner_id, world, loc_x, loc_y, loc_z, entity, item_spawner_type,
-            exp, active, activation_range, stop, delay,
-            max_loot_slots, max_stored_exp, min_mobs, max_mobs, stack_size,
-            max_stack_size, last_spawn_time, is_at_capacity, last_interacted_player,
-            preferred_sort_item, filtered_items, storage_items
+            spawner_id, world, loc_x, loc_y, loc_z,
+            entity_type, itemspawner_type, stack_size, max_stack_size,
+            active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
+            max_loot_slots, is_at_capacity, exp, max_stored_exp,
+            last_interacted_player, preferred_sort_item, filtered_items, storage_items
             """;
 
     // MySQL/MariaDB upsert syntax
     private static final String UPSERT_SQL_MYSQL = """
             INSERT INTO %s (
                 spawner_id, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
-                entity, item_spawner_type, exp, active,
-                activation_range, stop, delay, max_loot_slots,
-                max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
-                last_spawn_time, is_at_capacity, last_interacted_player,
-                preferred_sort_item, filtered_items, storage_items, total_items
+                entity_type, itemspawner_type, stack_size, max_stack_size,
+                active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
+                max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
+                last_interacted_player, preferred_sort_item, filtered_items, storage_items
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 world = VALUES(world),
@@ -77,37 +76,36 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 loc_z = VALUES(loc_z),
                 chunk_x = VALUES(chunk_x),
                 chunk_z = VALUES(chunk_z),
-                entity = VALUES(entity),
-                item_spawner_type = VALUES(item_spawner_type),
-                exp = VALUES(exp),
-                active = VALUES(active),
-                activation_range = VALUES(activation_range),
-                stop = VALUES(stop),
-                delay = VALUES(delay),
-                max_loot_slots = VALUES(max_loot_slots),
-                max_stored_exp = VALUES(max_stored_exp),
-                min_mobs = VALUES(min_mobs),
-                max_mobs = VALUES(max_mobs),
+                entity_type = VALUES(entity_type),
+                itemspawner_type = VALUES(itemspawner_type),
                 stack_size = VALUES(stack_size),
                 max_stack_size = VALUES(max_stack_size),
+                active = VALUES(active),
+                stop = VALUES(stop),
+                activation_range = VALUES(activation_range),
+                delay = VALUES(delay),
                 last_spawn_time = VALUES(last_spawn_time),
+                min_mobs = VALUES(min_mobs),
+                max_mobs = VALUES(max_mobs),
+                max_loot_slots = VALUES(max_loot_slots),
                 is_at_capacity = VALUES(is_at_capacity),
+                total_items = VALUES(total_items),
+                exp = VALUES(exp),
+                max_stored_exp = VALUES(max_stored_exp),
                 last_interacted_player = VALUES(last_interacted_player),
                 preferred_sort_item = VALUES(preferred_sort_item),
                 filtered_items = VALUES(filtered_items),
-                storage_items = VALUES(storage_items),
-                total_items = VALUES(total_items)
+                storage_items = VALUES(storage_items)
             """;
 
     // SQLite upsert syntax (ON CONFLICT)
     private static final String UPSERT_SQL_SQLITE = """
             INSERT INTO %s (
                 spawner_id, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
-                entity, item_spawner_type, exp, active,
-                activation_range, stop, delay, max_loot_slots,
-                max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
-                last_spawn_time, is_at_capacity, last_interacted_player,
-                preferred_sort_item, filtered_items, storage_items, total_items
+                entity_type, itemspawner_type, stack_size, max_stack_size,
+                active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
+                max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
+                last_interacted_player, preferred_sort_item, filtered_items, storage_items
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(spawner_id) DO UPDATE SET
                 world = excluded.world,
@@ -116,32 +114,32 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 loc_z = excluded.loc_z,
                 chunk_x = excluded.chunk_x,
                 chunk_z = excluded.chunk_z,
-                entity = excluded.entity,
-                item_spawner_type = excluded.item_spawner_type,
-                exp = excluded.exp,
-                active = excluded.active,
-                activation_range = excluded.activation_range,
-                stop = excluded.stop,
-                delay = excluded.delay,
-                max_loot_slots = excluded.max_loot_slots,
-                max_stored_exp = excluded.max_stored_exp,
-                min_mobs = excluded.min_mobs,
-                max_mobs = excluded.max_mobs,
+                entity_type = excluded.entity_type,
+                itemspawner_type = excluded.itemspawner_type,
                 stack_size = excluded.stack_size,
                 max_stack_size = excluded.max_stack_size,
+                active = excluded.active,
+                stop = excluded.stop,
+                activation_range = excluded.activation_range,
+                delay = excluded.delay,
                 last_spawn_time = excluded.last_spawn_time,
+                min_mobs = excluded.min_mobs,
+                max_mobs = excluded.max_mobs,
+                max_loot_slots = excluded.max_loot_slots,
                 is_at_capacity = excluded.is_at_capacity,
+                total_items = excluded.total_items,
+                exp = excluded.exp,
+                max_stored_exp = excluded.max_stored_exp,
                 last_interacted_player = excluded.last_interacted_player,
                 preferred_sort_item = excluded.preferred_sort_item,
                 filtered_items = excluded.filtered_items,
-                storage_items = excluded.storage_items,
-                total_items = excluded.total_items
+                storage_items = excluded.storage_items
             """;
 
     /** Columns the cross-server list GUI needs. Deliberately excludes the item blob. */
     private static final String CROSS_SERVER_COLUMNS = """
             spawner_id, world, loc_x, loc_y, loc_z,
-            entity, stack_size, stop, last_interacted_player,
+            entity_type, stack_size, stop, last_interacted_player,
             exp, total_items
             """;
 
@@ -380,24 +378,24 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         stmt.setInt(7, loc.getBlockZ() >> 4);
         stmt.setString(8, spawner.getEntityType().name());
         stmt.setString(9, spawner.isItemSpawner() ? spawner.getSpawnedItemMaterial().name() : null);
-        stmt.setLong(10, Math.max(0L, spawner.getSpawnerExp()));
-        stmt.setBoolean(11, spawner.getSpawnerActive());
-        stmt.setInt(12, spawner.getSpawnerRange());
+        stmt.setInt(10, spawner.getStackSize());
+        stmt.setInt(11, spawner.getMaxStackSize());
+        stmt.setBoolean(12, spawner.getSpawnerActive());
         stmt.setBoolean(13, spawner.getSpawnerStop().get());
-        stmt.setLong(14, spawner.getSpawnDelay());
-        stmt.setInt(15, spawner.getMaxSpawnerLootSlots());
-        stmt.setLong(16, spawner.getMaxStoredExp());
+        stmt.setInt(14, spawner.getSpawnerRange());
+        stmt.setLong(15, spawner.getSpawnDelay());
+        stmt.setLong(16, spawner.getLastSpawnTime());
         stmt.setInt(17, spawner.getMinMobs());
         stmt.setInt(18, spawner.getMaxMobs());
-        stmt.setInt(19, spawner.getStackSize());
-        stmt.setInt(20, spawner.getMaxStackSize());
-        stmt.setLong(21, spawner.getLastSpawnTime());
-        stmt.setBoolean(22, spawner.getIsAtCapacity());
-        stmt.setString(23, spawner.getLastInteractedPlayer());
-        stmt.setString(24, spawner.getPreferredSortItem() != null ? spawner.getPreferredSortItem().name() : null);
-        stmt.setString(25, serializeFilteredItems(spawner.getFilteredItems()));
-        stmt.setBytes(26, items);
-        stmt.setLong(27, totalItems);
+        stmt.setInt(19, spawner.getMaxSpawnerLootSlots());
+        stmt.setBoolean(20, spawner.getIsAtCapacity());
+        stmt.setLong(21, totalItems);
+        stmt.setLong(22, Math.max(0L, spawner.getSpawnerExp()));
+        stmt.setLong(23, spawner.getMaxStoredExp());
+        stmt.setString(24, spawner.getLastInteractedPlayer());
+        stmt.setString(25, spawner.getPreferredSortItem() != null ? spawner.getPreferredSortItem().name() : null);
+        stmt.setString(26, serializeFilteredItems(spawner.getFilteredItems()));
+        stmt.setBytes(27, items);
         return true;
     }
 
@@ -504,7 +502,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         }
 
         Location location = new Location(world, x, y, z);
-        String entityTypeStr = rs.getString("entity");
+        String entityTypeStr = rs.getString("entity_type");
         EntityType entityType;
         try {
             entityType = EntityType.valueOf(entityTypeStr);
@@ -515,7 +513,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
         // Create spawner based on type
         SpawnerData spawner;
-        String itemMaterialStr = rs.getString("item_spawner_type");
+        String itemMaterialStr = rs.getString("itemspawner_type");
         if (entityType == EntityType.ITEM && itemMaterialStr != null) {
             try {
                 Material itemMaterial = Material.valueOf(itemMaterialStr);
@@ -804,7 +802,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
                         EntityType entityType;
                         try {
-                            entityType = EntityType.valueOf(rs.getString("entity"));
+                            entityType = EntityType.valueOf(rs.getString("entity_type"));
                         } catch (IllegalArgumentException e) {
                             entityType = EntityType.PIG; // Fallback
                         }
@@ -911,7 +909,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
                         EntityType entityType;
                         try {
-                            entityType = EntityType.valueOf(rs.getString("entity"));
+                            entityType = EntityType.valueOf(rs.getString("entity_type"));
                         } catch (IllegalArgumentException e) {
                             entityType = EntityType.PIG; // Fallback
                         }

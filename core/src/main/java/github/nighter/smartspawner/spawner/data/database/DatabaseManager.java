@@ -100,34 +100,40 @@ public class DatabaseManager {
                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
                 spawner_id VARCHAR(64) NOT NULL,
 
-                -- Location (separate columns for indexing)
+                -- Location (separate columns for indexing).
+                -- chunk_x/chunk_z are derived from loc_x/loc_z, indexed for per-chunk lookups
                 world VARCHAR(128) NOT NULL,
                 loc_x INT NOT NULL,
                 loc_y INT NOT NULL,
                 loc_z INT NOT NULL,
-
-                -- Chunk coordinates, derived from loc_x/loc_z, indexed for per-chunk lookups
                 chunk_x INT NOT NULL DEFAULT 0,
                 chunk_z INT NOT NULL DEFAULT 0,
 
-                -- Entity data
-                entity VARCHAR(64) NOT NULL,
-                item_spawner_type VARCHAR(64) DEFAULT NULL,
+                -- What the spawner spawns. itemspawner_type is only set when entity_type is ITEM
+                entity_type VARCHAR(64) NOT NULL,
+                itemspawner_type VARCHAR(64) DEFAULT NULL,
 
-                -- Settings
-                exp BIGINT NOT NULL DEFAULT 0,
-                active BOOLEAN NOT NULL DEFAULT TRUE,
-                activation_range INT NOT NULL DEFAULT 16,
-                stop BOOLEAN NOT NULL DEFAULT TRUE,
-                delay BIGINT NOT NULL DEFAULT 500,
-                max_loot_slots INT NOT NULL DEFAULT 45,
-                max_stored_exp BIGINT NOT NULL DEFAULT 1000,
-                min_mobs INT NOT NULL DEFAULT 1,
-                max_mobs INT NOT NULL DEFAULT 4,
+                -- Stacking
                 stack_size INT NOT NULL DEFAULT 1,
                 max_stack_size INT NOT NULL DEFAULT 1000,
+
+                -- Spawning behaviour
+                active BOOLEAN NOT NULL DEFAULT TRUE,
+                stop BOOLEAN NOT NULL DEFAULT TRUE,
+                activation_range INT NOT NULL DEFAULT 16,
+                delay BIGINT NOT NULL DEFAULT 500,
                 last_spawn_time BIGINT NOT NULL DEFAULT 0,
+                min_mobs INT NOT NULL DEFAULT 1,
+                max_mobs INT NOT NULL DEFAULT 4,
+
+                -- Stored loot. total_items is denormalized from storage_items below
+                max_loot_slots INT NOT NULL DEFAULT 45,
                 is_at_capacity BOOLEAN NOT NULL DEFAULT FALSE,
+                total_items BIGINT NOT NULL DEFAULT 0,
+
+                -- Stored experience
+                exp BIGINT NOT NULL DEFAULT 0,
+                max_stored_exp BIGINT NOT NULL DEFAULT 1000,
 
                 -- Player interaction
                 last_interacted_player VARCHAR(64) DEFAULT NULL,
@@ -136,7 +142,6 @@ public class DatabaseManager {
 
                 -- Virtual inventory, see SpawnerInventoryCodec
                 storage_items MEDIUMBLOB DEFAULT NULL,
-                total_items BIGINT NOT NULL DEFAULT 0,
 
                 -- Timestamps
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -156,34 +161,40 @@ public class DatabaseManager {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 spawner_id VARCHAR(64) NOT NULL,
 
-                -- Location (separate columns for indexing)
+                -- Location (separate columns for indexing).
+                -- chunk_x/chunk_z are derived from loc_x/loc_z, indexed for per-chunk lookups
                 world VARCHAR(128) NOT NULL,
                 loc_x INT NOT NULL,
                 loc_y INT NOT NULL,
                 loc_z INT NOT NULL,
-
-                -- Chunk coordinates, derived from loc_x/loc_z, indexed for per-chunk lookups
                 chunk_x INT NOT NULL DEFAULT 0,
                 chunk_z INT NOT NULL DEFAULT 0,
 
-                -- Entity data
-                entity VARCHAR(64) NOT NULL,
-                item_spawner_type VARCHAR(64) DEFAULT NULL,
+                -- What the spawner spawns. itemspawner_type is only set when entity_type is ITEM
+                entity_type VARCHAR(64) NOT NULL,
+                itemspawner_type VARCHAR(64) DEFAULT NULL,
 
-                -- Settings
-                exp BIGINT NOT NULL DEFAULT 0,
-                active BOOLEAN NOT NULL DEFAULT 1,
-                activation_range INT NOT NULL DEFAULT 16,
-                stop BOOLEAN NOT NULL DEFAULT 1,
-                delay BIGINT NOT NULL DEFAULT 500,
-                max_loot_slots INT NOT NULL DEFAULT 45,
-                max_stored_exp BIGINT NOT NULL DEFAULT 1000,
-                min_mobs INT NOT NULL DEFAULT 1,
-                max_mobs INT NOT NULL DEFAULT 4,
+                -- Stacking
                 stack_size INT NOT NULL DEFAULT 1,
                 max_stack_size INT NOT NULL DEFAULT 1000,
+
+                -- Spawning behaviour
+                active BOOLEAN NOT NULL DEFAULT 1,
+                stop BOOLEAN NOT NULL DEFAULT 1,
+                activation_range INT NOT NULL DEFAULT 16,
+                delay BIGINT NOT NULL DEFAULT 500,
                 last_spawn_time BIGINT NOT NULL DEFAULT 0,
+                min_mobs INT NOT NULL DEFAULT 1,
+                max_mobs INT NOT NULL DEFAULT 4,
+
+                -- Stored loot. total_items is denormalized from storage_items below
+                max_loot_slots INT NOT NULL DEFAULT 45,
                 is_at_capacity BOOLEAN NOT NULL DEFAULT 0,
+                total_items BIGINT NOT NULL DEFAULT 0,
+
+                -- Stored experience
+                exp BIGINT NOT NULL DEFAULT 0,
+                max_stored_exp BIGINT NOT NULL DEFAULT 1000,
 
                 -- Player interaction
                 last_interacted_player VARCHAR(64) DEFAULT NULL,
@@ -192,7 +203,6 @@ public class DatabaseManager {
 
                 -- Virtual inventory, see SpawnerInventoryCodec
                 storage_items BLOB DEFAULT NULL,
-                total_items BIGINT NOT NULL DEFAULT 0,
 
                 -- Timestamps
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -552,10 +562,10 @@ public class DatabaseManager {
      */
     private static final String REBUILD_COLUMNS = """
             id, spawner_id, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
-            entity, item_spawner_type, exp, active, activation_range, stop, delay,
-            max_loot_slots, max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
-            last_spawn_time, is_at_capacity, last_interacted_player, preferred_sort_item,
-            filtered_items, storage_items, total_items
+            entity_type, itemspawner_type, stack_size, max_stack_size,
+            active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
+            max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
+            last_interacted_player, preferred_sort_item, filtered_items, storage_items
             """;
 
     /**
@@ -923,12 +933,12 @@ public class DatabaseManager {
     /**
      * Columns 1.7.x wrote, paired with the name 1.8.0 uses. The old names repeated the table's own
      * subject on every column, and {@code spawner_range} was the only one that could not simply be
-     * shortened: {@code range} is a reserved word in MySQL 8.
+     * shortened: {@code range} is a reserved word in MySQL 8. {@code entity_type} keeps its 1.7.x
+     * name and so is deliberately absent from this table.
      */
     static final String[][] COLUMN_RENAMES = {
             {"world_name", "world"},
-            {"entity_type", "entity"},
-            {"item_spawner_material", "item_spawner_type"},
+            {"item_spawner_material", "itemspawner_type"},
             {"spawner_exp", "exp"},
             {"spawner_active", "active"},
             {"spawner_range", "activation_range"},

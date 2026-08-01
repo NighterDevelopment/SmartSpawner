@@ -53,7 +53,8 @@ All notable changes to SmartSpawner are documented in this file.
 - The `database` section was flattened and its keys now use hyphens. `mode` is `type`, `table_prefix` is `table-prefix`, `server_name` is `server-name`, `sync_across_servers` is `sync-across-servers`, `migrate_from_local` is `migrate-from-local`, `sqlite.file` is `sqlite-file`, and the four `sql` connection keys moved up a level.
 - `sql.pool.maximum-size` is now `pool-size` and covers both storage modes. The other pool tuning keys and `sqlite.pool_size` were removed and are set internally.
 - The new `database.autosave-interval` accepts the usual time format, with a minimum of 30 seconds. It is the only setting in the section that `/ss reload` applies.
-- Database columns were shortened: `world_name` is `world`, `entity_type` is `entity`, `item_spawner_material` is `item_spawner_type`, `spawner_exp` is `exp`, `spawner_active` is `active`, `spawner_range` is `activation_range`, `spawner_stop` is `stop`, `spawn_delay` is `delay`, and `max_spawner_loot_slots` is `max_loot_slots`.
+- Database columns were shortened: `world_name` is `world`, `item_spawner_material` is `itemspawner_type`, `spawner_exp` is `exp`, `spawner_active` is `active`, `spawner_range` is `activation_range`, `spawner_stop` is `stop`, `spawn_delay` is `delay`, and `max_spawner_loot_slots` is `max_loot_slots`. `entity_type` keeps its name.
+- Columns are now grouped by subject in the table, so location, spawner type, stacking, spawning, stored loot, stored experience and player settings each sit together.
 - The `server_name` column was removed. A table now holds one server's spawners and says which in its name, so the column held the same value on every row.
 - With `sync-across-servers` on, this server's table is `<prefix><server-name>_data` instead of `<prefix>data`. Switching the setting renames the table, and an existing table at the target name is never overwritten.
 

@@ -53,9 +53,19 @@ existing target. Anything that used to filter on `server_name` now picks a *tabl
 server names back off the table names.
 
 Column names were shortened in 1.8.0 (`world_name` to `world`, `spawner_exp` to `exp`, and so on;
-see `DatabaseManager.COLUMN_RENAMES`). `spawner_range` became `activation_range`, not `range`,
-because `range` is reserved in MySQL 8. The v1 to v2 migration step deliberately still uses the 1.7.x
-names, because it reads a 1.7.x table; only the v3 step onwards sees the current ones.
+see `DatabaseManager.COLUMN_RENAMES`). Three exceptions to the shortening: `spawner_range` became
+`activation_range`, not `range`, because `range` is reserved in MySQL 8; `entity_type` keeps its
+1.7.x name, so it is absent from `COLUMN_RENAMES`; and `item_spawner_material` became
+`itemspawner_type`, which pairs with it. The v1 to v2 migration step deliberately still uses the
+1.7.x names, because it reads a 1.7.x table; only the v3 step onwards sees the current ones.
+
+Columns are declared grouped by subject (location, spawner type, stacking, spawning, stored loot,
+stored experience, player preferences, timestamps) and the SQL constants mirror that order. The
+order is cosmetic to SQL but not to the prepared statements: `SELECT_COLUMNS`, both upserts in
+`SpawnerDatabaseHandler`, both migrations and `REBUILD_COLUMNS` all bind by position, so moving a
+column means moving its `setX(n, ...)` call too. Only fresh tables and tables rebuilt by
+`dropServerNameColumn()` get the physical order; a table migrated by `ALTER TABLE` keeps the old
+one and works the same.
 
 `spawner_schema_meta.schema_version` drives `runSchemaMigrations()`. Adding a step means bumping
 `CURRENT_SCHEMA_VERSION` and adding a case to `applyMigrationStep`. Two ordering rules:
