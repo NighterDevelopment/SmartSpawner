@@ -50,6 +50,10 @@ The plugin creates two tables, named after `database.table-prefix`: `sspawner_da
 database, or to keep two SmartSpawner installs apart in one MySQL database. Existing tables are
 renamed automatically when the prefix changes.
 
+With `sync-across-servers` on, each server gets its own table named after it, for example
+`sspawner_server1_data`. Turning the setting on or off renames the table to match, and a table
+already sitting at the target name is never overwritten. The console says so if it finds one.
+
 ::: tip
 Keep a copy of your `plugins/SmartSpawner/` folder before updating, as you would for any update that
 touches saved data.

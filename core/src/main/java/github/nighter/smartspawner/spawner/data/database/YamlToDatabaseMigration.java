@@ -36,13 +36,13 @@ public class YamlToDatabaseMigration {
     // MySQL/MariaDB insert syntax
     private static final String INSERT_SQL_MYSQL = """
             INSERT INTO %s (
-                spawner_id, server_name, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
+                spawner_id, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity, item_spawner_type, exp, active,
                 activation_range, stop, delay, max_loot_slots,
                 max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                 last_spawn_time, is_at_capacity, last_interacted_player,
                 preferred_sort_item, filtered_items, storage_items, total_items
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 world = VALUES(world),
                 loc_x = VALUES(loc_x),
@@ -75,14 +75,14 @@ public class YamlToDatabaseMigration {
     // SQLite insert syntax
     private static final String INSERT_SQL_SQLITE = """
             INSERT INTO %s (
-                spawner_id, server_name, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
+                spawner_id, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity, item_spawner_type, exp, active,
                 activation_range, stop, delay, max_loot_slots,
                 max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                 last_spawn_time, is_at_capacity, last_interacted_player,
                 preferred_sort_item, filtered_items, storage_items, total_items
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(server_name, spawner_id) DO UPDATE SET
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(spawner_id) DO UPDATE SET
                 world = excluded.world,
                 loc_x = excluded.loc_x,
                 loc_y = excluded.loc_y,
@@ -352,33 +352,32 @@ public class YamlToDatabaseMigration {
 
         // Set statement parameters
         stmt.setString(1, spawnerId);
-        stmt.setString(2, serverName);
-        stmt.setString(3, worldName);
-        stmt.setInt(4, locX);
-        stmt.setInt(5, locY);
-        stmt.setInt(6, locZ);
-        stmt.setInt(7, locX >> 4);
-        stmt.setInt(8, locZ >> 4);
-        stmt.setString(9, entityType.name());
-        stmt.setString(10, itemSpawnerMaterial);
-        stmt.setInt(11, spawnerExp);
-        stmt.setBoolean(12, spawnerActive);
-        stmt.setInt(13, spawnerRange);
-        stmt.setBoolean(14, spawnerStop);
-        stmt.setLong(15, spawnDelay);
-        stmt.setInt(16, maxSpawnerLootSlots);
-        stmt.setInt(17, maxStoredExp);
-        stmt.setInt(18, minMobs);
-        stmt.setInt(19, maxMobs);
-        stmt.setInt(20, stackSize);
-        stmt.setInt(21, maxStackSize);
-        stmt.setLong(22, lastSpawnTime);
-        stmt.setBoolean(23, isAtCapacity);
-        stmt.setString(24, lastInteractedPlayer);
-        stmt.setString(25, preferredSortItemStr);
-        stmt.setString(26, filteredItemsStr);
-        stmt.setBytes(27, itemsBlob);
-        stmt.setLong(28, SpawnerInventoryCodec.totalItems(items));
+        stmt.setString(2, worldName);
+        stmt.setInt(3, locX);
+        stmt.setInt(4, locY);
+        stmt.setInt(5, locZ);
+        stmt.setInt(6, locX >> 4);
+        stmt.setInt(7, locZ >> 4);
+        stmt.setString(8, entityType.name());
+        stmt.setString(9, itemSpawnerMaterial);
+        stmt.setInt(10, spawnerExp);
+        stmt.setBoolean(11, spawnerActive);
+        stmt.setInt(12, spawnerRange);
+        stmt.setBoolean(13, spawnerStop);
+        stmt.setLong(14, spawnDelay);
+        stmt.setInt(15, maxSpawnerLootSlots);
+        stmt.setInt(16, maxStoredExp);
+        stmt.setInt(17, minMobs);
+        stmt.setInt(18, maxMobs);
+        stmt.setInt(19, stackSize);
+        stmt.setInt(20, maxStackSize);
+        stmt.setLong(21, lastSpawnTime);
+        stmt.setBoolean(22, isAtCapacity);
+        stmt.setString(23, lastInteractedPlayer);
+        stmt.setString(24, preferredSortItemStr);
+        stmt.setString(25, filteredItemsStr);
+        stmt.setBytes(26, itemsBlob);
+        stmt.setLong(27, SpawnerInventoryCodec.totalItems(items));
 
         return true;
     }

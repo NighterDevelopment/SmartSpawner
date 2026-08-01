@@ -29,13 +29,13 @@ public class SqliteToMySqlMigration {
     // MySQL insert syntax (target)
     private static final String INSERT_SQL_MYSQL = """
             INSERT INTO %s (
-                spawner_id, server_name, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
+                spawner_id, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity, item_spawner_type, exp, active,
                 activation_range, stop, delay, max_loot_slots,
                 max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                 last_spawn_time, is_at_capacity, last_interacted_player,
                 preferred_sort_item, filtered_items, storage_items, total_items
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 world = VALUES(world),
                 loc_x = VALUES(loc_x),
@@ -69,7 +69,7 @@ public class SqliteToMySqlMigration {
     private static final String TABLE_PLACEHOLDER = "{table}";
 
     private static final String SELECT_COMMON_COLUMNS = """
-            spawner_id, server_name, world, loc_x, loc_y, loc_z,
+            spawner_id, world, loc_x, loc_y, loc_z,
             entity, item_spawner_type, exp, active,
             activation_range, stop, delay, max_loot_slots,
             max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
@@ -83,7 +83,7 @@ public class SqliteToMySqlMigration {
      * reachable whenever a server upgrades and switches to MySQL in the same step.
      */
     private static final String SELECT_COMMON_COLUMNS_LEGACY = """
-            spawner_id, server_name, world_name AS world, loc_x, loc_y, loc_z,
+            spawner_id, world_name AS world, loc_x, loc_y, loc_z,
             entity_type AS entity, item_spawner_material AS item_spawner_type,
             spawner_exp AS exp, spawner_active AS active,
             spawner_range AS activation_range, spawner_stop AS stop,
@@ -165,11 +165,13 @@ public class SqliteToMySqlMigration {
      * @return the spawner table name present in the file, or null when there is none
      */
     private String resolveSourceTable(Connection conn) throws SQLException {
-        if (sqliteTableExists(conn, mysqlManager.getTableSpawners())) {
-            return mysqlManager.getTableSpawners();
-        }
-        if (sqliteTableExists(conn, LEGACY_TABLE_SPAWNERS)) {
-            return LEGACY_TABLE_SPAWNERS;
+        // SQLite never runs in cross-server mode, so a file written by 1.8.0 uses the single-server
+        // name even when MySQL is now on a per-server one.
+        for (String candidate : new String[]{
+                mysqlManager.getTableSpawners(), mysqlManager.getTableSingleServer(), LEGACY_TABLE_SPAWNERS}) {
+            if (sqliteTableExists(conn, candidate)) {
+                return candidate;
+            }
         }
         return null;
     }
@@ -251,39 +253,38 @@ public class SqliteToMySqlMigration {
 
                         // Transfer all columns
                         insertStmt.setString(1, rs.getString("spawner_id"));
-                        insertStmt.setString(2, rs.getString("server_name"));
-                        insertStmt.setString(3, rs.getString("world"));
-                        insertStmt.setInt(4, locX);
-                        insertStmt.setInt(5, rs.getInt("loc_y"));
-                        insertStmt.setInt(6, locZ);
-                        insertStmt.setInt(7, locX >> 4);
-                        insertStmt.setInt(8, locZ >> 4);
-                        insertStmt.setString(9, rs.getString("entity"));
-                        insertStmt.setString(10, rs.getString("item_spawner_type"));
-                        insertStmt.setLong(11, rs.getLong("exp"));
-                        insertStmt.setBoolean(12, rs.getBoolean("active"));
-                        insertStmt.setInt(13, rs.getInt("activation_range"));
-                        insertStmt.setBoolean(14, rs.getBoolean("stop"));
-                        insertStmt.setLong(15, rs.getLong("delay"));
-                        insertStmt.setInt(16, rs.getInt("max_loot_slots"));
-                        insertStmt.setLong(17, rs.getLong("max_stored_exp"));
-                        insertStmt.setInt(18, rs.getInt("min_mobs"));
-                        insertStmt.setInt(19, rs.getInt("max_mobs"));
-                        insertStmt.setInt(20, rs.getInt("stack_size"));
-                        insertStmt.setInt(21, rs.getInt("max_stack_size"));
-                        insertStmt.setLong(22, rs.getLong("last_spawn_time"));
-                        insertStmt.setBoolean(23, rs.getBoolean("is_at_capacity"));
-                        insertStmt.setString(24, rs.getString("last_interacted_player"));
-                        insertStmt.setString(25, rs.getString("preferred_sort_item"));
-                        insertStmt.setString(26, rs.getString("filtered_items"));
+                        insertStmt.setString(2, rs.getString("world"));
+                        insertStmt.setInt(3, locX);
+                        insertStmt.setInt(4, rs.getInt("loc_y"));
+                        insertStmt.setInt(5, locZ);
+                        insertStmt.setInt(6, locX >> 4);
+                        insertStmt.setInt(7, locZ >> 4);
+                        insertStmt.setString(8, rs.getString("entity"));
+                        insertStmt.setString(9, rs.getString("item_spawner_type"));
+                        insertStmt.setLong(10, rs.getLong("exp"));
+                        insertStmt.setBoolean(11, rs.getBoolean("active"));
+                        insertStmt.setInt(12, rs.getInt("activation_range"));
+                        insertStmt.setBoolean(13, rs.getBoolean("stop"));
+                        insertStmt.setLong(14, rs.getLong("delay"));
+                        insertStmt.setInt(15, rs.getInt("max_loot_slots"));
+                        insertStmt.setLong(16, rs.getLong("max_stored_exp"));
+                        insertStmt.setInt(17, rs.getInt("min_mobs"));
+                        insertStmt.setInt(18, rs.getInt("max_mobs"));
+                        insertStmt.setInt(19, rs.getInt("stack_size"));
+                        insertStmt.setInt(20, rs.getInt("max_stack_size"));
+                        insertStmt.setLong(21, rs.getLong("last_spawn_time"));
+                        insertStmt.setBoolean(22, rs.getBoolean("is_at_capacity"));
+                        insertStmt.setString(23, rs.getString("last_interacted_player"));
+                        insertStmt.setString(24, rs.getString("preferred_sort_item"));
+                        insertStmt.setString(25, rs.getString("filtered_items"));
 
                         if (hasItemBlob) {
-                            insertStmt.setBytes(27, rs.getBytes("storage_items"));
-                            insertStmt.setLong(28, rs.getLong("total_items"));
+                            insertStmt.setBytes(26, rs.getBytes("storage_items"));
+                            insertStmt.setLong(27, rs.getLong("total_items"));
                         } else {
                             Map<ItemSignature, Long> items = readLegacyInventory(rs.getString("inventory_data"));
-                            insertStmt.setBytes(27, SpawnerInventoryCodec.encode(items));
-                            insertStmt.setLong(28, SpawnerInventoryCodec.totalItems(items));
+                            insertStmt.setBytes(26, SpawnerInventoryCodec.encode(items));
+                            insertStmt.setLong(27, SpawnerInventoryCodec.totalItems(items));
                         }
 
                         insertStmt.addBatch();

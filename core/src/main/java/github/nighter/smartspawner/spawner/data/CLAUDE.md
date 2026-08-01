@@ -40,9 +40,22 @@ in that order.
 
 ## Database schema
 
-Two tables, both on the `spawner_` prefix: `spawner_data` and `spawner_schema_meta`
-(renamed from `smart_spawners` / `smartspawner_meta` in schema v3). Names live in
-`DatabaseManager.TABLE_SPAWNERS` / `TABLE_META`, not as literals in queries.
+Two tables on `database.table-prefix`: `sspawner_data` and `sspawner_schema_meta` (renamed from
+`smart_spawners` / `smartspawner_meta` in schema v3). Names live on `DatabaseManager`, never as
+literals in queries.
+
+**There is no `server_name` column.** A table holds exactly one server's spawners and says which in
+its name, so the column would be one repeated value carried again inside every index. With
+`sync-across-servers` on this server owns `<prefix><server>_data`; with it off, `<prefix>data`.
+Toggling the setting renames the table (`adoptTableForCurrentMode`), refusing to overwrite an
+existing target. Anything that used to filter on `server_name` now picks a *table* instead, through
+`SpawnerDatabaseHandler.tableFor(server)` and `DatabaseManager.listServerTables()`, which reads the
+server names back off the table names.
+
+Column names were shortened in 1.8.0 (`world_name` to `world`, `spawner_exp` to `exp`, and so on;
+see `DatabaseManager.COLUMN_RENAMES`). `spawner_range` became `activation_range`, not `range`,
+because `range` is reserved in MySQL 8. The v1 to v2 migration step deliberately still uses the 1.7.x
+names, because it reads a 1.7.x table; only the v3 step onwards sees the current ones.
 
 `spawner_schema_meta.schema_version` drives `runSchemaMigrations()`. Adding a step means bumping
 `CURRENT_SCHEMA_VERSION` and adding a case to `applyMigrationStep`. Two ordering rules:

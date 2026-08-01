@@ -44,6 +44,11 @@ public class DatabaseManager {
     private static final String SUFFIX_SPAWNERS = "data";
     /** Appended to the prefix for the plugin-owned schema metadata table. */
     private static final String SUFFIX_META = "schema_meta";
+    /**
+     * Appended to the prefix for the table holding rows a 1.7.x shared database had for servers
+     * other than this one. Fixed, so every server looks in the same place for its share.
+     */
+    private static final String SUFFIX_LEGACY_SHARED = "legacy_shared_data";
 
     /** Fixed names used before {@code database.table-prefix} existed (1.7.x and earlier). */
     private static final String LEGACY_TABLE_SPAWNERS = "smart_spawners";
@@ -61,6 +66,24 @@ public class DatabaseManager {
     private final String tableSpawners;
     private final String tableMeta;
 
+    /**
+     * Whether spawners from several servers share this database.
+     *
+     * <p>This only decides the table's <em>name</em>. Either way a table holds exactly one server's
+     * spawners, so there is no {@code server_name} column in either mode: the name would be the same
+     * value on every row, repeated again inside every index. When several servers share a database
+     * each one owns {@code <prefix><server>_data} and the list GUI reads the other tables directly,
+     * taking each server's name from its table name.</p>
+     */
+    private final boolean crossServer;
+
+    /** The table this server uses in each mode. Only one of them is {@link #tableSpawners}. */
+    private final String tableSingleServer;
+    private final String tableThisServer;
+
+    /** Where rows belonging to other servers wait until those servers upgrade. */
+    private final String tableLegacyShared;
+
     // Configuration values
     private final String host;
     private final int port;
@@ -76,7 +99,6 @@ public class DatabaseManager {
             CREATE TABLE IF NOT EXISTS %1$s (
                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
                 spawner_id VARCHAR(64) NOT NULL,
-                server_name VARCHAR(64) NOT NULL,
 
                 -- Location (separate columns for indexing)
                 world VARCHAR(128) NOT NULL,
@@ -120,12 +142,11 @@ public class DatabaseManager {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-                -- Indexes
-                UNIQUE KEY uk_server_spawner (server_name, spawner_id),
-                UNIQUE KEY uk_location (server_name, world, loc_x, loc_y, loc_z),
-                INDEX %2$sidx_server (server_name),
-                INDEX %2$sidx_world (server_name, world),
-                INDEX %2$sidx_chunk (server_name, world, chunk_x, chunk_z)
+                -- Indexes. The table is one server's data, so none of these carry a server name.
+                UNIQUE KEY uk_spawner (spawner_id),
+                UNIQUE KEY uk_location (world, loc_x, loc_y, loc_z),
+                INDEX %2$sidx_world (world),
+                INDEX %2$sidx_chunk (world, chunk_x, chunk_z)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             """;
 
@@ -134,7 +155,6 @@ public class DatabaseManager {
             CREATE TABLE IF NOT EXISTS %1$s (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 spawner_id VARCHAR(64) NOT NULL,
-                server_name VARCHAR(64) NOT NULL,
 
                 -- Location (separate columns for indexing)
                 world VARCHAR(128) NOT NULL,
@@ -179,19 +199,17 @@ public class DatabaseManager {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
                 -- Unique constraints
-                UNIQUE (server_name, spawner_id),
-                UNIQUE (server_name, world, loc_x, loc_y, loc_z)
+                UNIQUE (spawner_id),
+                UNIQUE (world, loc_x, loc_y, loc_z)
             )
             """;
 
     // SQLite index creation (separate statements). SQLite index names are database-scoped, not
     // table-scoped, so these carry the prefix as well.
-    private static final String CREATE_INDEX_SERVER_SQLITE =
-            "CREATE INDEX IF NOT EXISTS %2$sidx_server ON %1$s (server_name)";
     private static final String CREATE_INDEX_WORLD_SQLITE =
-            "CREATE INDEX IF NOT EXISTS %2$sidx_world ON %1$s (server_name, world)";
+            "CREATE INDEX IF NOT EXISTS %2$sidx_world ON %1$s (world)";
     private static final String CREATE_INDEX_CHUNK_SQLITE =
-            "CREATE INDEX IF NOT EXISTS %2$sidx_chunk ON %1$s (server_name, world, chunk_x, chunk_z)";
+            "CREATE INDEX IF NOT EXISTS %2$sidx_chunk ON %1$s (world, chunk_x, chunk_z)";
 
     private static final String SCHEMA_VERSION_KEY = "schema_version";
     private static final int LEGACY_SCHEMA_VERSION = 1;
@@ -222,7 +240,6 @@ public class DatabaseManager {
         this.storageMode = storageMode;
 
         this.tablePrefix = sanitizeTablePrefix(plugin.getConfig().getString("database.table-prefix", DEFAULT_TABLE_PREFIX));
-        this.tableSpawners = tablePrefix + SUFFIX_SPAWNERS;
         this.tableMeta = tablePrefix + SUFFIX_META;
 
         // Load configuration
@@ -234,6 +251,14 @@ public class DatabaseManager {
         this.serverName = plugin.getConfig().getString("database.server-name", "server1");
         this.sqliteFile = plugin.getConfig().getString("database.sqlite-file", "spawners.db");
         this.poolSize = Math.max(1, plugin.getConfig().getInt("database.pool-size", 10));
+
+        // One shared table per server only makes sense when servers actually share a database.
+        this.crossServer = storageMode == StorageMode.MYSQL
+                && plugin.getConfig().getBoolean("database.sync-across-servers", false);
+        this.tableSingleServer = tablePrefix + SUFFIX_SPAWNERS;
+        this.tableThisServer = tablePrefix + sanitizeIdentifier(serverName) + "_" + SUFFIX_SPAWNERS;
+        this.tableSpawners = crossServer ? tableThisServer : tableSingleServer;
+        this.tableLegacyShared = tablePrefix + SUFFIX_LEGACY_SHARED;
     }
 
     /**
@@ -242,8 +267,13 @@ public class DatabaseManager {
      * instead of trusted.
      */
     static String sanitizeTablePrefix(String value) {
-        String cleaned = value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "");
+        String cleaned = sanitizeIdentifier(value);
         return cleaned.isEmpty() ? DEFAULT_TABLE_PREFIX : cleaned;
+    }
+
+    /** @see #sanitizeTablePrefix(String) */
+    static String sanitizeIdentifier(String value) {
+        return value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "");
     }
 
     /** Fills the table name and prefix placeholders in the DDL templates above. */
@@ -261,6 +291,7 @@ public class DatabaseManager {
             // Renaming has to happen before anything reads the schema version, because the meta
             // table holding that version is itself one of the renamed tables.
             renameLegacyTables();
+            adoptTableForCurrentMode();
             createTables();
             createSchemaMetaTable();
             runSchemaMigrations();
@@ -270,6 +301,34 @@ public class DatabaseManager {
             logger.log(Level.SEVERE, "Failed to initialize database connection pool", e);
             return false;
         }
+    }
+
+    /**
+     * Moves the spawner table to the name the current {@code database.sync-across-servers} setting
+     * calls for, so toggling the setting keeps the data instead of starting empty.
+     *
+     * <p>An existing table at the target name is never overwritten. That case means two tables hold
+     * spawners and only the owner can say which is right, so the target is used as-is and the other
+     * is left untouched with a warning naming both.</p>
+     */
+    private void adoptTableForCurrentMode() throws SQLException {
+        String other = crossServer ? tableSingleServer : tableThisServer;
+        if (other.equals(tableSpawners) || !tableExists(other)) {
+            return;
+        }
+
+        if (tableExists(tableSpawners)) {
+            logger.warning("Both " + other + " and " + tableSpawners + " exist. Using " + tableSpawners
+                    + " and leaving " + other + " alone. Delete whichever one is stale.");
+            return;
+        }
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE " + other + " RENAME TO " + tableSpawners);
+        }
+        logger.info("Renamed database table " + other + " to " + tableSpawners
+                + " to match database.sync-across-servers.");
     }
 
     private void setupDataSource() {
@@ -445,7 +504,6 @@ public class DatabaseManager {
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute(sql(CREATE_INDEX_SERVER_SQLITE));
             stmt.execute(sql(CREATE_INDEX_WORLD_SQLITE));
             stmt.execute(sql(CREATE_INDEX_CHUNK_SQLITE));
         }
@@ -481,7 +539,139 @@ public class DatabaseManager {
             logger.info("Database schema migration completed to v" + currentVersion + ".");
         }
 
+        // After the migration steps, so it works on the current column names, and before the
+        // indexes, which no longer mention server_name.
+        dropServerNameColumn();
+        importFromLegacySharedTable();
         createSqliteIndexes();
+    }
+
+    /**
+     * Columns carried across when the table is rebuilt. {@code id} is included so row identity
+     * survives, and {@code server_name} is deliberately absent.
+     */
+    private static final String REBUILD_COLUMNS = """
+            id, spawner_id, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
+            entity, item_spawner_type, exp, active, activation_range, stop, delay,
+            max_loot_slots, max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
+            last_spawn_time, is_at_capacity, last_interacted_player, preferred_sort_item,
+            filtered_items, storage_items, total_items
+            """;
+
+    /**
+     * Removes the 1.7.x {@code server_name} column. A table now holds exactly one server's spawners,
+     * identified by its name, so the column was the same value on every row.
+     *
+     * <p>Done by rebuilding rather than {@code DROP COLUMN}: the column is part of both unique
+     * constraints, which SQLite refuses to drop out from under, and a shared 1.7.x database holds
+     * other servers' rows that must not end up in this server's table. Those rows are left behind in
+     * a renamed table so the other servers can still find them when they upgrade.</p>
+     */
+    private void dropServerNameColumn() throws SQLException {
+        if (!columnExists(tableSpawners, "server_name")) {
+            return;
+        }
+
+        String rebuilt = tableSpawners + "_rebuild";
+        String columns = REBUILD_COLUMNS.replace("\n", " ").trim();
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS " + rebuilt);
+        }
+
+        // Create the new shape under a scratch name. On SQLite index names are database-scoped, so
+        // the named indexes are only added after the old table (and its indexes) are gone.
+        String template = storageMode == StorageMode.SQLITE ? CREATE_TABLE_SQLITE : CREATE_TABLE_MYSQL;
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(String.format(template, rebuilt, tablePrefix + "rebuild_"));
+        }
+
+        long copied;
+        long foreign;
+        try (Connection conn = getConnection()) {
+            try (PreparedStatement insert = conn.prepareStatement(
+                    "INSERT INTO " + rebuilt + " (" + columns + ") SELECT " + columns
+                            + " FROM " + tableSpawners + " WHERE server_name = ?")) {
+                insert.setString(1, serverName);
+                copied = insert.executeUpdate();
+            }
+            try (PreparedStatement count = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM " + tableSpawners + " WHERE server_name <> ?")) {
+                count.setString(1, serverName);
+                try (ResultSet rs = count.executeQuery()) {
+                    foreign = rs.next() ? rs.getLong(1) : 0L;
+                }
+            }
+        }
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            if (foreign > 0) {
+                stmt.execute("DROP TABLE IF EXISTS " + tableLegacyShared);
+                stmt.execute("ALTER TABLE " + tableSpawners + " RENAME TO " + tableLegacyShared);
+                logger.warning("Kept " + foreign + " spawners belonging to other servers in "
+                        + tableLegacyShared + ". Each of those servers claims its own when it next "
+                        + "starts on this version, and the table is removed once it is empty.");
+            } else {
+                stmt.execute("DROP TABLE " + tableSpawners);
+            }
+            stmt.execute("ALTER TABLE " + rebuilt + " RENAME TO " + tableSpawners);
+        }
+
+        logger.info("Removed the redundant server_name column, keeping " + copied + " spawners.");
+    }
+
+    /**
+     * Claims this server's rows from the table the first server to upgrade left behind.
+     *
+     * <p>A 1.7.x database shared by several servers held them all in one table. The first server to
+     * start on 1.8.0 takes its own rows and parks the rest under a name every server looks for, which
+     * is here. Each later server imports its share and deletes it, and the last one out drops the
+     * table.</p>
+     */
+    private void importFromLegacySharedTable() throws SQLException {
+        if (tableLegacyShared.equals(tableSpawners) || !tableExists(tableLegacyShared)) {
+            return;
+        }
+
+        String columns = REBUILD_COLUMNS.replace("\n", " ").trim();
+        long claimed;
+        try (Connection conn = getConnection()) {
+            try (PreparedStatement insert = conn.prepareStatement(
+                    "INSERT INTO " + tableSpawners + " (" + columns + ") SELECT " + columns
+                            + " FROM " + tableLegacyShared + " WHERE server_name = ?")) {
+                insert.setString(1, serverName);
+                claimed = insert.executeUpdate();
+            }
+            if (claimed > 0) {
+                try (PreparedStatement delete = conn.prepareStatement(
+                        "DELETE FROM " + tableLegacyShared + " WHERE server_name = ?")) {
+                    delete.setString(1, serverName);
+                    delete.executeUpdate();
+                }
+            }
+        }
+
+        long remaining;
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableLegacyShared)) {
+            remaining = rs.next() ? rs.getLong(1) : 0L;
+        }
+
+        if (remaining == 0) {
+            try (Connection conn = getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("DROP TABLE " + tableLegacyShared);
+            }
+        }
+
+        if (claimed > 0) {
+            logger.info("Claimed " + claimed + " spawners for " + serverName + " from "
+                    + tableLegacyShared + (remaining == 0 ? ", which is now removed." : "."));
+        }
     }
 
     private Integer getSchemaVersionFromMeta() throws SQLException {
@@ -708,7 +898,6 @@ public class DatabaseManager {
                 FROM %2$s
                 """.formatted(tableSpawners, scratchTable),
                 "DROP TABLE " + scratchTable,
-                sql(CREATE_INDEX_SERVER_SQLITE),
                 sql(CREATE_INDEX_WORLD_SQLITE),
                 "COMMIT"
         };
@@ -982,7 +1171,7 @@ public class DatabaseManager {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE INDEX " + indexName + " ON " + tableSpawners
-                    + " (server_name, world, chunk_x, chunk_z)");
+                    + " (world, chunk_x, chunk_z)");
         }
     }
 
@@ -1020,6 +1209,56 @@ public class DatabaseManager {
      */
     public String getTableMeta() {
         return tableMeta;
+    }
+
+    /**
+     * The table name used when cross-server mode is off, {@code <prefix>data}.
+     * @return the single-server table name, whether or not it is the one in use
+     */
+    public String getTableSingleServer() {
+        return tableSingleServer;
+    }
+
+    /**
+     * Whether several servers share this database, each in its own table.
+     * @return true when {@code database.sync-across-servers} applies
+     */
+    public boolean isCrossServer() {
+        return crossServer;
+    }
+
+    /**
+     * Every server's spawner table in this database, mapped from server name to table name.
+     *
+     * <p>Discovered from the table list rather than from a column, because the server name lives in
+     * the table name now. Returns just this server when cross-server mode is off.</p>
+     */
+    public Map<String, String> listServerTables() throws SQLException {
+        Map<String, String> tables = new LinkedHashMap<>();
+        if (!crossServer) {
+            tables.put(serverName, tableSpawners);
+            return tables;
+        }
+
+        String suffix = "_" + SUFFIX_SPAWNERS;
+        try (Connection conn = getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            try (ResultSet rs = meta.getTables(conn.getCatalog(), null, tablePrefix + "%", new String[]{"TABLE"})) {
+                while (rs.next()) {
+                    String name = rs.getString("TABLE_NAME");
+                    if (name == null || !name.startsWith(tablePrefix) || !name.endsWith(suffix)) {
+                        continue;
+                    }
+                    String server = name.substring(tablePrefix.length(), name.length() - suffix.length());
+                    // Skips <prefix>data, whose "server" would be empty, and the parked legacy table.
+                    if (!server.isEmpty()) {
+                        tables.put(server, name);
+                    }
+                }
+            }
+        }
+        tables.putIfAbsent(serverName, tableSpawners);
+        return tables;
     }
 
     /**

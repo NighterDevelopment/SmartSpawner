@@ -62,6 +62,19 @@ class DatabaseManagerTest {
         assertEquals(DatabaseManager.DEFAULT_TABLE_PREFIX, DatabaseManager.sanitizeTablePrefix("---"));
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "server1,        server1",
+            "Survival-01,    Survival01",
+            "lobby_2,        lobby_2",
+            "'a b; DROP--',  abDROP",
+    })
+    @DisplayName("a server name is stripped the same way before it goes into a table name")
+    void serverNamesAreSanitizedForTableNames(String input, String expected) {
+        assertEquals(expected, DatabaseManager.sanitizeIdentifier(input),
+                "the server name is concatenated into the table name, so it gets the same treatment");
+    }
+
     /**
      * Words MySQL 8 will not accept as a bare identifier. The 1.8.0 renames shortened most columns to
      * a single plain word, which is exactly how a reserved word slips in; {@code spawner_range} became

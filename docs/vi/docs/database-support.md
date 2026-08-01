@@ -50,6 +50,10 @@ Plugin tạo hai bảng, đặt tên theo `database.table-prefix`: `sspawner_dat
 hoặc để tách hai bản cài SmartSpawner trong cùng một cơ sở dữ liệu MySQL. Bảng đang có sẽ được đổi
 tên tự động khi tiền tố thay đổi.
 
+Khi bật `sync-across-servers`, mỗi máy chủ có bảng riêng đặt theo tên của nó, ví dụ
+`sspawner_server1_data`. Bật hoặc tắt tùy chọn này sẽ đổi tên bảng cho khớp, và bảng đã có sẵn ở tên
+đích không bao giờ bị ghi đè. Console sẽ báo nếu gặp trường hợp đó.
+
 ::: tip
 Hãy sao lưu thư mục `plugins/SmartSpawner/` trước khi cập nhật, như với mọi bản cập nhật có động đến
 dữ liệu đã lưu.
