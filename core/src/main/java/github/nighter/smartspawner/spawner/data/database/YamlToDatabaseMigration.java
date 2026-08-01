@@ -36,28 +36,28 @@ public class YamlToDatabaseMigration {
     // MySQL/MariaDB insert syntax
     private static final String INSERT_SQL_MYSQL = """
             INSERT INTO %s (
-                spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
-                entity_type, item_spawner_material, spawner_exp, spawner_active,
-                spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
+                spawner_id, server_name, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
+                entity, item_spawner_type, exp, active,
+                activation_range, stop, delay, max_loot_slots,
                 max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                 last_spawn_time, is_at_capacity, last_interacted_player,
-                preferred_sort_item, filtered_items, items, total_items
+                preferred_sort_item, filtered_items, storage_items, total_items
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
-                world_name = VALUES(world_name),
+                world = VALUES(world),
                 loc_x = VALUES(loc_x),
                 loc_y = VALUES(loc_y),
                 loc_z = VALUES(loc_z),
                 chunk_x = VALUES(chunk_x),
                 chunk_z = VALUES(chunk_z),
-                entity_type = VALUES(entity_type),
-                item_spawner_material = VALUES(item_spawner_material),
-                spawner_exp = VALUES(spawner_exp),
-                spawner_active = VALUES(spawner_active),
-                spawner_range = VALUES(spawner_range),
-                spawner_stop = VALUES(spawner_stop),
-                spawn_delay = VALUES(spawn_delay),
-                max_spawner_loot_slots = VALUES(max_spawner_loot_slots),
+                entity = VALUES(entity),
+                item_spawner_type = VALUES(item_spawner_type),
+                exp = VALUES(exp),
+                active = VALUES(active),
+                activation_range = VALUES(activation_range),
+                stop = VALUES(stop),
+                delay = VALUES(delay),
+                max_loot_slots = VALUES(max_loot_slots),
                 max_stored_exp = VALUES(max_stored_exp),
                 min_mobs = VALUES(min_mobs),
                 max_mobs = VALUES(max_mobs),
@@ -68,35 +68,35 @@ public class YamlToDatabaseMigration {
                 last_interacted_player = VALUES(last_interacted_player),
                 preferred_sort_item = VALUES(preferred_sort_item),
                 filtered_items = VALUES(filtered_items),
-                items = VALUES(items),
+                storage_items = VALUES(storage_items),
                 total_items = VALUES(total_items)
             """;
 
     // SQLite insert syntax
     private static final String INSERT_SQL_SQLITE = """
             INSERT INTO %s (
-                spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
-                entity_type, item_spawner_material, spawner_exp, spawner_active,
-                spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
+                spawner_id, server_name, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
+                entity, item_spawner_type, exp, active,
+                activation_range, stop, delay, max_loot_slots,
                 max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                 last_spawn_time, is_at_capacity, last_interacted_player,
-                preferred_sort_item, filtered_items, items, total_items
+                preferred_sort_item, filtered_items, storage_items, total_items
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(server_name, spawner_id) DO UPDATE SET
-                world_name = excluded.world_name,
+                world = excluded.world,
                 loc_x = excluded.loc_x,
                 loc_y = excluded.loc_y,
                 loc_z = excluded.loc_z,
                 chunk_x = excluded.chunk_x,
                 chunk_z = excluded.chunk_z,
-                entity_type = excluded.entity_type,
-                item_spawner_material = excluded.item_spawner_material,
-                spawner_exp = excluded.spawner_exp,
-                spawner_active = excluded.spawner_active,
-                spawner_range = excluded.spawner_range,
-                spawner_stop = excluded.spawner_stop,
-                spawn_delay = excluded.spawn_delay,
-                max_spawner_loot_slots = excluded.max_spawner_loot_slots,
+                entity = excluded.entity,
+                item_spawner_type = excluded.item_spawner_type,
+                exp = excluded.exp,
+                active = excluded.active,
+                activation_range = excluded.activation_range,
+                stop = excluded.stop,
+                delay = excluded.delay,
+                max_loot_slots = excluded.max_loot_slots,
                 max_stored_exp = excluded.max_stored_exp,
                 min_mobs = excluded.min_mobs,
                 max_mobs = excluded.max_mobs,
@@ -107,7 +107,7 @@ public class YamlToDatabaseMigration {
                 last_interacted_player = excluded.last_interacted_player,
                 preferred_sort_item = excluded.preferred_sort_item,
                 filtered_items = excluded.filtered_items,
-                items = excluded.items,
+                storage_items = excluded.storage_items,
                 total_items = excluded.total_items
             """;
 

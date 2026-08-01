@@ -79,7 +79,7 @@ public class DatabaseManager {
                 server_name VARCHAR(64) NOT NULL,
 
                 -- Location (separate columns for indexing)
-                world_name VARCHAR(128) NOT NULL,
+                world VARCHAR(128) NOT NULL,
                 loc_x INT NOT NULL,
                 loc_y INT NOT NULL,
                 loc_z INT NOT NULL,
@@ -89,16 +89,16 @@ public class DatabaseManager {
                 chunk_z INT NOT NULL DEFAULT 0,
 
                 -- Entity data
-                entity_type VARCHAR(64) NOT NULL,
-                item_spawner_material VARCHAR(64) DEFAULT NULL,
+                entity VARCHAR(64) NOT NULL,
+                item_spawner_type VARCHAR(64) DEFAULT NULL,
 
                 -- Settings
-                spawner_exp BIGINT NOT NULL DEFAULT 0,
-                spawner_active BOOLEAN NOT NULL DEFAULT TRUE,
-                spawner_range INT NOT NULL DEFAULT 16,
-                spawner_stop BOOLEAN NOT NULL DEFAULT TRUE,
-                spawn_delay BIGINT NOT NULL DEFAULT 500,
-                max_spawner_loot_slots INT NOT NULL DEFAULT 45,
+                exp BIGINT NOT NULL DEFAULT 0,
+                active BOOLEAN NOT NULL DEFAULT TRUE,
+                activation_range INT NOT NULL DEFAULT 16,
+                stop BOOLEAN NOT NULL DEFAULT TRUE,
+                delay BIGINT NOT NULL DEFAULT 500,
+                max_loot_slots INT NOT NULL DEFAULT 45,
                 max_stored_exp BIGINT NOT NULL DEFAULT 1000,
                 min_mobs INT NOT NULL DEFAULT 1,
                 max_mobs INT NOT NULL DEFAULT 4,
@@ -113,7 +113,7 @@ public class DatabaseManager {
                 filtered_items TEXT DEFAULT NULL,
 
                 -- Virtual inventory, see SpawnerInventoryCodec
-                items MEDIUMBLOB DEFAULT NULL,
+                storage_items MEDIUMBLOB DEFAULT NULL,
                 total_items BIGINT NOT NULL DEFAULT 0,
 
                 -- Timestamps
@@ -122,10 +122,10 @@ public class DatabaseManager {
 
                 -- Indexes
                 UNIQUE KEY uk_server_spawner (server_name, spawner_id),
-                UNIQUE KEY uk_location (server_name, world_name, loc_x, loc_y, loc_z),
+                UNIQUE KEY uk_location (server_name, world, loc_x, loc_y, loc_z),
                 INDEX %2$sidx_server (server_name),
-                INDEX %2$sidx_world (server_name, world_name),
-                INDEX %2$sidx_chunk (server_name, world_name, chunk_x, chunk_z)
+                INDEX %2$sidx_world (server_name, world),
+                INDEX %2$sidx_chunk (server_name, world, chunk_x, chunk_z)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             """;
 
@@ -137,7 +137,7 @@ public class DatabaseManager {
                 server_name VARCHAR(64) NOT NULL,
 
                 -- Location (separate columns for indexing)
-                world_name VARCHAR(128) NOT NULL,
+                world VARCHAR(128) NOT NULL,
                 loc_x INT NOT NULL,
                 loc_y INT NOT NULL,
                 loc_z INT NOT NULL,
@@ -147,16 +147,16 @@ public class DatabaseManager {
                 chunk_z INT NOT NULL DEFAULT 0,
 
                 -- Entity data
-                entity_type VARCHAR(64) NOT NULL,
-                item_spawner_material VARCHAR(64) DEFAULT NULL,
+                entity VARCHAR(64) NOT NULL,
+                item_spawner_type VARCHAR(64) DEFAULT NULL,
 
                 -- Settings
-                spawner_exp BIGINT NOT NULL DEFAULT 0,
-                spawner_active BOOLEAN NOT NULL DEFAULT 1,
-                spawner_range INT NOT NULL DEFAULT 16,
-                spawner_stop BOOLEAN NOT NULL DEFAULT 1,
-                spawn_delay BIGINT NOT NULL DEFAULT 500,
-                max_spawner_loot_slots INT NOT NULL DEFAULT 45,
+                exp BIGINT NOT NULL DEFAULT 0,
+                active BOOLEAN NOT NULL DEFAULT 1,
+                activation_range INT NOT NULL DEFAULT 16,
+                stop BOOLEAN NOT NULL DEFAULT 1,
+                delay BIGINT NOT NULL DEFAULT 500,
+                max_loot_slots INT NOT NULL DEFAULT 45,
                 max_stored_exp BIGINT NOT NULL DEFAULT 1000,
                 min_mobs INT NOT NULL DEFAULT 1,
                 max_mobs INT NOT NULL DEFAULT 4,
@@ -171,7 +171,7 @@ public class DatabaseManager {
                 filtered_items TEXT DEFAULT NULL,
 
                 -- Virtual inventory, see SpawnerInventoryCodec
-                items BLOB DEFAULT NULL,
+                storage_items BLOB DEFAULT NULL,
                 total_items BIGINT NOT NULL DEFAULT 0,
 
                 -- Timestamps
@@ -180,7 +180,7 @@ public class DatabaseManager {
 
                 -- Unique constraints
                 UNIQUE (server_name, spawner_id),
-                UNIQUE (server_name, world_name, loc_x, loc_y, loc_z)
+                UNIQUE (server_name, world, loc_x, loc_y, loc_z)
             )
             """;
 
@@ -189,9 +189,9 @@ public class DatabaseManager {
     private static final String CREATE_INDEX_SERVER_SQLITE =
             "CREATE INDEX IF NOT EXISTS %2$sidx_server ON %1$s (server_name)";
     private static final String CREATE_INDEX_WORLD_SQLITE =
-            "CREATE INDEX IF NOT EXISTS %2$sidx_world ON %1$s (server_name, world_name)";
+            "CREATE INDEX IF NOT EXISTS %2$sidx_world ON %1$s (server_name, world)";
     private static final String CREATE_INDEX_CHUNK_SQLITE =
-            "CREATE INDEX IF NOT EXISTS %2$sidx_chunk ON %1$s (server_name, world_name, chunk_x, chunk_z)";
+            "CREATE INDEX IF NOT EXISTS %2$sidx_chunk ON %1$s (server_name, world, chunk_x, chunk_z)";
 
     private static final String SCHEMA_VERSION_KEY = "schema_version";
     private static final int LEGACY_SCHEMA_VERSION = 1;
@@ -505,7 +505,7 @@ public class DatabaseManager {
     }
 
     private int detectInitialSchemaVersion() throws SQLException {
-        if (columnExists(tableSpawners, "items")) {
+        if (columnExists(tableSpawners, "storage_items")) {
             return CURRENT_SCHEMA_VERSION;
         }
         return xpColumnsRequireMigration() ? LEGACY_SCHEMA_VERSION : 2;
@@ -729,11 +729,29 @@ public class DatabaseManager {
         }
     }
 
-    // ============== Schema v3: chunk columns and item blob ==============
+    // ============== Schema v3: 1.7.x column names, chunk columns and item blob ==============
 
     /**
-     * Adds the chunk coordinates and the binary inventory columns, then rewrites every stored
-     * inventory from the legacy string format into {@link SpawnerInventoryCodec}.
+     * Columns 1.7.x wrote, paired with the name 1.8.0 uses. The old names repeated the table's own
+     * subject on every column, and {@code spawner_range} was the only one that could not simply be
+     * shortened: {@code range} is a reserved word in MySQL 8.
+     */
+    static final String[][] COLUMN_RENAMES = {
+            {"world_name", "world"},
+            {"entity_type", "entity"},
+            {"item_spawner_material", "item_spawner_type"},
+            {"spawner_exp", "exp"},
+            {"spawner_active", "active"},
+            {"spawner_range", "activation_range"},
+            {"spawner_stop", "stop"},
+            {"spawn_delay", "delay"},
+            {"max_spawner_loot_slots", "max_loot_slots"},
+    };
+
+    /**
+     * Brings a 1.7.x table up to the 1.8.0 shape: the columns are renamed, the chunk coordinates and
+     * the binary inventory columns are added, and every stored inventory is rewritten from the legacy
+     * string format into {@link SpawnerInventoryCodec}.
      */
     private void migrateToChunkAndItemBlobColumns() throws SQLException {
         boolean hasLegacyInventory = columnExists(tableSpawners, "inventory_data");
@@ -743,9 +761,12 @@ public class DatabaseManager {
             logger.info("Created database backup before inventory format migration: " + backupName);
         }
 
+        // First, so everything below can use the current names.
+        renameLegacyColumns();
+
         addColumnIfMissing("chunk_x", "INT NOT NULL DEFAULT 0");
         addColumnIfMissing("chunk_z", "INT NOT NULL DEFAULT 0");
-        addColumnIfMissing("items", storageMode == StorageMode.SQLITE ? "BLOB DEFAULT NULL" : "MEDIUMBLOB DEFAULT NULL");
+        addColumnIfMissing("storage_items", storageMode == StorageMode.SQLITE ? "BLOB DEFAULT NULL" : "MEDIUMBLOB DEFAULT NULL");
         addColumnIfMissing("total_items", "BIGINT NOT NULL DEFAULT 0");
 
         backfillChunkColumns();
@@ -758,6 +779,30 @@ public class DatabaseManager {
 
         if (storageMode != StorageMode.SQLITE) {
             createMySqlChunkIndexIfMissing();
+        }
+    }
+
+    /**
+     * Applies {@link #COLUMN_RENAMES}. Driven by which columns are actually present rather than by
+     * the schema version, so a table that is already half converted finishes cleanly, and one that
+     * is already current is left alone. Renaming a column carries its indexes with it on both
+     * backends, so the unique constraints survive untouched.
+     */
+    private void renameLegacyColumns() throws SQLException {
+        int renamed = 0;
+        for (String[] rename : COLUMN_RENAMES) {
+            if (!columnExists(tableSpawners, rename[0]) || columnExists(tableSpawners, rename[1])) {
+                continue;
+            }
+            try (Connection conn = getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE " + tableSpawners
+                        + " RENAME COLUMN " + rename[0] + " TO " + rename[1]);
+            }
+            renamed++;
+        }
+        if (renamed > 0) {
+            logger.info("Renamed " + renamed + " database columns to the 1.8.0 names.");
         }
     }
 
@@ -819,7 +864,7 @@ public class DatabaseManager {
     }
 
     /**
-     * Rewrites {@code inventory_data} into the {@code items} blob. Rows whose legacy payload cannot
+     * Rewrites {@code inventory_data} into the {@code storage_items} blob. Rows whose legacy payload cannot
      * be parsed are left with a null blob and logged, rather than failing the whole migration.
      */
     private int convertLegacyInventories() throws SQLException {
@@ -832,7 +877,7 @@ public class DatabaseManager {
                     "SELECT id, spawner_id, inventory_data FROM " + tableSpawners
                             + " WHERE inventory_data IS NOT NULL AND inventory_data <> ''");
                  PreparedStatement update = conn.prepareStatement(
-                         "UPDATE " + tableSpawners + " SET items = ?, total_items = ? WHERE id = ?")) {
+                         "UPDATE " + tableSpawners + " SET storage_items = ?, total_items = ? WHERE id = ?")) {
 
                 int pending = 0;
                 try (ResultSet rs = select.executeQuery()) {
@@ -937,7 +982,7 @@ public class DatabaseManager {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE INDEX " + indexName + " ON " + tableSpawners
-                    + " (server_name, world_name, chunk_x, chunk_z)");
+                    + " (server_name, world, chunk_x, chunk_z)");
         }
     }
 

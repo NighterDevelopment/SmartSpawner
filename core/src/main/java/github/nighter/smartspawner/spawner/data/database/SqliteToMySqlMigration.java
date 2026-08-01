@@ -29,28 +29,28 @@ public class SqliteToMySqlMigration {
     // MySQL insert syntax (target)
     private static final String INSERT_SQL_MYSQL = """
             INSERT INTO %s (
-                spawner_id, server_name, world_name, loc_x, loc_y, loc_z, chunk_x, chunk_z,
-                entity_type, item_spawner_material, spawner_exp, spawner_active,
-                spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
+                spawner_id, server_name, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
+                entity, item_spawner_type, exp, active,
+                activation_range, stop, delay, max_loot_slots,
                 max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                 last_spawn_time, is_at_capacity, last_interacted_player,
-                preferred_sort_item, filtered_items, items, total_items
+                preferred_sort_item, filtered_items, storage_items, total_items
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
-                world_name = VALUES(world_name),
+                world = VALUES(world),
                 loc_x = VALUES(loc_x),
                 loc_y = VALUES(loc_y),
                 loc_z = VALUES(loc_z),
                 chunk_x = VALUES(chunk_x),
                 chunk_z = VALUES(chunk_z),
-                entity_type = VALUES(entity_type),
-                item_spawner_material = VALUES(item_spawner_material),
-                spawner_exp = VALUES(spawner_exp),
-                spawner_active = VALUES(spawner_active),
-                spawner_range = VALUES(spawner_range),
-                spawner_stop = VALUES(spawner_stop),
-                spawn_delay = VALUES(spawn_delay),
-                max_spawner_loot_slots = VALUES(max_spawner_loot_slots),
+                entity = VALUES(entity),
+                item_spawner_type = VALUES(item_spawner_type),
+                exp = VALUES(exp),
+                active = VALUES(active),
+                activation_range = VALUES(activation_range),
+                stop = VALUES(stop),
+                delay = VALUES(delay),
+                max_loot_slots = VALUES(max_loot_slots),
                 max_stored_exp = VALUES(max_stored_exp),
                 min_mobs = VALUES(min_mobs),
                 max_mobs = VALUES(max_mobs),
@@ -61,7 +61,7 @@ public class SqliteToMySqlMigration {
                 last_interacted_player = VALUES(last_interacted_player),
                 preferred_sort_item = VALUES(preferred_sort_item),
                 filtered_items = VALUES(filtered_items),
-                items = VALUES(items),
+                storage_items = VALUES(storage_items),
                 total_items = VALUES(total_items)
             """;
 
@@ -69,21 +69,37 @@ public class SqliteToMySqlMigration {
     private static final String TABLE_PLACEHOLDER = "{table}";
 
     private static final String SELECT_COMMON_COLUMNS = """
-            spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
-            entity_type, item_spawner_material, spawner_exp, spawner_active,
-            spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
+            spawner_id, server_name, world, loc_x, loc_y, loc_z,
+            entity, item_spawner_type, exp, active,
+            activation_range, stop, delay, max_loot_slots,
             max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
             last_spawn_time, is_at_capacity, last_interacted_player,
             preferred_sort_item, filtered_items
             """;
 
-    /** Source file already at schema v3. */
-    private static final String SELECT_ALL_SQLITE =
-            "SELECT " + SELECT_COMMON_COLUMNS + ", items, total_items FROM " + TABLE_PLACEHOLDER;
+    /**
+     * The same columns under the names 1.7.x used, aliased to the current ones so the row reader
+     * below does not have to know which shape it is looking at. A file left behind by 1.7.x is
+     * reachable whenever a server upgrades and switches to MySQL in the same step.
+     */
+    private static final String SELECT_COMMON_COLUMNS_LEGACY = """
+            spawner_id, server_name, world_name AS world, loc_x, loc_y, loc_z,
+            entity_type AS entity, item_spawner_material AS item_spawner_type,
+            spawner_exp AS exp, spawner_active AS active,
+            spawner_range AS activation_range, spawner_stop AS stop,
+            spawn_delay AS delay, max_spawner_loot_slots AS max_loot_slots,
+            max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
+            last_spawn_time, is_at_capacity, last_interacted_player,
+            preferred_sort_item, filtered_items
+            """;
 
-    /** Source file left behind by an older release, still on the string inventory column. */
+    /** Source file already on the 1.8.0 shape. */
+    private static final String SELECT_ALL_SQLITE =
+            "SELECT " + SELECT_COMMON_COLUMNS + ", storage_items, total_items FROM " + TABLE_PLACEHOLDER;
+
+    /** Source file left behind by 1.7.x, still on the old names and the string inventory column. */
     private static final String SELECT_ALL_SQLITE_LEGACY =
-            "SELECT " + SELECT_COMMON_COLUMNS + ", inventory_data FROM " + TABLE_PLACEHOLDER;
+            "SELECT " + SELECT_COMMON_COLUMNS_LEGACY + ", inventory_data FROM " + TABLE_PLACEHOLDER;
 
     public SqliteToMySqlMigration(SmartSpawner plugin, DatabaseManager mysqlManager) {
         this.plugin = plugin;
@@ -210,7 +226,7 @@ public class SqliteToMySqlMigration {
             }
 
             // A file left behind by an older release still carries the string inventory column.
-            boolean hasItemBlob = sqliteColumnExists(sqliteConn, sourceTable, "items");
+            boolean hasItemBlob = sqliteColumnExists(sqliteConn, sourceTable, "storage_items");
             String selectSql = hasItemBlob
                     ? SELECT_ALL_SQLITE.replace(TABLE_PLACEHOLDER, sourceTable)
                     : SELECT_ALL_SQLITE_LEGACY.replace(TABLE_PLACEHOLDER, sourceTable);
@@ -236,20 +252,20 @@ public class SqliteToMySqlMigration {
                         // Transfer all columns
                         insertStmt.setString(1, rs.getString("spawner_id"));
                         insertStmt.setString(2, rs.getString("server_name"));
-                        insertStmt.setString(3, rs.getString("world_name"));
+                        insertStmt.setString(3, rs.getString("world"));
                         insertStmt.setInt(4, locX);
                         insertStmt.setInt(5, rs.getInt("loc_y"));
                         insertStmt.setInt(6, locZ);
                         insertStmt.setInt(7, locX >> 4);
                         insertStmt.setInt(8, locZ >> 4);
-                        insertStmt.setString(9, rs.getString("entity_type"));
-                        insertStmt.setString(10, rs.getString("item_spawner_material"));
-                        insertStmt.setLong(11, rs.getLong("spawner_exp"));
-                        insertStmt.setBoolean(12, rs.getBoolean("spawner_active"));
-                        insertStmt.setInt(13, rs.getInt("spawner_range"));
-                        insertStmt.setBoolean(14, rs.getBoolean("spawner_stop"));
-                        insertStmt.setLong(15, rs.getLong("spawn_delay"));
-                        insertStmt.setInt(16, rs.getInt("max_spawner_loot_slots"));
+                        insertStmt.setString(9, rs.getString("entity"));
+                        insertStmt.setString(10, rs.getString("item_spawner_type"));
+                        insertStmt.setLong(11, rs.getLong("exp"));
+                        insertStmt.setBoolean(12, rs.getBoolean("active"));
+                        insertStmt.setInt(13, rs.getInt("activation_range"));
+                        insertStmt.setBoolean(14, rs.getBoolean("stop"));
+                        insertStmt.setLong(15, rs.getLong("delay"));
+                        insertStmt.setInt(16, rs.getInt("max_loot_slots"));
                         insertStmt.setLong(17, rs.getLong("max_stored_exp"));
                         insertStmt.setInt(18, rs.getInt("min_mobs"));
                         insertStmt.setInt(19, rs.getInt("max_mobs"));
@@ -262,7 +278,7 @@ public class SqliteToMySqlMigration {
                         insertStmt.setString(26, rs.getString("filtered_items"));
 
                         if (hasItemBlob) {
-                            insertStmt.setBytes(27, rs.getBytes("items"));
+                            insertStmt.setBytes(27, rs.getBytes("storage_items"));
                             insertStmt.setLong(28, rs.getLong("total_items"));
                         } else {
                             Map<ItemSignature, Long> items = readLegacyInventory(rs.getString("inventory_data"));
