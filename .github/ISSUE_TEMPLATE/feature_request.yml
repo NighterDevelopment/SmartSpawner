@@ -1,0 +1,58 @@
+name: Feature Suggestion
+description: Suggest an improvement or new capability for SmartSpawner
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve SmartSpawner. Describe the problem and intended outcome in enough detail for the suggestion to be evaluated.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and did not find a matching suggestion.
+          required: true
+        - label: This suggestion is related to SmartSpawner and is not a support request.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or limitation
+      description: What problem does this feature solve, and who is affected by it?
+      placeholder: Describe the current limitation and why it matters.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution
+      description: Describe how you expect the feature to work from a player or administrator perspective.
+      placeholder: Include the expected behavior, workflow, commands, permissions, or configuration where relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: Provide a concrete example showing how this feature would be used on a real server.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe any workarounds, plugins, or alternative designs you have considered.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add mockups, configuration examples, screenshots, or links that help explain the suggestion.

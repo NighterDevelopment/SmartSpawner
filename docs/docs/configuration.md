@@ -50,7 +50,7 @@ Enables extra console output for troubleshooting. Keep this <code>false</code> i
 
 <ConfigGroup name="spawner_properties">
 <template #info>
-Controls the default behavior of all Smart Spawners. These values apply to every spawner unless overridden by per-entity settings.
+Controls the default behavior of all Smart Spawners. These values apply to every spawner unless overridden by per-mob settings.
 </template>
 
 <ConfigGroup name="default">
@@ -117,7 +117,9 @@ Durability points removed from the tool when a spawner is broken.
 
 <ConfigProperty name="sneak_break" value="true" type="boolean">
 When <code>true</code>, sneaking while breaking a stacked spawner removes up to 64 spawners at once. When <code>false</code>, sneaking has no special effect.<br><br>
-⚠️ If a spawner entity has <code>drop_chance</code> configured in <code>spawners_settings.yml</code>, sneak breaking is blocked for that spawner (one at a time only), unless the player has <code>smartspawner.break.bypassdropchance</code>.
+::: warning Drop chance and sneak breaking
+If a mob type has `drop_chance` configured in `spawners_settings.yml`, sneak breaking is blocked for that spawner (one at a time only), unless the player has `smartspawner.break.bypassdropchance`.
+:::
 </ConfigProperty>
 
 <ConfigProperty name="sell_and_xp_break" value="true" type="boolean">
@@ -148,6 +150,18 @@ Allows naturally generated vanilla spawners to be broken and collected.
 
 <ConfigProperty name="convert_to_smart_spawner" value="false" type="boolean">
 If <code>true</code>, breaking a natural spawner converts it into a Smart Spawner. If <code>false</code>, it drops a vanilla spawner item.
+</ConfigProperty>
+
+<ConfigProperty name="drop_chance" value="(commented out)" type="string">
+Optional chance, as a percentage from <code>0.0</code> to <code>100.0</code>, that breaking a natural spawner actually drops the spawner item. Use the <code>default</code> key to set the chance for every mob type at once, then add specific mob types (for example <code>ZOMBIE: 75.0</code>) to override it for just that type. If this section is left commented out, or a mob type isn't listed and no <code>default</code> is set, the drop chance is 100.0. This also applies to spawners with no mob type assigned yet (uses the <code>default</code> chance).
+
+```yaml
+drop_chance:
+  default: 80.0   # applies to every spawner type
+  ZOMBIE: 75.0    # override for a specific type
+  SKELETON: 50.0
+  BLAZE: 25.0
+```
 </ConfigProperty>
 
 <ConfigProperty name="spawn_mobs" value="true" type="boolean">
@@ -367,7 +381,7 @@ Controls when approximation starts (when <code>approximate_loot</code> is <code>
 | `SPAWNER_ITEMS_SORT` | Items sorted in storage |
 | `SPAWNER_ITEM_FILTER` | Item filter toggled |
 | `SPAWNER_DROP_PAGE_ITEMS` | All items on current page dropped |
-| `SPAWNER_EGG_CHANGE` | Entity type changed with spawn egg |
+| `SPAWNER_EGG_CHANGE` | Mob type changed with spawn egg |
 | `COMMAND_EXECUTE_PLAYER` | Command run by a player |
 | `COMMAND_EXECUTE_CONSOLE` | Command run by console |
 | `COMMAND_EXECUTE_RCON` | Command run via RCON |

@@ -1,4 +1,6 @@
 <script setup>
+import LucideIcon from '../icon/LucideIcon.vue'
+
 defineProps({
   title: String,
   icon: String
@@ -8,7 +10,9 @@ defineProps({
 <template>
   <div class="feature-card">
     <div class="fc-header">
-      <div class="fc-icon">{{ icon }}</div>
+      <div v-if="icon" class="fc-icon">
+        <LucideIcon :name="icon" :size="18" />
+      </div>
       <h3 class="fc-title">{{ title }}</h3>
     </div>
     <div class="fc-content">
@@ -36,40 +40,44 @@ defineProps({
 .fc-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .fc-icon {
-  font-size: 1.8rem;
-  background: var(--vp-c-bg-mute);
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 8px;
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  flex-shrink: 0;
 }
 
 .fc-title {
   margin: 0 !important;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--vp-c-text-1);
 }
 
 .fc-content {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: var(--vp-c-text-2);
   line-height: 1.6;
   flex-grow: 1;
 }
 
+.fc-content :deep(p) {
+  margin: 0;
+}
+
 .fc-content :deep(img) {
-  border-radius: 8px;
+  border-radius: 10px;
   margin-top: 16px;
   border: 1px solid var(--vp-c-border);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   width: 100%;
   height: auto;
 }

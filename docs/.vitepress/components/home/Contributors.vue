@@ -1,5 +1,25 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { useData } from 'vitepress'
+import LucideIcon from '../icon/LucideIcon.vue'
+
+const { lang } = useData()
+const isVi = computed(() => (lang.value || '').startsWith('vi'))
+const copy = computed(() => isVi.value
+  ? {
+      title: 'Người đóng góp',
+      subtitle: 'SmartSpawner là dự án mã nguồn mở được xây dựng cùng cộng đồng.',
+      detail: 'Mọi đóng góp, dù lớn hay nhỏ, đều tạo nên khác biệt.',
+      error: 'Không thể tải danh sách người đóng góp. Xem trên',
+      cta: 'Xem tất cả trên GitHub'
+    }
+  : {
+      title: 'Contributors',
+      subtitle: 'SmartSpawner is open source and built with help from the community.',
+      detail: 'Every contribution, big or small, makes a difference.',
+      error: 'Could not load contributors. View them on',
+      cta: 'View all on GitHub'
+    })
 
 const contributors = ref([])
 const loading = ref(true)
@@ -9,7 +29,15 @@ onMounted(async () => {
   try {
     const res = await fetch('https://api.github.com/repos/OpenVdra/SmartSpawner/contributors?per_page=50')
     if (!res.ok) throw new Error()
-    contributors.value = await res.json()
+    const data = await res.json()
+    contributors.value = data.filter(contributor => {
+      const login = contributor.login?.toLowerCase() ?? ''
+      return contributor.type !== 'Bot'
+        && !login.includes('copilot')
+        && !login.includes('dependabot')
+        && !login.includes('dependency')
+        && !login.endsWith('[bot]')
+    })
   } catch {
     error.value = true
   } finally {
@@ -21,10 +49,10 @@ onMounted(async () => {
 <template>
   <div class="contributors-section">
     <div class="contributors-inner">
-      <h2 class="contributors-title">Contributors</h2>
+      <h2 class="contributors-title">{{ copy.title }}</h2>
       <p class="contributors-sub">
-        SmartSpawner is open source and built with help from the community.<br>
-        Every contribution, big or small, makes a difference.
+        {{ copy.subtitle }}<br>
+        {{ copy.detail }}
       </p>
 
       <div v-if="loading" class="contributors-placeholder">
@@ -32,7 +60,7 @@ onMounted(async () => {
       </div>
 
       <div v-else-if="error" class="contributors-error">
-        Could not load contributors. View them on
+        {{ copy.error }}
         <a href="https://github.com/OpenVdra/SmartSpawner/graphs/contributors" target="_blank" rel="noopener noreferrer">GitHub</a>.
       </div>
 
@@ -57,7 +85,8 @@ onMounted(async () => {
         rel="noopener noreferrer"
         class="contributors-cta"
       >
-        View all on GitHub →
+        <span>{{ copy.cta }}</span>
+        <LucideIcon name="ArrowUpRight" :size="16" />
       </a>
     </div>
   </div>
@@ -65,8 +94,7 @@ onMounted(async () => {
 
 <style scoped>
 .contributors-section {
-  border-top: 1px solid var(--vp-c-border);
-  padding: 64px 24px 80px;
+  padding: var(--home-section-gap) 24px 80px;
 }
 
 .contributors-inner {
@@ -80,6 +108,8 @@ onMounted(async () => {
   font-weight: 700;
   color: var(--vp-c-text-1);
   margin: 0 0 10px;
+  padding-top: 0;
+  border-top: 0;
   letter-spacing: -0.02em;
 }
 
@@ -169,7 +199,9 @@ onMounted(async () => {
 }
 
 .contributors-cta {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--vp-c-brand-1);
   font-size: 0.9rem;
   font-weight: 600;

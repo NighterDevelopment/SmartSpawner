@@ -2,15 +2,12 @@ package github.nighter.smartspawner.spawner.gui.synchronization.services;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.Scheduler;
-import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.spawner.gui.storage.SpawnerStorageUI;
 import github.nighter.smartspawner.spawner.gui.storage.StoragePageHolder;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-
-import java.util.Map;
 
 /**
  * Service responsible for handling storage GUI page updates.
@@ -21,32 +18,11 @@ public class StorageUpdateService {
     private static final int ITEMS_PER_PAGE = 45;
 
     private final SmartSpawner plugin;
-    private final LanguageManager languageManager;
     private final SpawnerStorageUI spawnerStorageUI;
-
-    // Cache for storage title format
-    private String cachedStorageTitleFormat = null;
 
     public StorageUpdateService(SmartSpawner plugin) {
         this.plugin = plugin;
-        this.languageManager = plugin.getLanguageManager();
         this.spawnerStorageUI = plugin.getSpawnerStorageUI();
-        initializeCache();
-    }
-
-    /**
-     * Initializes the cached storage title format.
-     */
-    private void initializeCache() {
-        cachedStorageTitleFormat = languageManager.getGuiTitle("gui_title_storage");
-    }
-
-    /**
-     * Reloads the cached storage title format.
-     */
-    public void reloadCache() {
-        cachedStorageTitleFormat = null;
-        initializeCache();
     }
 
     /**
@@ -161,37 +137,6 @@ public class StorageUpdateService {
      * @return Formatted title
      */
     private String getStorageTitle(SpawnerData spawner, int page, int totalPages) {
-        if (cachedStorageTitleFormat == null) {
-            cachedStorageTitleFormat = languageManager.getGuiTitle("gui_title_storage");
-        }
-        
-        // Build base placeholders (always present)
-        Map<String, String> placeholders = new java.util.HashMap<>(5);
-        placeholders.put("current_page", String.valueOf(page));
-        placeholders.put("total_pages", String.valueOf(totalPages));
-
-        // OPTIMIZATION: Only compute entity placeholders if they exist in the title format
-        if (cachedStorageTitleFormat.contains("{entity}") || cachedStorageTitleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
-            String entityName;
-            if (spawner.isItemSpawner()) {
-                entityName = languageManager.getVanillaItemName(spawner.getSpawnedItemMaterial());
-            } else {
-                entityName = languageManager.getFormattedMobName(spawner.getEntityType());
-            }
-
-            if (cachedStorageTitleFormat.contains("{entity}")) {
-                placeholders.put("entity", entityName);
-            }
-            if (cachedStorageTitleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
-                placeholders.put("ᴇɴᴛɪᴛʏ", languageManager.getSmallCaps(entityName));
-            }
-        }
-
-        // OPTIMIZATION: Only compute amount if it exists in the title format
-        if (cachedStorageTitleFormat.contains("{amount}")) {
-            placeholders.put("amount", String.valueOf(spawner.getStackSize()));
-        }
-
-        return languageManager.getGuiTitle("gui_title_storage", placeholders);
+        return spawnerStorageUI.getStorageTitle(spawner, page, totalPages);
     }
 }

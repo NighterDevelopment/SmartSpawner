@@ -33,11 +33,14 @@ public class IntegrationManager {
     private boolean hasBentoBox = false;
     private boolean hasSimpleClaimSystem = false;
     private boolean hasSimpleClaimSystem2 = false;
+    private boolean hasRedProtect = false;
     private boolean hasMinePlots = false;
     private boolean hasMythicMobs = false;
     private boolean hasIridiumSkyblock = false;
     private boolean hasPlotSquared = false;
     private boolean hasResidence = false;
+    private boolean hasFactions = false;
+    private boolean hasBlockLocker = false;
 
     // Integration plugin flags
     private boolean hasAuraSkills = false;
@@ -125,6 +128,11 @@ public class IntegrationManager {
             return false;
         }, true);
 
+        hasRedProtect = checkPlugin("RedProtect", () -> {
+            Plugin pRP = Bukkit.getPluginManager().getPlugin("RedProtect");
+            return pRP != null && pRP.isEnabled();
+        }, true);
+
         hasMinePlots = checkPlugin("minePlots", () -> {
             Plugin mP = Bukkit.getPluginManager().getPlugin("minePlots");
             return mP != null && mP.isEnabled();
@@ -163,6 +171,16 @@ public class IntegrationManager {
         hasResidence = checkPlugin("Residence", () -> {
             Plugin residence = Bukkit.getPluginManager().getPlugin("Residence");
             return residence != null && residence.isEnabled();
+        }, true);
+
+        hasFactions = checkPlugin("FactionsUUID", () -> {
+            Plugin factions = Bukkit.getPluginManager().getPlugin("FactionsUUID");
+            return factions != null && factions.isEnabled();
+        }, true);
+
+        hasBlockLocker = checkPlugin("BlockLocker", () -> {
+            Plugin blockLocker = Bukkit.getPluginManager().getPlugin("BlockLocker");
+            return blockLocker != null && blockLocker.isEnabled();
         }, true);
 
     }

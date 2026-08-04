@@ -4,18 +4,19 @@ import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.language.file.LanguageFiles;
 import lombok.Getter;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+/**
+ * Keeps every bundled language file in sync with the defaults. Version-less: on every startup missing
+ * keys are topped up (values and comments) while user translations are preserved. See {@link YamlMigrator}.
+ */
 public class LanguageUpdater {
-    private static final String VERSION_KEY = "language_version";
 
     private final SmartSpawner plugin;
     private final Set<LanguageFileType> activeFileTypes = new HashSet<>();
@@ -45,8 +46,7 @@ public class LanguageUpdater {
 
     /**
      * For each supported locale, ensures every language file is present and up-to-date.
-     * Files are created if missing, or merged-updated if the stored version is older than
-     * the running plugin version. User-customised values are preserved during updates.
+     * Files are created if missing, otherwise merged-updated. User-customised values are preserved.
      */
     public void checkAndUpdateLanguageFiles() {
         for (String language : LanguageFiles.SUPPORTED_LANGUAGES) {
@@ -54,58 +54,50 @@ public class LanguageUpdater {
             langDir.mkdirs();
 
             for (LanguageFileType type : activeFileTypes) {
-                File langFile = new File(langDir, type.getFileName());
+                File langFile   = new File(langDir, type.getFileName());
                 String resource = "language/" + language + "/" + type.getFileName();
+                List<YamlMigrator.Rename> renames = ConfigMigrations.forLanguageFile(type);
+
                 if (type == LanguageFileType.ITEMS) {
-                    updateItemDefaults(langFile, resource);
+                    // items.yml: only top up the '<section>.default' keys; leave per-mob overrides alone.
+                    YamlMigrator.migrate(langFile, plugin.getResource(resource), renames,
+                            ConfigMigrations.ITEM_DEFAULTS, false, plugin.getLogger());
+                } else if (type == LanguageFileType.MESSAGES || type == LanguageFileType.COMMAND_MESSAGES) {
+                    // Which parts of a message to send is the owner's choice. Once they have a
+                    // message, its components are left alone, so deleting 'message' to leave only
+                    // 'action_bar' sticks instead of coming back and sending both.
+                    YamlMigrator.migrate(langFile, plugin.getResource(resource), renames, null, true,
+                            YamlMigrator.OwnedSection.restoredWhenAbsent(LanguageUpdater::isMessageEntry),
+                            plugin.getLogger());
                 } else {
-                    ConfigVersionService.updateFile(plugin, langFile, resource, VERSION_KEY);
+                    YamlMigrator.migrate(langFile, plugin.getResource(resource), renames,
+                            plugin.getLogger());
                 }
             }
         }
     }
 
-    private void updateItemDefaults(File langFile, String resource) {
-        if (!langFile.exists()) {
-            ConfigVersionService.updateFile(plugin, langFile, resource, VERSION_KEY);
-            return;
-        }
+    /** The parts a single message is built from. A section holding any of these is one message. */
+    private static final Set<String> MESSAGE_COMPONENTS =
+            Set.of("message", "title", "subtitle", "action_bar", "sound", "enabled");
 
-        FileConfiguration current = YamlConfiguration.loadConfiguration(langFile);
-        String currentVersion = plugin.getPluginMeta().getVersion();
-        if (new Version(current.getString(VERSION_KEY, "0.0.0"))
-                .compareTo(new Version(currentVersion)) >= 0) {
-            return;
-        }
-
-        YamlConfiguration defaults = new YamlConfiguration();
-        try (InputStream input = plugin.getResource(resource)) {
-            if (input == null) {
-                plugin.getLogger().warning("Language resource not found in JAR: " + resource);
-                return;
+    /**
+     * True when {@code path} is one message rather than a group of them.
+     *
+     * <p>{@code messages.yml} is flat, so its messages sit at the top level. {@code command_messages.yml}
+     * nests them one deeper under the command they belong to, and those command sections must not count:
+     * locking {@code list} as a whole would keep a message added to it by a later update from ever
+     * reaching the file, which is the missing-key warning this is meant to avoid. Asking what a section
+     * directly contains identifies a message in either shape.</p>
+     */
+    private static boolean isMessageEntry(YamlConfiguration defaults, String path) {
+        ConfigurationSection section = defaults.getConfigurationSection(path);
+        if (section == null) return false;
+        for (String child : section.getKeys(false)) {
+            if (MESSAGE_COMPONENTS.contains(child) && !section.isConfigurationSection(child)) {
+                return true;
             }
-            defaults.loadFromString(new String(input.readAllBytes(), StandardCharsets.UTF_8));
-
-            for (String sectionName : new String[]{"smart_spawner", "item_spawner", "vanilla_spawner"}) {
-                String defaultPath = sectionName + ".default";
-                ConfigurationSection section = defaults.getConfigurationSection(defaultPath);
-                if (section == null) {
-                    continue;
-                }
-
-                for (String key : section.getKeys(true)) {
-                    String path = defaultPath + "." + key;
-                    if (!section.isConfigurationSection(key) && !current.contains(path)) {
-                        current.set(path, defaults.get(path));
-                    }
-                }
-            }
-
-            current.set(VERSION_KEY, currentVersion);
-            current.save(langFile);
-        } catch (Exception e) {
-            plugin.getLogger().warning("Failed to update default item language keys in "
-                    + langFile.getName() + ": " + e.getMessage());
         }
+        return false;
     }
 }

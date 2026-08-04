@@ -1,0 +1,233 @@
+name: Release
+
+# Two ways to release:
+#   1. Publish a GitHub Release (drafts do NOT trigger this — you must click "Publish").
+#   2. Run it by hand from the Actions tab ("Run workflow"). In that case the workflow
+#      auto-creates the tag + GitHub Release from the Gradle version if one doesn't exist
+#      yet, so you don't have to create a tag first.
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to create the tag/release and attach the built jar
+
+env:
+  # Game versions these uploads target. Must match the version lists that exist on
+  # Modrinth and Hangar. Keep this set in sync with the platforms when you add a new one.
+  GAME_VERSIONS: "1.21.5,1.21.6,1.21.7,1.21.8,1.21.9,1.21.10,1.21.11,26.1,26.1.1,26.1.2,26.2"
+  MODRINTH_ID: "9tQwxSFr"
+  # Your project slug on hangar.papermc.io. Verify it matches the project you created.
+  HANGAR_SLUG: "SmartSpawner"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build shadow jar
+        run: |
+          chmod +x gradlew
+          ./gradlew :core:shadowJar --no-daemon
+
+      - name: Resolve version and jar path
+        id: meta
+        run: |
+          VERSION=$(grep 'version = "' build.gradle.kts | head -n 1 | awk -F'"' '{print $2}')
+          JAR=$(ls core/build/libs/SmartSpawner-*.jar | head -n1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "jar=$JAR" >> "$GITHUB_OUTPUT"
+
+      # Resolve the changelog, in priority order:
+      #   1. the section for this version in CHANGELOG.md (the `## <version>` block,
+      #      keep-a-changelog style) — this is the normal path: keep CHANGELOG.md up to
+      #      date and the notes flow automatically;
+      #   2. the body of an already-published GitHub Release (UI publish);
+      #   3. a fallback line.
+      # Reused for the auto-created release, Modrinth, Hangar and Discord.
+      - name: Resolve changelog
+        id: changelog
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+        run: |
+          BODY=""
+          if [ -z "$BODY" ] && [ -f CHANGELOG.md ]; then
+            # Print everything between `## <version> ...` and the next `## ` heading,
+            # then strip leading/trailing blank lines.
+            BODY=$(awk -v ver="$VERSION" '
+              /^## / { if (found) exit; if ($2 == ver) { found=1; next } }
+              found { print }
+            ' CHANGELOG.md | awk 'NF {p=1} p' | tac | awk 'NF {p=1} p' | tac)
+          fi
+          if [ -z "$BODY" ]; then
+            BODY="$RELEASE_BODY"
+          fi
+          if [ -z "$BODY" ]; then
+            BODY="See the GitHub release for details."
+          fi
+          {
+            echo "body<<__CHANGELOG_EOF__"
+            echo "$BODY"
+            echo "__CHANGELOG_EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      # Make sure a GitHub Release (and its tag) exists for this version. On a
+      # `release: published` event it already does — we just take its tag. On a manual
+      # `workflow_dispatch` run we create the tag + Release from the Gradle version (using
+      # the changelog resolved above) if it isn't there yet, so "Run workflow" is enough to
+      # cut a release. The tag is the bare version (e.g. 1.7.1), no "v" prefix. Creating a
+      # release with GITHUB_TOKEN does not re-trigger this workflow, so no double publish.
+      - name: Ensure GitHub release exists
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          CHANGELOG: ${{ steps.changelog.outputs.body }}
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="$VERSION"
+            if ! gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+              gh release create "$TAG" --repo "$REPO" --target "${{ github.ref_name }}" \
+                --title "SmartSpawner $VERSION" --notes "$CHANGELOG"
+            fi
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          URL=$(gh release view "$TAG" --repo "$REPO" --json url --jq '.url' 2>/dev/null || true)
+          if [ -z "$URL" ]; then
+            URL="https://github.com/$REPO/releases"
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      # Each publish step below runs independently: a failure in one does not skip the
+      # others (if: !cancelled), but all of them require the build and metadata to succeed.
+
+      - name: Attach jar to the GitHub release
+        if: ${{ !cancelled() && steps.meta.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ steps.release.outputs.tag }}" \
+            "${{ steps.meta.outputs.jar }}" --clobber --repo "${{ github.repository }}"
+
+      - name: Publish to Modrinth
+        # Calls the Modrinth API directly. mc-publish is avoided here because it filters
+        # game versions against a bundled Minecraft manifest that has no 26.x entries,
+        # which drops every version and fails the upload. The API accepts them as-is.
+        if: ${{ !cancelled() && steps.meta.outcome == 'success' }}
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          JAR: ${{ steps.meta.outputs.jar }}
+          CHANGELOG: ${{ steps.changelog.outputs.body }}
+        run: |
+          GAME_VERSIONS_JSON=$(printf '%s' "$GAME_VERSIONS" | jq -R 'split(",")')
+          DATA=$(jq -n \
+            --arg project_id "$MODRINTH_ID" \
+            --arg version_number "$VERSION" \
+            --arg name "SmartSpawner $VERSION" \
+            --arg changelog "$CHANGELOG" \
+            --argjson game_versions "$GAME_VERSIONS_JSON" \
+            '{
+              project_id: $project_id,
+              version_number: $version_number,
+              name: $name,
+              version_type: "release",
+              changelog: $changelog,
+              game_versions: $game_versions,
+              loaders: ["paper", "purpur", "folia"],
+              dependencies: [],
+              featured: true,
+              file_parts: ["file"],
+              primary_file: "file"
+            }')
+          curl -sS --fail-with-body -X POST https://api.modrinth.com/v2/version \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            --form-string "data=$DATA" \
+            -F "file=@$JAR;type=application/java-archive"
+
+      - name: Publish to Hangar
+        if: ${{ !cancelled() && steps.meta.outcome == 'success' }}
+        uses: milkdrinkers/Hangar-Publish@v2
+        with:
+          api_token: ${{ secrets.HANGAR_API_TOKEN }}
+          slug: ${{ env.HANGAR_SLUG }}
+          version: ${{ steps.meta.outputs.version }}
+          channel: Release
+          description: ${{ steps.changelog.outputs.body }}
+          files: |
+            [
+              { "path": "${{ steps.meta.outputs.jar }}", "platforms": ["PAPER"] }
+            ]
+          platform_dependencies: |
+            { "PAPER": ["1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.1.1", "26.1.2", "26.2"] }
+
+      # Build the Discord embed body: the changelog followed by a download-links
+      # section. The GitHub link is the resolved release URL; Modrinth and Hangar
+      # come from the same badges linked in README.md.
+      #
+      # Discord embed descriptions are capped at 4096 characters; past that Discord
+      # silently truncates the *whole* string, which can chop off the download
+      # links at the bottom instead of just the changelog. So we measure the footer
+      # (download links) first, and if the changelog would overflow the remaining
+      # budget, truncate the changelog ourselves and append a "read full changelog
+      # on GitHub" pointer — the footer always survives intact.
+      - name: Compose Discord message
+        id: discord
+        if: ${{ !cancelled() && steps.meta.outcome == 'success' }}
+        env:
+          CHANGELOG: ${{ steps.changelog.outputs.body }}
+          RELEASE_URL: ${{ steps.release.outputs.url }}
+        run: |
+          MODRINTH="https://modrinth.com/plugin/smartspawner"
+          SPIGOT="https://www.spigotmc.org/resources/120743/"
+          HANGAR="https://hangar.papermc.io/Nighter/SmartSpawner"
+
+          FOOTER=$(printf '\n\n**📥 Download**\n[Modrinth](%s) · [Hangar](%s) · [Spigot](%s) · [GitHub Release](%s)' \
+            "$MODRINTH" "$HANGAR" "$SPIGOT" "$RELEASE_URL")
+          TRUNCATED_NOTE=$(printf '\n\n*… Read full changelog on [GitHub](%s)*' "$RELEASE_URL")
+
+          # Discord's real limit is 4096; leave headroom since bash's character count
+          # (locale-dependent) can differ slightly from Discord's own count.
+          MAX_LEN=4000
+          AVAILABLE=$((MAX_LEN - ${#FOOTER}))
+
+          if [ "${#CHANGELOG}" -gt "$AVAILABLE" ]; then
+            BUDGET=$((AVAILABLE - ${#TRUNCATED_NOTE}))
+            if [ "$BUDGET" -lt 0 ]; then
+              BUDGET=0
+            fi
+            CHANGELOG="${CHANGELOG:0:$BUDGET}${TRUNCATED_NOTE}"
+          fi
+
+          {
+            echo "description<<__DISCORD_EOF__"
+            echo "$CHANGELOG"
+            echo "$FOOTER"
+            echo "__DISCORD_EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Announce on Discord
+        if: ${{ !cancelled() && steps.meta.outcome == 'success' }}
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          embed-title: "SmartSpawner ${{ steps.meta.outputs.version }} released"
+          embed-description: ${{ steps.discord.outputs.description }}
+          embed-url: ${{ steps.release.outputs.url }}
+          embed-color: "5763719"

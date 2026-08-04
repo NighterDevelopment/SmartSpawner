@@ -1,7 +1,6 @@
 package github.nighter.smartspawner.spawner.gui.storage;
 
 import github.nighter.smartspawner.SmartSpawner;
-import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.api.events.SpawnerDropAllEvent;
 import github.nighter.smartspawner.api.events.SpawnerTakeAllEvent;
 import github.nighter.smartspawner.api.gui.GuiLayoutType;
@@ -168,10 +167,10 @@ public class SpawnerStorageAction implements Listener {
                         handleDropPageItems(player, spawner, inventory));
                 break;
             case "sell_all":
-                handleSellAction(player, spawner, false, button, clickTypeString);
+                handleSellAction(player, spawner, false, button, clickTypeString, inventory);
                 break;
             case "sell_and_exp":
-                handleSellAction(player, spawner, true, button, clickTypeString);
+                handleSellAction(player, spawner, true, button, clickTypeString, inventory);
                 break;
             case "collect_exp":
                 playActionResult(player, button, clickTypeString,
@@ -212,7 +211,7 @@ public class SpawnerStorageAction implements Listener {
      */
     private void handleSellAction(Player player, SpawnerData spawner, boolean collectExp,
                                   github.nighter.smartspawner.spawner.gui.layout.GuiButton sourceButton,
-                                  String sourceClickType) {
+                                  String sourceClickType, Inventory inventory) {
         if (!plugin.hasSellIntegration()) {
             plugin.getGuiButtonInteractionService().playFailSound(
                     player, sourceButton, sourceClickType);
@@ -228,10 +227,9 @@ public class SpawnerStorageAction implements Listener {
 
         // Check if there are items to sell
         if (spawner.getVirtualInventory().getUsedSlots() == 0) {
-            if (collectExp) {
-                // No items to sell but still collect exp
-                boolean success = plugin.getSpawnerMenuAction()
-                        .handleExpBottleAcceptedClick(player, spawner, true);
+            if (collectExp && spawner.getSpawnerExp() > 0) {
+                // No items to sell, but collect the stored exp without leaving the storage GUI
+                boolean success = handleCollectExpAction(player, spawner, inventory);
                 playActionResult(player, sourceButton, sourceClickType, success);
             } else {
                 messageService.sendMessage(player, "spawner_storage_empty");
@@ -568,37 +566,7 @@ public class SpawnerStorageAction implements Listener {
     }
 
     private void updateInventoryTitle(Player player, SpawnerData spawner, int page, int totalPages) {
-        // Build placeholders map with all supported placeholders
-        Map<String, String> placeholders = new HashMap<>(5);
-        placeholders.put("current_page", String.valueOf(page));
-        placeholders.put("total_pages", String.valueOf(totalPages));
-
-        // Get cached title format to check which placeholders are used
-        String titleFormat = languageManager.getGuiTitle("gui_title_storage");
-
-        // Add entity placeholders if used in title
-        if (titleFormat.contains("{entity}") || titleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
-            String entityName;
-            if (spawner.isItemSpawner()) {
-                entityName = languageManager.getVanillaItemName(spawner.getSpawnedItemMaterial());
-            } else {
-                entityName = languageManager.getFormattedMobName(spawner.getEntityType());
-            }
-
-            if (titleFormat.contains("{entity}")) {
-                placeholders.put("entity", entityName);
-            }
-            if (titleFormat.contains("{ᴇɴᴛɪᴛʏ}")) {
-                placeholders.put("ᴇɴᴛɪᴛʏ", languageManager.getSmallCaps(entityName));
-            }
-        }
-
-        // Add amount placeholder if used in title
-        if (titleFormat.contains("{amount}")) {
-            placeholders.put("amount", String.valueOf(spawner.getStackSize()));
-        }
-
-        String newTitle = languageManager.getGuiTitle("gui_title_storage", placeholders);
+        String newTitle = plugin.getSpawnerStorageUI().getStorageTitle(spawner, page, totalPages);
 
         try {
             player.getOpenInventory().setTitle(newTitle);
@@ -895,19 +863,19 @@ public class SpawnerStorageAction implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) {
-            return;
-        }
-
         Inventory inventory = event.getInventory();
-        Scheduler.runEntityTask(player, () -> handleInventoryClose(inventory));
-    }
-
-    private void handleInventoryClose(Inventory inventory) {
         if (!(inventory.getHolder(false) instanceof StoragePageHolder holder)) {
             return;
         }
 
+        // Inventory close events already execute on the owning player's region thread.
+        // Do not defer this work to the player's scheduler: after closing, a block-backed
+        // inventory could belong to a different region and resolving its holder there
+        // violates Folia's thread ownership rules.
+        handleInventoryClose(holder);
+    }
+
+    private void handleInventoryClose(StoragePageHolder holder) {
         SpawnerData spawner = holder.getSpawnerData();
         if (spawner.isStorageDirty()){
             plugin.getSpawnerManager().markSpawnerModified(spawner.getSpawnerId());

@@ -39,6 +39,10 @@ ITEM_MATERIAL:
 | `chance` | `100.0` | Drop probability (0.0–100.0) |
 | `potion_type` | `POISON` | Potion type for tipped arrows only |
 
+::: tip Material names
+Every `material` value is a Bukkit material name in capital letters, for example `DIAMOND` or `NETHERITE_INGOT`. See the full list of valid names here: [Bukkit Material list](https://jd.papermc.io/paper/26.2/org/bukkit/Material.html).
+:::
+
 ## Examples
 
 ### Basic Resource Spawner

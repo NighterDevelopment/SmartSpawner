@@ -74,11 +74,23 @@ dependencies:
       load: BEFORE
       required: false
       join-classpath: true
+    RedProtect:
+      load: BEFORE
+      required: false
+      join-classpath: true
     minePlots:
       load: BEFORE
       required: false
       join-classpath: true
     Residence:
+      load: BEFORE
+      required: false
+      join-classpath: true
+    FactionsUUID:
+      load: BEFORE
+      required: false
+      join-classpath: true
+    BlockLocker:
       load: BEFORE
       required: false
       join-classpath: true

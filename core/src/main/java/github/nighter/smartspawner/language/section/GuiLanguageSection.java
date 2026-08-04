@@ -60,6 +60,10 @@ public final class GuiLanguageSection {
         return value == null || value.isBlank() ? defaultValue : value;
     }
 
+    public boolean contains(String key) {
+        return enabled.getAsBoolean() && config().isString(key);
+    }
+
     public String name(String key) {
         return name(key, Collections.emptyMap());
     }

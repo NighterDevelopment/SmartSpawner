@@ -1,44 +1,59 @@
-# Welcome to SmartSpawner
+# SmartSpawner Documentation
 
-**SmartSpawner** is a free, open-source Minecraft plugin that transforms the way spawners work on your server. Instead of spawning mobs that wander around and cause entity lag, SmartSpawner generates drops and experience directly into an internal storage, keeping your TPS high and your players happy.
+SmartSpawner replaces mob-heavy farms with direct drop and experience generation. Players manage stacks, storage, filters, selling, and upgrades from an in-game interface while server owners retain control over every rate and integration.
 
-## Quick Navigation
+<img
+  class="docs-brand-banner"
+  src="/banner.png"
+  alt="SmartSpawner — High-performance spawners. Zero mob lag."
+  width="1731"
+  height="909"
+/>
 
-<CardGrid>
-
-<DocCard icon="🚀" title="Installation" link="/docs/installation" desc="Install SmartSpawner on your server in minutes." />
-
-<DocCard icon="✨" title="Features" link="/docs/features" desc="Explore all features: GUI, stacking, shop integration, and more." />
-
-<DocCard icon="⌨️" title="Commands" link="/docs/commands" desc="Full command reference with syntax and descriptions." />
-
-<DocCard icon="🔐" title="Permissions" link="/docs/permissions" desc="Permission nodes for commands and player features." />
-
-<DocCard icon="⚙️" title="Configuration" link="/docs/configuration" desc="Configure spawner behavior, economy, visuals, and logging." />
-
-<DocCard icon="🧩" title="Developer API" link="/docs/developer-api/" desc="Integrate SmartSpawner into your own plugins with the Java API." />
-
-</CardGrid>
-
-## Why SmartSpawner?
+## Start Here
 
 <CardGrid>
 
-<FeatureCard icon="⚡" title="No Entity Lag">
-Traditional spawners create mobs that the server must tick every game cycle. SmartSpawner skips mob spawning entirely. Drops are calculated mathematically, meaning zero entities and zero additional TPS load.
+<DocCard icon="Rocket" title="Installation" link="/docs/installation" desc="Install SmartSpawner and verify your first startup." />
+
+<DocCard icon="Sparkles" title="Features" link="/features/" desc="See spawner types, stacking, storage, effects, and database support." />
+
+<DocCard icon="Terminal" title="Commands" link="/docs/commands" desc="Reference every player and administrator command." />
+
+<DocCard icon="ShieldCheck" title="Permissions" link="/docs/permissions" desc="Control commands and player-facing spawner actions." />
+
+<DocCard icon="Settings" title="Configuration" link="/docs/configuration" desc="Tune generation, storage, economy, visuals, and logging." />
+
+<DocCard icon="Plug" title="Plugin Integrations" link="/docs/integrations/" desc="Connect shops, economies, protections, islands, Bedrock, skills, and custom drops." />
+
+</CardGrid>
+
+## Why SmartSpawner
+
+<CardGrid>
+
+<FeatureCard icon="Zap" title="No Mob Load">
+Drops are calculated directly instead of ticking spawned mobs. Large farms stay responsive without changing the player progression loop.
 </FeatureCard>
 
-<FeatureCard icon="📦" title="Stackable by Default">
-Players can combine hundreds of spawners into a single block via right-click or the stacker GUI. Stack sizes and drop rates scale proportionally.
+<FeatureCard icon="Blocks" title="Stackable by Default">
+Players combine compatible spawners into a single block through direct interaction or the dedicated stacker interface.
 </FeatureCard>
 
-<FeatureCard icon="🛒" title="Direct Sell Support">
-Connect to EconomyShopGUI, ShopGUI+, zShop, and more. Players can sell everything from the spawner storage GUI with one click.
+<FeatureCard icon="ShoppingCart" title="Direct Selling">
+Storage contents can be valued through a supported shop plugin and paid through the configured economy backend.
 </FeatureCard>
 
-<FeatureCard icon="🌐" title="Wide Compatibility">
-Works with WorldGuard, GriefPrevention, Lands, Towny, SuperiorSkyblock2, MythicMobs, AuraSkills, Floodgate/Geyser, and many more.
+<FeatureCard icon="Code2" title="Built to Extend">
+The public Java API exposes spawner creation, data access, lifecycle events, validation, and GUI layout providers.
 </FeatureCard>
 
 </CardGrid>
 
+## Recommended Path
+
+1. Confirm the [server requirements](/docs/installation#requirements).
+2. Install SmartSpawner and start the server once.
+3. Review the [main configuration](/docs/configuration).
+4. Enable the [plugin integrations](/docs/integrations/) used by your server.
+5. Adjust [spawner drops](/docs/spawners-settings) and [item spawners](/docs/item-spawners-settings).
