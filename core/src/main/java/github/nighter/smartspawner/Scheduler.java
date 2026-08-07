@@ -49,6 +49,11 @@ public final class Scheduler {
      */
     public static Task runTask(Runnable runnable) {
         if (isFolia) {
+            if (Bukkit.isGlobalTickThread()) {
+                runnable.run();
+                return new Task(null);
+            }
+
             try {
                 io.papermc.paper.threadedregions.scheduler.ScheduledTask task =
                         Bukkit.getGlobalRegionScheduler().run(plugin, scheduledTask -> runnable.run());
@@ -192,6 +197,11 @@ public final class Scheduler {
      */
     public static Task runEntityTask(Entity entity, Runnable runnable) {
         if (isFolia && entity != null) {
+            if (Bukkit.isOwnedByCurrentRegion(entity)) {
+                runnable.run();
+                return new Task(null);
+            }
+
             try {
                 io.papermc.paper.threadedregions.scheduler.ScheduledTask task =
                         entity.getScheduler().run(plugin, scheduledTask -> runnable.run(), null);
@@ -264,6 +274,11 @@ public final class Scheduler {
      */
     public static Task runLocationTask(Location location, Runnable runnable) {
         if (isFolia && location != null && location.getWorld() != null) {
+            if (Bukkit.isOwnedByCurrentRegion(location)) {
+                runnable.run();
+                return new Task(null);
+            }
+
             try {
                 io.papermc.paper.threadedregions.scheduler.ScheduledTask task =
                         Bukkit.getRegionScheduler().run(plugin, location, scheduledTask -> runnable.run());
@@ -290,6 +305,11 @@ public final class Scheduler {
      */
     public static Task runChunkTask(World world, int chunkX, int chunkZ, Runnable runnable) {
         if (isFolia && world != null) {
+            if (Bukkit.isOwnedByCurrentRegion(world, chunkX, chunkZ)) {
+                runnable.run();
+                return new Task(null);
+            }
+
             try {
                 io.papermc.paper.threadedregions.scheduler.ScheduledTask task =
                         Bukkit.getRegionScheduler().run(plugin, world, chunkX, chunkZ, scheduledTask -> runnable.run());
@@ -349,53 +369,6 @@ public final class Scheduler {
             }
         } else {
             return runTaskTimer(runnable, delayTicks, periodTicks);
-        }
-    }
-
-    /**
-     * Runs a task in the region of a specific location in a world.
-     * Falls back to regular scheduling on non-Folia servers.
-     *
-     * @param location  The location in whose region to run the task
-     * @param runnable  The task to run
-     * @return A Task object representing the scheduled task
-     */
-    public static Task runWorldTask(Location location, Runnable runnable) {
-        if (isFolia && location != null && location.getWorld() != null) {
-            try {
-                io.papermc.paper.threadedregions.scheduler.ScheduledTask task =
-                        Bukkit.getRegionScheduler().run(plugin, location, scheduledTask -> runnable.run());
-                return new Task(task);
-            } catch (Exception e) {
-                plugin.getLogger().log(Level.WARNING, "Error scheduling world task in Folia, falling back to global scheduler", e);
-                return runTask(runnable);
-            }
-        } else {
-            return runTask(runnable);
-        }
-    }
-
-    /**
-     * Runs a delayed task in the region of a specific location in a world.
-     *
-     * @param location   The location in whose region to run the task
-     * @param runnable   The task to run
-     * @param delayTicks The delay in ticks before running the task
-     * @return A Task object representing the scheduled task
-     */
-    public static Task runWorldTaskLater(Location location, Runnable runnable, long delayTicks) {
-        if (isFolia && location != null && location.getWorld() != null) {
-            try {
-                io.papermc.paper.threadedregions.scheduler.ScheduledTask task =
-                        Bukkit.getRegionScheduler().runDelayed(plugin, location, scheduledTask -> runnable.run(),
-                                delayTicks < 1 ? 1 : delayTicks);
-                return new Task(task);
-            } catch (Exception e) {
-                plugin.getLogger().log(Level.WARNING, "Error scheduling delayed world task in Folia, falling back to global scheduler", e);
-                return runTaskLater(runnable, delayTicks);
-            }
-        } else {
-            return runTaskLater(runnable, delayTicks);
         }
     }
 
