@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class GuiButtonInteractionService implements Listener {
     private static final long NANOS_PER_TICK = 50_000_000L;
-    private static final long ANTI_SPAM_NANOS = 300_000_000L;
+    private static final long ANTI_SPAM_NANOS = 100_000_000L;
 
     private final SmartSpawner plugin;
     private final Map<UUID, Long> lastInteractions = new ConcurrentHashMap<>();
@@ -37,41 +37,33 @@ public class GuiButtonInteractionService implements Listener {
      * @return true when the action may continue, false while the button is cooling down
      */
     public boolean tryUse(Player player, GuiLayoutType layoutType, GuiButton button) {
-        if (!tryUseAntiSpam(player)) {
+        long now = System.nanoTime();
+        if (isAntiSpamCoolingDown(player, now)) {
             return false;
         }
 
         long cooldownTicks = button.getCooldownTicks();
         if (cooldownTicks > 0L) {
-            long now = System.nanoTime();
             long cooldownNanos = cooldownTicks > Long.MAX_VALUE / NANOS_PER_TICK
                     ? Long.MAX_VALUE
                     : cooldownTicks * NANOS_PER_TICK;
+
+            Long previous = getLastButtonClick(player, layoutType, button);
+            if (previous != null && now - previous < cooldownNanos) {
+                long remainingNanos = cooldownNanos - (now - previous);
+                plugin.getMessageService().sendMessage(player, "action_not_ready",
+                        Map.of("time", formatRemainingTime(remainingNanos)));
+                return false;
+            }
 
             Map<GuiLayoutType, Map<String, Long>> playerClicks = lastClicks.computeIfAbsent(
                     player.getUniqueId(), ignored -> new ConcurrentHashMap<>());
             Map<String, Long> layoutClicks = playerClicks.computeIfAbsent(
                     layoutType, ignored -> new ConcurrentHashMap<>());
-            String buttonKey = button.getButtonType();
-            while (true) {
-                Long previous = layoutClicks.get(buttonKey);
-                if (previous != null && now - previous < cooldownNanos) {
-                    long remainingNanos = cooldownNanos - (now - previous);
-                    plugin.getMessageService().sendMessage(player, "action_not_ready",
-                            Map.of("time", formatRemainingTime(remainingNanos)));
-                    return false;
-                }
-
-                if (previous == null) {
-                    if (layoutClicks.putIfAbsent(buttonKey, now) == null) {
-                        break;
-                    }
-                } else if (layoutClicks.replace(buttonKey, previous, now)) {
-                    break;
-                }
-            }
+            layoutClicks.put(button.getButtonType(), now);
         }
 
+        lastInteractions.put(player.getUniqueId(), now);
         return true;
     }
 
@@ -100,12 +92,16 @@ public class GuiButtonInteractionService implements Listener {
     }
 
     /**
-     * Applies the global 300 ms GUI click debounce without checking button cooldown.
+     * Applies the global 100 ms GUI click debounce without checking button cooldown.
      */
     public boolean tryUseAntiSpam(Player player) {
         long now = System.nanoTime();
-        Long previous = lastInteractions.put(player.getUniqueId(), now);
-        return previous == null || now - previous >= ANTI_SPAM_NANOS;
+        if (isAntiSpamCoolingDown(player, now)) {
+            return false;
+        }
+
+        lastInteractions.put(player.getUniqueId(), now);
+        return true;
     }
 
     public void clear() {
@@ -130,6 +126,21 @@ public class GuiButtonInteractionService implements Listener {
             return (tenths / 10L) + "s";
         }
         return (tenths / 10L) + "." + (tenths % 10L) + "s";
+    }
+
+    private boolean isAntiSpamCoolingDown(Player player, long now) {
+        Long previous = lastInteractions.get(player.getUniqueId());
+        return previous != null && now - previous < ANTI_SPAM_NANOS;
+    }
+
+    private Long getLastButtonClick(Player player, GuiLayoutType layoutType, GuiButton button) {
+        Map<GuiLayoutType, Map<String, Long>> playerClicks = lastClicks.get(player.getUniqueId());
+        if (playerClicks == null) {
+            return null;
+        }
+
+        Map<String, Long> layoutClicks = playerClicks.get(layoutType);
+        return layoutClicks != null ? layoutClicks.get(button.getButtonType()) : null;
     }
 
     private void playSounds(Player player, List<GuiButtonSoundData> sounds) {

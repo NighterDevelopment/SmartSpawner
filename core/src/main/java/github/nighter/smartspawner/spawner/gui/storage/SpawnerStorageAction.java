@@ -49,7 +49,7 @@ public class SpawnerStorageAction implements Listener {
 
     private record TransferResult(boolean anyItemMoved, boolean inventoryFull, int totalMoved) {}
     private final Map<UUID, Long> lastItemClickTime = new ConcurrentHashMap<>();
-    private static final long ITEM_CLICK_DELAY_MS = 150;
+    private static final long ITEM_CLICK_DELAY_MS = 100;
 
     public SpawnerStorageAction(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -289,6 +289,7 @@ public class SpawnerStorageAction implements Listener {
         if (isItemClickTooFrequent(player)) {
             return;
         }
+        lastItemClickTime.put(player.getUniqueId(), System.currentTimeMillis());
 
         Inventory inventory = event.getInventory();
         ItemStack clickedItem = inventory.getItem(slot);
@@ -578,7 +579,6 @@ public class SpawnerStorageAction implements Listener {
     private boolean isItemClickTooFrequent(Player player) {
         long now = System.currentTimeMillis();
         long last = lastItemClickTime.getOrDefault(player.getUniqueId(), 0L);
-        lastItemClickTime.put(player.getUniqueId(), now);
 
         if ((now - last) < ITEM_CLICK_DELAY_MS) {
             messageService.sendMessage(player, "click_too_fast");
