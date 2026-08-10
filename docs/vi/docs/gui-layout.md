@@ -42,7 +42,7 @@ slot_12:
 Giá trị dùng cùng định dạng thời gian với `config.yml`: `20`, `5s`, `10m`, `1h`, `1m_30s`, v.v.
 
 - Nút đang cooldown không chạy action và gửi thông báo `action_not_ready` với placeholder `{time}`.
-- Mọi nút action có debounce chống spam **300 ms** ngay cả khi không đặt `cooldown`.
+- Mọi nút action có debounce chống spam **100 ms** ngay cả khi không đặt `cooldown`.
 - Cooldown cũng có thể được ghi đè trong nhánh điều kiện `if:`.
 
 ```yaml
