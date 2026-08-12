@@ -1,6 +1,6 @@
 plugins {
     id("com.gradleup.shadow")
-    id("xyz.jpenilla.run-paper") version "3.0.2"
+    id("xyz.jpenilla.run-paper") version "3.1.0"
 }
 
 val shade: Configuration by configurations.creating
