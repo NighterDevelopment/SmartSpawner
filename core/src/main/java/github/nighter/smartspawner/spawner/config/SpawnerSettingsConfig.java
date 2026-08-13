@@ -9,6 +9,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.EntitySnapshot;
 
 import java.io.File;
 import java.util.*;
@@ -44,6 +45,11 @@ public class SpawnerSettingsConfig {
 
     // Spawner item drop chance when the spawner block is broken
     private final Map<EntityType, Double> spawnerDropChances = new EnumMap<>(EntityType.class);
+    private final Map<String, Double> namedSpawnerDropChances = new HashMap<>();
+    private final Map<EntityType, EntitySnapshot> entityDisplaySnapshots = new EnumMap<>(EntityType.class);
+    private final Map<String, MobDefinition> definitionsByName = new HashMap<>();
+    private final Map<String, EntitySnapshot> snapshotsByName = new HashMap<>();
+    private final Map<EntityType, MobDefinition> defaultDefinitionsByEntity = new EnumMap<>(EntityType.class);
 
     public SpawnerSettingsConfig(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -79,33 +85,83 @@ public class SpawnerSettingsConfig {
         mobHeadMap.clear();
         entityLootConfigs.clear();
         spawnerDropChances.clear();
+        namedSpawnerDropChances.clear();
+        entityDisplaySnapshots.clear();
+        definitionsByName.clear();
+        snapshotsByName.clear();
+        defaultDefinitionsByEntity.clear();
 
         // Parse each mob's configuration
-        for (String entityName : config.getKeys(false)) {
+        for (String configName : config.getKeys(false)) {
             // Anything that is not a section is a stray scalar, not an entry.
-            ConfigurationSection entitySection = config.getConfigurationSection(entityName);
+            ConfigurationSection entitySection = config.getConfigurationSection(configName);
             if (entitySection == null) continue;
 
             // Validate entity type
             EntityType entityType;
             try {
-                entityType = EntityType.valueOf(entityName.toUpperCase());
+                String entityName = entitySection.getString("entity", configName);
+                entityType = EntityType.valueOf(entityName == null ? "" : entityName.toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Entity type '" + entityName + "' is invalid or not available in server version " + plugin.getServer().getBukkitVersion());
+                plugin.getLogger().warning("Entity for '" + configName + "' is invalid or missing in " + RESOURCE);
+                continue;
+            }
+
+            String normalizedName = entitySection.contains("entity")
+                    ? SpawnerConfigName.normalize(configName)
+                    : SpawnerConfigName.defaultName(entityType.name());
+            if (normalizedName.isEmpty() || definitionsByName.containsKey(normalizedName)) {
+                plugin.getLogger().warning("Duplicate or invalid spawner name '" + configName + "' in " + RESOURCE);
                 continue;
             }
 
             // Parse head texture data
             parseHeadTexture(entityType, entitySection);
+            EntitySnapshot snapshot = parseEntityDisplay(entityType, entitySection);
 
             // Parse loot data
-            parseLootData(entityName, entitySection);
+            parseLootData(normalizedName, entitySection);
 
-            parseSpawnerDropChance(entityType, entitySection);
+            parseSpawnerDropChance(normalizedName, entityType, entitySection);
+            MobDefinition definition = new MobDefinition(normalizedName, entityType,
+                    entityLootConfigs.get(normalizedName));
+            definitionsByName.put(normalizedName, definition);
+            if (snapshot != null) {
+                snapshotsByName.put(normalizedName, snapshot);
+                entityDisplaySnapshots.putIfAbsent(entityType, snapshot);
+            }
+            defaultDefinitionsByEntity.putIfAbsent(entityType, definition);
         }
     }
 
-    private void parseSpawnerDropChance(EntityType entityType, ConfigurationSection entitySection) {
+    private EntitySnapshot parseEntityDisplay(EntityType entityType, ConfigurationSection entitySection) {
+        String nbt = entitySection.getString("nbt_data");
+        if (nbt == null || nbt.isBlank()) {
+            return null;
+        }
+
+        String trimmed = nbt.trim();
+        if (trimmed.length() < 2 || trimmed.charAt(0) != '{' || trimmed.charAt(trimmed.length() - 1) != '}') {
+            plugin.getLogger().warning("Invalid nbt_data for " + entityType.name() + ": expected an SNBT compound");
+            return null;
+        }
+
+        String body = trimmed.substring(1, trimmed.length() - 1).trim();
+        String fullNbt = "{id:\"" + entityType.getKey().asString() + "\""
+                + (body.isEmpty() ? "" : "," + body) + "}";
+        try {
+            EntitySnapshot snapshot = plugin.getServer().getEntityFactory().createEntitySnapshot(fullNbt);
+            if (snapshot.getEntityType() == entityType) {
+                return snapshot;
+            }
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Invalid nbt_data for " + entityType.name() + ": " + e.getMessage());
+        }
+        return null;
+    }
+
+    private void parseSpawnerDropChance(String configName, EntityType entityType,
+                                        ConfigurationSection entitySection) {
         if (!entitySection.contains("drop_chance")) {
             return;
         }
@@ -117,7 +173,8 @@ public class SpawnerSettingsConfig {
             dropChance = 100.0;
         }
 
-        spawnerDropChances.put(entityType, dropChance);
+        spawnerDropChances.putIfAbsent(entityType, dropChance);
+        namedSpawnerDropChances.put(configName, dropChance);
     }
 
     /**
@@ -146,7 +203,7 @@ public class SpawnerSettingsConfig {
         }
 
         // Store mob head data
-        mobHeadMap.put(entityType, new MobHeadData(material, customTexture));
+        mobHeadMap.putIfAbsent(entityType, new MobHeadData(material, customTexture));
     }
 
     /**
@@ -209,7 +266,8 @@ public class SpawnerSettingsConfig {
         if (entityType == null || entityType == EntityType.UNKNOWN) {
             return null;
         }
-        return entityLootConfigs.get(entityType.name().toLowerCase());
+        MobDefinition definition = defaultDefinitionsByEntity.get(entityType);
+        return definition == null ? null : definition.lootConfig();
     }
 
     /**
@@ -228,6 +286,39 @@ public class SpawnerSettingsConfig {
     public boolean hasSpawnerDropChance(EntityType entityType) {
         return entityType != null && entityType != EntityType.UNKNOWN && spawnerDropChances.containsKey(entityType);
     }
+
+    public double getSpawnerDropChance(String configName, EntityType fallback) {
+        return namedSpawnerDropChances.getOrDefault(SpawnerConfigName.normalize(configName),
+                getSpawnerDropChance(fallback));
+    }
+
+    public boolean hasSpawnerDropChance(String configName) {
+        return namedSpawnerDropChances.containsKey(SpawnerConfigName.normalize(configName));
+    }
+
+    public EntitySnapshot getEntityDisplaySnapshot(EntityType entityType) {
+        return entityDisplaySnapshots.get(entityType);
+    }
+
+    public EntitySnapshot getEntityDisplaySnapshot(String configName, EntityType fallback) {
+        String normalized = SpawnerConfigName.normalize(configName);
+        if (definitionsByName.containsKey(normalized)) return snapshotsByName.get(normalized);
+        return entityDisplaySnapshots.get(fallback);
+    }
+
+    public MobDefinition getDefinition(String name) {
+        return definitionsByName.get(SpawnerConfigName.normalize(name));
+    }
+
+    public MobDefinition getDefaultDefinition(EntityType type) {
+        return defaultDefinitionsByEntity.get(type);
+    }
+
+    public Set<String> getDefinitionNames() {
+        return Collections.unmodifiableSet(definitionsByName.keySet());
+    }
+
+    public record MobDefinition(String name, EntityType entityType, EntityLootConfig lootConfig) {}
 
     /**
      * Reload the configuration

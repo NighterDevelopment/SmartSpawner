@@ -257,15 +257,11 @@ config_editor:
       - ''
       - '&#37eb9a ▸ &fClick to switch!'
 
-  loot_entry:
+  loot_entry_compact:
     name: '&fʟᴏᴏᴛ &#37eb9a{label}'
     lore:
-      - ''
-      - ' &#37eb9aℹ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ:'
-      - '  &8• &fItem: &e{item}'
-      - '  &8• &fAmount: &e{amount}'
-      - '  &8• &fChance: &e{chance}%'
-      - '  &8• &fDurability: &e{durability}'
+      - '&fMiktar: &#37eb9a{amount}'
+      - '&fŞans: &#37eb9a{chance}%'
       - ''
       - '&#37eb9a ▸ &fLeft click to edit!'
       - '&#37eb9a ▸ &fRight click to change the item!'

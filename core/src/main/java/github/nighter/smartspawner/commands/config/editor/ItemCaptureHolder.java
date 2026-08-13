@@ -27,6 +27,7 @@ public class ItemCaptureHolder implements InventoryHolder {
     private final String entryKey;
     private final String lootKey;
     private final int listPage;
+    private final String requestedName;
 
     public ItemCaptureHolder(ConfigEditorTarget target, Purpose purpose, String entryKey,
                              String lootKey, int listPage) {
@@ -35,6 +36,17 @@ public class ItemCaptureHolder implements InventoryHolder {
         this.entryKey = entryKey;
         this.lootKey = lootKey;
         this.listPage = listPage;
+        this.requestedName = null;
+    }
+
+    public ItemCaptureHolder(ConfigEditorTarget target, Purpose purpose, String entryKey,
+                             String lootKey, int listPage, String requestedName) {
+        this.target = target;
+        this.purpose = purpose;
+        this.entryKey = entryKey;
+        this.lootKey = lootKey;
+        this.listPage = listPage;
+        this.requestedName = requestedName;
     }
 
     @Override

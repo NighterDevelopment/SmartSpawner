@@ -64,7 +64,7 @@ public class SpawnerStackerUI {
 
     private boolean hasSpawnerDropChance(SpawnerData spawner) {
         SpawnerSettingsConfig settingsConfig = plugin.getSpawnerSettingsConfig();
-        return settingsConfig != null && settingsConfig.hasSpawnerDropChance(spawner.getEntityType());
+        return settingsConfig != null && settingsConfig.hasSpawnerDropChance(spawner.getConfigName());
     }
 
     private void populateStackerGui(Inventory gui, SpawnerData spawner) {

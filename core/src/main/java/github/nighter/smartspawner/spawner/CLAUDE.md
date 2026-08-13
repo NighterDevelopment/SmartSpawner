@@ -89,6 +89,11 @@ material or display name. `SpawnerTypeChecker` is the only correct way to tell t
 - **vanilla spawner**: has the `vanilla_spawner` boolean key
 - **item spawner**: has the `item_spawner_material` string key, and `SpawnerData.spawnedItemMaterial` is set with `entityType == EntityType.ITEM`
 
+The vanilla cage preview is configured through `SpawnerDisplayConfigurator`. Mob entries use their
+`nbt_data` `EntitySnapshot`; Item Spawners use the captured `nbt_data` item, then their first loot
+template, then a plain material as fallbacks. Apply it to item metadata, placed blocks, database
+restoration and config reloads so the preview does not silently lose entity NBT or item components.
+
 `SpawnerTypeChecker.init(plugin)` must run before any check; it is the first line of
 `initializeServices()`.
 

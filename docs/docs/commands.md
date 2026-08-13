@@ -22,12 +22,12 @@ All commands require `smartspawner.command.use` as a base permission, plus the s
 
 ### /ss give spawner
 
-<CommandRow commands="/ss give spawner &lt;player&gt; &lt;type&gt; [amount]" permission="smartspawner.command.give">
+<CommandRow commands="/ss give spawner &lt;player&gt; &lt;name&gt; [amount]" permission="smartspawner.command.give">
 
 Give Smart Spawners to a player.
 
 - `<player>`: Target player or selector (`@p`, `@a`, etc.)
-- `<type>`: Mob type (e.g. `zombie`, `skeleton`, `blaze`)
+- `<name>`: Top-level entry name from `spawner_mobs.yml` (e.g. `zombie_spawner`)
 - `[amount]`: Optional quantity 1–6400, default: 1
 
 </CommandRow>
@@ -42,15 +42,51 @@ Give vanilla Minecraft spawners to a player. No GUI, no stacking. Works exactly 
 
 ### /ss give item_spawner
 
-<CommandRow commands="/ss give item_spawner &lt;player&gt; &lt;item_type&gt; [amount]" permission="smartspawner.command.give">
+<CommandRow commands="/ss give item_spawner &lt;player&gt; &lt;name&gt; [amount]" permission="smartspawner.command.give">
 
 Give Item Spawners to a player.
 
-- `<item_type>`: Material name (e.g. `DIAMOND`, `EMERALD`, `NETHERITE_INGOT`)
+- `<name>`: Top-level entry name from `spawner_items.yml` (e.g. `diamond_spawner`)
 
 </CommandRow>
 
 ## Admin Commands
+
+### /ss edit
+
+<CommandRow :commands="['/ss edit smartspawner', '/ss edit itemspawner']" permission="smartspawner.command.edit">
+
+Open the in-game configuration editor for one spawner type.
+
+- `smartspawner`: Edit entries in `spawner_mobs.yml`
+- `itemspawner`: Edit entries in `spawner_items.yml`
+- Each target has its own GUI. There is no switch between the two editors.
+- Saved changes are applied immediately; `/ss reload` is not required.
+
+</CommandRow>
+
+### /ss add
+
+<CommandRow :commands="['/ss add smartspawner &lt;mob&gt; [name] [NBT tag]', '/ss add itemspawner [name]']" permission="smartspawner.command.add">
+
+Create a new entry before editing its XP, texture, and loot.
+
+- `smartspawner`: Tab-completes mobs available in the current server version. Name and NBT are optional. NBT defaults to `{}` and uses the same SNBT compound syntax as `/summon`.
+- `itemspawner`: Accepts an optional name, then opens a GUI. Put the source item in the middle slot and confirm.
+- Spaces in a supplied name are converted to underscores. Without a name, the defaults are `<entity>_spawner` and `<item>_spawner`.
+
+Examples:
+
+```bash
+/ss add smartspawner zombie {}
+/ss add smartspawner minecraft:zombie
+/ss add smartspawner zombie Boss Room {NoAI:1b,Silent:1b}
+/ss add itemspawner Jump Boost Farm
+```
+
+An existing configuration name is not overwritten.
+
+</CommandRow>
 
 ### /ss reload
 

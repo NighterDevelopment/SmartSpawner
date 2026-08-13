@@ -611,12 +611,7 @@ public class SpawnerStorageUI {
             materialAmountMap.merge(mat, entry.getValue(), Long::sum);
         }
 
-        EntityLootConfig lootConfig;
-        if (spawner.isItemSpawner()) {
-            lootConfig = plugin.getItemSpawnerSettingsConfig().getLootConfig(spawner.getSpawnedItemMaterial());
-        } else {
-            lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(spawner.getEntityType());
-        }
+        EntityLootConfig lootConfig = spawner.getLootConfig();
         List<LootItem> possibleLootItems = lootConfig != null ? lootConfig.getAllItems() : Collections.emptyList();
 
         if (possibleLootItems.isEmpty() && storedItems.isEmpty()) {

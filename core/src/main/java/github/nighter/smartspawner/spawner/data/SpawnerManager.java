@@ -4,7 +4,10 @@ import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.spawner.data.storage.SpawnerStorage;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
+import github.nighter.smartspawner.spawner.config.SpawnerDisplayConfigurator;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.CreatureSpawner;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -70,11 +73,28 @@ public class SpawnerManager {
             try {
                 spawner.loadConfigurationValues();
                 spawner.recalculateAfterConfigReload();
+                refreshSpawnerDisplay(spawner);
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to reload config for spawner " +
                         spawner.getSpawnerId() + ": " + e.getMessage());
             }
         }
+    }
+
+    private void refreshSpawnerDisplay(SpawnerData spawner) {
+        Location location = spawner.getSpawnerLocation();
+        Scheduler.runLocationTask(location, () -> {
+            Block block = location.getBlock();
+            if (block.getType() != Material.SPAWNER || !(block.getState(false) instanceof CreatureSpawner state)) {
+                return;
+            }
+            if (spawner.isItemSpawner()) {
+                SpawnerDisplayConfigurator.applyItem(plugin, state, spawner.getConfigName(), spawner.getSpawnedItemMaterial());
+            } else {
+                SpawnerDisplayConfigurator.applyMob(plugin, state, spawner.getConfigName(), spawner.getEntityType());
+            }
+            state.update(true, false);
+        });
     }
 
     public void addSpawner(String id, SpawnerData spawner) {

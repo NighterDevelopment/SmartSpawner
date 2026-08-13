@@ -86,13 +86,13 @@ give:
     message: "&#FF4444Oyuncu bulunamadı."
     sound: block.note_block.pling
   invalid_mob_type:
-    message: "&#FF4444Geçersiz yaratık türü."
+    message: "&#FF4444Geçersiz yaratık türü veya spawner adı."
     sound: block.note_block.pling
   invalid_item_type:
     message: "&#FF4444Geçersiz eşya türü."
     sound: block.note_block.pling
   invalid_item_spawner:
-    message: "&#FF4444Geçersiz eşya spawner türü."
+    message: "&#FF4444Geçersiz eşya spawner adı."
     sound: block.note_block.pling
   inventory_full:
     message: "&#FF4444Envanter dolu olduğu için bazı spawnerlar yere düştü."
@@ -206,8 +206,20 @@ gui_layout:
 #                   /ss config
 # --------------------------------------------------
 config_editor:
-  usage:
-    message: '&#FF4444Usage: /ss config spawnerloot'
+  edit_usage:
+    message: '&#FF4444Kullanım: /ss edit <smartspawner|itemspawner>'
+    sound: block.note_block.pling
+  add_usage:
+    message: '&#FF4444Kullanım: /ss add <smartspawner|itemspawner>'
+    sound: block.note_block.pling
+  add_smartspawner_usage:
+    message: '&#FF4444Kullanım: /ss add smartspawner <mob> [ad] [NBT etiketi], örnek: /ss add smartspawner zombie Boss Room {NoAI:1b}'
+    sound: block.note_block.pling
+  invalid_mob:
+    message: '&#FF4444{mob}, bu sunucu sürümünde oluşturulabilir bir mob değil.'
+    sound: block.note_block.bass
+  invalid_nbt:
+    message: '&#FF4444Geçersiz entity NBT. /summon ile aynı bileşik etiket sözdizimini kullanın, örnek: {NoAI:1b}'
     sound: block.note_block.pling
   entry_missing:
     message: '&#FF4444That entry is no longer in the file.'

@@ -96,7 +96,8 @@ public class SpawnEggHandler {
         spawnerData.updateLastInteractedPlayer(player.getName());
 
         // Update physical spawner
-        spawner.setSpawnedType(newType);
+        github.nighter.smartspawner.spawner.config.SpawnerDisplayConfigurator.applyMob(
+                plugin, spawner, spawnerData.getConfigName(), newType);
         spawner.update();
 
         // Notify player

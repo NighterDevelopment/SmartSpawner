@@ -26,15 +26,11 @@ public class ConfigEditorUI {
     static final int LIST_SIZE = 54;
     static final int LIST_CONTENT = 45;
     static final int LIST_PREVIOUS = 45;
-    static final int LIST_SWITCH = 47;
-    static final int LIST_NEW_ENTRY = 49;
     static final int LIST_NEXT = 53;
 
-    static final int LOOT_SIZE = 54;
+    static final int LOOT_SIZE = 27;
     static final int LOOT_START = 0;
-    static final int LOOT_END = 44;
-    static final int LOOT_BACK = 45;
-    static final int LOOT_ADD = 49;
+    static final int LOOT_END = 26;
 
     static final int CAPTURE_SIZE = 27;
     static final int CAPTURE_SLOT = 13;
@@ -78,18 +74,11 @@ public class ConfigEditorUI {
         if (shownPage < totalPages) {
             inventory.setItem(LIST_NEXT, navigationItem("next_page", shownPage + 1));
         }
-        boolean showingMobs = target == ConfigEditorTarget.SMART_SPAWNER;
-        inventory.setItem(LIST_SWITCH, simpleItem(
-                showingMobs ? Material.CHEST : Material.ZOMBIE_SPAWN_EGG,
-                showingMobs ? "config_editor.switch_to_items" : "config_editor.switch_to_mobs",
-                Map.of()));
-        inventory.setItem(LIST_NEW_ENTRY, simpleItem(Material.NETHER_STAR, "config_editor.new_entry", Map.of()));
-
         player.openInventory(inventory);
     }
 
     private ItemStack buildEntryIcon(ConfigEditorTarget target, ConfigEditorService.EntryView entry) {
-        Material icon = iconFor(target, entry.key());
+        Material icon = iconFor(target, entry.typeKey());
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("entry", entry.key());
         placeholders.put("experience", String.valueOf(entry.experience()));
@@ -135,9 +124,10 @@ public class ConfigEditorUI {
             }
             inventory.setItem(slot++, buildLootIcon(loot));
         }
-
-        inventory.setItem(LOOT_ADD, simpleItem(Material.HOPPER, "config_editor.add_loot", Map.of()));
-        inventory.setItem(LOOT_BACK, simpleItem(Material.ARROW, "config_editor.back", Map.of()));
+        if (slot <= LOOT_END) {
+            inventory.setItem(slot, simpleItem(Material.LIME_STAINED_GLASS_PANE,
+                    "config_editor.add_loot", Map.of()));
+        }
 
         player.openInventory(inventory);
     }
@@ -157,7 +147,7 @@ public class ConfigEditorUI {
 
         // Show the real item so the admin sees exactly what drops, then overwrite its text.
         ItemStack icon = loot.preview().clone();
-        applyText(icon, "config_editor.loot_entry", placeholders);
+        applyText(icon, "config_editor.loot_entry_compact", placeholders);
         return icon;
     }
 

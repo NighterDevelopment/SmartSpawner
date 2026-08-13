@@ -122,6 +122,12 @@ public class SpawnerStackHandler {
             return false;
         }
 
+        String handConfigName = SpawnerTypeChecker.getConfigName(itemInHand);
+        if (handConfigName != null && !handConfigName.equals(targetSpawner.getConfigName())) {
+            messageService.sendMessage(player, "spawner_different");
+            return false;
+        }
+
         // If both are item spawners, check if they spawn the same item
         if (isItemSpawnerItem && isTargetItemSpawner) {
             Material handItemMaterial = SpawnerTypeChecker.getItemSpawnerMaterial(itemInHand);

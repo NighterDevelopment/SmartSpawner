@@ -387,9 +387,9 @@ public class SpawnerStackerHandler implements Listener {
 
             // Give spawners to player after decreasing stack
             if (spawner.isItemSpawner()) {
-                giveItemSpawnersToPlayer(player, finalActualChange, spawner.getSpawnedItemMaterial());
+                giveItemSpawnersToPlayer(player, finalActualChange, spawner.getSpawnedItemMaterial(), spawner.getConfigName());
             } else {
-                giveSpawnersToPlayer(player, finalActualChange, spawner.getEntityType());
+                giveSpawnersToPlayer(player, finalActualChange, spawner.getEntityType(), spawner.getConfigName());
             }
 
             // Log destack operation
@@ -444,10 +444,10 @@ public class SpawnerStackerHandler implements Listener {
             InventoryScanResult scanResult;
             if (spawner.isItemSpawner()) {
                 Material requiredItemMaterial = spawner.getSpawnedItemMaterial();
-                scanResult = scanPlayerInventoryForItemSpawner(player, requiredItemMaterial);
+                scanResult = scanPlayerInventoryForItemSpawner(player, requiredItemMaterial, spawner.getConfigName());
             } else {
                 EntityType requiredType = spawner.getEntityType();
-                scanResult = scanPlayerInventory(player, requiredType);
+                scanResult = scanPlayerInventory(player, requiredType, spawner.getConfigName());
             }
 
             // Check if player has different spawner types
@@ -474,9 +474,9 @@ public class SpawnerStackerHandler implements Listener {
             }
 
             if (spawner.isItemSpawner()) {
-                removeValidItemSpawnersFromInventory(player, spawner.getSpawnedItemMaterial(), actualChange, scanResult.spawnerSlots);
+                removeValidItemSpawnersFromInventory(player, spawner.getSpawnedItemMaterial(), spawner.getConfigName(), actualChange, scanResult.spawnerSlots);
             } else {
-                removeValidSpawnersFromInventory(player, spawner.getEntityType(), actualChange, scanResult.spawnerSlots);
+                removeValidSpawnersFromInventory(player, spawner.getEntityType(), spawner.getConfigName(), actualChange, scanResult.spawnerSlots);
             }
             spawner.setStackSize(currentSize + actualChange);
 
@@ -523,9 +523,9 @@ public class SpawnerStackerHandler implements Listener {
             // Scan inventory for matching spawners
             InventoryScanResult scanResult;
             if (spawner.isItemSpawner()) {
-                scanResult = scanPlayerInventoryForItemSpawner(player, spawner.getSpawnedItemMaterial());
+                scanResult = scanPlayerInventoryForItemSpawner(player, spawner.getSpawnedItemMaterial(), spawner.getConfigName());
             } else {
-                scanResult = scanPlayerInventory(player, spawner.getEntityType());
+                scanResult = scanPlayerInventory(player, spawner.getEntityType(), spawner.getConfigName());
             }
 
             if (scanResult.availableSpawners == 0 && scanResult.hasDifferentType) {
@@ -551,10 +551,10 @@ public class SpawnerStackerHandler implements Listener {
 
             // Remove spawners from inventory first
             if (spawner.isItemSpawner()) {
-                removeValidItemSpawnersFromInventory(player, spawner.getSpawnedItemMaterial(), actualChange,
+                removeValidItemSpawnersFromInventory(player, spawner.getSpawnedItemMaterial(), spawner.getConfigName(), actualChange,
                         scanResult.spawnerSlots);
             } else {
-                removeValidSpawnersFromInventory(player, spawner.getEntityType(), actualChange,
+                removeValidSpawnersFromInventory(player, spawner.getEntityType(), spawner.getConfigName(), actualChange,
                         scanResult.spawnerSlots);
             }
 
@@ -613,9 +613,9 @@ public class SpawnerStackerHandler implements Listener {
 
             // Give spawners to player after decreasing stack
             if (spawner.isItemSpawner()) {
-                giveItemSpawnersToPlayer(player, finalActualChange, spawner.getSpawnedItemMaterial());
+                giveItemSpawnersToPlayer(player, finalActualChange, spawner.getSpawnedItemMaterial(), spawner.getConfigName());
             } else {
-                giveSpawnersToPlayer(player, finalActualChange, spawner.getEntityType());
+                giveSpawnersToPlayer(player, finalActualChange, spawner.getEntityType(), spawner.getConfigName());
             }
 
             if (plugin.getSpawnerActionLogger() != null) {
@@ -798,7 +798,7 @@ public class SpawnerStackerHandler implements Listener {
     }
 
     // Combined inventory scan that collects all required data in one pass
-    private InventoryScanResult scanPlayerInventory(Player player, EntityType requiredType) {
+    private InventoryScanResult scanPlayerInventory(Player player, EntityType requiredType, String requiredConfigName) {
         int count = 0;
         boolean hasDifferentType = false;
         List<SpawnerSlot> spawnerSlots = new ArrayList<>();
@@ -814,7 +814,7 @@ public class SpawnerStackerHandler implements Listener {
 
             Optional<EntityType> itemType = getSpawnerEntityTypeCached(item);
             if (itemType.isPresent()) {
-                if (itemType.get() == requiredType) {
+                if (itemType.get() == requiredType && requiredConfigName.equals(SpawnerTypeChecker.getConfigName(item))) {
                     count += item.getAmount();
                     spawnerSlots.add(new SpawnerSlot(i, item.getAmount()));
                 } else {
@@ -827,7 +827,8 @@ public class SpawnerStackerHandler implements Listener {
     }
 
     // Combined inventory scan for item spawners that checks item material
-    private InventoryScanResult scanPlayerInventoryForItemSpawner(Player player, Material requiredItemMaterial) {
+    private InventoryScanResult scanPlayerInventoryForItemSpawner(Player player, Material requiredItemMaterial,
+                                                                   String requiredConfigName) {
         int count = 0;
         boolean hasDifferentType = false;
         List<SpawnerSlot> spawnerSlots = new ArrayList<>();
@@ -844,7 +845,7 @@ public class SpawnerStackerHandler implements Listener {
             // Check if it's an item spawner
             if (SpawnerTypeChecker.isItemSpawner(item)) {
                 Material itemMaterial = SpawnerTypeChecker.getItemSpawnerMaterial(item);
-                if (itemMaterial == requiredItemMaterial) {
+                if (itemMaterial == requiredItemMaterial && requiredConfigName.equals(SpawnerTypeChecker.getConfigName(item))) {
                     count += item.getAmount();
                     spawnerSlots.add(new SpawnerSlot(i, item.getAmount()));
                 } else {
@@ -897,7 +898,8 @@ public class SpawnerStackerHandler implements Listener {
         return Optional.empty();
     }
 
-    private void removeValidSpawnersFromInventory(Player player, EntityType requiredType, int amountToRemove, List<SpawnerSlot> spawnerSlots) {
+    private void removeValidSpawnersFromInventory(Player player, EntityType requiredType, String requiredConfigName,
+                                                   int amountToRemove, List<SpawnerSlot> spawnerSlots) {
         int remainingToRemove = amountToRemove;
 
         // Use the pre-scanned slots for faster removal
@@ -909,7 +911,8 @@ public class SpawnerStackerHandler implements Listener {
             if (item == null || item.getType() != Material.SPAWNER) continue;
 
             Optional<EntityType> spawnerType = getSpawnerEntityTypeCached(item);
-            if (spawnerType.isPresent() && spawnerType.get() == requiredType) {
+            if (spawnerType.isPresent() && spawnerType.get() == requiredType
+                    && requiredConfigName.equals(SpawnerTypeChecker.getConfigName(item))) {
                 int itemAmount = item.getAmount();
                 if (itemAmount <= remainingToRemove) {
                     player.getInventory().setItem(slot.slotIndex, null);
@@ -924,7 +927,9 @@ public class SpawnerStackerHandler implements Listener {
         player.updateInventory();
     }
 
-    private void removeValidItemSpawnersFromInventory(Player player, Material requiredItemMaterial, int amountToRemove, List<SpawnerSlot> spawnerSlots) {
+    private void removeValidItemSpawnersFromInventory(Player player, Material requiredItemMaterial,
+                                                       String requiredConfigName, int amountToRemove,
+                                                       List<SpawnerSlot> spawnerSlots) {
         int remainingToRemove = amountToRemove;
 
         // Use the pre-scanned slots for faster removal
@@ -937,7 +942,8 @@ public class SpawnerStackerHandler implements Listener {
 
             if (SpawnerTypeChecker.isItemSpawner(item)) {
                 Material itemMaterial = SpawnerTypeChecker.getItemSpawnerMaterial(item);
-                if (itemMaterial == requiredItemMaterial) {
+                if (itemMaterial == requiredItemMaterial
+                        && requiredConfigName.equals(SpawnerTypeChecker.getConfigName(item))) {
                     int itemAmount = item.getAmount();
                     if (itemAmount <= remainingToRemove) {
                         player.getInventory().setItem(slot.slotIndex, null);
@@ -953,7 +959,7 @@ public class SpawnerStackerHandler implements Listener {
         player.updateInventory();
     }
 
-    public void giveSpawnersToPlayer(Player player, int amount, EntityType entityType) {
+    public void giveSpawnersToPlayer(Player player, int amount, EntityType entityType, String configName) {
         final int MAX_STACK_SIZE = 64;
         int remainingAmount = amount;
 
@@ -967,7 +973,8 @@ public class SpawnerStackerHandler implements Listener {
             }
 
             Optional<EntityType> itemEntityType = getSpawnerEntityTypeCached(item);
-            if (itemEntityType.isEmpty() || itemEntityType.get() != entityType) continue;
+            if (itemEntityType.isEmpty() || itemEntityType.get() != entityType
+                    || !configName.equals(SpawnerTypeChecker.getConfigName(item))) continue;
 
             int currentAmount = item.getAmount();
             if (currentAmount < MAX_STACK_SIZE) {
@@ -984,7 +991,7 @@ public class SpawnerStackerHandler implements Listener {
 
             while (remainingAmount > 0) {
                 int stackSize = Math.min(MAX_STACK_SIZE, remainingAmount);
-                ItemStack spawnerItem = spawnerItemFactory.createSmartSpawnerItem(entityType, stackSize);
+                ItemStack spawnerItem = spawnerItemFactory.createSmartSpawnerItem(configName, stackSize);
                 newStacks.add(spawnerItem);
                 remainingAmount -= stackSize;
             }
@@ -1009,7 +1016,7 @@ public class SpawnerStackerHandler implements Listener {
         player.updateInventory();
     }
 
-    public void giveItemSpawnersToPlayer(Player player, int amount, Material itemMaterial) {
+    public void giveItemSpawnersToPlayer(Player player, int amount, Material itemMaterial, String configName) {
         final int MAX_STACK_SIZE = 64;
         int remainingAmount = amount;
 
@@ -1025,7 +1032,8 @@ public class SpawnerStackerHandler implements Listener {
             }
 
             Material itemSpawnerMaterial = SpawnerTypeChecker.getItemSpawnerMaterial(item);
-            if (itemSpawnerMaterial != itemMaterial) continue;
+            if (itemSpawnerMaterial != itemMaterial
+                    || !configName.equals(SpawnerTypeChecker.getConfigName(item))) continue;
 
             int currentAmount = item.getAmount();
             if (currentAmount < MAX_STACK_SIZE) {
@@ -1042,7 +1050,7 @@ public class SpawnerStackerHandler implements Listener {
 
             while (remainingAmount > 0) {
                 int stackSize = Math.min(MAX_STACK_SIZE, remainingAmount);
-                ItemStack spawnerItem = spawnerItemFactory.createItemSpawnerItem(itemMaterial, stackSize);
+                ItemStack spawnerItem = spawnerItemFactory.createItemSpawnerItem(configName, stackSize);
                 newStacks.add(spawnerItem);
                 remainingAmount -= stackSize;
             }
@@ -1136,6 +1144,6 @@ public class SpawnerStackerHandler implements Listener {
         }
 
         SpawnerSettingsConfig settingsConfig = plugin.getSpawnerSettingsConfig();
-        return settingsConfig == null || !settingsConfig.hasSpawnerDropChance(spawner.getEntityType());
+        return settingsConfig == null || !settingsConfig.hasSpawnerDropChance(spawner.getConfigName());
     }
 }

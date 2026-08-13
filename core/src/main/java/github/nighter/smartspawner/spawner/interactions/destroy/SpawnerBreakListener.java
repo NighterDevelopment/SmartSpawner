@@ -279,10 +279,15 @@ public class SpawnerBreakListener implements Listener {
         // Create the appropriate spawner item based on type
         ItemStack template;
         if (spawner.isItemSpawner()) {
-            template = spawnerItemFactory.createItemSpawnerItem(spawner.getSpawnedItemMaterial());
+            template = spawnerItemFactory.createItemSpawnerItem(spawner.getConfigName(), 1);
+            if (template == null) {
+                template = spawnerItemFactory.createItemSpawnerItem(spawner.getSpawnedItemMaterial());
+            }
         } else {
-            EntityType entityType = spawner.getEntityType();
-            template = spawnerItemFactory.createSmartSpawnerItem(entityType);
+            template = spawnerItemFactory.createSmartSpawnerItem(spawner.getConfigName(), 1);
+            if (template == null) {
+                template = spawnerItemFactory.createSmartSpawnerItem(spawner.getEntityType());
+            }
         }
 
         int dropAmount;
@@ -355,12 +360,12 @@ public class SpawnerBreakListener implements Listener {
         if (settingsConfig == null) {
             return 100.0;
         }
-        return settingsConfig.getSpawnerDropChance(spawner.getEntityType());
+        return settingsConfig.getSpawnerDropChance(spawner.getConfigName(), spawner.getEntityType());
     }
 
     private boolean hasSmartSpawnerDropChance(SpawnerData spawner) {
         SpawnerSettingsConfig settingsConfig = plugin.getSpawnerSettingsConfig();
-        return settingsConfig != null && settingsConfig.hasSpawnerDropChance(spawner.getEntityType());
+        return settingsConfig != null && settingsConfig.hasSpawnerDropChance(spawner.getConfigName());
     }
 
     private boolean hasDropChanceBypass(Player player) {

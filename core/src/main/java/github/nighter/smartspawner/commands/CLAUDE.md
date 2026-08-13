@@ -43,14 +43,15 @@ Arguments are Brigadier arguments added in an overridden `build()`. Look at `Set
 | `set` | `set/SetSubCommand` | `smartspawner.command.set` |
 | `language` | `config/FolderConfigSubCommand` (LANGUAGE) | `smartspawner.command.language` |
 | `gui_layout` | `config/FolderConfigSubCommand` (GUI_LAYOUT) | `smartspawner.command.gui_layout` |
-| `config` | `config/editor/SpawnerConfigSubCommand` | `smartspawner.command.config` |
+| `edit` | `config/editor/EditSpawnerSubCommand` | `smartspawner.command.edit` |
+| `add` | `config/editor/AddSpawnerSubCommand` | `smartspawner.command.add` |
 
 `FolderConfigSubCommand` is instantiated twice with different `ConfigOption` values. Adding a third
 folder-switching command means a new enum constant, not a new class.
 
-`config/editor/` is the in-game settings editor behind `/ss config spawnerloot`; its main screen
-switches between mob and item-spawner entries. It is the only place in the plugin that **writes** a
-config file:
+`config/editor/` is the in-game settings editor behind `/ss edit smartspawner|itemspawner`, with
+separate entry lists for each target. New entries are created through `/ss add`. It is the only place
+in the plugin that **writes** a config file:
 
 - `ConfigEditorService` is the single write path. GUI reads use an in-memory snapshot; every mutation
   loads the latest file from disk, changes one thing, saves, refreshes the snapshot, and reloads the
@@ -60,6 +61,8 @@ config file:
 - `ConfigEditorTarget` holds what differs between the two files: which keys are valid, whether `drop_chance` applies, whether the section repeats its key in a `material` field.
 - `ConfigEditorDialogs` uses Paper's Dialog API for numbers and text. Its callbacks arrive on a **network thread**, so every one hops through `Scheduler.runTask` before touching config or inventories. Dialog labels go through `LegacyComponentSerializer` because the language files hold legacy colour codes that a plain `Component.text` would show verbatim.
 - `ItemCaptureHolder` is the one-slot inventory used to read a real `ItemStack` off the admin. `ConfigEditorHandler` returns whatever is left in that slot on close, so the editor can never eat an item. Adding a screen that takes items must keep that guarantee.
+- The loot list is a fixed 27-slot inventory. Existing loot replaces the lime pane at the same slot;
+  clicking any remaining pane opens item capture. There are no navigation or dedicated add buttons.
 
 ## Reload lives here
 

@@ -112,6 +112,7 @@ public class DatabaseManager {
                 -- What the spawner spawns. itemspawner_type is only set when entity_type is ITEM
                 entity_type VARCHAR(64) NOT NULL,
                 itemspawner_type VARCHAR(64) DEFAULT NULL,
+                config_name VARCHAR(128) DEFAULT NULL,
 
                 -- Stacking
                 stack_size INT NOT NULL DEFAULT 1,
@@ -173,6 +174,7 @@ public class DatabaseManager {
                 -- What the spawner spawns. itemspawner_type is only set when entity_type is ITEM
                 entity_type VARCHAR(64) NOT NULL,
                 itemspawner_type VARCHAR(64) DEFAULT NULL,
+                config_name VARCHAR(128) DEFAULT NULL,
 
                 -- Stacking
                 stack_size INT NOT NULL DEFAULT 1,
@@ -223,7 +225,7 @@ public class DatabaseManager {
 
     private static final String SCHEMA_VERSION_KEY = "schema_version";
     private static final int LEGACY_SCHEMA_VERSION = 1;
-    private static final int CURRENT_SCHEMA_VERSION = 3;
+    private static final int CURRENT_SCHEMA_VERSION = 4;
 
     /** Rows converted per transaction while rewriting inventories during the v3 migration. */
     private static final int MIGRATION_BATCH_SIZE = 250;
@@ -705,8 +707,11 @@ public class DatabaseManager {
     }
 
     private int detectInitialSchemaVersion() throws SQLException {
+        if (columnExists(tableSpawners, "config_name")) {
+            return 4;
+        }
         if (columnExists(tableSpawners, "storage_items")) {
-            return CURRENT_SCHEMA_VERSION;
+            return 3;
         }
         return xpColumnsRequireMigration() ? LEGACY_SCHEMA_VERSION : 2;
     }
@@ -728,6 +733,7 @@ public class DatabaseManager {
         switch (targetVersion) {
             case 2 -> migrateXpColumnsToBigIntIfNeeded();
             case 3 -> migrateToChunkAndItemBlobColumns();
+            case 4 -> addColumnIfMissing("config_name", "VARCHAR(128) DEFAULT NULL");
             default -> throw new SQLException("No database migration handler found for schema version: " + targetVersion);
         }
     }

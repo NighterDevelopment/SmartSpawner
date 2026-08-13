@@ -2,6 +2,35 @@
 
 File `plugins/SmartSpawner/spawner_mobs.yml` điều khiển bảng vật phẩm, XP, texture head và tỷ lệ rơi tùy chọn cho từng loại mob của Smart Spawner.
 
+## Quản Lý Trong Game
+
+Dùng `/ss edit smartspawner` để chỉnh các mục mob hiện có. GUI này tách biệt với trình sửa Item
+Spawner và không có nút chuyển đổi. Để tạo mục mới, dùng:
+
+```bash
+/ss add smartspawner <mob> [name] [NBT tag]
+```
+
+Đối số mob tự động gợi ý các entity sống và có thể spawn trong phiên bản máy chủ hiện tại, đồng thời
+nhận ID có namespace như `minecraft:zombie`. NBT là tùy chọn và mặc định là `{}`. Khi được dùng, NBT
+là compound SNBT giống `/summon` và phải có cặp dấu ngoặc nhọn bên ngoài:
+
+Tên cấu hình cũng là tùy chọn và mặc định theo entity, ví dụ `zombie_spawner`. Khoảng trắng trong tên
+được tự động đổi thành dấu gạch dưới.
+
+```bash
+/ss add smartspawner zombie {}
+/ss add smartspawner minecraft:zombie
+/ss add smartspawner zombie Boss Room {NoAI:1b,Silent:1b}
+```
+
+SmartSpawner kiểm tra NBT mà không spawn entity thật rồi lưu vào `nbt_data`. Entity mang NBT này
+được dùng làm model quay bên trong lồng spawner; plugin vẫn tạo loot ảo và không spawn mob đó ra thế
+giới. Lệnh không ghi đè mục đã tồn tại.
+
+Màn hình loot có 27 slot, không phân trang và không có item điều hướng. Chỉ có một ô kính xanh lá nằm
+ngay sau loot cuối cùng; khi thêm item, ô kính này tự dịch sang slot kế tiếp.
+
 ::: info Hệ số vật phẩm
 Mỗi chu kỳ tạo vật phẩm chạy từ **min_mobs** đến **max_mobs** lần (mặc định 1–4). Số lượng cấu hình là giá trị cơ sở cho mỗi mob nên đầu ra thực tế có thể lớn hơn.
 :::
@@ -9,8 +38,10 @@ Mỗi chu kỳ tạo vật phẩm chạy từ **min_mobs** đến **max_mobs** l
 ## Định Dạng Cấu Hình
 
 ```yaml
-MOB_NAME:
+custom_spawner_name:
+  entity: MOB_NAME
   experience: <number>
+  nbt_data: <SNBT giống lệnh summon> # Có trên mục được tạo bằng /ss add
   drop_chance: <percentage>   # Tùy chọn, mặc định 100.0 nếu bỏ qua
   mob_head:
     item: <MATERIAL>
@@ -43,7 +74,8 @@ Các mục được đánh số, và con số chỉ là vị trí trong danh sá
 vật phẩm rơi ra, nhờ vậy cùng một material có thể xuất hiện nhiều lần:
 
 ```yaml
-BOGGED:
+poison_bogged_spawner:
+  entity: BOGGED
   loot:
     1:
       item: 'tipped_arrow[potion_contents={potion:"minecraft:poison"}]'
@@ -70,6 +102,7 @@ trông có vẻ đúng nhưng lại rơi ra thứ khác.
 | Thuộc tính | Định dạng | Mô tả |
 |------------|-----------|-------|
 | `experience` | `5` | XP tạo ra mỗi lần spawner kích hoạt |
+| `nbt_data` | `{profile:DrDonutt}` | SNBT kiểu `/summon` dùng cho model entity quay bên trong lồng spawner |
 | `drop_chance` | `75.0` | Xác suất vật phẩm Smart Spawner rơi khi bị phá; bỏ qua để dùng 100.0 |
 | `material` | `"PLAYER_HEAD"` | Material head hiển thị trong block spawner |
 | `hash_texture` | `"abc123..."` | Hash texture cho player head; dùng `null` cho head vanilla |
@@ -97,7 +130,8 @@ trông có vẻ đúng nhưng lại rơi ra thứ khác.
 ### Mob Dùng Custom Head
 
 ```yaml
-COW:
+cow_spawner:
+  entity: COW
   experience: 3
   mob_head:
     item: "PLAYER_HEAD"
@@ -116,7 +150,8 @@ COW:
 ### Mob Dùng Head Vanilla
 
 ```yaml
-SKELETON:
+skeleton_spawner:
+  entity: SKELETON
   experience: 5
   mob_head:
     item: "SKELETON_SKULL"
@@ -140,7 +175,8 @@ SKELETON:
 ### Mob Có Vũ Khí
 
 ```yaml
-WITHER_SKELETON:
+wither_skeleton_spawner:
+  entity: WITHER_SKELETON
   experience: 5
   mob_head:
     item: "WITHER_SKELETON_SKULL"
@@ -168,7 +204,8 @@ WITHER_SKELETON:
 ### Mob Có Tipped Arrow
 
 ```yaml
-BOGGED:
+bogged_spawner:
+  entity: BOGGED
   experience: 5
   mob_head:
     item: "PLAYER_HEAD"
@@ -187,7 +224,8 @@ BOGGED:
 ### Mob Có Potion Và Đồ Phù Phép
 
 ```yaml
-WITCH:
+witch_spawner:
+  entity: WITCH
   experience: 5
   loot:
     1:
@@ -203,7 +241,8 @@ WITCH:
 ### Mob Có Tỷ Lệ Rơi Spawner
 
 ```yaml
-ALLAY:
+allay_spawner:
+  entity: ALLAY
   experience: 0
   drop_chance: 75.0
   mob_head:
@@ -214,7 +253,8 @@ ALLAY:
 ### Mob Không Có Vật Phẩm
 
 ```yaml
-BAT:
+bat_spawner:
+  entity: BAT
   experience: 0
   mob_head:
     item: "PLAYER_HEAD"
@@ -265,10 +305,10 @@ SmartSpawner cung cấp `spawner_mobs.yml` đầy đủ cho mọi mob vanilla v�
 ## Trao Spawner
 
 ```bash
-/ss give spawner <player> <mob_type> [amount]
+/ss give spawner <player> <name> [amount]
 ```
 
 ```bash
-/ss give spawner @p skeleton 1
-/ss give spawner Player123 wither_skeleton 3
+/ss give spawner @p skeleton_spawner 1
+/ss give spawner Player123 wither_skeleton_spawner 3
 ```

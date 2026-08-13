@@ -2,6 +2,7 @@ package github.nighter.smartspawner.commands.config.editor;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.language.MessageService;
+import github.nighter.smartspawner.spawner.config.SpawnerConfigName;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
@@ -64,17 +65,6 @@ public class ConfigEditorHandler implements Listener {
             ui.openEntryList(player, target, holder.getPage() + 1);
             return;
         }
-        if (slot == ConfigEditorUI.LIST_NEW_ENTRY) {
-            click(player);
-            ui.openItemCapture(player, new ItemCaptureHolder(target,
-                    ItemCaptureHolder.Purpose.NEW_ENTRY, null, null, holder.getPage()));
-            return;
-        }
-        if (slot == ConfigEditorUI.LIST_SWITCH) {
-            click(player);
-            ui.openEntryList(player, target.other(), 1);
-            return;
-        }
         if (slot >= ConfigEditorUI.LIST_CONTENT) return;
 
         List<String> entries = service.listEntries(target);
@@ -106,24 +96,18 @@ public class ConfigEditorHandler implements Listener {
             return;
         }
 
-        if (slot == ConfigEditorUI.LOOT_BACK) {
-            click(player);
-            dialogs.openEntryOptions(player, target, entryKey, listPage);
-            return;
-        }
+        if (slot < ConfigEditorUI.LOOT_START || slot > ConfigEditorUI.LOOT_END) return;
 
-        if (slot == ConfigEditorUI.LOOT_ADD) {
+        List<String> lootKeys = service.listLootKeys(target, entryKey);
+        int index = slot - ConfigEditorUI.LOOT_START;
+        if (index >= lootKeys.size()) {
+            // Only the single green pane directly after the last loot row adds another item.
+            if (index != lootKeys.size() || lootKeys.size() >= ConfigEditorUI.LOOT_SIZE) return;
             click(player);
             ui.openItemCapture(player, new ItemCaptureHolder(target,
                     ItemCaptureHolder.Purpose.ADD_LOOT, entryKey, null, listPage));
             return;
         }
-
-        if (slot < ConfigEditorUI.LOOT_START || slot > ConfigEditorUI.LOOT_END) return;
-
-        List<String> lootKeys = service.listLootKeys(target, entryKey);
-        int index = slot - ConfigEditorUI.LOOT_START;
-        if (index < 0 || index >= lootKeys.size()) return;
         String lootKey = lootKeys.get(index);
 
         if (event.getClick() == ClickType.RIGHT) {
@@ -227,17 +211,15 @@ public class ConfigEditorHandler implements Listener {
 
     private void createEntryFrom(Player player, ItemCaptureHolder holder, ItemStack captured) {
         ConfigEditorTarget target = holder.getTarget();
-        String key = target == ConfigEditorTarget.SMART_SPAWNER
-                ? entityKeyFromSpawnEgg(captured.getType())
-                : captured.getType().name();
+        String key = holder.getRequestedName() == null || holder.getRequestedName().isBlank()
+                ? SpawnerConfigName.defaultName(captured.getType().name())
+                : SpawnerConfigName.normalize(holder.getRequestedName());
 
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("item", captured.getType().name());
 
-        if (key == null || !target.isValidKey(key)) {
-            messageService.sendMessage(player, target == ConfigEditorTarget.SMART_SPAWNER
-                    ? "config_editor.new_entry_needs_egg"
-                    : "config_editor.new_entry_invalid", placeholders);
+        if (key.isEmpty() || !captured.getType().isItem()) {
+            messageService.sendMessage(player, "config_editor.new_entry_invalid", placeholders);
             returnItem(player, captured);
             ui.openEntryList(player, target, holder.getListPage());
             return;
@@ -246,7 +228,9 @@ public class ConfigEditorHandler implements Listener {
         placeholders.put("entry", key);
         returnItem(player, captured);
 
-        if (!service.createEntry(target, key)) {
+        boolean created = target == ConfigEditorTarget.ITEM_SPAWNER
+                && service.createItemEntry(captured, holder.getRequestedName());
+        if (!created) {
             messageService.sendMessage(player, "config_editor.new_entry_exists", placeholders);
             ui.openEntryList(player, target, holder.getListPage());
             return;
@@ -254,24 +238,6 @@ public class ConfigEditorHandler implements Listener {
 
         messageService.sendMessage(player, "config_editor.new_entry_created", placeholders);
         dialogs.openEntryOptions(player, target, key, holder.getListPage());
-    }
-
-    /**
-     * A spawn egg is the only item that names a mob, so it is what the editor asks for when creating
-     * a mob entry. Every vanilla egg is {@code <TYPE>_SPAWN_EGG}.
-     */
-    private String entityKeyFromSpawnEgg(Material material) {
-        String name = material.name();
-        if (!name.endsWith("_SPAWN_EGG")) {
-            return null;
-        }
-
-        String candidate = name.substring(0, name.length() - "_SPAWN_EGG".length());
-        try {
-            return EntityType.valueOf(candidate).name();
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
     }
 
     private void returnItem(Player player, ItemStack item) {

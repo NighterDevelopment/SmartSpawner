@@ -2,6 +2,21 @@
 
 File `plugins/SmartSpawner/spawner_items.yml` cấu hình vật phẩm, XP và texture cho **Item Spawner**, loại spawner tạo nguyên liệu trực tiếp thay vì drop mob.
 
+## Quản Lý Trong Game
+
+Dùng `/ss edit itemspawner` để chỉnh các mục hiện có. GUI này tách biệt với trình sửa mob
+SmartSpawner và không có nút chuyển đổi.
+
+Chạy `/ss add itemspawner [name]` để tạo mục mới. Tên là tùy chọn, khoảng trắng tự đổi thành dấu gạch dưới;
+nếu bỏ qua, tên mặc định dựa trên material như `diamond_spawner`. Đặt vật phẩm nguồn vào GUI rồi xác nhận.
+
+Vật phẩm nguồn được lưu nguyên vẹn dưới `nbt_data` và hiển thị bên trong lồng spawner. Các
+component của item được giữ lại, vì vậy splash potion Jump Boost sẽ hiện đúng potion đó thay vì một
+splash potion thường. Mục cũ chưa có `nbt_data` sẽ dùng loot hợp lệ đầu tiên làm model.
+
+Màn hình loot có 27 slot, không phân trang và không có item điều hướng. Chỉ có một ô kính xanh lá nằm
+ngay sau loot cuối cùng; khi thêm item, ô kính này tự dịch sang slot kế tiếp.
+
 ::: info Hệ số vật phẩm
 Mỗi chu kỳ tạo từ **min_mobs** đến **max_mobs** lần (mặc định 1–4). Số lượng cấu hình là giá trị cơ sở được nhân lên.
 :::
@@ -14,8 +29,10 @@ Item Spawner không hỗ trợ potion hoặc enchanted book. Chỉ **tipped arro
 
 ```yaml
 
-ITEM_MATERIAL:
+custom_spawner_name:
+  item: ITEM_MATERIAL
   experience: <number>
+  nbt_data: <vật phẩm đã bắt> # Được /ss add itemspawner tự ghi
   loot:
     1:
       item: <item>          # Bắt buộc
@@ -32,6 +49,7 @@ ITEM_MATERIAL:
 |------------|-----------|-------|
 | `material` | `"DIAMOND"` | Material chính mà spawner đại diện |
 | `experience` | `1` | XP tạo ra mỗi lần kích hoạt |
+| `nbt_data` | `nbt:...` | Vật phẩm nguyên vẹn được dùng làm model quay bên trong lồng spawner |
 | `amount` | `1-1` | Khoảng số lượng cơ sở mỗi chu kỳ |
 | `chance` | `100.0` | Xác suất rơi từ 0.0–100.0 |
 | `item` | `DIAMOND` | Vật phẩm sẽ rơi. Bỏ trống để dùng tên mục. |
@@ -45,7 +63,8 @@ Mỗi giá trị `material` là một tên material của Bukkit viết hoa, ví
 ### Spawner Tài Nguyên Cơ Bản
 
 ```yaml
-DIAMOND:
+diamond_spawner:
+  item: DIAMOND
   experience: 1
   loot:
     1:
@@ -59,7 +78,8 @@ DIAMOND:
 ### Nhiều Loại Vật Phẩm
 
 ```yaml
-GOLD_INGOT:
+gold_ingot_spawner:
+  item: GOLD_INGOT
   experience: 1
   loot:
     1:
@@ -76,7 +96,8 @@ GOLD_INGOT:
 ### Custom Head
 
 ```yaml
-EMERALD:
+emerald_spawner:
+  item: EMERALD
   experience: 1
   loot:
     1:
@@ -90,7 +111,8 @@ EMERALD:
 ### Tipped Arrow
 
 ```yaml
-TIPPED_ARROW:
+tipped_arrow_spawner:
+  item: TIPPED_ARROW
   experience: 1
   loot:
     1:
@@ -105,7 +127,8 @@ TIPPED_ARROW:
 ### Vật Phẩm Hiếm Có Xác Suất
 
 ```yaml
-TOTEM_OF_UNDYING:
+totem_of_undying_spawner:
+  item: TOTEM_OF_UNDYING
   experience: 2
   loot:
     1:
@@ -141,10 +164,10 @@ SmartSpawner có sẵn cấu hình cho các nguyên liệu giá trị phổ bi�
 ## Trao Item Spawner
 
 ```bash
-/ss give item_spawner <player> <MATERIAL> [amount]
+/ss give item_spawner <player> <name> [amount]
 ```
 
 ```bash
-/ss give item_spawner @p DIAMOND 1
-/ss give item_spawner Player123 NETHERITE_INGOT 5
+/ss give item_spawner @p diamond_spawner 1
+/ss give item_spawner Player123 netherite_ingot_spawner 5
 ```

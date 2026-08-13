@@ -54,7 +54,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     // SQL Statements
     private static final String SELECT_COLUMNS = """
             spawner_id, world, loc_x, loc_y, loc_z,
-            entity_type, itemspawner_type, stack_size, max_stack_size,
+            entity_type, itemspawner_type, config_name, stack_size, max_stack_size,
             active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
             max_loot_slots, is_at_capacity, exp, max_stored_exp,
             last_interacted_player, preferred_sort_item, filtered_items, storage_items
@@ -67,8 +67,8 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 entity_type, itemspawner_type, stack_size, max_stack_size,
                 active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
                 max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
-                last_interacted_player, preferred_sort_item, filtered_items, storage_items
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                last_interacted_player, preferred_sort_item, filtered_items, storage_items, config_name
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 world = VALUES(world),
                 loc_x = VALUES(loc_x),
@@ -95,7 +95,8 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 last_interacted_player = VALUES(last_interacted_player),
                 preferred_sort_item = VALUES(preferred_sort_item),
                 filtered_items = VALUES(filtered_items),
-                storage_items = VALUES(storage_items)
+                storage_items = VALUES(storage_items),
+                config_name = VALUES(config_name)
             """;
 
     // SQLite upsert syntax (ON CONFLICT)
@@ -105,8 +106,8 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 entity_type, itemspawner_type, stack_size, max_stack_size,
                 active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
                 max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
-                last_interacted_player, preferred_sort_item, filtered_items, storage_items
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                last_interacted_player, preferred_sort_item, filtered_items, storage_items, config_name
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(spawner_id) DO UPDATE SET
                 world = excluded.world,
                 loc_x = excluded.loc_x,
@@ -133,7 +134,8 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 last_interacted_player = excluded.last_interacted_player,
                 preferred_sort_item = excluded.preferred_sort_item,
                 filtered_items = excluded.filtered_items,
-                storage_items = excluded.storage_items
+                storage_items = excluded.storage_items,
+                config_name = excluded.config_name
             """;
 
     /** Columns the cross-server list GUI needs. Deliberately excludes the item blob. */
@@ -396,6 +398,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         stmt.setString(25, spawner.getPreferredSortItem() != null ? spawner.getPreferredSortItem().name() : null);
         stmt.setString(26, serializeFilteredItems(spawner.getFilteredItems()));
         stmt.setBytes(27, items);
+        stmt.setString(28, spawner.getConfigName());
         return true;
     }
 
@@ -514,16 +517,17 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         // Create spawner based on type
         SpawnerData spawner;
         String itemMaterialStr = rs.getString("itemspawner_type");
+        String configName = rs.getString("config_name");
         if (entityType == EntityType.ITEM && itemMaterialStr != null) {
             try {
                 Material itemMaterial = Material.valueOf(itemMaterialStr);
-                spawner = new SpawnerData(spawnerId, location, itemMaterial, plugin);
+                spawner = new SpawnerData(spawnerId, location, itemMaterial, configName, plugin);
             } catch (IllegalArgumentException e) {
                 logger.severe("Invalid item spawner material for spawner " + spawnerId + ": " + itemMaterialStr);
                 return null;
             }
         } else {
-            spawner = new SpawnerData(spawnerId, location, entityType, plugin);
+            spawner = new SpawnerData(spawnerId, location, entityType, configName, plugin);
         }
 
         // Load settings
@@ -582,21 +586,23 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             virtualInv.sortItems(spawner.getPreferredSortItem());
         }
 
-        // Restore the physical spawner block state for item spawners
-        if (spawner.isItemSpawner()) {
-            Scheduler.runLocationTask(location, () -> {
-                org.bukkit.block.Block block = location.getBlock();
-                if (block.getType() == Material.SPAWNER) {
-                    org.bukkit.block.BlockState state = block.getState(false);
-                    if (state instanceof org.bukkit.block.CreatureSpawner cs) {
-                        cs.setSpawnedType(EntityType.ITEM);
-                        ItemStack spawnedItem = new ItemStack(spawner.getSpawnedItemMaterial(), 1);
-                        cs.setSpawnedItem(spawnedItem);
-                        cs.update(true, false);
+        // Restore the complete in-cage model from config when the physical block is loaded.
+        Scheduler.runLocationTask(location, () -> {
+            org.bukkit.block.Block block = location.getBlock();
+            if (block.getType() == Material.SPAWNER) {
+                org.bukkit.block.BlockState state = block.getState(false);
+                if (state instanceof org.bukkit.block.CreatureSpawner cs) {
+                    if (spawner.isItemSpawner()) {
+                        github.nighter.smartspawner.spawner.config.SpawnerDisplayConfigurator.applyItem(
+                                plugin, cs, spawner.getConfigName(), spawner.getSpawnedItemMaterial());
+                    } else {
+                        github.nighter.smartspawner.spawner.config.SpawnerDisplayConfigurator.applyMob(
+                                plugin, cs, spawner.getConfigName(), spawner.getEntityType());
                     }
+                    cs.update(true, false);
                 }
-            });
-        }
+            }
+        });
 
         return spawner;
     }

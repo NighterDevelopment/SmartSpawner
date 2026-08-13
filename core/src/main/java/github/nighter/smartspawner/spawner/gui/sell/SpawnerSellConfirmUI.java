@@ -246,8 +246,7 @@ public class SpawnerSellConfirmUI {
             materialAmountMap.merge(material, entry.getValue(), Long::sum);
         }
 
-        EntityType entityType = spawner.getEntityType();
-        EntityLootConfig lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
+        EntityLootConfig lootConfig = spawner.getLootConfig();
         List<LootItem> possibleLootItems = lootConfig != null ? lootConfig.getAllItems() : Collections.emptyList();
 
         if (possibleLootItems.isEmpty() && storedItems.isEmpty()) {

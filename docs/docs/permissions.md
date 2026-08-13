@@ -50,6 +50,14 @@ Allows clearing holograms and ghost spawners with <code>/ss clear</code>.
 Allows scanning and highlighting nearby spawners with <code>/ss near</code>.
 </PermRow>
 
+<PermRow permission="smartspawner.command.edit" defaultVal="op">
+Allows opening the separate SmartSpawner and ItemSpawner configuration editors with <code>/ss edit</code>.
+</PermRow>
+
+<PermRow permission="smartspawner.command.add" defaultVal="op">
+Allows creating SmartSpawner and ItemSpawner configuration entries with <code>/ss add</code>.
+</PermRow>
+
 <PermRow permission="smartspawner.command.set" defaultVal="op">
 Allows setting spawner properties (stack size, range, delay) with <code>/ss set</code>.
 </PermRow>

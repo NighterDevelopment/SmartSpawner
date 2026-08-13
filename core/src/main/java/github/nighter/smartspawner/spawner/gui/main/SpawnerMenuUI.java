@@ -251,7 +251,7 @@ public class SpawnerMenuUI {
             placeholders.put("percent_storage_rounded", String.valueOf(percentStorage));
         }
         final List<Component> finalLootComponents = usedPlaceholders.contains("loot_items") 
-                ? buildLootItemComponents(spawner.getEntityType(), virtualInventory.getConsolidatedItems()) 
+                ? buildLootItemComponents(spawner, virtualInventory.getConsolidatedItems())
                 : Collections.emptyList();
 
         Consumer<ItemMeta> metaModifier = meta -> {
@@ -598,14 +598,14 @@ public class SpawnerMenuUI {
         return maximum > 0 ? (int) ((double) current / maximum * 100) : 0;
     }
 
-    private List<Component> buildLootItemComponents(EntityType entityType, Map<ItemSignature, Long> storedItems) {
+    private List<Component> buildLootItemComponents(SpawnerData spawner, Map<ItemSignature, Long> storedItems) {
         Map<Material, Long> materialAmountMap = new HashMap<>();
         for (Map.Entry<ItemSignature, Long> entry : storedItems.entrySet()) {
             Material material = entry.getKey().getMaterial();
             materialAmountMap.merge(material, entry.getValue(), Long::sum);
         }
 
-        EntityLootConfig lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
+        EntityLootConfig lootConfig = spawner.getLootConfig();
         List<LootItem> possibleLootItems = lootConfig != null ? lootConfig.getAllItems() : Collections.emptyList();
 
         if (possibleLootItems.isEmpty() && storedItems.isEmpty()) {

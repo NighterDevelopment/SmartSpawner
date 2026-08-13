@@ -23,23 +23,18 @@ import org.jspecify.annotations.NullMarked;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @NullMarked
 public class GiveSubCommand extends BaseSubCommand {
     private final SpawnerItemFactory spawnerItemFactory;
-    private final List<String> supportedMobs;
     private static final int MAX_AMOUNT = 6400;
 
     public GiveSubCommand(SmartSpawner plugin) {
         super(plugin);
         this.spawnerItemFactory = plugin.getSpawnerItemFactory();
         // Generate supported mobs list from DynamicEntityValidator
-        this.supportedMobs = DynamicEntityValidator.getValidEntities().stream()
-                .map(EntityType::name)
-                .sorted()
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -73,8 +68,8 @@ public class GiveSubCommand extends BaseSubCommand {
     private LiteralArgumentBuilder<CommandSourceStack> buildRegularGiveCommand() {
         return Commands.literal("spawner")
                 .then(Commands.argument("player", ArgumentTypes.player())
-                        .then(Commands.argument("mobType", StringArgumentType.word())
-                                .suggests(createMobSuggestions())
+                        .then(Commands.argument("configName", StringArgumentType.word())
+                                .suggests(createSmartSpawnerSuggestions())
                                 .executes(context -> executeGive(context, false, 1))
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1, MAX_AMOUNT))
                                         .executes(context -> executeGive(context, false,
@@ -95,32 +90,40 @@ public class GiveSubCommand extends BaseSubCommand {
     private LiteralArgumentBuilder<CommandSourceStack> buildItemSpawnerGiveCommand() {
         return Commands.literal("item_spawner")
                 .then(Commands.argument("player", ArgumentTypes.player())
-                        .then(Commands.argument("itemType", StringArgumentType.word())
-                                .suggests(createItemSuggestions())
+                        .then(Commands.argument("configName", StringArgumentType.word())
+                                .suggests(createItemSpawnerSuggestions())
                                 .executes(context -> executeGiveItemSpawner(context, 1))
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1, MAX_AMOUNT))
                                         .executes(context -> executeGiveItemSpawner(context,
                                                 IntegerArgumentType.getInteger(context, "amount"))))));
     }
 
+    private SuggestionProvider<CommandSourceStack> createSmartSpawnerSuggestions() {
+        return (context, builder) -> {
+            String input = builder.getRemaining().toLowerCase(Locale.ROOT);
+            plugin.getSpawnerSettingsConfig().getDefinitionNames().stream()
+                    .filter(name -> name.startsWith(input)).forEach(builder::suggest);
+            return builder.buildFuture();
+        };
+    }
+
     private SuggestionProvider<CommandSourceStack> createMobSuggestions() {
         return (context, builder) -> {
-            String input = builder.getRemaining().toLowerCase();
-            supportedMobs.stream()
-                    .map(String::toLowerCase) // Convert to lowercase for suggestions
-                    .filter(mob -> mob.startsWith(input))
+            String input = builder.getRemaining().toLowerCase(Locale.ROOT);
+            DynamicEntityValidator.getValidEntities().stream()
+                    .map(type -> type.name().toLowerCase())
+                    .filter(name -> name.startsWith(input))
+                    .sorted()
                     .forEach(builder::suggest);
             return builder.buildFuture();
         };
     }
 
-    private SuggestionProvider<CommandSourceStack> createItemSuggestions() {
+    private SuggestionProvider<CommandSourceStack> createItemSpawnerSuggestions() {
         return (context, builder) -> {
-            String input = builder.getRemaining().toLowerCase();
-            plugin.getItemSpawnerSettingsConfig().getValidItemSpawnerMaterials().stream()
-                    .map(material -> material.name().toLowerCase())
-                    .filter(item -> item.startsWith(input))
-                    .forEach(builder::suggest);
+            String input = builder.getRemaining().toLowerCase(Locale.ROOT);
+            plugin.getItemSpawnerSettingsConfig().getDefinitionNames().stream()
+                    .filter(name -> name.startsWith(input)).forEach(builder::suggest);
             return builder.buildFuture();
         };
     }
@@ -147,23 +150,27 @@ public class GiveSubCommand extends BaseSubCommand {
             }
 
             Player target = players.get(0); // Get the first (and typically only) player from the selector
-            String mobType = StringArgumentType.getString(context, "mobType");
+            String mobType = isVanilla ? StringArgumentType.getString(context, "mobType") : null;
 
             // Validate mob type (case insensitive check)
-            if (!supportedMobs.contains(mobType.toUpperCase())) {
-                plugin.getMessageService().sendMessage(sender, "give.invalid_mob_type");
-                return 0;
-            }
-
-            EntityType entityType = EntityType.valueOf(mobType.toUpperCase());
+            EntityType entityType;
             ItemStack spawnerItem;
 
             if (isVanilla) {
+                try { entityType = EntityType.valueOf(mobType.toUpperCase()); }
+                catch (IllegalArgumentException e) {
+                    plugin.getMessageService().sendMessage(sender, "give.invalid_mob_type"); return 0;
+                }
                 // Use the correct method for vanilla spawners
                 spawnerItem = spawnerItemFactory.createVanillaSpawnerItem(entityType, amount);
             } else {
-                // Use spawner item factory for smart spawners
-                spawnerItem = spawnerItemFactory.createSmartSpawnerItem(entityType, amount);
+                String configName = StringArgumentType.getString(context, "configName");
+                var definition = plugin.getSpawnerSettingsConfig().getDefinition(configName);
+                if (definition == null) {
+                    plugin.getMessageService().sendMessage(sender, "give.invalid_mob_type"); return 0;
+                }
+                entityType = definition.entityType();
+                spawnerItem = spawnerItemFactory.createSmartSpawnerItem(definition.name(), amount);
             }
 
             giveOrDropOverflow(target, spawnerItem);
@@ -216,25 +223,15 @@ public class GiveSubCommand extends BaseSubCommand {
             }
 
             Player target = players.get(0);
-            String itemType = StringArgumentType.getString(context, "itemType");
-
-            // Validate item type
-            Material itemMaterial;
-            try {
-                itemMaterial = Material.valueOf(itemType.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                plugin.getMessageService().sendMessage(sender, "give.invalid_item_type");
-                return 0;
-            }
-
-            // Verify it's a valid item spawner type
-            if (!plugin.getItemSpawnerSettingsConfig().isValidItemSpawner(itemMaterial)) {
+            String configName = StringArgumentType.getString(context, "configName");
+            var definition = plugin.getItemSpawnerSettingsConfig().getDefinition(configName);
+            if (definition == null) {
                 plugin.getMessageService().sendMessage(sender, "give.invalid_item_spawner");
                 return 0;
             }
+            Material itemMaterial = definition.material();
 
-            // Create item spawner
-            ItemStack spawnerItem = spawnerItemFactory.createItemSpawnerItem(itemMaterial, amount);
+            ItemStack spawnerItem = spawnerItemFactory.createItemSpawnerItem(definition.name(), amount);
 
             giveOrDropOverflow(target, spawnerItem);
 

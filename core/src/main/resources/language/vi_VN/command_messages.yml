@@ -86,13 +86,13 @@ give:
     message: "&#FF4444Không tìm thấy người chơi."
     sound: block.note_block.pling
   invalid_mob_type:
-    message: "&#FF4444Loại sinh vật không hợp lệ."
+    message: "&#FF4444Loại sinh vật hoặc tên spawner không hợp lệ."
     sound: block.note_block.pling
   invalid_item_type:
     message: "&#FF4444Loại vật phẩm không hợp lệ."
     sound: block.note_block.pling
   invalid_item_spawner:
-    message: "&#FF4444Loại spawner vật phẩm không hợp lệ."
+    message: "&#FF4444Tên Item Spawner không hợp lệ."
     sound: block.note_block.pling
   inventory_full:
     message: "&#FF4444Một số spawner đã rơi ra vì túi đồ đã đầy."
@@ -206,8 +206,20 @@ gui_layout:
 #                   /ss config
 # --------------------------------------------------
 config_editor:
-  usage:
-    message: '&#FF4444Cách dùng: /ss config spawnerloot'
+  edit_usage:
+    message: '&#FF4444Cách dùng: /ss edit <smartspawner|itemspawner>'
+    sound: block.note_block.pling
+  add_usage:
+    message: '&#FF4444Cách dùng: /ss add <smartspawner|itemspawner>'
+    sound: block.note_block.pling
+  add_smartspawner_usage:
+    message: '&#FF4444Cách dùng: /ss add smartspawner <mob> [tên] [NBT tag], ví dụ: /ss add smartspawner zombie Boss Room {NoAI:1b}'
+    sound: block.note_block.pling
+  invalid_mob:
+    message: '&#FF4444{mob} không phải mob có thể spawn trong phiên bản server này.'
+    sound: block.note_block.bass
+  invalid_nbt:
+    message: '&#FF4444NBT của entity không hợp lệ. Hãy dùng compound tag giống /summon, ví dụ: {NoAI:1b}'
     sound: block.note_block.pling
   entry_missing:
     message: '&#FF4444Mục này không còn trong file nữa.'

@@ -13,6 +13,7 @@ import org.bukkit.persistence.PersistentDataType;
 public class SpawnerTypeChecker {
     private static NamespacedKey VANILLA_SPAWNER_KEY;
     private static NamespacedKey ITEM_SPAWNER_KEY;
+    private static NamespacedKey CONFIG_NAME_KEY;
 
     /**
      * Initializes the spawner type checker with plugin instance
@@ -21,6 +22,7 @@ public class SpawnerTypeChecker {
     public static void init(SmartSpawner plugin) {
         VANILLA_SPAWNER_KEY = new NamespacedKey(plugin, "vanilla_spawner");
         ITEM_SPAWNER_KEY = new NamespacedKey(plugin, "item_spawner_material");
+        CONFIG_NAME_KEY = new NamespacedKey(plugin, "spawner_config_name");
     }
 
     /**
@@ -80,5 +82,10 @@ public class SpawnerTypeChecker {
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    public static String getConfigName(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return null;
+        return item.getItemMeta().getPersistentDataContainer().get(CONFIG_NAME_KEY, PersistentDataType.STRING);
     }
 }

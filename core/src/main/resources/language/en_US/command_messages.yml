@@ -86,13 +86,13 @@ give:
     message: "&#FF4444Player not found."
     sound: block.note_block.pling
   invalid_mob_type:
-    message: "&#FF4444Invalid mob type."
+    message: "&#FF4444Invalid mob type or spawner name."
     sound: block.note_block.pling
   invalid_item_type:
     message: "&#FF4444Invalid item type."
     sound: block.note_block.pling
   invalid_item_spawner:
-    message: "&#FF4444Invalid item spawner type."
+    message: "&#FF4444Invalid Item Spawner name."
     sound: block.note_block.pling
   inventory_full:
     message: "&#FF4444Some spawner items were dropped because the inventory is full."
@@ -206,8 +206,20 @@ gui_layout:
 #                   /ss config
 # --------------------------------------------------
 config_editor:
-  usage:
-    message: '&#FF4444Usage: /ss config spawnerloot'
+  edit_usage:
+    message: '&#FF4444Usage: /ss edit <smartspawner|itemspawner>'
+    sound: block.note_block.pling
+  add_usage:
+    message: '&#FF4444Usage: /ss add <smartspawner|itemspawner>'
+    sound: block.note_block.pling
+  add_smartspawner_usage:
+    message: '&#FF4444Usage: /ss add smartspawner <mob> [name] [NBT tag], for example: /ss add smartspawner zombie Boss Room {NoAI:1b}'
+    sound: block.note_block.pling
+  invalid_mob:
+    message: '&#FF4444{mob} is not a spawnable mob on this server version.'
+    sound: block.note_block.bass
+  invalid_nbt:
+    message: '&#FF4444Invalid entity NBT. Use the same compound tag syntax as /summon, for example: {NoAI:1b}'
     sound: block.note_block.pling
   entry_missing:
     message: '&#FF4444That entry is no longer in the file.'

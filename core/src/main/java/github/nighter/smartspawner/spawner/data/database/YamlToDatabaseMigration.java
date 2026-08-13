@@ -5,6 +5,7 @@ import github.nighter.smartspawner.spawner.data.legacy.LegacyInventoryCodec;
 import github.nighter.smartspawner.spawner.data.storage.SpawnerInventoryCodec;
 import github.nighter.smartspawner.spawner.data.storage.StorageMode;
 import github.nighter.smartspawner.spawner.properties.ItemSignature;
+import github.nighter.smartspawner.spawner.config.SpawnerConfigName;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -40,8 +41,8 @@ public class YamlToDatabaseMigration {
                 entity_type, itemspawner_type, stack_size, max_stack_size,
                 active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
                 max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
-                last_interacted_player, preferred_sort_item, filtered_items, storage_items
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                last_interacted_player, preferred_sort_item, filtered_items, storage_items, config_name
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 world = VALUES(world),
                 loc_x = VALUES(loc_x),
@@ -68,7 +69,8 @@ public class YamlToDatabaseMigration {
                 last_interacted_player = VALUES(last_interacted_player),
                 preferred_sort_item = VALUES(preferred_sort_item),
                 filtered_items = VALUES(filtered_items),
-                storage_items = VALUES(storage_items)
+                storage_items = VALUES(storage_items),
+                config_name = VALUES(config_name)
             """;
 
     // SQLite insert syntax
@@ -78,8 +80,8 @@ public class YamlToDatabaseMigration {
                 entity_type, itemspawner_type, stack_size, max_stack_size,
                 active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
                 max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
-                last_interacted_player, preferred_sort_item, filtered_items, storage_items
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                last_interacted_player, preferred_sort_item, filtered_items, storage_items, config_name
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(spawner_id) DO UPDATE SET
                 world = excluded.world,
                 loc_x = excluded.loc_x,
@@ -106,7 +108,8 @@ public class YamlToDatabaseMigration {
                 last_interacted_player = excluded.last_interacted_player,
                 preferred_sort_item = excluded.preferred_sort_item,
                 filtered_items = excluded.filtered_items,
-                storage_items = excluded.storage_items
+                storage_items = excluded.storage_items,
+                config_name = excluded.config_name
             """;
 
     public YamlToDatabaseMigration(SmartSpawner plugin, DatabaseManager databaseManager) {
@@ -376,6 +379,8 @@ public class YamlToDatabaseMigration {
         stmt.setString(25, preferredSortItemStr);
         stmt.setString(26, filteredItemsStr);
         stmt.setBytes(27, itemsBlob);
+        stmt.setString(28, SpawnerConfigName.defaultName(
+                itemSpawnerMaterial != null ? itemSpawnerMaterial : entityType.name()));
 
         return true;
     }

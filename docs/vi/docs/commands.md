@@ -22,12 +22,12 @@ Mọi lệnh cần quyền gốc `smartspawner.command.use` cùng node cụ th�
 
 ### /ss give spawner
 
-<CommandRow commands="/ss give spawner &lt;player&gt; &lt;type&gt; [amount]" permission="smartspawner.command.give">
+<CommandRow commands="/ss give spawner &lt;player&gt; &lt;name&gt; [amount]" permission="smartspawner.command.give">
 
 Trao Smart Spawner cho người chơi.
 
 - `<player>`: Người chơi đích hoặc selector (`@p`, `@a`, v.v.)
-- `<type>`: Loại mob, ví dụ `zombie`, `skeleton`, `blaze`
+- `<name>`: Tên mục cấp cao nhất trong `spawner_mobs.yml`, ví dụ `zombie_spawner`
 - `[amount]`: Số lượng tùy chọn từ 1–6400, mặc định 1
 
 </CommandRow>
@@ -42,15 +42,51 @@ Trao spawner Minecraft vanilla. Không GUI, không xếp chồng; hoạt động
 
 ### /ss give item_spawner
 
-<CommandRow commands="/ss give item_spawner &lt;player&gt; &lt;item_type&gt; [amount]" permission="smartspawner.command.give">
+<CommandRow commands="/ss give item_spawner &lt;player&gt; &lt;name&gt; [amount]" permission="smartspawner.command.give">
 
 Trao Item Spawner cho người chơi.
 
-- `<item_type>`: Tên material, ví dụ `DIAMOND`, `EMERALD`, `NETHERITE_INGOT`
+- `<name>`: Tên mục cấp cao nhất trong `spawner_items.yml`, ví dụ `diamond_spawner`
 
 </CommandRow>
 
 ## Lệnh Quản Trị
+
+### /ss edit
+
+<CommandRow :commands="['/ss edit smartspawner', '/ss edit itemspawner']" permission="smartspawner.command.edit">
+
+Mở trình sửa cấu hình trong game cho từng loại spawner.
+
+- `smartspawner`: Chỉnh các mục trong `spawner_mobs.yml`
+- `itemspawner`: Chỉnh các mục trong `spawner_items.yml`
+- Mỗi loại có GUI riêng và không thể chuyển qua lại giữa hai GUI.
+- Thay đổi được áp dụng ngay; không cần chạy `/ss reload`.
+
+</CommandRow>
+
+### /ss add
+
+<CommandRow :commands="['/ss add smartspawner &lt;mob&gt; [name] [NBT tag]', '/ss add itemspawner [name]']" permission="smartspawner.command.add">
+
+Tạo mục mới trước khi chỉnh XP, texture và loot.
+
+- `smartspawner`: Tự động gợi ý các mob có trong phiên bản máy chủ hiện tại. NBT là tùy chọn và mặc định là `{}`. Khi được cung cấp, NBT dùng compound SNBT giống `/summon` và được kiểm tra mà không spawn entity thật.
+- `itemspawner`: Mở GUI; đặt vật phẩm nguồn vào ô giữa rồi xác nhận. Vật phẩm gốc sẽ được trả lại.
+- Tên là tùy chọn. Khoảng trắng tự đổi thành `_`; nếu bỏ qua, tên mặc định là `<entity>_spawner` hoặc `<item>_spawner`.
+
+Ví dụ:
+
+```bash
+/ss add smartspawner zombie {}
+/ss add smartspawner minecraft:zombie
+/ss add smartspawner zombie Boss Room {NoAI:1b,Silent:1b}
+/ss add itemspawner Jump Boost Farm
+```
+
+Lệnh không ghi đè tên cấu hình đã tồn tại.
+
+</CommandRow>
 
 ### /ss reload
 

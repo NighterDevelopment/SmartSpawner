@@ -2,7 +2,9 @@ package github.nighter.smartspawner.commands.config.editor;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.spawner.config.ConfiguredItemParser;
+import github.nighter.smartspawner.spawner.config.SpawnerConfigName;
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -96,7 +98,8 @@ public class ConfigEditorService {
             String key = keys.get(i);
             String dropPath = key + ".drop_chance";
             ConfigurationSection loot = config.getConfigurationSection(key + ".loot");
-            entries.add(new EntryView(key, config.getInt(key + ".experience", 0),
+            String typeKey = config.getString(key + (target == ConfigEditorTarget.SMART_SPAWNER ? ".entity" : ".item"), key);
+            entries.add(new EntryView(key, typeKey, config.getInt(key + ".experience", 0),
                     config.contains(dropPath) ? config.getDouble(dropPath) : null,
                     loot == null ? 0 : loot.getKeys(false).size()));
         }
@@ -266,16 +269,41 @@ public class ConfigEditorService {
      *
      * @return false when the key is invalid for this file or already present
      */
-    public boolean createEntry(ConfigEditorTarget target, String key) {
-        String normalised = key.trim().toUpperCase(Locale.ROOT);
-        if (!target.isValidKey(normalised) || hasEntry(target, normalised)) {
+    public boolean createMobEntry(String requestedName, EntityType entityType, String entityNbt) {
+        String normalised = SpawnerConfigName.normalize(requestedName);
+        if (normalised.isEmpty() || hasEntry(ConfigEditorTarget.SMART_SPAWNER, normalised)) {
             return false;
         }
 
-        mutate(target, config -> {
+        mutate(ConfigEditorTarget.SMART_SPAWNER, config -> {
+            config.set(normalised + ".entity", entityType.name());
             config.set(normalised + ".experience", 0);
-            config.set(normalised + ".mob_head.item", defaultHeadMaterial(target, normalised));
+            if (entityNbt != null) {
+                config.set(normalised + ".nbt_data", entityNbt.trim());
+            }
+            config.set(normalised + ".mob_head.item", "PLAYER_HEAD");
             config.set(normalised + ".mob_head.hash_texture", null);
+        });
+        return true;
+    }
+
+    /** Creates an ItemSpawner entry and preserves the captured item as its in-cage model. */
+    public boolean createItemEntry(ItemStack displayItem, String requestedName) {
+        String normalizedKey = SpawnerConfigName.normalize(requestedName);
+        if (normalizedKey.isEmpty()) normalizedKey = SpawnerConfigName.defaultName(displayItem.getType().name());
+        final String key = normalizedKey;
+        if (hasEntry(ConfigEditorTarget.ITEM_SPAWNER, key)) {
+            return false;
+        }
+        String encoded = describesItselfFully(displayItem)
+                ? displayItem.getType().name()
+                : ConfiguredItemParser.toNbtValue(displayItem);
+        mutate(ConfigEditorTarget.ITEM_SPAWNER, config -> {
+            config.set(key + ".item", displayItem.getType().name());
+            config.set(key + ".experience", 0);
+            config.set(key + ".nbt_data", encoded);
+            config.set(key + ".mob_head.item", displayItem.getType().name());
+            config.set(key + ".mob_head.hash_texture", null);
         });
         return true;
     }
@@ -384,7 +412,7 @@ public class ConfigEditorService {
     }
 
     /** A loot entry as the GUI needs to show it. */
-    public record EntryView(String key, int experience, Double dropChance, int lootCount) {}
+    public record EntryView(String key, String typeKey, int experience, Double dropChance, int lootCount) {}
 
     public record EntryPage(List<EntryView> entries, int currentPage, int totalPages) {}
 

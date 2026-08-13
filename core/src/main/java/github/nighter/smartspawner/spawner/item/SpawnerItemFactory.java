@@ -4,6 +4,7 @@ import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.spawner.lootgen.loot.EntityLootConfig;
 import github.nighter.smartspawner.spawner.lootgen.loot.LootItem;
+import github.nighter.smartspawner.spawner.config.SpawnerDisplayConfigurator;
 import github.nighter.smartspawner.utils.ItemTooltipUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -28,14 +29,18 @@ public class SpawnerItemFactory {
     private final SmartSpawner plugin;
     private final LanguageManager languageManager;
     private static NamespacedKey VANILLA_SPAWNER_KEY;
-    private final Map<EntityType, ItemStack> spawnerItemCache = new HashMap<>();
-    private final Map<EntityType, Long> cacheTimestamps = new HashMap<>();
+    private final NamespacedKey configNameKey;
+    private final NamespacedKey itemSpawnerMaterialKey;
+    private final Map<String, ItemStack> spawnerItemCache = new HashMap<>();
+    private final Map<String, Long> cacheTimestamps = new HashMap<>();
     private long lastCacheCleanup = System.currentTimeMillis();
 
     public SpawnerItemFactory(SmartSpawner plugin) {
         this.plugin = plugin;
         this.languageManager = plugin.getLanguageManager();
         VANILLA_SPAWNER_KEY = new NamespacedKey(plugin, "vanilla_spawner");
+        this.configNameKey = new NamespacedKey(plugin, "spawner_config_name");
+        this.itemSpawnerMaterialKey = new NamespacedKey(plugin, "item_spawner_material");
     }
 
     public void reload() {
@@ -54,12 +59,11 @@ public class SpawnerItemFactory {
             return;
         }
         lastCacheCleanup = currentTime;
-        Iterator<Map.Entry<EntityType, Long>> iterator = cacheTimestamps.entrySet().iterator();
+        Iterator<Map.Entry<String, Long>> iterator = cacheTimestamps.entrySet().iterator();
         while (iterator.hasNext()) {
-            Map.Entry<EntityType, Long> entry = iterator.next();
+            Map.Entry<String, Long> entry = iterator.next();
             if (currentTime - entry.getValue() > CACHE_EXPIRY_TIME_MS) {
-                EntityType type = entry.getKey();
-                spawnerItemCache.remove(type);
+                spawnerItemCache.remove(entry.getKey());
                 iterator.remove();
             }
         }
@@ -70,9 +74,22 @@ public class SpawnerItemFactory {
     }
 
     public ItemStack createSmartSpawnerItem(EntityType entityType, int amount) {
+        var definition = plugin.getSpawnerSettingsConfig().getDefaultDefinition(entityType);
+        return definition == null ? createSmartSpawnerItem(null, entityType, amount)
+                : createSmartSpawnerItem(definition.name(), entityType, amount);
+    }
+
+    public ItemStack createSmartSpawnerItem(String configName, int amount) {
+        var definition = plugin.getSpawnerSettingsConfig().getDefinition(configName);
+        if (definition == null) return null;
+        return createSmartSpawnerItem(definition.name(), definition.entityType(), amount);
+    }
+
+    private ItemStack createSmartSpawnerItem(String configName, EntityType entityType, int amount) {
         cleanupCacheIfNeeded();
+        String cacheKey = "mob:" + (configName != null ? configName : entityType.name());
         if (amount == 1) {
-            ItemStack cachedItem = spawnerItemCache.get(entityType);
+            ItemStack cachedItem = spawnerItemCache.get(cacheKey);
             if (cachedItem != null) {
                 return cachedItem.clone();
             }
@@ -84,13 +101,15 @@ public class SpawnerItemFactory {
             if (meta instanceof BlockStateMeta blockMeta) {
                 BlockState blockState = blockMeta.getBlockState();
                 if (blockState instanceof CreatureSpawner cs) {
-                    cs.setSpawnedType(entityType);
+                    SpawnerDisplayConfigurator.applyMob(plugin, cs, configName, entityType);
                     blockMeta.setBlockState(cs);
                 }
             }
             String entityTypeName = languageManager.getFormattedMobName(entityType);
             String entityTypeNameSmallCaps = languageManager.getSmallCaps(entityTypeName);
-            EntityLootConfig lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
+            var definition = plugin.getSpawnerSettingsConfig().getDefinition(configName);
+            EntityLootConfig lootConfig = definition != null ? definition.lootConfig()
+                    : plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
             List<LootItem> lootItems = lootConfig != null ? lootConfig.getAllItems() : Collections.emptyList();
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("entity", entityTypeName);
@@ -120,24 +139,25 @@ public class SpawnerItemFactory {
                 meta.lore(lore);
             }
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
+            if (configName != null) meta.getPersistentDataContainer().set(configNameKey, PersistentDataType.STRING, configName);
             spawner.setItemMeta(meta);
         }
         ItemTooltipUtil.hideTooltip(spawner);
         if (amount == 1) {
-            spawnerItemCache.put(entityType, spawner.clone());
-            cacheTimestamps.put(entityType, System.currentTimeMillis());
+            spawnerItemCache.put(cacheKey, spawner.clone());
+            cacheTimestamps.put(cacheKey, System.currentTimeMillis());
             if (spawnerItemCache.size() > MAX_CACHE_SIZE) {
-                EntityType oldestEntity = null;
+                String oldestKey = null;
                 long oldestTime = Long.MAX_VALUE;
-                for (Map.Entry<EntityType, Long> entry : cacheTimestamps.entrySet()) {
+                for (Map.Entry<String, Long> entry : cacheTimestamps.entrySet()) {
                     if (entry.getValue() < oldestTime) {
                         oldestTime = entry.getValue();
-                        oldestEntity = entry.getKey();
+                        oldestKey = entry.getKey();
                     }
                 }
-                if (oldestEntity != null) {
-                    spawnerItemCache.remove(oldestEntity);
-                    cacheTimestamps.remove(oldestEntity);
+                if (oldestKey != null) {
+                    spawnerItemCache.remove(oldestKey);
+                    cacheTimestamps.remove(oldestKey);
                 }
             }
         }
@@ -190,14 +210,31 @@ public class SpawnerItemFactory {
     }
 
     public ItemStack createItemSpawnerItem(Material itemMaterial, int amount) {
+        var definition = plugin.getItemSpawnerSettingsConfig().getDefaultDefinition(itemMaterial);
+        return definition == null ? createItemSpawnerItem(null, itemMaterial, amount)
+                : createItemSpawnerItem(definition.name(), itemMaterial, amount);
+    }
+
+    public ItemStack createItemSpawnerItem(String configName, int amount) {
+        var definition = plugin.getItemSpawnerSettingsConfig().getDefinition(configName);
+        if (definition == null) return null;
+        return createItemSpawnerItem(definition.name(), definition.material(), amount);
+    }
+
+    private ItemStack createItemSpawnerItem(String configName, Material itemMaterial, int amount) {
+        cleanupCacheIfNeeded();
+        String cacheKey = "item:" + (configName != null ? configName : itemMaterial.name());
+        if (amount == 1) {
+            ItemStack cachedItem = spawnerItemCache.get(cacheKey);
+            if (cachedItem != null) return cachedItem.clone();
+        }
         ItemStack spawner = new ItemStack(Material.SPAWNER, amount);
         ItemMeta meta = spawner.getItemMeta();
         if (meta != null && itemMaterial != null) {
             if (meta instanceof BlockStateMeta blockMeta) {
                 BlockState blockState = blockMeta.getBlockState();
                 if (blockState instanceof CreatureSpawner cs) {
-                    // Set to ITEM type for item spawners
-                    cs.setSpawnedType(EntityType.ITEM);
+                    SpawnerDisplayConfigurator.applyItem(plugin, cs, configName, itemMaterial);
                     blockMeta.setBlockState(cs);
                 }
             }
@@ -206,7 +243,9 @@ public class SpawnerItemFactory {
             String itemNameSmallCaps = languageManager.getSmallCaps(itemName);
             
             // Get loot config for this item spawner
-            EntityLootConfig lootConfig = plugin.getItemSpawnerSettingsConfig().getLootConfig(itemMaterial);
+            var definition = plugin.getItemSpawnerSettingsConfig().getDefinition(configName);
+            EntityLootConfig lootConfig = definition != null ? definition.lootConfig()
+                    : plugin.getItemSpawnerSettingsConfig().getLootConfig(itemMaterial);
             List<LootItem> lootItems = lootConfig != null ? lootConfig.getAllItems() : Collections.emptyList();
             
             Map<String, String> placeholders = new HashMap<>();
@@ -248,15 +287,37 @@ public class SpawnerItemFactory {
             
             // Store the item material in persistent data
             meta.getPersistentDataContainer().set(
-                    new NamespacedKey(plugin, "item_spawner_material"),
+                    itemSpawnerMaterialKey,
                     PersistentDataType.STRING,
                     itemMaterial.name()
             );
+            if (configName != null) meta.getPersistentDataContainer().set(configNameKey, PersistentDataType.STRING, configName);
             
             spawner.setItemMeta(meta);
         }
         ItemTooltipUtil.hideTooltip(spawner);
+        if (amount == 1) {
+            spawnerItemCache.put(cacheKey, spawner.clone());
+            cacheTimestamps.put(cacheKey, System.currentTimeMillis());
+            trimCacheToLimit();
+        }
         return spawner;
+    }
+
+    private void trimCacheToLimit() {
+        if (spawnerItemCache.size() <= MAX_CACHE_SIZE) return;
+        String oldestKey = null;
+        long oldestTime = Long.MAX_VALUE;
+        for (Map.Entry<String, Long> entry : cacheTimestamps.entrySet()) {
+            if (entry.getValue() < oldestTime) {
+                oldestTime = entry.getValue();
+                oldestKey = entry.getKey();
+            }
+        }
+        if (oldestKey != null) {
+            spawnerItemCache.remove(oldestKey);
+            cacheTimestamps.remove(oldestKey);
+        }
     }
 
     private String itemKey(String section, String variant, String field) {

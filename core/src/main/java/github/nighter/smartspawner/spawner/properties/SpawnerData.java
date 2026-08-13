@@ -73,6 +73,8 @@ public class SpawnerData {
     @Getter
     private EntityType entityType;
     @Getter @Setter
+    private String configName;
+    @Getter @Setter
     private EntityLootConfig lootConfig;
 
     // Item spawner support - stores the material being spawned for item spawners
@@ -132,11 +134,17 @@ public class SpawnerData {
     private volatile Boolean cachedHasNoLoot = null;
 
     public SpawnerData(String id, Location location, EntityType type, SmartSpawner plugin) {
+        this(id, location, type, defaultMobName(plugin, type), plugin);
+    }
+
+    public SpawnerData(String id, Location location, EntityType type, String configName, SmartSpawner plugin) {
         super();
         this.plugin = plugin;
         this.spawnerId = id;
         this.spawnerLocation = location;
         this.entityType = type;
+        this.configName = configName == null || configName.isBlank()
+                ? defaultMobName(plugin, type) : configName;
         this.spawnedItemMaterial = null;
 
         initializeDefaults();
@@ -147,12 +155,18 @@ public class SpawnerData {
 
     // Constructor for item spawners
     public SpawnerData(String id, Location location, Material itemMaterial, SmartSpawner plugin) {
+        this(id, location, itemMaterial, defaultItemName(plugin, itemMaterial), plugin);
+    }
+
+    public SpawnerData(String id, Location location, Material itemMaterial, String configName, SmartSpawner plugin) {
         super();
         this.plugin = plugin;
         this.spawnerId = id;
         this.spawnerLocation = location;
         this.entityType = EntityType.ITEM;
         this.spawnedItemMaterial = itemMaterial;
+        this.configName = configName == null || configName.isBlank()
+                ? defaultItemName(plugin, itemMaterial) : configName;
 
         initializeDefaults();
         loadConfigurationValues();
@@ -184,10 +198,24 @@ public class SpawnerData {
 
         // Load loot config based on spawner type
         if (isItemSpawner() && spawnedItemMaterial != null) {
-            this.lootConfig = plugin.getItemSpawnerSettingsConfig().getLootConfig(spawnedItemMaterial);
+            var definition = plugin.getItemSpawnerSettingsConfig().getDefinition(configName);
+            this.lootConfig = definition != null ? definition.lootConfig()
+                    : plugin.getItemSpawnerSettingsConfig().getLootConfig(spawnedItemMaterial);
         } else {
-            this.lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
+            var definition = plugin.getSpawnerSettingsConfig().getDefinition(configName);
+            this.lootConfig = definition != null ? definition.lootConfig()
+                    : plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
         }
+    }
+
+    private static String defaultMobName(SmartSpawner plugin, EntityType type) {
+        var definition = plugin.getSpawnerSettingsConfig().getDefaultDefinition(type);
+        return definition != null ? definition.name() : type.name().toLowerCase(Locale.ROOT) + "_spawner";
+    }
+
+    private static String defaultItemName(SmartSpawner plugin, Material material) {
+        var definition = plugin.getItemSpawnerSettingsConfig().getDefaultDefinition(material);
+        return definition != null ? definition.name() : material.name().toLowerCase(Locale.ROOT) + "_spawner";
     }
 
     public void recalculateAfterConfigReload() {
@@ -434,7 +462,10 @@ public class SpawnerData {
 
     public void setEntityType(EntityType newType) {
         this.entityType = newType;
-        this.lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(newType);
+        var definition = plugin.getSpawnerSettingsConfig().getDefaultDefinition(newType);
+        this.configName = definition != null ? definition.name() : defaultMobName(plugin, newType);
+        this.lootConfig = definition != null ? definition.lootConfig()
+                : plugin.getSpawnerSettingsConfig().getLootConfig(newType);
         // Mark sell value as dirty since entity type and prices changed
         this.sellValueDirty = true;
         updateHologramData();
@@ -491,9 +522,13 @@ public class SpawnerData {
     public void setLootConfig() {
         // Load loot config based on spawner type
         if (isItemSpawner() && spawnedItemMaterial != null) {
-            this.lootConfig = plugin.getItemSpawnerSettingsConfig().getLootConfig(spawnedItemMaterial);
+            var definition = plugin.getItemSpawnerSettingsConfig().getDefinition(configName);
+            this.lootConfig = definition != null ? definition.lootConfig()
+                    : plugin.getItemSpawnerSettingsConfig().getLootConfig(spawnedItemMaterial);
         } else {
-            this.lootConfig = plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
+            var definition = plugin.getSpawnerSettingsConfig().getDefinition(configName);
+            this.lootConfig = definition != null ? definition.lootConfig()
+                    : plugin.getSpawnerSettingsConfig().getLootConfig(entityType);
         }
         // Mark sell value as dirty since prices may have changed
         this.sellValueDirty = true;

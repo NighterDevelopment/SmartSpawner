@@ -10,71 +10,66 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
 
-/**
- * {@code /ss config spawnerloot}.
- *
- * <p>Opens the in-game editor for the matching settings file. Player only: the whole command is a
- * GUI, so there is nothing for console to do, and it says so rather than failing silently.</p>
- */
+/** Opens one of the two independent spawner configuration editors. */
 @NullMarked
-public class SpawnerConfigSubCommand extends BaseSubCommand {
-
+public class EditSpawnerSubCommand extends BaseSubCommand {
     private final ConfigEditorUI ui;
 
-    public SpawnerConfigSubCommand(SmartSpawner plugin, ConfigEditorUI ui) {
+    public EditSpawnerSubCommand(SmartSpawner plugin, ConfigEditorUI ui) {
         super(plugin);
         this.ui = ui;
     }
 
     @Override
     public String getName() {
-        return "config";
+        return "edit";
     }
 
     @Override
     public String getPermission() {
-        return "smartspawner.command.config";
+        return "smartspawner.command.edit";
     }
 
     @Override
     public String getDescription() {
-        return "Edit mob and item spawner loot in game";
+        return "Edit SmartSpawner or ItemSpawner settings in game";
     }
 
     @Override
     public LiteralArgumentBuilder<CommandSourceStack> build() {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal(getName());
         builder.requires(source -> hasPermission(source.getSender()));
-
-        // No bare /ss config: keep the intended command visible in the usage message.
         builder.executes(context -> {
             logCommandExecution(context);
-            plugin.getMessageService().sendMessage(context.getSource().getSender(), "config_editor.usage");
-            return 0;
+            return usage(context.getSource().getSender());
         });
 
-        builder.then(Commands.literal("spawnerloot").executes(context -> {
-            logCommandExecution(context);
-            return open(context);
-        }));
-
+        for (ConfigEditorTarget target : ConfigEditorTarget.values()) {
+            builder.then(Commands.literal(target.getCommandArgument()).executes(context -> {
+                logCommandExecution(context);
+                return open(context, target);
+            }));
+        }
         return builder;
     }
 
     @Override
     public int execute(CommandContext<CommandSourceStack> context) {
-        plugin.getMessageService().sendMessage(context.getSource().getSender(), "config_editor.usage");
+        return usage(context.getSource().getSender());
+    }
+
+    private int usage(CommandSender sender) {
+        plugin.getMessageService().sendMessage(sender, "config_editor.edit_usage");
         return 0;
     }
 
-    private int open(CommandContext<CommandSourceStack> context) {
+    private int open(CommandContext<CommandSourceStack> context, ConfigEditorTarget target) {
         CommandSender sender = context.getSource().getSender();
         if (!(sender instanceof Player player)) {
             plugin.getMessageService().sendMessage(sender, "player_only");
             return 0;
         }
-
-        ui.openEntryList(player, ConfigEditorTarget.SMART_SPAWNER, 1);
+        ui.openEntryList(player, target, 1);
         return 1;
     }
 }

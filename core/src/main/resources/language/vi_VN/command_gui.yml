@@ -208,7 +208,7 @@ price_item:
     - '  &8• &fGiá cửa hàng: &a${shop_price}'
 
 # --------------------------------------------------
-#            Trình sửa cấu hình (/ss config spawnerloot)
+#            Trình sửa cấu hình (/ss edit, /ss add)
 # --------------------------------------------------
 config_editor:
   mob_list_title: 'ᴄàɪ đặᴛ ʟᴏᴏᴛ ᴍᴏʙ ({current}/{total})'
@@ -257,15 +257,11 @@ config_editor:
       - ''
       - '&#37eb9a ▸ &fNhấn để chuyển!'
 
-  loot_entry:
+  loot_entry_compact:
     name: '&fʟᴏᴏᴛ &#37eb9a{label}'
     lore:
-      - ''
-      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
-      - '  &8• &fVật phẩm: &e{item}'
-      - '  &8• &fSố lượng: &e{amount}'
-      - '  &8• &fTỷ lệ: &e{chance}%'
-      - '  &8• &fĐộ bền: &e{durability}'
+      - '&fSố lượng: &#37eb9a{amount}'
+      - '&fTỷ lệ: &#37eb9a{chance}%'
       - ''
       - '&#37eb9a ▸ &fChuột trái để chỉnh sửa!'
       - '&#37eb9a ▸ &fChuột phải để đổi vật phẩm!'

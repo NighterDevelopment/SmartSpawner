@@ -2,6 +2,22 @@
 
 The `spawner_items.yml` file in `plugins/SmartSpawner/` configures drop tables, XP values, and textures for **Item Spawners**, the spawner type that generates raw materials instead of mob drops.
 
+## In-game Management
+
+Use `/ss edit itemspawner` to edit existing entries. Its GUI is separate from the SmartSpawner mob
+editor and has no switch button.
+
+Run `/ss add itemspawner [name]` to create an entry. Put the source item into the middle slot of the
+capture GUI and confirm. The name is optional, spaces become underscores, and the default is based on
+the captured material (for example `diamond_spawner`). Existing names are not overwritten.
+
+The captured item is stored losslessly as `nbt_data` and rendered inside the spawner cage. Item
+components are retained, so a Jump Boost splash potion is shown as that potion instead of a plain
+splash potion. Older entries without `nbt_data` use their first valid loot item as the preview.
+
+The loot screen has 27 slots and no pagination or navigation items. One lime stained-glass pane follows
+the last configured loot item; click it to add an item, and it moves one slot forward.
+
 ::: info Drop Multiplier
 Each cycle generates drops between **min_mobs** and **max_mobs** times (default: 1–4). Configured amounts are base values that get multiplied.
 :::
@@ -13,8 +29,10 @@ Item spawners do not support potions or enchanted books. Only **tipped arrows** 
 ## Configuration Format
 
 ```yaml
-ITEM_MATERIAL:
+custom_spawner_name:
+  item: ITEM_MATERIAL      # Required; controls the displayed/generated item type
   experience: <number>
+  nbt_data: <captured item> # Written automatically by /ss add itemspawner
   loot:
     1:
       item: <item>          # Required
@@ -29,7 +47,9 @@ ITEM_MATERIAL:
 
 | Property | Format | Description |
 |----------|--------|-------------|
+| `item` (spawner level) | `DIAMOND` | Material used by this named Item Spawner entry |
 | `experience` | `1` | XP generated per spawner trigger |
+| `nbt_data` | `nbt:...` | Exact item rendered as the rotating model inside the spawner cage |
 | `item` | `DIAMOND` | The item that drops. Omit it to use the entry name. |
 | `amount` | `1-1` | Base item quantity range per cycle |
 | `chance` | `100.0` | Drop probability (0.0 to 100.0) |
@@ -47,7 +67,8 @@ Every `material` value is a Bukkit material name in capital letters, for example
 ### Basic Resource Spawner
 
 ```yaml
-DIAMOND:
+diamond_spawner:
+  item: DIAMOND
   experience: 1
   loot:
     1:
@@ -61,7 +82,8 @@ DIAMOND:
 ### Multiple Drop Types
 
 ```yaml
-GOLD_INGOT:
+gold_ingot_spawner:
+  item: GOLD_INGOT
   experience: 1
   loot:
     1:
@@ -78,7 +100,8 @@ GOLD_INGOT:
 ### Custom Head Texture
 
 ```yaml
-EMERALD:
+emerald_spawner:
+  item: EMERALD
   experience: 1
   loot:
     1:
@@ -92,7 +115,8 @@ EMERALD:
 ### Tipped Arrow Spawner
 
 ```yaml
-TIPPED_ARROW:
+tipped_arrow_spawner:
+  item: TIPPED_ARROW
   experience: 1
   loot:
     1:
@@ -107,7 +131,8 @@ TIPPED_ARROW:
 ### Rare Item with Chance Drop
 
 ```yaml
-TOTEM_OF_UNDYING:
+totem_of_undying_spawner:
+  item: TOTEM_OF_UNDYING
   experience: 2
   loot:
     1:
@@ -145,11 +170,11 @@ SmartSpawner ships with defaults for common valuable materials.
 ## Give Item Spawners
 
 ```bash
-/ss give item_spawner <player> <MATERIAL> [amount]
+/ss give item_spawner <player> <name> [amount]
 ```
 
 Examples:
 ```bash
-/ss give item_spawner @p DIAMOND 1
-/ss give item_spawner Player123 NETHERITE_INGOT 5
+/ss give item_spawner @p diamond_spawner 1
+/ss give item_spawner Player123 netherite_ingot_spawner 5
 ```

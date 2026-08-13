@@ -172,8 +172,12 @@ permissions:
     description: "Allow highlighting nearby spawners through walls"
     default: op
 
-  smartspawner.command.config:
-    description: "Allow editing spawner and item spawner settings in game"
+  smartspawner.command.edit:
+    description: "Allow editing SmartSpawner and ItemSpawner settings in game"
+    default: op
+
+  smartspawner.command.add:
+    description: "Allow adding SmartSpawner and ItemSpawner entries"
     default: op
 
   smartspawner.command.set:

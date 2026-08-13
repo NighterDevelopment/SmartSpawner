@@ -33,8 +33,8 @@ public class SqliteToMySqlMigration {
                 entity_type, itemspawner_type, stack_size, max_stack_size,
                 active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
                 max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
-                last_interacted_player, preferred_sort_item, filtered_items, storage_items
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                last_interacted_player, preferred_sort_item, filtered_items, storage_items, config_name
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 world = VALUES(world),
                 loc_x = VALUES(loc_x),
@@ -61,7 +61,8 @@ public class SqliteToMySqlMigration {
                 last_interacted_player = VALUES(last_interacted_player),
                 preferred_sort_item = VALUES(preferred_sort_item),
                 filtered_items = VALUES(filtered_items),
-                storage_items = VALUES(storage_items)
+                storage_items = VALUES(storage_items),
+                config_name = VALUES(config_name)
             """;
 
     private static final String LEGACY_TABLE_SPAWNERS = "smart_spawners";
@@ -94,11 +95,11 @@ public class SqliteToMySqlMigration {
 
     /** Source file already on the 1.8.0 shape. */
     private static final String SELECT_ALL_SQLITE =
-            "SELECT " + SELECT_COMMON_COLUMNS + ", storage_items, total_items FROM " + TABLE_PLACEHOLDER;
+            "SELECT " + SELECT_COMMON_COLUMNS + ", storage_items, total_items, %s FROM " + TABLE_PLACEHOLDER;
 
     /** Source file left behind by 1.7.x, still on the old names and the string inventory column. */
     private static final String SELECT_ALL_SQLITE_LEGACY =
-            "SELECT " + SELECT_COMMON_COLUMNS_LEGACY + ", inventory_data FROM " + TABLE_PLACEHOLDER;
+            "SELECT " + SELECT_COMMON_COLUMNS_LEGACY + ", inventory_data, NULL AS config_name FROM " + TABLE_PLACEHOLDER;
 
     public SqliteToMySqlMigration(SmartSpawner plugin, DatabaseManager mysqlManager) {
         this.plugin = plugin;
@@ -228,8 +229,10 @@ public class SqliteToMySqlMigration {
 
             // A file left behind by an older release still carries the string inventory column.
             boolean hasItemBlob = sqliteColumnExists(sqliteConn, sourceTable, "storage_items");
+            boolean hasConfigName = sqliteColumnExists(sqliteConn, sourceTable, "config_name");
             String selectSql = hasItemBlob
-                    ? SELECT_ALL_SQLITE.replace(TABLE_PLACEHOLDER, sourceTable)
+                    ? SELECT_ALL_SQLITE.formatted(hasConfigName ? "config_name" : "NULL AS config_name")
+                            .replace(TABLE_PLACEHOLDER, sourceTable)
                     : SELECT_ALL_SQLITE_LEGACY.replace(TABLE_PLACEHOLDER, sourceTable);
 
             try (Connection mysqlConn = mysqlManager.getConnection();
@@ -286,6 +289,7 @@ public class SqliteToMySqlMigration {
                         insertStmt.setString(24, rs.getString("last_interacted_player"));
                         insertStmt.setString(25, rs.getString("preferred_sort_item"));
                         insertStmt.setString(26, rs.getString("filtered_items"));
+                        insertStmt.setString(28, rs.getString("config_name"));
 
                         insertStmt.addBatch();
                         batchCount++;
