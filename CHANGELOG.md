@@ -30,6 +30,11 @@ All notable changes to SmartSpawner are documented in this file.
 - Settings that only take effect after a full restart are now marked RESTART in `config.yml`.
 - Bedrock form menus are off by default. Set `bedrock_support.enable_formui` to `true` and restart to use them.
 - The two spawner settings files were renamed, and loot entries use a new format. See the details below.
+- Loot generation and virtual storage now keep compact item totals instead of creating a separate item stack for every generated drop. This substantially reduces CPU and memory use, especially for large spawner stacks.
+- Storage menus render only the page being viewed, and hoppers read stored items in small batches. Spawners with large inventories no longer rebuild their entire contents for these actions.
+- Selling now works directly with the compact stored item totals and stays synchronized with loot and storage updates, reducing processing overhead and avoiding overlapping changes.
+- Folia tasks that are already on the correct region or global thread run immediately, avoiding unnecessary scheduling delays.
+- GUI controls respond faster: the built-in anti-spam delay was reduced from 300 milliseconds to 100 milliseconds, and rejected rapid clicks no longer extend the delay.
 
 ### Removed
 - YAML storage was removed. Servers still set to `YAML` are switched to `SQLITE` automatically.
