@@ -42,7 +42,7 @@ slot_12:
 The value uses the same time format as `config.yml` (`20`, `5s`, `10m`, `1h`, compound `1m_30s`, etc.).
 
 - A button rejected by cooldown does not run its action, and sends the `action_not_ready` message with the `{time}` placeholder.
-- All action buttons have a built-in **300 ms anti-spam debounce**, even without a `cooldown`.
+- All action buttons have a built-in **100 ms anti-spam debounce**, even without a `cooldown`.
 - Cooldown can also be overridden inside a conditional `if:` branch.
 
 ```yaml
