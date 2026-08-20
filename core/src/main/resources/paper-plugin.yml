@@ -16,15 +16,6 @@ prefix: "SmartSpawner"
 # Dependencies
 dependencies:
   server:
-    # Bedrock Support Plugins
-    floodgate:
-      load: BEFORE
-      required: false
-      join-classpath: true
-    Geyser-Spigot:
-      load: BEFORE
-      required: false
-      join-classpath: true
     # Shop Plugins
     EconomyShopGUI:
       load: AFTER
@@ -182,6 +173,10 @@ permissions:
 
   smartspawner.command.gui_layout:
     description: "Allow changing the active SmartSpawner GUI layout"
+    default: op
+
+  smartspawner.command.editloot:
+    description: "Allow editing a spawner's loot table in game"
     default: op
 
   # Feature permissions

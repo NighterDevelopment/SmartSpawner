@@ -21,7 +21,6 @@
 #
 # Actions:
 #   open_storage: Open storage GUI
-#   open_stacker: Open stacker GUI
 #   sell_and_exp: Sell all items and collect exp
 #   collect_exp: Collect exp only
 #   none: Display only, no action

@@ -183,10 +183,6 @@ spawner_management:
     name: '&fᴍở &#5DB5F1ᴍᴇɴᴜ ꜱᴘᴀᴡɴᴇʀ'
     lore:
       - '&#5DB5F1 ▸ &fNhấp để mở menu!'
-  stack:
-    name: '&fᴄʜỉɴʜ ꜱửᴀ &#5DB5F1ꜱᴛᴀᴄᴋ'
-    lore:
-      - '&#5DB5F1 ▸ &fNhấp để chỉnh sửa stack!'
   remove:
     name: '&fɢỡ ʙỏ &#FF6B6Bꜱᴘᴀᴡɴᴇʀ'
     lore:
@@ -206,3 +202,92 @@ price_item:
     - '  &8• &fNguồn: &e{price_source}'
     - '  &8• &fGiá tùy chỉnh: &a${custom_price}'
     - '  &8• &fGiá cửa hàng: &a${shop_price}'
+
+# ──────────────────────────────────────────────────────
+#              Trình sửa loot (/ss editloot)
+# ──────────────────────────────────────────────────────
+editloot:
+  mob_loot_title: 'ʟᴏᴏᴛ ᴍᴏʙ • {entry}'
+  item_loot_title: 'ʟᴏᴏᴛ ᴠậᴛ ᴘʜẩᴍ • {entry}'
+  capture_add_title: 'ᴛʜả ᴠậᴛ ᴘʜẩᴍ để ᴛʜêᴍ'
+  capture_replace_title: 'ᴛʜả ᴠậᴛ ᴘʜẩᴍ ᴍớɪ'
+
+  loot_entry:
+    name: '&fʟᴏᴏᴛ &#37eb9a{label}'
+    lore:
+      - ''
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fVật phẩm: &e{item}'
+      - '  &8• &fSố lượng: &e{amount}'
+      - '  &8• &fTỉ lệ: &e{chance}%'
+      - '  &8• &fĐộ bền: &e{durability}'
+      - ''
+      - '&#37eb9a ▸ &fChuột trái để sửa giá trị!'
+      - '&#37eb9a ▸ &fChuột phải để đổi vật phẩm!'
+
+  loot_broken:
+    name: '&fʟᴏᴏᴛ &#FF6B6B{label}'
+    lore:
+      - ''
+      - ' &#FF6B6B⚠ ᴄảɴʜ ʙáᴏ:'
+      - '  &8• &fKhông đọc được vật phẩm này.'
+      - '  &8• &fGiá trị: &e{item}'
+      - ''
+      - '&#FF6B6B ▸ &fChuột phải để đặt vật phẩm mới!'
+
+  add_loot:
+    name: '&fᴛʜêᴍ &#37eb9aʟᴏᴏᴛ'
+    lore:
+      - ''
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fThêm một vật phẩm loot khác.'
+      - ''
+      - '&#37eb9a ▸ &fBấm để chọn vật phẩm!'
+
+  capture_hint:
+    name: '&fᴛʜả ᴠậᴛ ᴘʜẩᴍ &#5DB5F1ᴠàᴏ ô ɢɪữᴀ'
+    lore:
+      - ''
+      - ' &#5DB5F1ℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fVật phẩm được lưu y nguyên.'
+      - '  &8• &fBạn nhận lại nó khi rời đi.'
+
+  cancel:
+    name: '&fʜủʏ &#FF6B6Bᴄʜọɴ'
+    lore:
+      - ''
+      - ' &#FF6B6Bℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fBỏ lần chọn này.'
+      - ''
+      - '&#FF6B6B ▸ &fBấm để hủy!'
+
+  confirm:
+    name: '&fxáᴄ ɴʜậɴ &#37eb9aᴠậᴛ ᴘʜẩᴍ'
+    lore:
+      - ''
+      - ' &#37eb9aℹ ᴛʜôɴɢ ᴛɪɴ:'
+      - '  &8• &fTiếp tục đặt số lượng và tỉ lệ.'
+      - ''
+      - '&#37eb9a ▸ &fBấm để tiếp tục!'
+
+  # Văn bản dialog. Hiển thị trong dialog của client nên giữ ngắn gọn.
+  dialog_title:
+    name: 'ᴄàɪ đặᴛ ʟᴏᴏᴛ'
+  dialog_body:
+    name: '&7Số lượng và độ bền chấp nhận khoảng như &f0-2&7.'
+  dialog_save:
+    name: '&aLưu'
+  dialog_cancel:
+    name: '&cHủy'
+  field_amount:
+    name: 'Số lượng (vd: 1 hoặc 0-2)'
+  field_chance:
+    name: 'Tỉ lệ % (0-100)'
+  field_durability:
+    name: 'Độ bền (để trống nếu không, vd: 1-384)'
+  error_amount:
+    name: '&cSố lượng phải là số nguyên 0-{max}, và min không lớn hơn max.'
+  error_chance:
+    name: '&cTỉ lệ phải là số từ 0 đến 100.'
+  error_durability:
+    name: '&cĐộ bền phải là số nguyên, và min không lớn hơn max.'

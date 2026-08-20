@@ -73,7 +73,7 @@ Allows players to change a spawner's mob type by right-clicking it with a spawn 
 </PermRow>
 
 <PermRow permission="smartspawner.stack" defaultVal="true">
-Allows players to stack spawners by hand (right-click) or through the stacker GUI.
+Allows players to stack spawners by hand (right-click).
 </PermRow>
 
 <PermRow permission="smartspawner.break" defaultVal="true">
@@ -81,7 +81,7 @@ Allows players to break and collect Smart Spawners (subject to tool and Silk Tou
 </PermRow>
 
 <PermRow permission="smartspawner.break.bypassdropchance" defaultVal="op">
-Players with this permission always receive the spawner item when breaking, regardless of the <code>drop_chance</code> setting. Also allows sneak stack breaking and stacker GUI access for spawners that have <code>drop_chance</code> configured.
+Players with this permission always receive the spawner item when breaking, regardless of the <code>drop_chance</code> setting. Also allows sneak stack breaking for spawners that have <code>drop_chance</code> configured.
 </PermRow>
 
 <PermRow permission="smartspawner.sellall" defaultVal="true">

@@ -56,7 +56,7 @@ slot_14:
         action: "sell_and_exp"
     no_sell_integration:
       click:
-        action: "open_stacker"
+        action: "none"
 ```
 
 ## Button Click Sounds
@@ -96,7 +96,7 @@ left_click:
   sound_success: block.note_block.bell
   sound_fail: block.note_block.pling
 right_click:
-  action: "open_stacker"
+  action: "collect_exp"
   sound: ui.button.click
 ```
 
@@ -127,10 +127,10 @@ slot_14:
       left_click:
         action: "sell_and_exp"
       right_click:
-        action: "open_stacker"
+        action: "none"
     no_sell_integration:
       click:
-        action: "open_stacker"
+        action: "none"
 ```
 
 - `custom_texture` is the hash from the texture URL (without the `http://textures.minecraft.net/texture/` prefix).
@@ -159,7 +159,7 @@ slot_14:
         action: "sell_and_exp"
     no_sell_integration:
       click:
-        action: "open_stacker"
+        action: "none"
 ```
 
 Available conditions include `sell_integration` and `no_sell_integration`.

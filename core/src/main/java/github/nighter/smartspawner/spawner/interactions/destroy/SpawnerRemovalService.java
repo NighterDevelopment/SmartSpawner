@@ -2,7 +2,6 @@ package github.nighter.smartspawner.spawner.interactions.destroy;
 
 import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.SmartSpawner;
-import github.nighter.smartspawner.commands.list.gui.adminstacker.AdminStackerHolder;
 import github.nighter.smartspawner.commands.list.gui.management.SpawnerManagementHolder;
 import github.nighter.smartspawner.extras.HopperService;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
@@ -212,13 +211,6 @@ public class SpawnerRemovalService {
         Object holder = inventory.getHolder(false);
         if (holder instanceof SpawnerManagementHolder managementHolder &&
                 spawnerId.equals(managementHolder.getSpawnerId())) {
-            player.closeInventory();
-            return;
-        }
-
-        if (holder instanceof AdminStackerHolder adminStackerHolder &&
-                adminStackerHolder.getSpawnerData() != null &&
-                spawnerId.equals(adminStackerHolder.getSpawnerData().getSpawnerId())) {
             player.closeInventory();
         }
     }

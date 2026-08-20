@@ -8,7 +8,6 @@ import github.nighter.smartspawner.hooks.rpg.AuraSkillsIntegration;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayout;
-import github.nighter.smartspawner.spawner.gui.stacker.SpawnerStackerUI;
 import github.nighter.smartspawner.spawner.gui.storage.SpawnerStorageUI;
 import github.nighter.smartspawner.spawner.gui.synchronization.SpawnerGuiViewManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
@@ -43,7 +42,6 @@ public class SpawnerMenuAction implements Listener {
     );
     private final SmartSpawner plugin;
     private final SpawnerMenuUI spawnerMenuUI;
-    private final SpawnerStackerUI spawnerStackerUI;
     private final SpawnerStorageUI spawnerStorageUI;
     private final SpawnerGuiViewManager spawnerGuiViewManager;
     private final LanguageManager languageManager;
@@ -53,7 +51,6 @@ public class SpawnerMenuAction implements Listener {
     public SpawnerMenuAction(SmartSpawner plugin) {
         this.plugin = plugin;
         this.spawnerMenuUI = plugin.getSpawnerMenuUI();
-        this.spawnerStackerUI = plugin.getSpawnerStackerUI();
         this.spawnerStorageUI = plugin.getSpawnerStorageUI();
         this.spawnerGuiViewManager = plugin.getSpawnerGuiViewManager();
         this.languageManager = plugin.getLanguageManager();
@@ -144,21 +141,6 @@ public class SpawnerMenuAction implements Listener {
                         player, button, clickType);
                 handleStorageClick(player, spawner, false);
                 return true;
-            case "open_stacker":
-                if (!plugin.getGuiButtonInteractionService().tryUse(player, GuiLayoutType.MAIN_GUI, button)) {
-                    return true;
-                }
-                // Check stacker permission and open stacker GUI
-                if (!player.hasPermission("smartspawner.stack")) {
-                    messageService.sendMessage(player, "no_permission");
-                    plugin.getGuiButtonInteractionService().playFailSound(
-                            player, button, clickType);
-                    return true;
-                }
-                plugin.getGuiButtonInteractionService().playNavigateSound(
-                        player, button, clickType);
-                spawnerStackerUI.openStackerGui(player, spawner);
-                return true;
             case "sell_and_exp":
                 if (!plugin.getGuiButtonInteractionService().tryUse(player, GuiLayoutType.MAIN_GUI, button)) {
                     return true;
@@ -241,37 +223,12 @@ public class SpawnerMenuAction implements Listener {
             return;
         }
 
-        // Determine which mode we're in based on shop integration
+        // With sell integration, left click sells the storage and collects EXP.
+        // Without it, the info button is display-only.
         boolean hasShopIntegration = plugin.hasSellIntegration() && player.hasPermission("smartspawner.sellall");
-
-        // Handle clicks based on shop integration mode
-        if (hasShopIntegration) {
-            // Standard mode: Left click for selling/XP, right click for stacker
-            if (clickType == ClickType.LEFT) {
-                // Collect EXP and sell items in storage
-                handleExpBottleAcceptedClick(player, spawner, true);
-                handleSellAllItems(player, spawner, true);
-            } else if (clickType == ClickType.RIGHT) {
-                // Check stacker permission
-                if (!player.hasPermission("smartspawner.stack")) {
-                    messageService.sendMessage(player, "no_permission");
-                    return;
-                }
-
-                // Open stacker GUI
-                spawnerStackerUI.openStackerGui(player, spawner);
-                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-            }
-        } else {
-            // Check stacker permission
-            if (!player.hasPermission("smartspawner.stack")) {
-                messageService.sendMessage(player, "no_permission");
-                return;
-            }
-
-            // Open stacker GUI
-            spawnerStackerUI.openStackerGui(player, spawner);
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+        if (hasShopIntegration && clickType == ClickType.LEFT) {
+            handleExpBottleAcceptedClick(player, spawner, true);
+            handleSellAllItems(player, spawner, true);
         }
     }
 
@@ -404,18 +361,8 @@ public class SpawnerMenuAction implements Listener {
         // Reset spawner exp and update menu
         spawner.setSpawnerExp(0);
         plugin.getSpawnerManager().markSpawnerModified(spawner.getSpawnerId());
-        
-        // Check if player is Bedrock and use appropriate menu
-        if (isBedrockPlayer(player)) {
-            if (plugin.getSpawnerMenuFormUI() != null) {
-                plugin.getSpawnerMenuFormUI().openSpawnerForm(player, spawner);
-            } else {
-                // Fallback to standard GUI if FormUI not available
-                spawnerMenuUI.openSpawnerMenu(player, spawner, true);
-            }
-        } else {
-            spawnerMenuUI.openSpawnerMenu(player, spawner, true);
-        }
+
+        spawnerMenuUI.openSpawnerMenu(player, spawner, true);
 
         // Update all viewers instead of just current player
         spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
@@ -594,14 +541,6 @@ public class SpawnerMenuAction implements Listener {
             plugin.getLogger().warning("Error giving AuraSkills XP: " + e.getMessage());
             plugin.debug("AuraSkills integration error: " + e.toString());
         }
-    }
-
-    private boolean isBedrockPlayer(Player player) {
-        if (plugin.getIntegrationManager() == null || 
-            plugin.getIntegrationManager().getFloodgateHook() == null) {
-            return false;
-        }
-        return plugin.getIntegrationManager().getFloodgateHook().isBedrockPlayer(player);
     }
 
     private void givePlayerExpInChunks(Player player, long totalExp) {

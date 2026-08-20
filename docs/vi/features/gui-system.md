@@ -28,16 +28,12 @@ Duyệt spawner theo thế giới và phân trang những hệ thống lớn t�
 
 ## Công Cụ Kho
 
-Giao diện kho có chức năng sắp xếp và lọc cho kho lớn, đồng thời người chơi Bedrock nhận form thân thiện với cảm ứng tương đương.
+Giao diện kho có chức năng sắp xếp và lọc cho kho lớn.
 
 <CardGrid>
 
 <FeatureMediaCard icon="ArrowDownAZ" title="Sắp xếp vật phẩm" image="https://cdn.modrinth.com/data/9tQwxSFr/images/df395dacedef2e793d131059b6d10ee8f9cd4d28_350.webp" alt="Bộ sắp xếp kho SmartSpawner hiện tại">
 Sắp xếp theo loại vật phẩm để quản lý hàng trăm trang, hoặc lọc vật phẩm cụ thể trước khi lấy hay bán.
-</FeatureMediaCard>
-
-<FeatureMediaCard icon="Gamepad2" title="Form UI Bedrock" image="https://cdn.modrinth.com/data/9tQwxSFr/images/df8098897c88f1d02f8d26b70f4834c705cfe2fb.webp" alt="Form UI Bedrock hiện tại" link="/vi/docs/integrations/bedrock-support" action="Cấu hình Bedrock">
-Người chơi Floodgate có thể mở kho, quản lý stack, nhận kinh nghiệm và xem thông tin qua điều khiển form native.
 </FeatureMediaCard>
 
 </CardGrid>

@@ -224,33 +224,15 @@ public class SpawnerSellConfirmListener implements Listener {
     }
 
     private void reopenPreviousGui(Player player, SpawnerData spawner, SpawnerSellConfirmUI.PreviousGui previousGui) {
-        // Check if player is Bedrock
-        boolean isBedrockPlayer = isBedrockPlayer(player);
-
         switch (previousGui) {
             case MAIN_MENU:
-                if (isBedrockPlayer && plugin.getSpawnerMenuFormUI() != null) {
-                    // Reopen FormUI for Bedrock players
-                    plugin.getSpawnerMenuFormUI().openSpawnerForm(player, spawner);
-                } else {
-                    // Reopen standard GUI for Java players
-                    plugin.getSpawnerMenuUI().openSpawnerMenu(player, spawner, true);
-                }
+                plugin.getSpawnerMenuUI().openSpawnerMenu(player, spawner, true);
                 break;
             case STORAGE:
-                // Storage GUI works the same for both Java and Bedrock
                 org.bukkit.inventory.Inventory storageInventory = plugin.getSpawnerStorageUI()
                         .createStorageInventory(player, spawner, 1, -1);
                 player.openInventory(storageInventory);
                 break;
         }
-    }
-
-    private boolean isBedrockPlayer(Player player) {
-        if (plugin.getIntegrationManager() == null ||
-            plugin.getIntegrationManager().getFloodgateHook() == null) {
-            return false;
-        }
-        return plugin.getIntegrationManager().getFloodgateHook().isBedrockPlayer(player);
     }
 }

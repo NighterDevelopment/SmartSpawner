@@ -25,15 +25,6 @@ public class SpawnerMobHeadTexture {
     private static final Map<String, SkullMeta> CUSTOM_TEXTURE_META_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
     private static final ItemStack DEFAULT_SPAWNER_BLOCK = new ItemStack(Material.SPAWNER);
 
-    private static boolean isBedrockPlayer(Player player) {
-        SmartSpawner plugin = SmartSpawner.getInstance();
-        if (plugin == null || plugin.getIntegrationManager() == null || 
-            plugin.getIntegrationManager().getFloodgateHook() == null) {
-            return false;
-        }
-        return plugin.getIntegrationManager().getFloodgateHook().isBedrockPlayer(player);
-    }
-
     /**
      * Optimized version that accepts a Consumer to modify the ItemMeta directly,
      * avoiding an extra getItemMeta() and setItemMeta() cycle.
@@ -45,14 +36,6 @@ public class SpawnerMobHeadTexture {
      */
     public static ItemStack getCustomHead(EntityType entityType, Player player, Consumer<ItemMeta> metaModifier) {
         if (entityType == null) {
-            ItemStack item = DEFAULT_SPAWNER_BLOCK.clone();
-            if (metaModifier != null) {
-                item.editMeta(metaModifier);
-            }
-            return item;
-        }
-
-        if (isBedrockPlayer(player)) {
             ItemStack item = DEFAULT_SPAWNER_BLOCK.clone();
             if (metaModifier != null) {
                 item.editMeta(metaModifier);
@@ -182,14 +165,6 @@ public class SpawnerMobHeadTexture {
      */
     public static ItemStack getItemSpawnerHead(Material itemMaterial, Player player, Consumer<ItemMeta> metaModifier) {
         if (itemMaterial == null) {
-            ItemStack item = DEFAULT_SPAWNER_BLOCK.clone();
-            if (metaModifier != null) {
-                item.editMeta(metaModifier);
-            }
-            return item;
-        }
-
-        if (isBedrockPlayer(player)) {
             ItemStack item = DEFAULT_SPAWNER_BLOCK.clone();
             if (metaModifier != null) {
                 item.editMeta(metaModifier);

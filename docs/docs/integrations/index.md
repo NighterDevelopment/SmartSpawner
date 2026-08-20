@@ -14,8 +14,6 @@ SmartSpawner detects optional plugins at startup and enables only the integratio
 
 <DocCard icon="Home" title="Islands and Plots" link="/docs/integrations/islands/" desc="Plot and island permissions for spawner actions." />
 
-<DocCard icon="Gamepad2" title="Bedrock Support" link="/docs/integrations/bedrock-support" desc="Serve native forms to players detected by Floodgate." />
-
 <DocCard icon="Swords" title="AuraSkills" link="/docs/integrations/auraskills" desc="Convert claimed spawner experience into skill XP." />
 
 <DocCard icon="Sparkles" title="MythicMobs" link="/docs/integrations/mythicmobs" desc="Create Smart Spawner items from custom mob drops." />

@@ -6,11 +6,13 @@ import github.nighter.smartspawner.api.SmartSpawnerPlugin;
 import github.nighter.smartspawner.api.gui.ExternalGuiLayoutLoader;
 import github.nighter.smartspawner.api.gui.GuiLayoutRegistryImpl;
 import github.nighter.smartspawner.commands.BrigadierCommandManager;
+import github.nighter.smartspawner.commands.editloot.LootEditorDialogs;
+import github.nighter.smartspawner.commands.editloot.LootEditorHandler;
+import github.nighter.smartspawner.commands.editloot.LootEditorService;
+import github.nighter.smartspawner.commands.editloot.LootEditorUI;
 import github.nighter.smartspawner.commands.list.ListSubCommand;
-import github.nighter.smartspawner.commands.list.gui.adminstacker.AdminStackerHandler;
 import github.nighter.smartspawner.commands.list.gui.list.SpawnerListGUI;
 import github.nighter.smartspawner.commands.list.gui.list.UserPreferenceCache;
-import github.nighter.smartspawner.commands.list.gui.management.SpawnerManagementGUI;
 import github.nighter.smartspawner.commands.list.gui.management.SpawnerManagementHandler;
 import github.nighter.smartspawner.commands.list.gui.serverselection.ServerSelectionHandler;
 import github.nighter.smartspawner.commands.near.NearResultGUI;
@@ -44,12 +46,9 @@ import github.nighter.smartspawner.spawner.data.storage.StorageMode;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayoutConfig;
 import github.nighter.smartspawner.spawner.gui.layout.GuiButtonInteractionService;
 import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuAction;
-import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuFormUI;
 import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuUI;
 import github.nighter.smartspawner.spawner.gui.sell.SpawnerSellConfirmListener;
 import github.nighter.smartspawner.spawner.gui.sell.SpawnerSellConfirmUI;
-import github.nighter.smartspawner.spawner.gui.stacker.SpawnerStackerHandler;
-import github.nighter.smartspawner.spawner.gui.stacker.SpawnerStackerUI;
 import github.nighter.smartspawner.spawner.gui.storage.SpawnerStorageAction;
 import github.nighter.smartspawner.spawner.gui.storage.SpawnerStorageUI;
 import github.nighter.smartspawner.spawner.gui.storage.filter.FilterConfigUI;
@@ -115,10 +114,8 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     private GuiLayoutConfig guiLayoutConfig;
     private GuiButtonInteractionService guiButtonInteractionService;
     private SpawnerMenuUI spawnerMenuUI;
-    private SpawnerMenuFormUI spawnerMenuFormUI;
     private SpawnerStorageUI spawnerStorageUI;
     private FilterConfigUI filterConfigUI;
-    private SpawnerStackerUI spawnerStackerUI;
     private SpawnerSellConfirmUI spawnerSellConfirmUI;
 
     // Core handlers
@@ -128,7 +125,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
 
     // UI actions
     private SpawnerMenuAction spawnerMenuAction;
-    private SpawnerStackerHandler spawnerStackerHandler;
     private SpawnerStorageAction spawnerStorageAction;
     private SpawnerSellManager spawnerSellManager;
     private SpawnerSellConfirmListener spawnerSellConfirmListener;
@@ -158,9 +154,14 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     private UserPreferenceCache userPreferenceCache;
     private SpawnerListGUI spawnerListGUI;
     private SpawnerManagementHandler spawnerManagementHandler;
-    private AdminStackerHandler adminStackerHandler;
     private ServerSelectionHandler serverSelectionHandler;
     private PricesGUI pricesGUI;
+
+    // In-game loot editor (/ss editloot)
+    private LootEditorService lootEditorService;
+    private LootEditorUI lootEditorUI;
+    private LootEditorDialogs lootEditorDialogs;
+    private LootEditorHandler lootEditorHandler;
 
     // Logging system
     @Getter
@@ -307,9 +308,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         this.spawnerLootGenerator = new SpawnerLootGenerator(this);
         this.spawnerSellManager = new SpawnerSellManager(this);
         this.rangeChecker = new SpawnerRangeChecker(this);
-
-        // Initialize FormUI components only if Floodgate is available
-        initializeFormUIComponents();
         return true;
     }
 
@@ -385,32 +383,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         return true;
     }
 
-    private void initializeFormUIComponents() {
-        // Check if FormUI is enabled in config
-        boolean formUIEnabled = getConfig().getBoolean("bedrock_support.enable_formui", false);
-        
-        if (!formUIEnabled) {
-            this.spawnerMenuFormUI = null;
-            debug("FormUI components not initialized - disabled in config");
-            return;
-        }
-        
-        if (integrationManager != null && integrationManager.getFloodgateHook() != null 
-            && integrationManager.getFloodgateHook().isEnabled()) {
-            try {
-                this.spawnerMenuFormUI = new SpawnerMenuFormUI(this);
-                getLogger().info("FormUI components initialized successfully for Bedrock player support");
-            } catch (NoClassDefFoundError | Exception e) {
-                getLogger().warning("Failed to initialize FormUI components: " + e.getMessage());
-                this.spawnerMenuFormUI = null;
-            }
-        } else {
-            this.spawnerMenuFormUI = null;
-        }
-    }
-
     private void initializeHandlers() {
-        this.spawnerStackerUI = new SpawnerStackerUI(this);
         this.spawnEggHandler = new SpawnEggHandler(this);
         this.spawnerStackHandler = new SpawnerStackHandler(this);
         this.spawnerClickManager = new SpawnerClickManager(this);
@@ -420,7 +393,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
 
     private void initializeUIAndActions() {
         this.spawnerMenuAction = new SpawnerMenuAction(this);
-        this.spawnerStackerHandler = new SpawnerStackerHandler(this);
         this.spawnerStorageAction = new SpawnerStorageAction(this);
         this.spawnerSellConfirmListener = new SpawnerSellConfirmListener(this);
     }
@@ -457,13 +429,12 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         // Note: spawnerGuiViewManager registers its own listeners internally
         pm.registerEvents(spawnerClickManager, this);
         pm.registerEvents(spawnerMenuAction, this);
-        pm.registerEvents(spawnerStackerHandler, this);
         pm.registerEvents(worldEventHandler, this);
         pm.registerEvents(spawnerListGUI, this);
         pm.registerEvents(spawnerManagementHandler, this);
-        pm.registerEvents(adminStackerHandler, this);
         pm.registerEvents(serverSelectionHandler, this);
         pm.registerEvents(pricesGUI, this);
+        pm.registerEvents(lootEditorHandler, this);
         pm.registerEvents(spawnerSellConfirmListener, this);
         pm.registerEvents(guiButtonInteractionService, this);
 
@@ -482,13 +453,18 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     }
 
     private void setupCommand() {
+        // Built before the command manager because MainCommand takes the loot editor at construction.
+        this.lootEditorService = new LootEditorService(this);
+        this.lootEditorUI = new LootEditorUI(this, lootEditorService);
+        this.lootEditorDialogs = new LootEditorDialogs(this, lootEditorService, lootEditorUI);
+        this.lootEditorHandler = new LootEditorHandler(this, lootEditorService, lootEditorUI, lootEditorDialogs);
+
         this.brigadierCommandManager = new BrigadierCommandManager(this);
         brigadierCommandManager.registerCommands();
         this.userPreferenceCache = new UserPreferenceCache(this);
         this.listSubCommand = new ListSubCommand(this);
         this.spawnerListGUI = new SpawnerListGUI(this);
         this.spawnerManagementHandler = new SpawnerManagementHandler(this, listSubCommand);
-        this.adminStackerHandler = new AdminStackerHandler(this, new SpawnerManagementGUI(this));
         this.serverSelectionHandler = new ServerSelectionHandler(this, listSubCommand);
         this.pricesGUI = new PricesGUI(this);
     }
@@ -604,6 +580,11 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
             itemSpawnerSettingsConfig.reload();
         }
 
+        // Keep loot-editor navigation reading fresh snapshots after a full plugin reload.
+        if (lootEditorService != null) {
+            lootEditorService.reload();
+        }
+
         // Reload logging system (file logging + discord webhook)
         loggingConfig.loadConfig();
         spawnerActionLogger.reloadDiscord();
@@ -612,9 +593,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         if (spawnerAuditListener != null) HandlerList.unregisterAll(spawnerAuditListener);
         this.spawnerAuditListener = new SpawnerAuditListener(spawnerActionLogger);
         getServer().getPluginManager().registerEvents(spawnerAuditListener, this);
-        
-        // Reinitialize FormUI components in case config changed
-        initializeFormUIComponents();
     }
 
     @Override
@@ -667,7 +645,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         if (spawnerGuiViewManager != null) spawnerGuiViewManager.cleanup();
         if (hopperService != null) hopperService.cleanup();
         if (spawnerClickManager != null) spawnerClickManager.cleanup();
-        if (spawnerStackerHandler != null) spawnerStackerHandler.cleanupAll();
         if (spawnerStorageUI != null) spawnerStorageUI.cleanup();
         if (spawnerLocationLockManager !=null) spawnerLocationLockManager.shutdown();
     }

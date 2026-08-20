@@ -6,10 +6,6 @@ authors: [ https://github.com/OpenVdra/SmartSpawner ]
 folia-supported: true
 
 softdepend:
-  # Bedrock Support Plugins
-  - floodgate
-  - Geyser-Spigot
-
   # Shop Plugins
   - EconomyShopGUI
   - EconomyShopGUI-Premium
@@ -100,6 +96,10 @@ permissions:
 
   smartspawner.command.gui_layout:
     description: Allow changing the active SmartSpawner GUI layout
+    default: op
+
+  smartspawner.command.editloot:
+    description: Allow editing a spawner's loot table in game
     default: op
 
   # Feature permissions

@@ -25,7 +25,6 @@ dependencies {
     shade(libs.bstats)
     compileOnly(libs.sqlite)
 
-    compileOnly(libs.floodgate)
     compileOnly(libs.worldguard) // also supplies WorldEdit, for BukkitAdapter
     compileOnly(libs.shopgui) {
         exclude(group = "*")
@@ -129,7 +128,7 @@ tasks.shadowJar {
     relocate("org.bstats", project.group.toString())
     mergeServiceFiles()
 
-    destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
+    // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
 }
 
 tasks.build {

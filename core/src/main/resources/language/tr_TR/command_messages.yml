@@ -201,3 +201,29 @@ gui_layout:
   error:
     message: "&#FF4444Menü düzeni değiştirilemedi. Lütfen konsolu kontrol edin."
     sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#                     /ss editloot
+# ──────────────────────────────────────────────────────
+editloot:
+  usage:
+    message: "Kullanım: &#37eb9a/ss editloot <spawner adı>&f. Örnek: &#37eb9a/ss editloot blaze_spawner"
+    sound: block.note_block.hat
+  unknown_entry:
+    message: "&#FF4444{name} adında bir spawner yok&#FF4444. Geçerli adlar için tab tuşunu kullan."
+    sound: block.note_block.bass
+  entry_missing:
+    message: "&#FF4444Bu kayıt artık dosyada değil."
+    sound: block.note_block.bass
+  loot_added:
+    message: "&#37eb9aGanimet kaydı &f{label}&#37eb9a eklendi."
+    sound: entity.experience_orb.pickup
+  loot_saved:
+    message: "&#37eb9aGanimet kaydı &f{label}&#37eb9a kaydedildi."
+    sound: entity.experience_orb.pickup
+  loot_replaced:
+    message: "&#37eb9a{label}&#37eb9a için eşya güncellendi."
+    sound: entity.experience_orb.pickup
+  capture_empty:
+    message: "&#FF4444Önce ortadaki yuvaya bir eşya koy."
+    sound: block.note_block.bass

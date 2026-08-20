@@ -183,10 +183,6 @@ spawner_management:
     name: '&fAç: &#5DB5F1Spawner Menüsü'
     lore:
       - '&#5DB5F1 ▸ &fMenüyü açmak için tıkla!'
-  stack:
-    name: '&fDüzenle: &#5DB5F1Stack'
-    lore:
-      - '&#5DB5F1 ▸ &fStack miktarını düzenlemek için tıkla!'
   remove:
     name: '&fKaldır: &#FF6B6BSpawner'
     lore:
@@ -206,3 +202,92 @@ price_item:
     - '  &8• &fKaynak: &e{price_source}'
     - '  &8• &fÖzel fiyat: &a${custom_price}'
     - '  &8• &fMarket fiyatı: &a${shop_price}'
+
+# ──────────────────────────────────────────────────────
+#              Ganimet Düzenleyici (/ss editloot)
+# ──────────────────────────────────────────────────────
+editloot:
+  mob_loot_title: 'Mob Ganimeti • {entry}'
+  item_loot_title: 'Eşya Ganimeti • {entry}'
+  capture_add_title: 'Eklemek için bir eşya bırak'
+  capture_replace_title: 'Yeni eşyayı bırak'
+
+  loot_entry:
+    name: '&fGanimet &#37eb9a{label}'
+    lore:
+      - ''
+      - ' &#37eb9aℹ Bilgi:'
+      - '  &8• &fEşya: &e{item}'
+      - '  &8• &fMiktar: &e{amount}'
+      - '  &8• &fŞans: &e{chance}%'
+      - '  &8• &fDayanıklılık: &e{durability}'
+      - ''
+      - '&#37eb9a ▸ &fDeğerleri düzenlemek için sol tıkla!'
+      - '&#37eb9a ▸ &fEşyayı değiştirmek için sağ tıkla!'
+
+  loot_broken:
+    name: '&fGanimet &#FF6B6B{label}'
+    lore:
+      - ''
+      - ' &#FF6B6B⚠ Uyarı:'
+      - '  &8• &fBu eşya okunamadı.'
+      - '  &8• &fDeğer: &e{item}'
+      - ''
+      - '&#FF6B6B ▸ &fYeni bir eşya ayarlamak için sağ tıkla!'
+
+  add_loot:
+    name: '&fGanimet &#37eb9aEkle'
+    lore:
+      - ''
+      - ' &#37eb9aℹ Bilgi:'
+      - '  &8• &fBaşka bir ganimet eşyası ekle.'
+      - ''
+      - '&#37eb9a ▸ &fBir eşya seçmek için tıkla!'
+
+  capture_hint:
+    name: '&fEşyayı &#5DB5F1ortadaki yuvaya bırak'
+    lore:
+      - ''
+      - ' &#5DB5F1ℹ Bilgi:'
+      - '  &8• &fEşya olduğu gibi kaydedilir.'
+      - '  &8• &fAyrıldığında geri alırsın.'
+
+  cancel:
+    name: '&fSeçimi &#FF6B6Bİptal Et'
+    lore:
+      - ''
+      - ' &#FF6B6Bℹ Bilgi:'
+      - '  &8• &fBu seçimi geri al.'
+      - ''
+      - '&#FF6B6B ▸ &fİptal için tıkla!'
+
+  confirm:
+    name: '&fEşyayı &#37eb9aOnayla'
+    lore:
+      - ''
+      - ' &#37eb9aℹ Bilgi:'
+      - '  &8• &fMiktar ve şansı ayarlamaya devam et.'
+      - ''
+      - '&#37eb9a ▸ &fDevam etmek için tıkla!'
+
+  # Dialog metni. İstemci dialogunda gösterilir, kısa tut.
+  dialog_title:
+    name: 'Ganimet Ayarları'
+  dialog_body:
+    name: '&7Miktar ve dayanıklılık &f0-2&7 gibi aralık kabul eder.'
+  dialog_save:
+    name: '&aKaydet'
+  dialog_cancel:
+    name: '&cİptal'
+  field_amount:
+    name: 'Miktar (örn. 1 veya 0-2)'
+  field_chance:
+    name: 'Şans % (0-100)'
+  field_durability:
+    name: 'Dayanıklılık (yoksa boş, örn. 1-384)'
+  error_amount:
+    name: '&cMiktar 0-{max} arası tam sayı olmalı ve min, maksı geçmemeli.'
+  error_chance:
+    name: '&cŞans 0 ile 100 arası bir sayı olmalı.'
+  error_durability:
+    name: '&cDayanıklılık tam sayı olmalı ve min, maksı geçmemeli.'

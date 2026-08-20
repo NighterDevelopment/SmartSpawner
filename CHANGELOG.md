@@ -7,6 +7,7 @@ All notable changes to SmartSpawner are documented in this file.
 ### Added
 - Custom items can now be spawner drops. Potions, enchanted gear, named items and items from other plugins all work.
 - Spawner cage previews preserve their configured data. Entity NBT controls the mob model, while Item Spawners display the exact source item and its components, such as potion effects.
+- `/ss editloot <name>` opens an in-game loot editor for a spawner. New drops are added by dropping an item into the menu, then setting its amount, chance and durability, with durability shown only for tools and weapons. It covers both mob and item spawners.
 
 ### Fixed
 - Items stored in a spawner keep their enchantments, custom names, lore and durability across restarts.
@@ -23,7 +24,6 @@ All notable changes to SmartSpawner are documented in this file.
 - Action logging is now in one file, `activity_log.yml`. It replaces `discord_logging.yml` and the `logging` section of `config.yml`, and existing settings move across on the first start.
 - The `database` section of `config.yml` was simplified. Every setting sits at one level and the connection pool has a single size option.
 - Settings that only take effect after a full restart are now marked RESTART in `config.yml`.
-- Bedrock form menus are off by default. Set `bedrock_support.enable_formui` to `true` and restart to use them.
 - The two spawner settings files were renamed, and loot entries use a new format. See the details below.
 - Loot generation and virtual storage now keep compact item totals instead of creating a separate item stack for every generated drop. This substantially reduces CPU and memory use, especially for large spawner stacks.
 - Loot generation no longer copies each configured drop just to check its type, so spawners with custom item drops cost less every cycle.
@@ -34,6 +34,8 @@ All notable changes to SmartSpawner are documented in this file.
 
 ### Removed
 - YAML storage was removed. Servers still set to `YAML` are switched to `SQLITE` automatically.
+- Bedrock form menus were removed. Bedrock players now use the same chest menus as Java players, and the `bedrock_support` section of `config.yml` is gone.
+- The stacker menu was removed, along with the admin stack editor in `/ss list`. Spawners still stack by placing one spawner on another of the same type, controlled by the `smartspawner.stack` permission.
 
 ### Notes
 - **Spawner settings are not carried over.** The two renamed files are created fresh in the new format, and the old files are left untouched beside them so customised drop tables can be copied across by hand. The console reports this on the first start.

@@ -48,7 +48,7 @@ Browse registered spawners by world and page through large installations from on
 
 ## Storage tools
 
-The storage interface includes sorting and filtering controls for large inventories, while Bedrock players receive an equivalent touch-friendly form.
+The storage interface includes sorting and filtering controls for large inventories.
 
 <CardGrid>
 
@@ -59,17 +59,6 @@ The storage interface includes sorting and filtering controls for large inventor
   alt="Current SmartSpawner storage sorter"
 >
 Sort by item type to keep hundreds of storage pages manageable, or filter specific drops before taking or selling them.
-</FeatureMediaCard>
-
-<FeatureMediaCard
-  icon="Gamepad2"
-  title="Bedrock Form UI"
-  image="https://cdn.modrinth.com/data/9tQwxSFr/images/df8098897c88f1d02f8d26b70f4834c705cfe2fb.webp"
-  alt="Current SmartSpawner Bedrock Form UI"
-  link="/docs/integrations/bedrock-support"
-  action="Configure Bedrock support"
->
-Floodgate players can open storage, manage stacks, collect experience, and view information through native form controls.
 </FeatureMediaCard>
 
 </CardGrid>

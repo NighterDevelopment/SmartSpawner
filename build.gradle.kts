@@ -31,10 +31,6 @@ allprojects {
             url = uri("https://oss.sonatype.org/content/groups/public/")
         }
         maven {
-            name = "opencollabRepositoryMain"
-            url = uri("https://repo.opencollab.dev/main")
-        }
-        maven {
             name = "jitpack"
             url = uri("https://jitpack.io")
         }

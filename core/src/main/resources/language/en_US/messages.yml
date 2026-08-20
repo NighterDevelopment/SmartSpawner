@@ -73,25 +73,6 @@ click_too_fast:
   sound: block.note_block.bass
 
 # ──────────────────────────────────────────────────────
-#         Spawner - Stacker GUI Interaction
-# ──────────────────────────────────────────────────────
-spawner_stacker_minimum_reached:
-  message: '&#FF4444Minimum limit reached. &f{amount} &cwill remain stacked.'
-  sound: block.note_block.pling
-
-spawner_cannot_remove_last:
-  action_bar: '&#FF4444You cannot remove the last spawner.'
-  sound: block.note_block.pling
-
-spawner_insufficient_quantity:
-  action_bar: '&#FF4444Not enough spawners: &f{amountAvailable}&c/&f{amountChange}'
-  sound: block.note_block.pling
-
-stacker_drop_blocked:
-  message: '&#FF4444Stacker GUI is disabled when this spawner has drop chance.'
-  sound: block.note_block.pling
-
-# ──────────────────────────────────────────────────────
 #             Spawner - Stack Interaction
 # ──────────────────────────────────────────────────────
 spawner_different:

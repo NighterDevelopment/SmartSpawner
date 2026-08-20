@@ -2,10 +2,8 @@ package github.nighter.smartspawner.spawner.interactions.click;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.hooks.protections.CheckOpenMenu;
-import github.nighter.smartspawner.hooks.bedrock.FloodgateHook;
 import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuUI;
-import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuFormUI;
 import github.nighter.smartspawner.spawner.interactions.stack.SpawnerStackHandler;
 import github.nighter.smartspawner.spawner.interactions.type.SpawnEggHandler;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
@@ -37,14 +35,12 @@ public class SpawnerClickManager implements Listener {
     private final SpawnEggHandler spawnEggHandler;
     private final SpawnerStackHandler spawnerStackHandler;
     private final SpawnerMenuUI spawnerMenuUI;
-    private final SpawnerMenuFormUI spawnerMenuFormUI;
 
     // Use ConcurrentHashMap for thread safety without explicit synchronization
     private final Map<UUID, Long> playerCooldowns = new ConcurrentHashMap<>();
 
     // Cached config values for performance (avoid repeated lookups)
     private boolean skipMainGui = false;
-    private FloodgateHook floodgateHook = null;
 
     public SpawnerClickManager(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -53,7 +49,6 @@ public class SpawnerClickManager implements Listener {
         this.spawnEggHandler = plugin.getSpawnEggHandler();
         this.spawnerStackHandler = plugin.getSpawnerStackHandler();
         this.spawnerMenuUI = plugin.getSpawnerMenuUI();
-        this.spawnerMenuFormUI = plugin.getSpawnerMenuFormUI();
 
         // Load cached config values
         loadConfig();
@@ -67,11 +62,6 @@ public class SpawnerClickManager implements Listener {
     public void loadConfig() {
         // Cache skip_main_gui setting
         this.skipMainGui = plugin.getGuiLayoutConfig().isSkipMainGui();
-
-        // Cache FloodgateHook reference
-        if (plugin.getIntegrationManager() != null) {
-            this.floodgateHook = plugin.getIntegrationManager().getFloodgateHook();
-        }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -195,18 +185,7 @@ public class SpawnerClickManager implements Listener {
             return;
         }
 
-        // Use cached FloodgateHook for performance
-        if (floodgateHook != null && floodgateHook.isBedrockPlayer(player)) {
-            if (spawnerMenuFormUI != null) {
-                spawnerMenuFormUI.openSpawnerForm(player, spawner);
-            } else {
-                // Fallback to standard GUI if FormUI not available
-                spawnerMenuUI.openSpawnerMenu(player, spawner, false);
-            }
-        } else {
-            // Open the regular GUI menu for Java players
-            spawnerMenuUI.openSpawnerMenu(player, spawner, false);
-        }
+        spawnerMenuUI.openSpawnerMenu(player, spawner, false);
     }
 
     private void openStorageGui(Player player, SpawnerData spawner) {

@@ -28,7 +28,6 @@ blocklocker = { module = "nl.rutgerkok:blocklocker", version = "1.13" }
 economyshopgui = { module = "com.github.Gypopo:EconomyShopGUI-API", version = "1.10.1" }
 excellenteconomy = { module = "su.nightexpress.excellenteconomy:ExcellentEconomy", version = "2.8.0" }
 factions = { module = "dev.kitteh:factions", version = "4.6.0" }
-floodgate = { module = "org.geysermc.floodgate:api", version = "2.2.5-SNAPSHOT" }
 griefprevention = { module = "com.github.GriefPrevention:GriefPrevention", version = "18.0.0" }
 iridiumskyblock = { module = "com.iridium:IridiumSkyblock", version = "4.1.4" }
 lands = { module = "com.github.IncrediblePlugins:LandsAPI", version = "7.25.4" }

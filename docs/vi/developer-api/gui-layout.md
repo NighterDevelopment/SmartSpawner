@@ -98,7 +98,6 @@ public enum GuiLayoutType {
 | Action | Mô tả |
 |--------|-------|
 | `open_storage` | Mở GUI kho |
-| `open_stacker` | Mở GUI stacker |
 | `collect_exp` | Nhận XP đã lưu |
 | `sell_and_exp` | Bán vật phẩm và nhận XP |
 | `sell_all` | Bán toàn bộ |

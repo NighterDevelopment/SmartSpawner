@@ -23,7 +23,6 @@ public class SpawnerManagementGUI {
     private static final int INVENTORY_SIZE = 27;
     private static final int TELEPORT_SLOT = 10;
     private static final int OPEN_SPAWNER_SLOT = 12;
-    private static final int STACK_SLOT = 14;
     private static final int REMOVE_SLOT = 16;
     private static final int BACK_SLOT = 26;
 
@@ -56,7 +55,6 @@ public class SpawnerManagementGUI {
 
         createActionItem(inv, TELEPORT_SLOT, "spawner_management.teleport", Material.ENDER_PEARL);
         createActionItem(inv, OPEN_SPAWNER_SLOT, "spawner_management.open_spawner", Material.ENDER_EYE);
-        createActionItem(inv, STACK_SLOT, "spawner_management.stack", Material.SPAWNER);
         createActionItem(inv, REMOVE_SLOT, "spawner_management.remove", Material.BARRIER);
 
         createActionItem(

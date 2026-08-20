@@ -2,7 +2,6 @@ package github.nighter.smartspawner.commands.list.gui.management;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.Scheduler;
-import github.nighter.smartspawner.commands.list.gui.adminstacker.AdminStackerUI;
 import github.nighter.smartspawner.commands.list.ListSubCommand;
 import github.nighter.smartspawner.commands.list.gui.list.enums.FilterOption;
 import github.nighter.smartspawner.commands.list.gui.list.enums.SortOption;
@@ -27,7 +26,6 @@ public class SpawnerManagementHandler implements Listener {
     private final SpawnerManager spawnerManager;
     private final ListSubCommand listSubCommand;
     private final SpawnerMenuUI spawnerMenuUI;
-    private final AdminStackerUI adminStackerUI;
 
     public SpawnerManagementHandler(SmartSpawner plugin, ListSubCommand listSubCommand) {
         this.plugin = plugin;
@@ -35,7 +33,6 @@ public class SpawnerManagementHandler implements Listener {
         this.spawnerManager = plugin.getSpawnerManager();
         this.listSubCommand = listSubCommand;
         this.spawnerMenuUI = plugin.getSpawnerMenuUI();
-        this.adminStackerUI = new AdminStackerUI(plugin);
     }
 
     @EventHandler
@@ -72,7 +69,6 @@ public class SpawnerManagementHandler implements Listener {
         switch (slot) {
             case 10 -> handleTeleport(player, spawner);
             case 12 -> handleOpenSpawnerGUI(player, spawner);
-            case 14 -> handleStackManagement(player, spawner, worldName, listPage);
             case 16 -> handleRemoveSpawner(player, spawner, worldName, listPage);
         }
     }
@@ -95,27 +91,7 @@ public class SpawnerManagementHandler implements Listener {
             return;
         }
 
-        // Check if player is Bedrock and use appropriate menu
-        if (isBedrockPlayer(player)) {
-            if (plugin.getSpawnerMenuFormUI() != null) {
-                plugin.getSpawnerMenuFormUI().openSpawnerForm(player, spawner);
-            } else {
-                // Fallback to standard GUI if FormUI not available
-                spawnerMenuUI.openSpawnerMenu(player, spawner, false);
-            }
-        } else {
-            spawnerMenuUI.openSpawnerMenu(player, spawner, false);
-        }
-        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-    }
-
-    private void handleStackManagement(Player player, SpawnerData spawner, String worldName, int listPage) {
-        if (!player.hasPermission("smartspawner.stack")) {
-            messageService.sendMessage(player, "no_permission");
-            return;
-        }
-
-        adminStackerUI.openAdminStackerGui(player, spawner, worldName, listPage);
+        spawnerMenuUI.openSpawnerMenu(player, spawner, false);
         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
     }
 
@@ -155,14 +131,6 @@ public class SpawnerManagementHandler implements Listener {
 
         listSubCommand.openSpawnerListGUI(player, worldName, listPage, filter, sort);
         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-    }
-
-    private boolean isBedrockPlayer(Player player) {
-        if (plugin.getIntegrationManager() == null ||
-            plugin.getIntegrationManager().getFloodgateHook() == null) {
-            return false;
-        }
-        return plugin.getIntegrationManager().getFloodgateHook().isBedrockPlayer(player);
     }
 
 }

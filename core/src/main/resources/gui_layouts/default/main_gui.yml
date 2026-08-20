@@ -22,7 +22,6 @@
 #
 # Actions:
 #   open_storage: Open storage GUI
-#   open_stacker: Open stacker GUI
 #   sell_and_exp: Sell all items and collect exp
 #   collect_exp: Collect exp only
 #   none: Display only, no action
@@ -51,8 +50,8 @@ slot_14:
   material: PLAYER_HEAD
   enabled: true
   info_button: true
-  # With sell integration: left click = sell+exp, right click = stacker
-  # Without sell integration: any click = stacker
+  # With sell integration: left click = sell+exp
+  # Without sell integration: display only
   if:
     sell_integration:
       left_click:
@@ -62,13 +61,9 @@ slot_14:
           - block.note_block.bell
           - entity.experience_orb.pickup
         sound_fail: block.note_block.pling
-      right_click:
-        action: "open_stacker"
-        sound: ui.button.click
     no_sell_integration:
       click:
-        action: "open_stacker"
-        sound: ui.button.click
+        action: "none"
 
 # Experience bottle
 slot_16:

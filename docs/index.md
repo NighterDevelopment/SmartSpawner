@@ -28,9 +28,6 @@ features:
   - title: Claims Stay Protected
     details: Your region and island rules still apply.
     link: /docs/integrations/protections/
-  - title: Made for Bedrock
-    details: Clean native forms, ready for mobile.
-    link: /docs/integrations/bedrock-support
   - title: Make It Yours
     details: Extend everything with the open Java API.
     link: /developer-api/

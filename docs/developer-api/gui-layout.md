@@ -110,7 +110,6 @@ public enum GuiLayoutType {
 | Action | Description |
 |--------|-------------|
 | `open_storage` | Open spawner storage GUI |
-| `open_stacker` | Open spawner stacker GUI |
 | `collect_exp` | Claim stored XP |
 | `sell_and_exp` | Sell items and claim XP |
 | `sell_all` | Sell all items |

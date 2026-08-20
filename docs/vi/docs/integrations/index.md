@@ -14,8 +14,6 @@ SmartSpawner phát hiện plugin tùy chọn khi khởi động và chỉ bật 
 
 <DocCard icon="Home" title="Đảo và Plot" link="/vi/docs/integrations/islands/" desc="Quyền plot và đảo cho các thao tác spawner." />
 
-<DocCard icon="Gamepad2" title="Hỗ Trợ Bedrock" link="/vi/docs/integrations/bedrock-support" desc="Hiển thị form native cho người chơi được Floodgate phát hiện." />
-
 <DocCard icon="Swords" title="AuraSkills" link="/vi/docs/integrations/auraskills" desc="Chuyển kinh nghiệm nhận từ spawner thành XP kỹ năng." />
 
 <DocCard icon="Sparkles" title="MythicMobs" link="/vi/docs/integrations/mythicmobs" desc="Tạo vật phẩm Smart Spawner từ bảng drop mob tùy chỉnh." />

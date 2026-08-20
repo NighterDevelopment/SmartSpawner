@@ -41,7 +41,7 @@ Cho phép đổi loại mob của spawner bằng cách nhấp phải với spawn
 </PermRow>
 
 <PermRow permission="smartspawner.stack" defaultVal="true">
-Cho phép xếp chồng spawner bằng tay hoặc qua GUI stacker.
+Cho phép xếp chồng spawner bằng tay.
 </PermRow>
 
 <PermRow permission="smartspawner.break" defaultVal="true">
@@ -49,7 +49,7 @@ Cho phép phá và thu thập Smart Spawner, vẫn chịu yêu cầu công cụ 
 </PermRow>
 
 <PermRow permission="smartspawner.break.bypassdropchance" defaultVal="op">
-Người có quyền này luôn nhận vật phẩm spawner khi phá bất kể <code>drop_chance</code>. Quyền cũng cho phép phá stack khi cúi và dùng GUI stacker đối với spawner có cấu hình tỷ lệ rơi.
+Người có quyền này luôn nhận vật phẩm spawner khi phá bất kể <code>drop_chance</code>. Quyền cũng cho phép phá stack khi cúi đối với spawner có cấu hình tỷ lệ rơi.
 </PermRow>
 
 <PermRow permission="smartspawner.sellall" defaultVal="true">

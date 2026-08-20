@@ -187,10 +187,6 @@ public class SpawnerGuiViewManager {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(spawner.getSpawnerId());
         }
 
-        if (plugin.getSpawnerMenuFormUI() != null) {
-            plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(spawner.getSpawnerId());
-        }
-
         int viewerCount = viewers.size();
         if (viewerCount > 10) {
             plugin.debug(viewerCount + " spawner menu viewers to update for " + spawner.getSpawnerId() + " (batch update)");
@@ -286,11 +282,6 @@ public class SpawnerGuiViewManager {
                     });
                 }
             }
-        }
-
-        // Check for stacker viewers if that functionality exists
-        if (plugin.getSpawnerStackerHandler() != null) {
-            plugin.getSpawnerStackerHandler().closeAllViewersInventory(spawnerId);
         }
     }
 

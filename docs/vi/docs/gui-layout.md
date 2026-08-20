@@ -56,7 +56,7 @@ slot_14:
         action: "sell_and_exp"
     no_sell_integration:
       click:
-        action: "open_stacker"
+        action: "none"
 ```
 
 ## Âm Thanh Khi Nhấn
@@ -96,7 +96,7 @@ left_click:
   sound_success: block.note_block.bell
   sound_fail: block.note_block.pling
 right_click:
-  action: "open_stacker"
+  action: "collect_exp"
   sound: ui.button.click
 ```
 
@@ -127,10 +127,10 @@ slot_14:
       left_click:
         action: "sell_and_exp"
       right_click:
-        action: "open_stacker"
+        action: "none"
     no_sell_integration:
       click:
-        action: "open_stacker"
+        action: "none"
 ```
 
 - `custom_texture` là hash trong URL texture, không gồm tiền tố `http://textures.minecraft.net/texture/`.
@@ -159,7 +159,7 @@ slot_14:
         action: "sell_and_exp"
     no_sell_integration:
       click:
-        action: "open_stacker"
+        action: "none"
 ```
 
 Điều kiện hiện có gồm `sell_integration` và `no_sell_integration`.

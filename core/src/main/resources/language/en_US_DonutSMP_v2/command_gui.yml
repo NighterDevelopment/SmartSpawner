@@ -183,10 +183,6 @@ spawner_management:
     name: '&fᴏᴘᴇɴ &#5DB5F1ꜱᴘᴀᴡɴᴇʀ ɢᴜɪ'
     lore:
       - '&#5DB5F1 ▸ &fClick to open the menu!'
-  stack:
-    name: '&fᴇᴅɪᴛ &#5DB5F1ꜱᴛᴀᴄᴋ'
-    lore:
-      - '&#5DB5F1 ▸ &fClick to edit the stack!'
   remove:
     name: '&fʀᴇᴍᴏᴠᴇ &#FF6B6Bꜱᴘᴀᴡɴᴇʀ'
     lore:
@@ -206,3 +202,92 @@ price_item:
     - '  &8• &fSource: &e{price_source}'
     - '  &8• &fCustom price: &a${custom_price}'
     - '  &8• &fShop price: &a${shop_price}'
+
+# ──────────────────────────────────────────────────────
+#              Loot Editor (/ss editloot)
+# ──────────────────────────────────────────────────────
+editloot:
+  mob_loot_title: 'ᴍᴏʙ ʟᴏᴏᴛ • {entry}'
+  item_loot_title: 'ɪᴛᴇᴍ ʟᴏᴏᴛ • {entry}'
+  capture_add_title: 'ᴅʀᴏᴘ ᴀɴ ɪᴛᴇᴍ ᴛᴏ ᴀᴅᴅ'
+  capture_replace_title: 'ᴅʀᴏᴘ ᴛʜᴇ ɴᴇᴡ ɪᴛᴇᴍ'
+
+  loot_entry:
+    name: '&fʟᴏᴏᴛ &#37eb9a{label}'
+    lore:
+      - ''
+      - ' &#37eb9aℹ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ:'
+      - '  &8• &fItem: &e{item}'
+      - '  &8• &fAmount: &e{amount}'
+      - '  &8• &fChance: &e{chance}%'
+      - '  &8• &fDurability: &e{durability}'
+      - ''
+      - '&#37eb9a ▸ &fLeft click to edit values!'
+      - '&#37eb9a ▸ &fRight click to change the item!'
+
+  loot_broken:
+    name: '&fʟᴏᴏᴛ &#FF6B6B{label}'
+    lore:
+      - ''
+      - ' &#FF6B6B⚠ ᴡᴀʀɴɪɴɢ:'
+      - '  &8• &fThis item could not be read.'
+      - '  &8• &fValue: &e{item}'
+      - ''
+      - '&#FF6B6B ▸ &fRight click to set a new item!'
+
+  add_loot:
+    name: '&fᴀᴅᴅ &#37eb9aʟᴏᴏᴛ'
+    lore:
+      - ''
+      - ' &#37eb9aℹ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ:'
+      - '  &8• &fAdd another loot item.'
+      - ''
+      - '&#37eb9a ▸ &fClick to choose an item!'
+
+  capture_hint:
+    name: '&fᴅʀᴏᴘ ᴀɴ ɪᴛᴇᴍ &#5DB5F1ɪɴ ᴛʜᴇ ᴍɪᴅᴅʟᴇ'
+    lore:
+      - ''
+      - ' &#5DB5F1ℹ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ:'
+      - '  &8• &fThe item is saved exactly as it is.'
+      - '  &8• &fYou get it back when you leave.'
+
+  cancel:
+    name: '&fᴄᴀɴᴄᴇʟ &#FF6B6Bᴄᴀᴘᴛᴜʀᴇ'
+    lore:
+      - ''
+      - ' &#FF6B6Bℹ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ:'
+      - '  &8• &fDiscard this capture.'
+      - ''
+      - '&#FF6B6B ▸ &fClick to cancel!'
+
+  confirm:
+    name: '&fᴄᴏɴꜰɪʀᴍ &#37eb9aɪᴛᴇᴍ'
+    lore:
+      - ''
+      - ' &#37eb9aℹ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ:'
+      - '  &8• &fContinue to set amount and chance.'
+      - ''
+      - '&#37eb9a ▸ &fClick to continue!'
+
+  # Dialog text. Rendered inside the client dialog, so keep it short.
+  dialog_title:
+    name: 'ʟᴏᴏᴛ ꜱᴇᴛᴛɪɴɢꜱ'
+  dialog_body:
+    name: '&7Amount and durability accept a range like &f0-2&7.'
+  dialog_save:
+    name: '&aSave'
+  dialog_cancel:
+    name: '&cCancel'
+  field_amount:
+    name: 'Amount (e.g. 1 or 0-2)'
+  field_chance:
+    name: 'Chance % (0-100)'
+  field_durability:
+    name: 'Durability (blank for none, e.g. 1-384)'
+  error_amount:
+    name: '&cAmount must be whole numbers 0-{max}, and min not above max.'
+  error_chance:
+    name: '&cChance must be a number from 0 to 100.'
+  error_durability:
+    name: '&cDurability must be whole numbers, and min not above max.'

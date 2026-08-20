@@ -6,10 +6,6 @@ title: Tương thích plugin
 
 SmartSpawner tự phát hiện plugin tùy chọn và chỉ bật những tích hợp có trên máy chủ.
 
-<FeatureMediaCard icon="Gamepad2" title="Form UI Bedrock" image="https://cdn.modrinth.com/data/9tQwxSFr/images/df8098897c88f1d02f8d26b70f4834c705cfe2fb.webp" alt="Form UI Bedrock hiện tại" link="/vi/docs/integrations/bedrock-support" action="Đọc hướng dẫn Bedrock">
-Người chơi Floodgate và Geyser nhận menu thân thiện với cảm ứng thay vì chest GUI khi bật `bedrock_support.enable_formui`.
-</FeatureMediaCard>
-
 ## Các Tích Hợp Được Hỗ Trợ
 
 <CardGrid>

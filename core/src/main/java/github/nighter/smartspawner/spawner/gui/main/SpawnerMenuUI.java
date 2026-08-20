@@ -118,10 +118,11 @@ public class SpawnerMenuUI {
         GuiLayout layout = plugin.getGuiLayoutConfig().getMainLayout(spawner, player);
         Inventory menu = createMenu(spawner, layout);
 
-        // OPTIMIZATION: Populate menu items based on layout configuration
-        // Iterate through ALL buttons in layout and create items based on their actions
+        // Populate menu items from the layout. A button's item is chosen by its identity
+        // (the info_button flag, or a recognized action), not by requiring an action: an
+        // enabled button with a valid key always appears, even with no action at all.
         ItemStack[] items = new ItemStack[INVENTORY_SIZE];
-        
+
         for (GuiButton button : layout.getAllButtons().values()) {
             if (!button.isEnabled()) {
                 continue;
@@ -132,30 +133,37 @@ public class SpawnerMenuUI {
                 continue;
             }
 
-            // OPTIMIZATION: Get action - check all action types not just default
-            // A button might have left_click/right_click but no click
-            String action = getAnyActionFromButton(button);
-            if (action == null || action.isEmpty()) {
-                continue;
-            }
-
-            ItemStack item = null;
-            switch (action) {
-                case "open_storage":
-                    item = createLootStorageItem(spawner, button);
-                    break;
-                case "open_stacker":
-                case "sell_and_exp":
-                case "none":
-                    // Spawner info button or custom action
-                    item = createSpawnerInfoItem(player, spawner, button);
-                    break;
-                case "collect_exp":
-                    item = createExpItem(spawner, button);
-                    break;
-                default:
-                    plugin.getLogger().warning("Unknown action in main GUI: " + action);
-                    continue;
+            ItemStack item;
+            if (button.isInfoButton()) {
+                // The spawner info button is display-oriented; it does not need an action to show.
+                item = createSpawnerInfoItem(player, spawner, button);
+            } else {
+                // Check all click types, not just the default one.
+                String action = getAnyActionFromButton(button);
+                if (action == null || action.isEmpty()) {
+                    action = "none";
+                }
+                switch (action) {
+                    case "open_storage":
+                        item = createLootStorageItem(spawner, button);
+                        break;
+                    case "collect_exp":
+                        item = createExpItem(spawner, button);
+                        break;
+                    case "sell_and_exp":
+                        item = createSpawnerInfoItem(player, spawner, button);
+                        break;
+                    case "none":
+                        // Display-only button: show it as configured with no behavior.
+                        item = createStaticItem(button);
+                        break;
+                    default:
+                        // Unknown action: keep the button visible rather than hiding it.
+                        plugin.debug("Main GUI button '" + button.getButtonType()
+                                + "' has an unrecognized action '" + action + "', showing as a display item");
+                        item = createStaticItem(button);
+                        break;
+                }
             }
 
             if (item != null) {
@@ -592,6 +600,25 @@ public class SpawnerMenuUI {
         cacheTimestamps.put(cacheKey, System.currentTimeMillis());
 
         return expItem;
+    }
+
+    /**
+     * Builds a display-only item for a button that has no behavior (no action, or an
+     * unrecognized one). It renders the configured material or custom head so the button
+     * stays visible in the menu based on its layout key alone.
+     */
+    private ItemStack createStaticItem(GuiButton button) {
+        ItemStack item;
+        if (button.getMaterial() == Material.PLAYER_HEAD
+                && button.getCustomTexture() != null && !button.getCustomTexture().trim().isEmpty()) {
+            item = SpawnerMobHeadTexture.getCustomHeadFromTexture(button.getCustomTexture(), null);
+        } else {
+            item = new ItemStack(button.getMaterial());
+        }
+        if (item.getType() == Material.SPAWNER) {
+            ItemTooltipUtil.hideTooltip(item);
+        }
+        return item;
     }
 
     private int calculatePercentage(long current, long maximum) {

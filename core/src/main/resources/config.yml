@@ -83,10 +83,6 @@ hopper:
   # Item stacks moved per collection. Maximum 5.
   stack_per_transfer: 5
 
-bedrock_support:
-  # RESTART. Show Bedrock players a form menu instead of a chest GUI. Needs Floodgate.
-  enable_formui: false
-
 hologram:
   # Floating text above spawners.
   enabled: false

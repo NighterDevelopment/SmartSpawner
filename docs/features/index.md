@@ -1,6 +1,6 @@
 ---
 title: Features
-description: Explore SmartSpawner's virtual drops, storage, stacking, spawner types, and Bedrock UI.
+description: Explore SmartSpawner's virtual drops, storage, stacking, and spawner types.
 ---
 
 # Features
@@ -56,17 +56,6 @@ Browse registered spawners by world, inspect their data, teleport to them, and m
 </FeatureMediaCard>
 
 <FeatureMediaCard
-  icon="Gamepad2"
-  title="Native Bedrock menus"
-  image="https://cdn.modrinth.com/data/9tQwxSFr/images/df8098897c88f1d02f8d26b70f4834c705cfe2fb.webp"
-  alt="Current SmartSpawner Bedrock Form UI"
-  link="/docs/integrations/bedrock-support"
-  action="Configure Bedrock support"
->
-Floodgate players receive a touch-friendly Form UI with the same core actions available to Java players.
-</FeatureMediaCard>
-
-<FeatureMediaCard
   icon="Box"
   title="Recognizable spawner identity"
   image="https://cdn.modrinth.com/data/9tQwxSFr/images/e5de039ba6be2cc100e1529d708a02e50b34a6f5.webp"
@@ -99,7 +88,7 @@ Compatibility, storage, and auditing live in the Server Guide.
 
 <CardGrid>
 
-<DocCard icon="Plug" title="Plugin Compatibility" link="/docs/plugin-compatibility" desc="Connect protections, world managers, RPG plugins, and Bedrock." />
+<DocCard icon="Plug" title="Plugin Compatibility" link="/docs/plugin-compatibility" desc="Connect protections, world managers, and RPG plugins." />
 
 <DocCard icon="Server" title="Database Support" link="/docs/database-support" desc="Choose SQLite or MySQL storage for your deployment." />
 

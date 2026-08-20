@@ -199,18 +199,6 @@ Số stack được chuyển mỗi chu kỳ, tối đa 5.
 
 </ConfigGroup>
 
-<ConfigGroup name="bedrock_support">
-
-<ConfigProperty name="enable_formui" value="false" type="boolean">
-Hiển thị form thân thiện với di động cho người chơi Bedrock qua Floodgate/Geyser thay vì chest GUI. Cần Floodgate.
-
-::: warning RESTART
-Tùy chọn này chỉ được đọc lúc máy chủ khởi động. `/ss reload` không áp dụng nó.
-:::
-</ConfigProperty>
-
-</ConfigGroup>
-
 <ConfigGroup name="hologram">
 <template #info>
 Điều khiển văn bản nổi phía trên block spawner.

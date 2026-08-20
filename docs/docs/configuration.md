@@ -201,18 +201,6 @@ Number of item stacks transferred per cycle (up to 5).
 
 </ConfigGroup>
 
-<ConfigGroup name="bedrock_support">
-
-<ConfigProperty name="enable_formui" value="false" type="boolean">
-Shows mobile-friendly form menus to Bedrock players (via Floodgate/Geyser) instead of chest GUIs. Requires Floodgate.
-
-::: warning RESTART
-This option is only read when the server starts. `/ss reload` does not apply it.
-:::
-</ConfigProperty>
-
-</ConfigGroup>
-
 <ConfigGroup name="hologram">
 <template #info>
 Controls floating text displays above spawner blocks.

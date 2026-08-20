@@ -73,25 +73,6 @@ click_too_fast:
   sound: block.note_block.bass
 
 # ──────────────────────────────────────────────────────
-#         Spawner - Stacker GUI Interaction
-# ──────────────────────────────────────────────────────
-spawner_stacker_minimum_reached:
-  message: '&#FF4444Đã đạt giới hạn tối thiểu. &f{amount} &csẽ vẫn được stack.'
-  sound: block.note_block.pling
-
-spawner_cannot_remove_last:
-  action_bar: '&#FF4444Bạn không thể gỡ spawner cuối cùng.'
-  sound: block.note_block.pling
-
-spawner_insufficient_quantity:
-  action_bar: '&#FF4444Không đủ spawner: &f{amountAvailable}&c/&f{amountChange}'
-  sound: block.note_block.pling
-
-stacker_drop_blocked:
-  message: '&#FF4444Menu stack bị tắt khi spawner này có tỉ lệ rơi.'
-  sound: block.note_block.pling
-
-# ──────────────────────────────────────────────────────
 #             Spawner - Stack Interaction
 # ──────────────────────────────────────────────────────
 spawner_different:

@@ -6,17 +6,6 @@ title: Plugin Compatibility
 
 SmartSpawner detects optional plugins and enables only the integrations available on your server.
 
-<FeatureMediaCard
-  icon="Gamepad2"
-  title="Bedrock Form UI"
-  image="https://cdn.modrinth.com/data/9tQwxSFr/images/df8098897c88f1d02f8d26b70f4834c705cfe2fb.webp"
-  alt="Current SmartSpawner Bedrock Form UI"
-  link="/docs/integrations/bedrock-support"
-  action="Read the Bedrock setup guide"
->
-Floodgate and Geyser players receive a touch-friendly menu instead of a chest GUI when `bedrock_support.enable_formui` is enabled.
-</FeatureMediaCard>
-
 ## Supported integrations
 
 <CardGrid>

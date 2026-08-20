@@ -24,7 +24,7 @@ SmartSpawner thay thế các trang trại sinh quá nhiều mob bằng cơ chế
 
 <DocCard icon="Settings" title="Cấu Hình" link="/vi/docs/configuration" desc="Điều chỉnh tạo vật phẩm, kho, kinh tế, hiệu ứng và ghi log." />
 
-<DocCard icon="Plug" title="Tích Hợp Plugin" link="/vi/docs/integrations/" desc="Kết nối cửa hàng, kinh tế, bảo vệ, đảo, Bedrock, kỹ năng và mob tùy chỉnh." />
+<DocCard icon="Plug" title="Tích Hợp Plugin" link="/vi/docs/integrations/" desc="Kết nối cửa hàng, kinh tế, bảo vệ, đảo, kỹ năng và mob tùy chỉnh." />
 
 </CardGrid>
 
@@ -37,7 +37,7 @@ Vật phẩm được tính trực tiếp thay vì phải tick mob đã sinh. Tr
 </FeatureCard>
 
 <FeatureCard icon="Blocks" title="Xếp Chồng Mặc Định">
-Người chơi kết hợp các spawner tương thích vào một block bằng thao tác trực tiếp hoặc giao diện stacker chuyên dụng.
+Người chơi kết hợp các spawner tương thích vào một block bằng thao tác trực tiếp.
 </FeatureCard>
 
 <FeatureCard icon="ShoppingCart" title="Bán Trực Tiếp">

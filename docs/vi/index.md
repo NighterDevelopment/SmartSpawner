@@ -28,9 +28,6 @@ features:
   - title: Khu Vực Luôn Được Bảo Vệ
     details: Quy tắc vùng và đảo hiện có vẫn được áp dụng.
     link: /vi/docs/integrations/protections/
-  - title: Tối Ưu Cho Bedrock
-    details: Form native gọn gàng, phù hợp thiết bị di động.
-    link: /vi/docs/integrations/bedrock-support
   - title: Tự Do Mở Rộng
     details: Mở rộng mọi thứ với Java API mã nguồn mở.
     link: /vi/developer-api/

@@ -8,7 +8,6 @@ import github.nighter.smartspawner.hooks.protections.api.Lands;
 import github.nighter.smartspawner.hooks.protections.api.PlotSquared;
 import github.nighter.smartspawner.hooks.protections.api.SuperiorSkyblock2;
 import github.nighter.smartspawner.hooks.rpg.AuraSkillsIntegration;
-import github.nighter.smartspawner.hooks.bedrock.FloodgateHook;
 import lombok.Getter;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import org.bukkit.Bukkit;
@@ -44,11 +43,9 @@ public class IntegrationManager {
 
     // Integration plugin flags
     private boolean hasAuraSkills = false;
-    private boolean hasFloodgate = false;
 
     // Integration instances
     public AuraSkillsIntegration auraSkillsIntegration;
-    public FloodgateHook floodgateHook;
 
     public IntegrationManager(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -193,17 +190,6 @@ public class IntegrationManager {
                 return true;
             } else {
                 this.auraSkillsIntegration = null;
-                return false;
-            }
-        }, true);
-
-        hasFloodgate = checkPlugin("Floodgate", () -> {
-            Plugin floodgatePlugin = Bukkit.getPluginManager().getPlugin("floodgate");
-            if (floodgatePlugin != null && floodgatePlugin.isEnabled()) {
-                this.floodgateHook = new FloodgateHook(plugin);
-                return this.floodgateHook.isEnabled();
-            } else {
-                this.floodgateHook = null;
                 return false;
             }
         }, true);

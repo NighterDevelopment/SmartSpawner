@@ -229,9 +229,6 @@ public class SpawnerData {
         if (plugin.getSpawnerMenuUI() != null) {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(this.spawnerId);
         }
-        if (plugin.getSpawnerMenuFormUI() != null) {
-            plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(this.spawnerId);
-        }
     }
 
     /**
@@ -246,9 +243,6 @@ public class SpawnerData {
         // Invalidate GUI cache after API modifications
         if (plugin.getSpawnerMenuUI() != null) {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(this.spawnerId);
-        }
-        if (plugin.getSpawnerMenuFormUI() != null) {
-            plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(this.spawnerId);
         }
     }
 
@@ -369,9 +363,6 @@ public class SpawnerData {
         if (plugin.getSpawnerMenuUI() != null) {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(this.spawnerId);
         }
-        if (plugin.getSpawnerMenuFormUI() != null) {
-            plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(this.spawnerId);
-        }
     }
 
     public void setSpawnerExp(long exp) {
@@ -381,9 +372,6 @@ public class SpawnerData {
         // Invalidate GUI cache when experience changes
         if (plugin.getSpawnerMenuUI() != null) {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(this.spawnerId);
-        }
-        if (plugin.getSpawnerMenuFormUI() != null) {
-            plugin.getSpawnerMenuFormUI().invalidateSpawnerCache(this.spawnerId);
         }
     }
 

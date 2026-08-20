@@ -1,6 +1,6 @@
 ---
 title: Tính năng
-description: Khám phá vật phẩm ảo, kho, xếp chồng, các loại spawner và giao diện Bedrock của SmartSpawner.
+description: Khám phá vật phẩm ảo, kho, xếp chồng và các loại spawner của SmartSpawner.
 ---
 
 # Tính Năng
@@ -56,17 +56,6 @@ Duyệt spawner theo thế giới, kiểm tra dữ liệu, dịch chuyển đế
 </FeatureMediaCard>
 
 <FeatureMediaCard
-  icon="Gamepad2"
-  title="Menu Bedrock native"
-  image="https://cdn.modrinth.com/data/9tQwxSFr/images/df8098897c88f1d02f8d26b70f4834c705cfe2fb.webp"
-  alt="Form UI Bedrock hiện tại của SmartSpawner"
-  link="/vi/docs/integrations/bedrock-support"
-  action="Cấu hình Bedrock"
->
-Người chơi Floodgate nhận Form UI thân thiện với cảm ứng cùng các thao tác chính giống người chơi Java.
-</FeatureMediaCard>
-
-<FeatureMediaCard
   icon="Box"
   title="Nhận diện spawner rõ ràng"
   image="https://cdn.modrinth.com/data/9tQwxSFr/images/e5de039ba6be2cc100e1529d708a02e50b34a6f5.webp"
@@ -99,7 +88,7 @@ Tương thích, lưu trữ và ghi log nằm trong Hướng dẫn máy chủ.
 
 <CardGrid>
 
-<DocCard icon="Plug" title="Tương Thích Plugin" link="/vi/docs/plugin-compatibility" desc="Kết nối bảo vệ, quản lý thế giới, RPG và Bedrock." />
+<DocCard icon="Plug" title="Tương Thích Plugin" link="/vi/docs/plugin-compatibility" desc="Kết nối bảo vệ, quản lý thế giới và RPG." />
 
 <DocCard icon="Server" title="Hỗ Trợ Cơ Sở Dữ Liệu" link="/vi/docs/database-support" desc="Chọn SQLite hoặc MySQL cho mô hình triển khai của bạn." />
 

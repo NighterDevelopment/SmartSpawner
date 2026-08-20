@@ -78,7 +78,6 @@ const enManualSidebar = [
           { text: 'IridiumSkyblock', link: '/docs/integrations/islands/iridiumskyblock' }
         ]
       },
-      { text: 'Bedrock Support', link: '/docs/integrations/bedrock-support' },
       { text: 'AuraSkills', link: '/docs/integrations/auraskills' },
       { text: 'MythicMobs', link: '/docs/integrations/mythicmobs' },
       { text: 'Troubleshooting', link: '/docs/integrations/troubleshooting' }
@@ -160,7 +159,6 @@ const viManualSidebar = [
           { text: 'IridiumSkyblock', link: '/vi/docs/integrations/islands/iridiumskyblock' }
         ]
       },
-      { text: 'Hỗ trợ Bedrock', link: '/vi/docs/integrations/bedrock-support' },
       { text: 'AuraSkills', link: '/vi/docs/integrations/auraskills' },
       { text: 'MythicMobs', link: '/vi/docs/integrations/mythicmobs' },
       { text: 'Khắc phục sự cố', link: '/vi/docs/integrations/troubleshooting' }

@@ -24,7 +24,7 @@ SmartSpawner replaces mob-heavy farms with direct drop and experience generation
 
 <DocCard icon="Settings" title="Configuration" link="/docs/configuration" desc="Tune generation, storage, economy, visuals, and logging." />
 
-<DocCard icon="Plug" title="Plugin Integrations" link="/docs/integrations/" desc="Connect shops, economies, protections, islands, Bedrock, skills, and custom drops." />
+<DocCard icon="Plug" title="Plugin Integrations" link="/docs/integrations/" desc="Connect shops, economies, protections, islands, skills, and custom drops." />
 
 </CardGrid>
 
@@ -37,7 +37,7 @@ Drops are calculated directly instead of ticking spawned mobs. Large farms stay 
 </FeatureCard>
 
 <FeatureCard icon="Blocks" title="Stackable by Default">
-Players combine compatible spawners into a single block through direct interaction or the dedicated stacker interface.
+Players combine compatible spawners into a single block through direct interaction.
 </FeatureCard>
 
 <FeatureCard icon="ShoppingCart" title="Direct Selling">

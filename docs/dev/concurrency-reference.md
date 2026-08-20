@@ -54,11 +54,9 @@ Key concurrency problems addressed:
 | `SpawnerData.java` | `AtomicBoolean spawnerStop` | CAS flag (per spawner) | Thread-safe start/stop state for the spawner |
 | `SpawnerData.java` | `synchronized` methods | Intrinsic lock (per spawner) | Protects pre-generated loot storage (`storePreGeneratedLoot`, `getAndClearPreGeneratedItems`, etc.) |
 | `SpawnerData.java` | `volatile` fields (`accumulatedSellValue`, `sellValueDirty`, `preGeneratedItems`, `preGeneratedExperience`, `isPreGenerating`, `cachedHasNoLoot`) | Memory visibility | Allows safe reads from async threads without full locking |
-| `SpawnerLocationLockManager.java` | `ConcurrentHashMap<Location, ReentrantLock>` | Global location locks | Prevents race conditions between pickaxe break and GUI stack/destack operations |
+| `SpawnerLocationLockManager.java` | `ConcurrentHashMap<Location, ReentrantLock>` | Global location locks | Prevents race conditions between pickaxe break and stacking and placement operations |
 | `SpawnerLocationLockManager.java` | `ReentrantLock` (per location) | Fine-grained global lock | Same-location operations are serialized across all threads |
-| `SpawnerStackerHandler.java` | `AtomicBoolean updateLocks` (per viewer UUID) | CAS guard | Prevents concurrent GUI refresh updates for the same player |
-| `SpawnerStackerHandler.java` | `locationLockManager.tryLock()` | External global lock | Serializes stack changes with break/removal operations |
-| `SpawnerBreakListener.java` | `locationLockManager.tryLock()` | External global lock | Serializes break handling with GUI stack/destack operations |
+| `SpawnerBreakListener.java` | `locationLockManager.tryLock()` | External global lock | Serializes break handling with stacking and placement operations |
 | `SpawnerRemovalService.java` | `locationLockManager.tryLock()` | External global lock | Serializes removal with break and GUI operations |
 | `SpawnerRemovalService.java` | `ConcurrentHashMap.newKeySet() pendingRemovalIds` | Concurrent set | Tracks spawners currently in the removal pipeline |
 | `SpawnerRemovalService.java` | `ConcurrentHashMap.newKeySet() pendingRemovalLocations` | Concurrent set | Tracks locations currently in the removal pipeline |
@@ -68,9 +66,6 @@ Key concurrency problems addressed:
 | `VirtualInventory.java` | `ConcurrentHashMap<ItemSignature, Long>` | Concurrent map | Internal item storage (writes are protected by `inventoryLock` in `SpawnerData`) |
 | `SpawnerManager.java` | `ConcurrentHashMap<String, SpawnerData> spawners` | Concurrent map | Thread-safe registry of all loaded spawners |
 | `SpawnerManager.java` | `ConcurrentHashMap.newKeySet() confirmedGhostSpawners` | Concurrent set | Tracks spawners confirmed as ghosts to avoid repeated checks |
-| `SpawnerStackerHandler.java` | `ConcurrentHashMap<UUID, Long> lastClickTime` | Concurrent map | Thread-safe click cooldown tracking |
-| `SpawnerStackerHandler.java` | `ConcurrentHashMap<UUID, Scheduler.Task> pendingUpdates` | Concurrent map | Thread-safe pending GUI update task tracking |
-| `SpawnerStackerHandler.java` | `ConcurrentHashMap<String, Set<UUID>> activeViewers` | Concurrent map | Thread-safe viewer tracking per spawner |
 | `SpawnerHighlightManager.java` | `ConcurrentHashMap<UUID, ScanSession> activeSessions` | Concurrent map | Thread-safe active scan session tracking |
 | `LRUCache.java` | `synchronized` methods | Intrinsic lock | Makes `LinkedHashMap` cache thread-safe for language/formatting lookups |
 | `UpdateTaskManager.java` | `synchronized` methods + `volatile boolean isTaskRunning` | Hybrid lock | Thread-safe lifecycle management for the GUI update task |
@@ -141,7 +136,6 @@ A global `ConcurrentHashMap<Location, ReentrantLock>` assigns one lock per spawn
 
 **Consumers of this lock:**
 - `SpawnerBreakListener` — both smart and vanilla spawner breaks.
-- `SpawnerStackerHandler` — all stack/destack operations (`handleStackDecrease`, `handleStackIncrease`, `handleAddAll`, `handleRemoveAll`).
 - `SpawnerRemovalService` — `claimRemoval()` and `removeBlockAndFinalize()`.
 
 ---
@@ -169,7 +163,6 @@ A global `ConcurrentHashMap<Location, ReentrantLock>` assigns one lock per spawn
 - `SpawnerLootGenerator.spawnLootToSpawner()` — skips loot generation while selling.
 
 **Other `AtomicBoolean` usage:**
-- `SpawnerStackerHandler` — `Map<UUID, AtomicBoolean> updateLocks` prevents concurrent GUI refresh for the same viewer (CAS `compareAndSet(false, true)`).
 - `SpawnerHighlightManager` — `AtomicBoolean cancelled` inside `ScanSession` allows a scan to be cancelled from any thread.
 
 ---
@@ -228,9 +221,6 @@ Every method (`get`, `put`, `clear`, `size`, `capacity`, `resize`) is `synchroni
 | `SpawnerManager.java` | `ConcurrentHashMap<String, SpawnerData>` | All loaded spawners |
 | `SpawnerManager.java` | `ConcurrentHashMap.newKeySet()` (`confirmedGhostSpawners`) | Confirmed ghost spawner IDs |
 | `VirtualInventory.java` | `ConcurrentHashMap<ItemSignature, Long>` | Consolidated item storage (note: writes are still protected by `inventoryLock` in `SpawnerData`) |
-| `SpawnerStackerHandler.java` | `ConcurrentHashMap<UUID, Long>` | Click cooldown timestamps |
-| `SpawnerStackerHandler.java` | `ConcurrentHashMap<UUID, Scheduler.Task>` | Pending delayed GUI update tasks |
-| `SpawnerStackerHandler.java` | `ConcurrentHashMap<String, Set<UUID>>` | Active viewers per spawner |
 | `SpawnerHighlightManager.java` | `ConcurrentHashMap<UUID, ScanSession>` | Active scan sessions |
 | `SpawnerHighlightManager.java` | `CopyOnWriteArrayList<BlockDisplay>` | Highlight entities (many reads, few writes) |
 | `SpawnerRemovalService.java` | `ConcurrentHashMap.newKeySet()` (`pendingRemovalIds`) | In-flight removal IDs |
@@ -269,7 +259,6 @@ This is the single point of dispatch for every threaded operation in the plugin.
 - `SpawnerHighlightManager` — offloads spawner scanning to async, then renders results on the main thread.
 - `SpawnerHologram` — every spawn/update/remove of the `TextDisplay` is dispatched to its owning region thread.
 - `SpawnerLocationLockManager` — cleanup task runs as an async timer.
-- `SpawnerStackerHandler` — viewer update batching uses `runTaskLater`; inventory close verification uses `runEntityTaskLater`.
 - `SpawnerSellConfirmListener` — reopens the previous GUI via `runEntityTask(player, ...)` so `ServerPlayer.initMenu()` runs on the player's own region thread.
 
 ---
@@ -399,7 +388,6 @@ Key points:
 | `SpawnerLootGenerator.java` | `lootGenerationLock`, `dataLock` (tryLock) | `runTaskAsync` → `runLocationTask` | Non-blocking loot generation |
 | `SpawnerSellManager.java` | `AtomicBoolean selling` (CAS) | `runTaskAsync` → `runLocationTask` | Non-blocking sell execution |
 | `SpawnerBreakListener.java` | `locationLockManager.tryLock()` | Callback dispatch via entity/location tasks | Safe spawner breaking |
-| `SpawnerStackerHandler.java` | `locationLockManager.tryLock()`, `AtomicBoolean updateLocks` | `runTaskTimer`, `runTaskLater`, `runEntityTask` | Safe GUI stacker |
 | `SpawnerRemovalService.java` | `locationLockManager`, pending sets (`ConcurrentHashMap`) | `CompletableFuture`, `getChunkAtAsync`, `runLocationTask` | Async-safe spawner removal |
 | `SpawnerHighlightManager.java` | `AtomicBoolean cancelled`, `CopyOnWriteArrayList` | `runTaskAsync` → `runTask` | Async scan + highlight rendering |
 | `SpawnerHologram.java` | `AtomicReference<TextDisplay>` | `runLocationTask`, `runEntityTask` | Folia-safe hologram management |
