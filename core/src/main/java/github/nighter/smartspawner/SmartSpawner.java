@@ -6,10 +6,6 @@ import github.nighter.smartspawner.api.SmartSpawnerPlugin;
 import github.nighter.smartspawner.api.gui.ExternalGuiLayoutLoader;
 import github.nighter.smartspawner.api.gui.GuiLayoutRegistryImpl;
 import github.nighter.smartspawner.commands.BrigadierCommandManager;
-import github.nighter.smartspawner.commands.config.editor.ConfigEditorDialogs;
-import github.nighter.smartspawner.commands.config.editor.ConfigEditorHandler;
-import github.nighter.smartspawner.commands.config.editor.ConfigEditorService;
-import github.nighter.smartspawner.commands.config.editor.ConfigEditorUI;
 import github.nighter.smartspawner.commands.list.ListSubCommand;
 import github.nighter.smartspawner.commands.list.gui.adminstacker.AdminStackerHandler;
 import github.nighter.smartspawner.commands.list.gui.list.SpawnerListGUI;
@@ -166,12 +162,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     private ServerSelectionHandler serverSelectionHandler;
     private PricesGUI pricesGUI;
 
-    // In-game settings editor (/ss config)
-    private ConfigEditorService configEditorService;
-    private ConfigEditorUI configEditorUI;
-    private ConfigEditorDialogs configEditorDialogs;
-    private ConfigEditorHandler configEditorHandler;
-    
     // Logging system
     @Getter
     private SpawnerActionLogger spawnerActionLogger;
@@ -470,7 +460,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         pm.registerEvents(spawnerStackerHandler, this);
         pm.registerEvents(worldEventHandler, this);
         pm.registerEvents(spawnerListGUI, this);
-        pm.registerEvents(configEditorHandler, this);
         pm.registerEvents(spawnerManagementHandler, this);
         pm.registerEvents(adminStackerHandler, this);
         pm.registerEvents(serverSelectionHandler, this);
@@ -493,12 +482,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     }
 
     private void setupCommand() {
-        // Built before the command manager because MainCommand takes the editor UI at construction.
-        this.configEditorService = new ConfigEditorService(this);
-        this.configEditorUI = new ConfigEditorUI(this, configEditorService);
-        this.configEditorDialogs = new ConfigEditorDialogs(this, configEditorService, configEditorUI);
-        this.configEditorHandler = new ConfigEditorHandler(this, configEditorService, configEditorUI, configEditorDialogs);
-
         this.brigadierCommandManager = new BrigadierCommandManager(this);
         brigadierCommandManager.registerCommands();
         this.userPreferenceCache = new UserPreferenceCache(this);
@@ -621,11 +604,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
             itemSpawnerSettingsConfig.reload();
         }
 
-        // Keep config-editor navigation entirely in memory after a full plugin reload.
-        if (configEditorService != null) {
-            configEditorService.reload();
-        }
-        
         // Reload logging system (file logging + discord webhook)
         loggingConfig.loadConfig();
         spawnerActionLogger.reloadDiscord();

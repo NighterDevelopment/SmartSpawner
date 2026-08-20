@@ -5,8 +5,6 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.commands.clear.ClearSubCommand;
 import github.nighter.smartspawner.commands.config.FolderConfigSubCommand;
-import github.nighter.smartspawner.commands.config.editor.AddSpawnerSubCommand;
-import github.nighter.smartspawner.commands.config.editor.EditSpawnerSubCommand;
 import github.nighter.smartspawner.commands.give.GiveSubCommand;
 import github.nighter.smartspawner.commands.hologram.HologramSubCommand;
 import github.nighter.smartspawner.commands.list.ListSubCommand;
@@ -41,10 +39,7 @@ public class MainCommand {
                 new NearSubCommand(plugin, plugin.getSpawnerHighlightManager()),
                 new SetSubCommand(plugin),
                 new FolderConfigSubCommand(plugin, FolderConfigSubCommand.ConfigOption.LANGUAGE),
-                new FolderConfigSubCommand(plugin, FolderConfigSubCommand.ConfigOption.GUI_LAYOUT),
-                new EditSpawnerSubCommand(plugin, plugin.getConfigEditorUI()),
-                new AddSpawnerSubCommand(plugin, plugin.getConfigEditorService(),
-                        plugin.getConfigEditorUI(), plugin.getConfigEditorDialogs())
+                new FolderConfigSubCommand(plugin, FolderConfigSubCommand.ConfigOption.GUI_LAYOUT)
         );
     }
 

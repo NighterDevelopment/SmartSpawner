@@ -144,10 +144,6 @@ public class DatabaseManager {
                 -- Virtual inventory, see SpawnerInventoryCodec
                 storage_items MEDIUMBLOB DEFAULT NULL,
 
-                -- Timestamps
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
                 -- Indexes. The table is one server's data, so none of these carry a server name.
                 UNIQUE KEY uk_spawner (spawner_id),
                 UNIQUE KEY uk_location (world, loc_x, loc_y, loc_z),
@@ -205,10 +201,6 @@ public class DatabaseManager {
 
                 -- Virtual inventory, see SpawnerInventoryCodec
                 storage_items BLOB DEFAULT NULL,
-
-                -- Timestamps
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
                 -- Unique constraints
                 UNIQUE (spawner_id),
@@ -887,8 +879,6 @@ public class DatabaseManager {
                     preferred_sort_item VARCHAR(64) DEFAULT NULL,
                     filtered_items TEXT DEFAULT NULL,
                     inventory_data TEXT DEFAULT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE (server_name, spawner_id),
                     UNIQUE (server_name, world_name, loc_x, loc_y, loc_z)
                 )
@@ -900,8 +890,7 @@ public class DatabaseManager {
                     spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
                     max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                     last_spawn_time, is_at_capacity, last_interacted_player,
-                    preferred_sort_item, filtered_items, inventory_data,
-                    created_at, updated_at
+                    preferred_sort_item, filtered_items, inventory_data
                 )
                 SELECT
                     id, spawner_id, server_name, world_name, loc_x, loc_y, loc_z,
@@ -909,8 +898,7 @@ public class DatabaseManager {
                     spawner_range, spawner_stop, spawn_delay, max_spawner_loot_slots,
                     max_stored_exp, min_mobs, max_mobs, stack_size, max_stack_size,
                     last_spawn_time, is_at_capacity, last_interacted_player,
-                    preferred_sort_item, filtered_items, inventory_data,
-                    created_at, updated_at
+                    preferred_sort_item, filtered_items, inventory_data
                 FROM %2$s
                 """.formatted(tableSpawners, scratchTable),
                 "DROP TABLE " + scratchTable,

@@ -6,17 +6,12 @@ All notable changes to SmartSpawner are documented in this file.
 
 ### Added
 - Custom items can now be spawner drops. Potions, enchanted gear, named items and items from other plugins all work.
-- Added `/ss edit smartspawner` for editing mob drops, experience, drop chance and head textures in game. Changes apply immediately without a restart.
-- Added `/ss edit itemspawner` for editing Item Spawner drops, experience and textures in its own GUI. Changes apply immediately without a restart.
-- Added `/ss add smartspawner <mob> [name] [NBT tag]` for creating a named mob spawner entry. The name and NBT tag are optional; mob names complete from the current server version and NBT uses the same syntax as `/summon`.
-- Added `/ss add itemspawner [name]` for creating a named Item Spawner entry by placing its source item into a GUI.
-- Loot is added in the editor by dropping the real item into the window. Experience, drop chance and head texture are set there too.
-- The loot editor uses a compact 27-slot GUI. A single green pane follows the last configured loot item and moves to the next slot whenever another item is added.
 - Spawner cage previews preserve their configured data. Entity NBT controls the mob model, while Item Spawners display the exact source item and its components, such as potion effects.
 
 ### Fixed
 - Items stored in a spawner keep their enchantments, custom names, lore and durability across restarts.
 - The total item count in `/ss list` is now exact instead of an estimate.
+- Item Spawner holograms now show the spawned item's name instead of a generic entity label.
 
 ### Changed
 - Spawner configuration entries now have custom names and declare their spawned entity or item in an `entity` or `item` child key. Spaces in names become underscores, and omitted names default to names such as `zombie_spawner` or `diamond_spawner`.
@@ -31,6 +26,7 @@ All notable changes to SmartSpawner are documented in this file.
 - Bedrock form menus are off by default. Set `bedrock_support.enable_formui` to `true` and restart to use them.
 - The two spawner settings files were renamed, and loot entries use a new format. See the details below.
 - Loot generation and virtual storage now keep compact item totals instead of creating a separate item stack for every generated drop. This substantially reduces CPU and memory use, especially for large spawner stacks.
+- Loot generation no longer copies each configured drop just to check its type, so spawners with custom item drops cost less every cycle.
 - Storage menus render only the page being viewed, and hoppers read stored items in small batches. Spawners with large inventories no longer rebuild their entire contents for these actions.
 - Selling now works directly with the compact stored item totals and stays synchronized with loot and storage updates, reducing processing overhead and avoiding overlapping changes.
 - Folia tasks that are already on the correct region or global thread run immediately, avoiding unnecessary scheduling delays.

@@ -418,7 +418,7 @@ public class SpawnerData {
 
     public void updateHologramData() {
         if (hologram != null) {
-            hologram.updateData(stackSize, entityType, spawnerExp, maxStoredExp,
+            hologram.updateData(stackSize, entityType, spawnedItemMaterial, spawnerExp, maxStoredExp,
                     virtualInventory.getUsedSlots(), maxSpawnerLootSlots);
         }
     }
@@ -491,8 +491,7 @@ public class SpawnerData {
     }
 
     private boolean isLootItemValid(LootItem item) {
-        ItemStack example = item.createItemStack();
-        return example != null && !filteredItems.contains(example.getType());
+        return item.isAvailable() && !filteredItems.contains(item.material());
     }
 
     public int getEntityExperienceValue() {

@@ -52,42 +52,6 @@ Trao Item Spawner cho người chơi.
 
 ## Lệnh Quản Trị
 
-### /ss edit
-
-<CommandRow :commands="['/ss edit smartspawner', '/ss edit itemspawner']" permission="smartspawner.command.edit">
-
-Mở trình sửa cấu hình trong game cho từng loại spawner.
-
-- `smartspawner`: Chỉnh các mục trong `spawner_mobs.yml`
-- `itemspawner`: Chỉnh các mục trong `spawner_items.yml`
-- Mỗi loại có GUI riêng và không thể chuyển qua lại giữa hai GUI.
-- Thay đổi được áp dụng ngay; không cần chạy `/ss reload`.
-
-</CommandRow>
-
-### /ss add
-
-<CommandRow :commands="['/ss add smartspawner &lt;mob&gt; [name] [NBT tag]', '/ss add itemspawner [name]']" permission="smartspawner.command.add">
-
-Tạo mục mới trước khi chỉnh XP, texture và loot.
-
-- `smartspawner`: Tự động gợi ý các mob có trong phiên bản máy chủ hiện tại. NBT là tùy chọn và mặc định là `{}`. Khi được cung cấp, NBT dùng compound SNBT giống `/summon` và được kiểm tra mà không spawn entity thật.
-- `itemspawner`: Mở GUI; đặt vật phẩm nguồn vào ô giữa rồi xác nhận. Vật phẩm gốc sẽ được trả lại.
-- Tên là tùy chọn. Khoảng trắng tự đổi thành `_`; nếu bỏ qua, tên mặc định là `<entity>_spawner` hoặc `<item>_spawner`.
-
-Ví dụ:
-
-```bash
-/ss add smartspawner zombie {}
-/ss add smartspawner minecraft:zombie
-/ss add smartspawner zombie Boss Room {NoAI:1b,Silent:1b}
-/ss add itemspawner Jump Boost Farm
-```
-
-Lệnh không ghi đè tên cấu hình đã tồn tại.
-
-</CommandRow>
-
 ### /ss reload
 
 <CommandRow commands="/ss reload" permission="smartspawner.command.reload">

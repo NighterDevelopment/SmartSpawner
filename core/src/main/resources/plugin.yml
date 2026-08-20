@@ -90,14 +90,6 @@ permissions:
     description: Allow highlighting nearby spawners through walls
     default: op
 
-  smartspawner.command.edit:
-    description: Allow editing SmartSpawner and ItemSpawner settings in game
-    default: op
-
-  smartspawner.command.add:
-    description: Allow adding SmartSpawner and ItemSpawner entries
-    default: op
-
   smartspawner.command.set:
     description: Allow setting SmartSpawner stack size, range, and delay
     default: op

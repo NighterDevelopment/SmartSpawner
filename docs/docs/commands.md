@@ -52,42 +52,6 @@ Give Item Spawners to a player.
 
 ## Admin Commands
 
-### /ss edit
-
-<CommandRow :commands="['/ss edit smartspawner', '/ss edit itemspawner']" permission="smartspawner.command.edit">
-
-Open the in-game configuration editor for one spawner type.
-
-- `smartspawner`: Edit entries in `spawner_mobs.yml`
-- `itemspawner`: Edit entries in `spawner_items.yml`
-- Each target has its own GUI. There is no switch between the two editors.
-- Saved changes are applied immediately; `/ss reload` is not required.
-
-</CommandRow>
-
-### /ss add
-
-<CommandRow :commands="['/ss add smartspawner &lt;mob&gt; [name] [NBT tag]', '/ss add itemspawner [name]']" permission="smartspawner.command.add">
-
-Create a new entry before editing its XP, texture, and loot.
-
-- `smartspawner`: Tab-completes mobs available in the current server version. Name and NBT are optional. NBT defaults to `{}` and uses the same SNBT compound syntax as `/summon`.
-- `itemspawner`: Accepts an optional name, then opens a GUI. Put the source item in the middle slot and confirm.
-- Spaces in a supplied name are converted to underscores. Without a name, the defaults are `<entity>_spawner` and `<item>_spawner`.
-
-Examples:
-
-```bash
-/ss add smartspawner zombie {}
-/ss add smartspawner minecraft:zombie
-/ss add smartspawner zombie Boss Room {NoAI:1b,Silent:1b}
-/ss add itemspawner Jump Boost Farm
-```
-
-An existing configuration name is not overwritten.
-
-</CommandRow>
-
 ### /ss reload
 
 <CommandRow commands="/ss reload" permission="smartspawner.command.reload">
