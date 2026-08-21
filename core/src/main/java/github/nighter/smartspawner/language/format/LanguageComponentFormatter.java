@@ -41,9 +41,18 @@ public final class LanguageComponentFormatter {
     }
 
     public static Component translatableLootLine(String template, Material material, String amount, String chance) {
+        return translatableLootLine(template, Component.translatable(material.translationKey()), amount, chance);
+    }
+
+    /**
+     * Same as the material overload, but the item name is supplied as a ready component. This is how a
+     * caller passes an item's effective name (for example a tipped arrow's potion-specific name) instead
+     * of the plain material translation, so the loot line reads the way the item does in an inventory.
+     */
+    public static Component translatableLootLine(String template, Component itemName, String amount, String chance) {
         if (template == null) {
             return noItalic(Component.text(amount + " ")
-                    .append(Component.translatable(material.translationKey()))
+                    .append(itemName)
                     .append(Component.text(" (" + chance + ")")));
         }
 
@@ -68,8 +77,42 @@ public final class LanguageComponentFormatter {
                 .deserialize(ColorUtil.translateHexColorCodes(afterRaw));
 
         return noItalic(before
-                .append(Component.translatable(material.translationKey()).color(itemColor))
+                .append(itemName.colorIfAbsent(itemColor))
                 .append(after));
+    }
+
+    /**
+     * Renders a lore template where a single placeholder is replaced by a ready component (an item's
+     * effective name) rather than text. Every other line, and the text around the placeholder, keeps the
+     * legacy colour handling. Used by GUIs that want a readable, correctly translated item name in the
+     * lore instead of a raw config value such as an {@code nbt:} blob.
+     */
+    public static List<Component> loreWithItemName(
+            List<String> template,
+            Function<String, String> lineFormatter,
+            String placeholder,
+            Component itemName
+    ) {
+        LegacyComponentSerializer legacySerial = LegacyComponentSerializer.legacySection();
+        List<Component> result = new ArrayList<>(template.size());
+
+        for (String line : template) {
+            int index = line.indexOf(placeholder);
+            if (index < 0) {
+                result.add(noItalic(legacySerial.deserialize(lineFormatter.apply(line))));
+                continue;
+            }
+
+            String beforeRaw = line.substring(0, index);
+            String afterRaw = line.substring(index + placeholder.length());
+            TextColor itemColor = extractLastColor(beforeRaw, TextColor.color(0xFFFFFF));
+
+            Component before = legacySerial.deserialize(lineFormatter.apply(beforeRaw));
+            Component after = legacySerial.deserialize(lineFormatter.apply(afterRaw));
+            result.add(noItalic(before.append(itemName.colorIfAbsent(itemColor)).append(after)));
+        }
+
+        return result;
     }
 
     public static List<Component> loreComponents(

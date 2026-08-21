@@ -129,7 +129,7 @@ public class SpawnerItemFactory {
                         item.minAmount() + "-" + item.maxAmount();
                 String chance = String.format("%.1f", item.chance());
                 lootComponents.add(languageManager.buildTranslatableLootLine(
-                        lootItemsKey, item.material(), amountRange, chance));
+                        lootItemsKey, item.template(), amountRange, chance));
             }
             String displayName = languageManager.getItemName(nameKey, placeholders);
             meta.setDisplayName(displayName);
@@ -268,7 +268,7 @@ public class SpawnerItemFactory {
                         item.minAmount() + "-" + item.maxAmount();
                 String chance = String.format("%.1f", item.chance());
                 lootComponents.add(languageManager.buildTranslatableLootLine(
-                        lootItemsKey, item.material(), amountRange, chance));
+                        lootItemsKey, item.template(), amountRange, chance));
             }
 
             String displayName = languageManager.getItemName(nameKey, placeholders);

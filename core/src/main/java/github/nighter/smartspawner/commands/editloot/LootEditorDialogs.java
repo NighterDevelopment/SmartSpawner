@@ -124,12 +124,22 @@ public class LootEditorDialogs {
         ActionButton cancel = ActionButton.create(label("editloot.dialog_cancel"), null, HALF_WIDTH,
                 click((view, audience) -> onCancel(player, form)));
 
+        // Save and Cancel share the top row; Delete sits alone below, so it is only offered for an
+        // existing row and is kept away from Save to avoid a misclick.
+        List<ActionButton> buttons = new ArrayList<>(3);
+        buttons.add(save);
+        buttons.add(cancel);
+        if (!form.isAdd()) {
+            buttons.add(ActionButton.create(label("editloot.dialog_delete"), null, HALF_WIDTH,
+                    click((view, audience) -> onDelete(player, form))));
+        }
+
         player.showDialog(Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(label("editloot.dialog_title"))
                         .body(body)
                         .inputs(inputs)
                         .build())
-                .type(DialogType.multiAction(List.of(save, cancel), null, 2))));
+                .type(DialogType.multiAction(buttons, null, 2))));
     }
 
     // ============== Save / cancel ==============
@@ -182,6 +192,21 @@ public class LootEditorDialogs {
             if (form.isAdd()) {
                 returnItem(player, form.pending());
             }
+            ui.openLootList(player, form.target(), form.entryKey());
+        });
+    }
+
+    /** Removes an existing loot row from the entry, then returns to the loot list. */
+    private void onDelete(Player player, Form form) {
+        show(player, () -> {
+            if (service.readLoot(form.target(), form.entryKey(), form.lootKey()) == null) {
+                plugin.getMessageService().sendMessage(player, "editloot.entry_missing");
+                ui.openLootList(player, form.target(), form.entryKey());
+                return;
+            }
+            service.removeLoot(form.target(), form.entryKey(), form.lootKey());
+            plugin.getMessageService().sendMessage(player, "editloot.loot_deleted",
+                    Map.of("label", form.lootKey()));
             ui.openLootList(player, form.target(), form.entryKey());
         });
     }

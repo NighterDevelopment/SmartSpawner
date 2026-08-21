@@ -134,6 +134,15 @@ public final class ItemLanguageSection {
         );
     }
 
+    public Component translatableLootLine(String templateKey, Component itemName, String amount, String chance) {
+        return LanguageComponentFormatter.translatableLootLine(
+                locale().items().getString(templateKey),
+                itemName,
+                amount,
+                chance
+        );
+    }
+
     public List<Component> loreComponents(
             String key,
             Map<String, String> placeholders,

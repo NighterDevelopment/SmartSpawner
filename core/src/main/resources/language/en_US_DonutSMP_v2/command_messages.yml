@@ -224,6 +224,9 @@ editloot:
   loot_replaced:
     message: "&#37eb9aUpdated the item for &f{label}&#37eb9a."
     sound: entity.experience_orb.pickup
+  loot_deleted:
+    message: "&#FF6B6BRemoved loot entry &f{label}&#FF6B6B."
+    sound: entity.item.pickup
   capture_empty:
     message: "&#FF4444Put an item in the middle slot first."
     sound: block.note_block.bass

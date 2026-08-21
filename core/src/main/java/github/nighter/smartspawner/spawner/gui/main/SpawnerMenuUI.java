@@ -648,18 +648,17 @@ public class SpawnerMenuUI {
                 String formattedAmount = languageManager.formatNumber(amount);
                 String chance = String.format("%.1f", lootItem.chance()) + "%";
                 components.add(languageManager.buildTranslatableGuiLootLine(
-                        LOOT_ITEM_FORMAT_KEY, material, formattedAmount, chance));
+                        LOOT_ITEM_FORMAT_KEY, lootItem.template(), formattedAmount, chance));
             }
         } else {
             List<Map.Entry<ItemSignature, Long>> sortedItems =
                     new ArrayList<>(storedItems.entrySet());
             sortedItems.sort(Comparator.comparing(e -> e.getKey().getMaterialName()));
             for (Map.Entry<ItemSignature, Long> entry : sortedItems) {
-                Material material = entry.getKey().getMaterial();
                 long amount = entry.getValue();
                 String formattedAmount = languageManager.formatNumber(amount);
                 components.add(languageManager.buildTranslatableGuiLootLine(
-                        LOOT_ITEM_FORMAT_KEY, material, formattedAmount, ""));
+                        LOOT_ITEM_FORMAT_KEY, entry.getKey().getTemplate(), formattedAmount, ""));
             }
         }
         return components;

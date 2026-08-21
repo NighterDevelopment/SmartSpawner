@@ -2,6 +2,7 @@ package github.nighter.smartspawner.commands.editloot;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.language.LanguageManager;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -77,19 +78,31 @@ public class LootEditorUI {
     private ItemStack buildLootIcon(LootEditorService.LootView loot) {
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("label", loot.key());
-        placeholders.put("item", loot.rawItem());
         placeholders.put("amount", loot.amountLabel());
         placeholders.put("chance", trim(loot.chance()));
         String durability = loot.durabilityLabel();
         placeholders.put("durability", durability == null ? "-" : durability);
 
         if (loot.isBroken()) {
+            // A broken row cannot be rendered as its item, so its raw value is shown for the admin to fix.
+            placeholders.put("item", loot.rawItem());
             return simpleItem(Material.BARRIER, "editloot.loot_broken", placeholders);
         }
 
-        // Show the real item so the admin sees exactly what drops, then overwrite its text.
+        // Show the real item so the admin sees exactly what drops, then overwrite its text. The item name
+        // is inserted as a component so the lore reads a readable, translated name (a tipped arrow shows
+        // "Arrow of Strength") instead of the raw config value, which can be a long nbt blob.
         ItemStack icon = loot.preview().clone();
-        applyText(icon, "editloot.loot_entry", placeholders);
+        ItemMeta meta = icon.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(lang().commandGui().name("editloot.loot_entry.name", placeholders));
+            List<Component> lore = lang().commandGui().loreWithItemName(
+                    "editloot.loot_entry.lore", placeholders, "{item}", loot.preview().effectiveName());
+            if (!lore.isEmpty()) {
+                meta.lore(lore);
+            }
+            icon.setItemMeta(meta);
+        }
         return icon;
     }
 

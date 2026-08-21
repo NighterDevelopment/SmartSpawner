@@ -224,6 +224,9 @@ editloot:
   loot_replaced:
     message: "&#37eb9aĐã đổi vật phẩm cho &f{label}&#37eb9a."
     sound: entity.experience_orb.pickup
+  loot_deleted:
+    message: "&#FF6B6BĐã xóa loot &f{label}&#FF6B6B."
+    sound: entity.item.pickup
   capture_empty:
     message: "&#FF4444Hãy đặt một vật phẩm vào ô giữa trước."
     sound: block.note_block.bass

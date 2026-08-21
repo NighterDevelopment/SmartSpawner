@@ -279,6 +279,8 @@ editloot:
     name: '&aLưu'
   dialog_cancel:
     name: '&cHủy'
+  dialog_delete:
+    name: '&4Xóa loot'
   field_amount:
     name: 'Số lượng (vd: 1 hoặc 0-2)'
   field_chance:

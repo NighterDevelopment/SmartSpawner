@@ -279,6 +279,8 @@ editloot:
     name: '&aSave'
   dialog_cancel:
     name: '&cCancel'
+  dialog_delete:
+    name: '&4Delete loot'
   field_amount:
     name: 'Amount (e.g. 1 or 0-2)'
   field_chance:

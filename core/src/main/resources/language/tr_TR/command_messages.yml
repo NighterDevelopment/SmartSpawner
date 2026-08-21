@@ -224,6 +224,9 @@ editloot:
   loot_replaced:
     message: "&#37eb9a{label}&#37eb9a için eşya güncellendi."
     sound: entity.experience_orb.pickup
+  loot_deleted:
+    message: "&#FF6B6B{label}&#FF6B6B ganimeti kaldırıldı."
+    sound: entity.item.pickup
   capture_empty:
     message: "&#FF4444Önce ortadaki yuvaya bir eşya koy."
     sound: block.note_block.bass

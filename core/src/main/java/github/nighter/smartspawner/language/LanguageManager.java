@@ -13,6 +13,7 @@ import github.nighter.smartspawner.language.section.ItemLanguageSection;
 import github.nighter.smartspawner.language.section.MessageLanguageSection;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -251,6 +252,34 @@ public class LanguageManager {
             String chance
     ) {
         return guiLanguage.translatableLootLine(templateKey, material, amount, chance);
+    }
+
+    /**
+     * As above, but names the item from a real {@link ItemStack} so its effective name is used (a tipped
+     * arrow shows "Arrow of Strength", not "Tipped Arrow"). Falls back to the material name when the item
+     * is null.
+     */
+    public Component buildTranslatableGuiLootLine(
+            String templateKey,
+            ItemStack item,
+            String amount,
+            String chance
+    ) {
+        return guiLanguage.translatableLootLine(templateKey, itemDisplayName(item), amount, chance);
+    }
+
+    public Component buildTranslatableLootLine(
+            String templateKey,
+            ItemStack item,
+            String amount,
+            String chance
+    ) {
+        return items.translatableLootLine(templateKey, itemDisplayName(item), amount, chance);
+    }
+
+    /** The name the client shows for this item, keeping component-specific names like potion effects. */
+    private static Component itemDisplayName(ItemStack item) {
+        return item == null ? Component.empty() : item.effectiveName();
     }
 
     public List<Component> buildItemLoreAsComponents(

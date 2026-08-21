@@ -279,6 +279,8 @@ editloot:
     name: '&aKaydet'
   dialog_cancel:
     name: '&cİptal'
+  dialog_delete:
+    name: '&4Ganimeti sil'
   field_amount:
     name: 'Miktar (örn. 1 veya 0-2)'
   field_chance:
