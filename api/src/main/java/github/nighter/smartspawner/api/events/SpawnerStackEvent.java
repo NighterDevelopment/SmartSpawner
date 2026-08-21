@@ -88,13 +88,20 @@ public class SpawnerStackEvent extends Event implements Cancellable {
      */
     public enum StackSource {
         /**
-         * Stacked by placing a spawner on another.
+         * Stacked by right-clicking a spawner in hand onto an existing spawner block.
          */
         PLACE,
 
         /**
          * Stacked through the GUI interface.
          */
-        GUI
+        GUI,
+
+        /**
+         * Stacked while placing a spawner block, for example sneak-placing a whole held
+         * stack at once. The block itself is placed in the same action, so the
+         * {@link SpawnerPlaceEvent} for that placement fires alongside this event.
+         */
+        BLOCK_PLACE
     }
 }

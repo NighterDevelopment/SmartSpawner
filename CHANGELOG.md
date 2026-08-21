@@ -8,9 +8,11 @@ All notable changes to SmartSpawner are documented in this file.
 - Custom spawners can now be created. The same mob or item can be set up under several names, each with its own drop table, so one entity can power many different spawners.
 - Custom items can now be spawner drops, including potions, enchanted gear, named items and items from other plugins. They keep all of their data and show their real in-game name in every menu.
 - `/ss editloot <name>` opens an in-game loot editor for mob and item spawners. Drop an item into the menu to add it as a drop, captured exactly with all of its data, then set its amount, chance and durability. Existing drops can be edited or removed. Durability is shown only for tools and weapons.
+- Sneak stacking and sneak placing can each be turned off with `sneak_stack` and `sneak_place` in `config.yml`. Both stay on by default.
 
 ### Fixed
 - Item Spawner holograms now show the spawned item's name instead of a generic entity label.
+- Sneak-placing a whole stack of spawners now fires the stacking event in the API, so it can be cancelled and limited like normal stacking.
 
 ### Changed
 - `/ss give spawner` and `/ss give item_spawner` now select a spawner by its configured name.

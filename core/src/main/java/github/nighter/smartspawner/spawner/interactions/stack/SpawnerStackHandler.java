@@ -71,7 +71,8 @@ public class SpawnerStackHandler {
         }
 
         try {
-            handleSpawnerStack(player, spawnerData, itemInHand, player.isSneaking());
+            boolean stackAll = player.isSneaking() && Config.get().isSneakStackEnabled();
+            handleSpawnerStack(player, spawnerData, itemInHand, stackAll);
         } finally {
             releaseStackLock(block.getLocation());
             updateLastStackTime(player);

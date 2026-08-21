@@ -89,6 +89,14 @@ XP tối đa spawner lưu trước khi ngừng tạo thêm.
 Số spawner tối đa có thể xếp trong một block.
 </ConfigProperty>
 
+<ConfigProperty name="sneak_stack" value="true" type="boolean">
+Khi <code>true</code>, khom người lúc phải chuột vào spawner sẽ xếp toàn bộ spawner đang cầm vào chồng cùng lúc. Khi <code>false</code>, mỗi lần bấm chỉ xếp một cái.
+</ConfigProperty>
+
+<ConfigProperty name="sneak_place" value="true" type="boolean">
+Khi <code>true</code>, khom người lúc đặt spawner sẽ đặt cả chồng đang cầm thành một spawner. Khi <code>false</code>, mỗi lần đặt chỉ một cái.
+</ConfigProperty>
+
 <ConfigProperty name="allow_exp_mending" value="true" type="boolean">
 Cho phép XP đã lưu sửa vật phẩm có Mending khi người chơi nhận XP.
 </ConfigProperty>

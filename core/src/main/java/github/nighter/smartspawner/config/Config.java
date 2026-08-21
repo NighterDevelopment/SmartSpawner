@@ -38,6 +38,8 @@ public class Config {
 
     // Spawner property settings
     private final boolean allowExpMending;
+    private final boolean sneakStackEnabled;
+    private final boolean sneakPlaceEnabled;
 
     // Natural spawner settings
     private final boolean naturalBreakable;
@@ -73,6 +75,10 @@ public class Config {
         // Spawner property settings
         this.allowExpMending = config.getBoolean(
                 "spawner_properties.default.allow_exp_mending", true);
+        this.sneakStackEnabled = config.getBoolean(
+                "spawner_properties.default.sneak_stack", true);
+        this.sneakPlaceEnabled = config.getBoolean(
+                "spawner_properties.default.sneak_place", true);
 
         // Natural spawner settings
         this.naturalBreakable = config.getBoolean("natural_spawner.breakable", false);

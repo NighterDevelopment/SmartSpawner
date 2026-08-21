@@ -29,6 +29,12 @@ spawner_properties:
     max_stored_exp: 1000
     max_stack_size: 10000
 
+    # Sneak to stack every held spawner onto one at once. Off stacks one at a time.
+    sneak_stack: true
+
+    # Sneak to place a whole held stack as one spawner. Off places one at a time.
+    sneak_place: true
+
     # Let players repair held items with the XP stored in a spawner.
     allow_exp_mending: true
     protect_from_explosions: true

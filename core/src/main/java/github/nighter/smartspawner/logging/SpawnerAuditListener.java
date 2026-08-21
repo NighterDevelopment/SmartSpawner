@@ -58,8 +58,14 @@ public class SpawnerAuditListener implements Listener {
     
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSpawnerStack(SpawnerStackEvent event) {
-        SpawnerEventType eventType = event.getSource() == SpawnerStackEvent.StackSource.PLACE ? 
-                SpawnerEventType.SPAWNER_STACK_HAND : 
+        // A BLOCK_PLACE stack is part of placing a spawner block, already recorded by the
+        // matching SPAWNER_PLACE entry. Skip it here so a single placement is not logged twice.
+        if (event.getSource() == SpawnerStackEvent.StackSource.BLOCK_PLACE) {
+            return;
+        }
+
+        SpawnerEventType eventType = event.getSource() == SpawnerStackEvent.StackSource.PLACE ?
+                SpawnerEventType.SPAWNER_STACK_HAND :
                 SpawnerEventType.SPAWNER_STACK_GUI;
         
         int amountAdded = event.getNewStackSize() - event.getOldStackSize();

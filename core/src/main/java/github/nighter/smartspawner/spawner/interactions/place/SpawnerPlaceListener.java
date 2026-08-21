@@ -2,6 +2,7 @@ package github.nighter.smartspawner.spawner.interactions.place;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.api.events.SpawnerPlaceEvent;
+import github.nighter.smartspawner.api.events.SpawnerStackEvent;
 import github.nighter.smartspawner.config.Config;
 import github.nighter.smartspawner.extras.HopperService;
 import github.nighter.smartspawner.hooks.protections.CheckStackBlock;
@@ -114,6 +115,18 @@ public class SpawnerPlaceListener implements Listener {
             }
         }
 
+        // Sneak-placing a pre-stacked spawner must go through the stacking API too, otherwise
+        // addons that cancel or limit stacking via SpawnerStackEvent are bypassed. On cancel we
+        // still place a single spawner and refund the rest.
+        if (stackSize > 1 && SpawnerStackEvent.getHandlerList().getRegisteredListeners().length != 0) {
+            SpawnerStackEvent stackEvent = new SpawnerStackEvent(player, block.getLocation(), 1, stackSize,
+                    SpawnerStackEvent.StackSource.BLOCK_PLACE, storedEntityType);
+            Bukkit.getPluginManager().callEvent(stackEvent);
+            if (stackEvent.isCancelled()) {
+                stackSize = 1;
+            }
+        }
+
         if (!immediatelyConsumeItems(player, item, stackSize)) {
             event.setCancelled(true);
             return;
@@ -206,7 +219,7 @@ public class SpawnerPlaceListener implements Listener {
             return 1;
         }
 
-        if (player.isSneaking()) {
+        if (player.isSneaking() && Config.get().isSneakPlaceEnabled()) {
             return Math.min(item.getAmount(), plugin.getConfig().getInt("spawner_properties.default.max_stack_size", 10000));
         } else {
             return 1;

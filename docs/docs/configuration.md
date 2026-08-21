@@ -91,6 +91,14 @@ Maximum XP the spawner can store before it stops generating more.
 Maximum number of spawners that can be stacked into one block.
 </ConfigProperty>
 
+<ConfigProperty name="sneak_stack" value="true" type="boolean">
+When <code>true</code>, sneaking while right-clicking a spawner adds every held spawner to the stack at once. When <code>false</code>, each click adds one.
+</ConfigProperty>
+
+<ConfigProperty name="sneak_place" value="true" type="boolean">
+When <code>true</code>, sneaking while placing a spawner places the whole held stack as one spawner. When <code>false</code>, each placement adds one.
+</ConfigProperty>
+
 <ConfigProperty name="allow_exp_mending" value="true" type="boolean">
 When <code>true</code>, stored XP can repair items with the Mending enchantment when players claim XP from the spawner.
 </ConfigProperty>
