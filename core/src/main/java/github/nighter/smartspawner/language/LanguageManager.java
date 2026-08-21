@@ -14,6 +14,7 @@ import github.nighter.smartspawner.language.section.MessageLanguageSection;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -265,7 +266,7 @@ public class LanguageManager {
             String amount,
             String chance
     ) {
-        return guiLanguage.translatableLootLine(templateKey, itemDisplayName(item), amount, chance);
+        return guiLanguage.translatableLootLine(templateKey, getItemDisplayName(item), amount, chance);
     }
 
     public Component buildTranslatableLootLine(
@@ -274,12 +275,21 @@ public class LanguageManager {
             String amount,
             String chance
     ) {
-        return items.translatableLootLine(templateKey, itemDisplayName(item), amount, chance);
+        return items.translatableLootLine(templateKey, getItemDisplayName(item), amount, chance);
     }
 
-    /** The name the client shows for this item, keeping component-specific names like potion effects. */
-    private static Component itemDisplayName(ItemStack item) {
-        return item == null ? Component.empty() : item.effectiveName();
+    /**
+     * The name to show for this item: its custom name if it has one, otherwise the effective name the
+     * client would display (which keeps component-specific names like potion effects).
+     */
+    public Component getItemDisplayName(ItemStack item) {
+        if (item == null) return Component.empty();
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null && meta.hasDisplayName()) {
+            Component custom = meta.displayName();
+            if (custom != null) return custom;
+        }
+        return item.effectiveName();
     }
 
     public List<Component> buildItemLoreAsComponents(

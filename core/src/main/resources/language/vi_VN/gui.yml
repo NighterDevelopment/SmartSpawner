@@ -13,6 +13,7 @@ spawner_storage_item:
   # {max_slots} - Maximum number of slots in the storage (formatted with commas)
   # {current_items} - Current number of items in the storage
   # {percent_storage_rounded} - Percentage of storage used (0-100)
+  # {total_sell_price} - Total sell value currently stored in the spawner
   # {entity} - The spawner's entity type (normal capitalization)
   # {ᴇɴᴛɪᴛʏ} - The spawner's entity type (small caps)
   name: '&fᴍở &#5DB5F1ᴋʜᴏ'
@@ -21,6 +22,7 @@ spawner_storage_item:
   # {max_slots} - Maximum number of slots in the storage (formatted with commas)
   # {current_items} - Current number of items in the storage
   # {percent_storage_rounded} - Percentage of storage used (0-100)
+  # {total_sell_price} - Total sell value currently stored in the spawner
   # {loot_items} - The complete formatted list of loot items
   # {entity} - The spawner's entity type (normal capitalization)
   # {ᴇɴᴛɪᴛʏ} - The spawner's entity type (small caps)

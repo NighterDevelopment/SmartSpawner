@@ -97,7 +97,7 @@ public class LootEditorUI {
         if (meta != null) {
             meta.setDisplayName(lang().commandGui().name("editloot.loot_entry.name", placeholders));
             List<Component> lore = lang().commandGui().loreWithItemName(
-                    "editloot.loot_entry.lore", placeholders, "{item}", loot.preview().effectiveName());
+                    "editloot.loot_entry.lore", placeholders, "{item}", lang().getItemDisplayName(loot.preview()));
             if (!lore.isEmpty()) {
                 meta.lore(lore);
             }

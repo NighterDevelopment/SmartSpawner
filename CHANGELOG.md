@@ -5,32 +5,22 @@ All notable changes to SmartSpawner are documented in this file.
 ## 1.8.0
 
 ### Added
-- Custom items can now be spawner drops. Potions, enchanted gear, named items and items from other plugins all work.
-- Spawner cage previews preserve their configured data. Entity NBT controls the mob model, while Item Spawners display the exact source item and its components, such as potion effects.
-- `/ss editloot <name>` opens an in-game loot editor for a spawner. New drops are added by dropping an item into the menu, then setting its amount, chance and durability, with durability shown only for tools and weapons. It covers both mob and item spawners.
+- Custom spawners can now be created. The same mob or item can be set up under several names, each with its own drop table, so one entity can power many different spawners.
+- Custom items can now be spawner drops, including potions, enchanted gear, named items and items from other plugins. They keep all of their data and show their real in-game name in every menu.
+- `/ss editloot <name>` opens an in-game loot editor for mob and item spawners. Drop an item into the menu to add it as a drop, captured exactly with all of its data, then set its amount, chance and durability. Existing drops can be edited or removed. Durability is shown only for tools and weapons.
 
 ### Fixed
-- Items stored in a spawner keep their enchantments, custom names, lore and durability across restarts.
-- The total item count in `/ss list` is now exact instead of an estimate.
 - Item Spawner holograms now show the spawned item's name instead of a generic entity label.
 
 ### Changed
-- Spawner configuration entries now have custom names and declare their spawned entity or item in an `entity` or `item` child key. Spaces in names become underscores, and omitted names default to names such as `zombie_spawner` or `diamond_spawner`.
-- `/ss give spawner` and `/ss give item_spawner` now select spawners by their configuration name, allowing multiple separately configured spawners to use the same entity or item.
-- SQLite is now the default storage mode and is faster than the old YAML files on servers of any size. MySQL and MariaDB work as before, including cross-server spawner listing.
-- SQLite reads and saves at the same time, so `/ss list` no longer waits for a save to finish.
-- How often spawner data is saved can now be set with `database.autosave-interval`, which defaults to 3 minutes. It was previously fixed at 5 minutes.
-- Selling is now in its own file, `sell_integration.yml`. It replaces the `sell_integration` section of `config.yml` and `item_prices.yml`, and existing settings and prices move across on the first start.
-- Action logging is now in one file, `activity_log.yml`. It replaces `discord_logging.yml` and the `logging` section of `config.yml`, and existing settings move across on the first start.
-- The `database` section of `config.yml` was simplified. Every setting sits at one level and the connection pool has a single size option.
+- `/ss give spawner` and `/ss give item_spawner` now select a spawner by its configured name.
+- SQLite is now the default storage and is faster than the old YAML files on servers of any size. MySQL and MariaDB work as before, including cross-server spawner listing.
+- How often spawner data is saved can now be set with `database.autosave-interval`, which defaults to 3 minutes.
+- Large spawner stacks and full storages use far less CPU and memory. Loot generation, storage menus, hoppers and selling were all reworked to stay fast with large amounts of items.
+- Menus respond faster to clicks.
 - Settings that only take effect after a full restart are now marked RESTART in `config.yml`.
-- The two spawner settings files were renamed, and loot entries use a new format. See the details below.
-- Loot generation and virtual storage now keep compact item totals instead of creating a separate item stack for every generated drop. This substantially reduces CPU and memory use, especially for large spawner stacks.
-- Loot generation no longer copies each configured drop just to check its type, so spawners with custom item drops cost less every cycle.
-- Storage menus render only the page being viewed, and hoppers read stored items in small batches. Spawners with large inventories no longer rebuild their entire contents for these actions.
-- Selling now works directly with the compact stored item totals and stays synchronized with loot and storage updates, reducing processing overhead and avoiding overlapping changes.
-- Folia tasks that are already on the correct region or global thread run immediately, avoiding unnecessary scheduling delays.
-- GUI controls respond faster: the built-in anti-spam delay was reduced from 300 milliseconds to 100 milliseconds, and rejected rapid clicks no longer extend the delay.
+- Selling and action logging settings moved into clearer files, and the `database` section was simplified. Existing settings move across automatically on the first start. See the details below.
+- The two spawner settings files were renamed and loot entries use a new format. See the details below.
 
 ### Removed
 - YAML storage was removed. Servers still set to `YAML` are switched to `SQLITE` automatically.
@@ -56,6 +46,7 @@ All notable changes to SmartSpawner are documented in this file.
 - The `default_material` line was removed. The fallback head is now built in.
 - A loot entry the server cannot read is skipped, and the console names the mob and the entry.
 - The guide in the comments at the top of both files was replaced with a link to the documentation site.
+- The storage button in the main menu now accepts the `{total_sell_price}` placeholder, showing the sell value of everything stored, as the info button already does.
 - `discord_logging.yml` is now `activity_log.yml`, and the `logging` section of `config.yml` became its `file` section. Both moves happen on the first start and keep the configured values.
 - Inside that file the Discord settings sit under `discord`, and the per-event message templates sit under `embeds`, one block per event with the `embed` line removed.
 - The `sell_integration` section of `config.yml` became the top level of `sell_integration.yml`, so its keys lost the `sell_integration.` prefix. `item_prices.yml` became the `custom_prices.prices` section of that file and is deleted once its prices have been copied across.

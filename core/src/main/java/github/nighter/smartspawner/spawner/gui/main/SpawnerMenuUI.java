@@ -237,17 +237,17 @@ public class SpawnerMenuUI {
         
         // Define all available placeholders
         Set<String> availablePlaceholders = Set.of(
-            "max_slots", "current_items", "percent_storage_rounded", "loot_items"
+            "max_slots", "current_items", "percent_storage_rounded", "total_sell_price", "loot_items"
         );
-        
+
         // Detect which placeholders are actually used
         Set<String> usedPlaceholders = new HashSet<>();
         usedPlaceholders.addAll(detectUsedPlaceholders(nameTemplate, availablePlaceholders));
         usedPlaceholders.addAll(detectUsedPlaceholders(loreTemplate, availablePlaceholders));
-        
+
         // Build only the placeholders that are actually used
         Map<String, String> placeholders = new HashMap<>();
-        
+
         if (usedPlaceholders.contains("max_slots")) {
             placeholders.put("max_slots", languageManager.formatNumber(maxSlots));
         }
@@ -257,6 +257,12 @@ public class SpawnerMenuUI {
         if (usedPlaceholders.contains("percent_storage_rounded")) {
             int percentStorage = calculatePercentage(currentItems, maxSlots);
             placeholders.put("percent_storage_rounded", String.valueOf(percentStorage));
+        }
+        if (usedPlaceholders.contains("total_sell_price")) {
+            if (spawner.isSellValueDirty()) {
+                spawner.recalculateSellValue();
+            }
+            placeholders.put("total_sell_price", languageManager.formatNumber(spawner.getAccumulatedSellValue()));
         }
         final List<Component> finalLootComponents = usedPlaceholders.contains("loot_items") 
                 ? buildLootItemComponents(spawner, virtualInventory.getConsolidatedItems())
