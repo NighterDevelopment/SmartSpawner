@@ -13,6 +13,7 @@ All notable changes to SmartSpawner are documented in this file.
 ### Fixed
 - Item Spawner holograms now show the spawned item's name instead of a generic entity label.
 - Sneak-placing a whole stack of spawners now fires the stacking event in the API, so it can be cancelled and limited like normal stacking.
+- A spawner type change cancelled through the API no longer takes the player's spawn egg.
 
 ### Changed
 - `/ss give spawner` and `/ss give item_spawner` now select a spawner by its configured name.

@@ -71,8 +71,11 @@ public class SpawnEggHandler {
 
         if (optionalEntityType.isPresent()) {
             EntityType newType = optionalEntityType.get();
-            updateSpawner(player, spawner, spawnerData, newType);
-            consumeItemIfSurvival(player, spawnEgg);
+            // Only consume the egg if the change actually went through. A cancelled
+            // SpawnerEggChangeEvent leaves the spawner unchanged, so the egg must stay too.
+            if (updateSpawner(player, spawner, spawnerData, newType)) {
+                consumeItemIfSurvival(player, spawnEgg);
+            }
         }
     }
 
@@ -83,12 +86,14 @@ public class SpawnEggHandler {
      * @param spawner     The spawner to update
      * @param spawnerData The spawner data
      * @param newType     The new entity type
+     * @return {@code true} if the spawner was changed, {@code false} if a listener
+     *         cancelled {@link SpawnerEggChangeEvent}
      */
-    private void updateSpawner(Player player, CreatureSpawner spawner, SpawnerData spawnerData, EntityType newType) {
+    private boolean updateSpawner(Player player, CreatureSpawner spawner, SpawnerData spawnerData, EntityType newType) {
         if(SpawnerEggChangeEvent.getHandlerList().getRegisteredListeners().length != 0) {
             SpawnerEggChangeEvent e = new SpawnerEggChangeEvent(player, spawner.getLocation(), spawnerData.getEntityType(), newType);
             Bukkit.getPluginManager().callEvent(e);
-            if(e.isCancelled()) return;
+            if(e.isCancelled()) return false;
         }
 
         // Update spawner data
@@ -105,6 +110,7 @@ public class SpawnEggHandler {
         placeholders.put("entity", languageManager.getFormattedMobName(newType));
         placeholders.put("ᴇɴᴛɪᴛʏ", languageManager.getSmallCaps(placeholders.get("entity")));
         messageService.sendMessage(player, CHANGED_MESSAGE_KEY, placeholders);
+        return true;
     }
 
     /**
