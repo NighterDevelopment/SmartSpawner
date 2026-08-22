@@ -2,17 +2,14 @@ package github.nighter.smartspawner.spawner.gui.synchronization.services;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.Scheduler;
-import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.spawner.gui.layout.GuiButton;
 import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuHolder;
 import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuUI;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +27,6 @@ public class GuiUpdateService {
     public static final int UPDATE_ALL = UPDATE_CHEST | UPDATE_INFO | UPDATE_EXP;
 
     private final SmartSpawner plugin;
-    private final LanguageManager languageManager;
     private final SpawnerMenuUI spawnerMenuUI;
 
     // Batched update tracking
@@ -39,7 +35,6 @@ public class GuiUpdateService {
 
     public GuiUpdateService(SmartSpawner plugin) {
         this.plugin = plugin;
-        this.languageManager = plugin.getLanguageManager();
         this.spawnerMenuUI = plugin.getSpawnerMenuUI();
     }
 
@@ -201,66 +196,11 @@ public class GuiUpdateService {
         if (areItemsEqual(currentSpawnerItem, newSpawnerItem)) {
             return false;
         }
-        preserveTimerInfo(currentSpawnerItem, newSpawnerItem);
+        // The rebuilt item already carries the current countdown (SpawnerMenuUI resolves {time}
+        // against the live timer on every build), so there is nothing to carry over from the old
+        // item.
         inventory.setItem(spawnerInfoSlot, newSpawnerItem);
         return true;
-    }
-
-    /**
-     * Preserves timer information when updating spawner info item.
-     */
-    private void preserveTimerInfo(ItemStack currentItem, ItemStack newItem) {
-        if (currentItem == null || newItem == null) {
-            return;
-        }
-        ItemMeta currentMeta = currentItem.getItemMeta();
-        ItemMeta newMeta = newItem.getItemMeta();
-
-        if (currentMeta == null || !currentMeta.hasLore() || newMeta == null || !newMeta.hasLore()) {
-            return;
-        }
-
-        List<String> currentLore = currentMeta.getLore();
-        List<String> newLore = newMeta.getLore();
-
-        if (currentLore == null || newLore == null) {
-            return;
-        }
-
-        // Find timer line in new lore
-        int newTimerLineIndex = -1;
-        for (int i = 0; i < newLore.size(); i++) {
-            if (newLore.get(i).contains("{time}")) {
-                newTimerLineIndex = i;
-                break;
-            }
-        }
-
-        if (newTimerLineIndex == -1) {
-            return;
-        }
-
-        // Extract timer value from current lore
-        if (newTimerLineIndex < currentLore.size()) {
-            String currentLine = currentLore.get(newTimerLineIndex);
-            String newLine = newLore.get(newTimerLineIndex);
-
-            if (!currentLine.contains("{time}") && newLine.contains("{time}")) {
-                String currentTimerValue = extractTimerValue(currentLine, newLine);
-                
-                if (currentTimerValue != null && !currentTimerValue.isEmpty()) {
-                    Map<String, String> timerPlaceholder = Collections.singletonMap("time", currentTimerValue);
-                    List<String> updatedLore = new ArrayList<>(newLore.size());
-
-                    for (String line : newLore) {
-                        updatedLore.add(languageManager.applyOnlyPlaceholders(line, timerPlaceholder));
-                    }
-
-                    newMeta.setLore(updatedLore);
-                    newItem.setItemMeta(newMeta);
-                }
-            }
-        }
     }
 
     /**
@@ -278,31 +218,6 @@ public class GuiUpdateService {
             return false;
         }
         return item1.getAmount() == item2.getAmount() && item1.isSimilar(item2);
-    }
-
-    /**
-     * Extracts timer value from current line using template matching.
-     */
-    private String extractTimerValue(String currentLine, String newLine) {
-        String newLineTemplate = newLine.replace("{time}", "TIMER_PLACEHOLDER");
-        String cleanNewTemplate = ChatColor.stripColor(newLineTemplate);
-        String cleanCurrentLine = ChatColor.stripColor(currentLine);
-
-        int placeholderIndex = cleanNewTemplate.indexOf("TIMER_PLACEHOLDER");
-        if (placeholderIndex >= 0 && cleanCurrentLine.length() >= placeholderIndex) {
-            String beforePlaceholder = cleanNewTemplate.substring(0, placeholderIndex);
-            String afterPlaceholder = cleanNewTemplate.substring(placeholderIndex + "TIMER_PLACEHOLDER".length());
-
-            if (cleanCurrentLine.startsWith(beforePlaceholder) && cleanCurrentLine.endsWith(afterPlaceholder)) {
-                int startIndex = beforePlaceholder.length();
-                int endIndex = cleanCurrentLine.length() - afterPlaceholder.length();
-                if (endIndex > startIndex) {
-                    return cleanCurrentLine.substring(startIndex, endIndex).trim();
-                }
-            }
-        }
-
-        return null;
     }
 
     /**

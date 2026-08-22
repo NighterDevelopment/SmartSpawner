@@ -6,7 +6,7 @@ Before installing SmartSpawner, make sure your server meets these requirements:
 
 | Requirement | Specification |
 |-------------|---------------|
-| **Minecraft Version** | 1.21.5+ |
+| **Minecraft Version** | 1.21.6+ |
 | **Server Software** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) or compatible forks |
 | **Java Version** | Java 25+ |
 

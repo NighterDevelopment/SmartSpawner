@@ -25,7 +25,7 @@ Choose your preferred download source:
 
 | Requirement | Specification |
 |-------------|---------------|
-| **Minecraft Version** | 1.21.5+ |
+| **Minecraft Version** | 1.21.6+ |
 | **Server Software** | Paper, Folia, Purpur or compatible forks |
 | **Java Version** | Java 25+ |
 

@@ -6,7 +6,7 @@ Trước khi cài SmartSpawner, hãy đảm bảo máy chủ đáp ứng:
 
 | Yêu cầu | Thông số |
 |---------|----------|
-| **Phiên bản Minecraft** | 1.21.5+ |
+| **Phiên bản Minecraft** | 1.21.6+ |
 | **Phần mềm máy chủ** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) hoặc fork tương thích |
 | **Phiên bản Java** | Java 25+ |
 

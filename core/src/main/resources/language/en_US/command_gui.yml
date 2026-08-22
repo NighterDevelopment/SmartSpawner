@@ -276,11 +276,11 @@ editloot:
   dialog_body:
     name: '&7Amount and durability accept a range like &f0-2&7.'
   dialog_save:
-    name: '&aSave'
+    name: '&a✔ &fSave'
   dialog_cancel:
-    name: '&cCancel'
+    name: '&c← &fCancel'
   dialog_delete:
-    name: '&4Delete loot'
+    name: '&4✖ &fDelete loot'
   field_amount:
     name: 'Amount (e.g. 1 or 0-2)'
   field_chance:

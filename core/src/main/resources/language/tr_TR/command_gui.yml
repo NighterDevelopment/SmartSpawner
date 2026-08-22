@@ -276,11 +276,11 @@ editloot:
   dialog_body:
     name: '&7Miktar ve dayanıklılık &f0-2&7 gibi aralık kabul eder.'
   dialog_save:
-    name: '&aKaydet'
+    name: '&a✔ &fKaydet'
   dialog_cancel:
-    name: '&cİptal'
+    name: '&c← &fİptal'
   dialog_delete:
-    name: '&4Ganimeti sil'
+    name: '&4✖ &fGanimeti sil'
   field_amount:
     name: 'Miktar (örn. 1 veya 0-2)'
   field_chance:

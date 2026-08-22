@@ -25,7 +25,7 @@ Chọn nguồn tải bạn muốn:
 
 | Yêu cầu | Thông số |
 |---------|----------|
-| **Phiên bản Minecraft** | 1.21.5+ |
+| **Phiên bản Minecraft** | 1.21.6+ |
 | **Phần mềm máy chủ** | Paper, Folia, Purpur hoặc fork tương thích |
 | **Phiên bản Java** | Java 25+ |
 

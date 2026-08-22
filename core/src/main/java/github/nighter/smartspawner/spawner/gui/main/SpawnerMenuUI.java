@@ -389,10 +389,13 @@ public class SpawnerMenuUI {
         String buttonConfig = (button != null) ? (button.getMaterial().name() + "_" + button.getCustomTexture()) : "default";
         String cacheKey = spawner.getSpawnerId() + "|info|" + currentItems + "|" + maxSlots + "|" + currentExp + "|" + maxExp + "|" + hasShopPermission + "|" + buttonConfig;
 
-        // Check cache first
+        // Check cache first. The cached item keeps the {time} placeholder unresolved (the
+        // countdown is never baked in), so resolve it against the live timer on every return.
         ItemStack cachedItem = itemCache.get(cacheKey);
         if (cachedItem != null && !isCacheEntryExpired(cacheKey)) {
-            return cachedItem.clone();
+            ItemStack result = cachedItem.clone();
+            applyTimerPlaceholder(result, spawner, player);
+            return result;
         }
 
         // Smart placeholder detection: First, get the raw name and lore templates
@@ -507,11 +510,10 @@ public class SpawnerMenuUI {
             placeholders.put("total_sell_price", languageManager.formatNumber(totalSellPrice));
         }
 
-        // Calculate and add timer value
-        if (usedPlaceholders.contains("time")) {
-            String timerValue = plugin.getSpawnerGuiViewManager().calculateTimerDisplay(spawner, player);
-            placeholders.put("time", timerValue);
-        }
+        // NOTE: {time} is deliberately left unresolved here so it is not baked into the cached
+        // item. The live countdown is a per-tick value; baking it would freeze a stale time in the
+        // cache (and pollute the placeholder cache). It is resolved via applyTimerPlaceholder() on
+        // every return instead, so the item always shows the current countdown.
 
         // Prepare the meta modifier consumer
         Consumer<ItemMeta> metaModifier = meta -> {
@@ -545,12 +547,61 @@ public class SpawnerMenuUI {
         }
 
         if (spawnerItem.getType() == Material.SPAWNER) ItemTooltipUtil.hideTooltip(spawnerItem);
-        
-        // Cache the result
+
+        // Cache the result while {time} is still an unresolved placeholder, then resolve it on the
+        // returned copy so the cache never holds a frozen countdown value.
         itemCache.put(cacheKey, spawnerItem.clone());
         cacheTimestamps.put(cacheKey, System.currentTimeMillis());
-        
+
+        applyTimerPlaceholder(spawnerItem, spawner, player);
+
         return spawnerItem;
+    }
+
+    /**
+     * Resolves the {time} placeholder in an already-built spawner info item against the current
+     * countdown. Does nothing (and never computes the timer) when the item uses no {time}
+     * placeholder, so layouts without a timer pay no cost. This is intentionally kept outside the
+     * item and placeholder caches, because the countdown changes every second.
+     */
+    private void applyTimerPlaceholder(ItemStack item, SpawnerData spawner, Player player) {
+        if (item == null) {
+            return;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return;
+        }
+
+        boolean nameHasTimer = meta.hasDisplayName() && meta.getDisplayName().contains("{time}");
+        List<String> lore = meta.hasLore() ? meta.getLore() : null;
+        boolean loreHasTimer = false;
+        if (lore != null) {
+            for (String line : lore) {
+                if (line.contains("{time}")) {
+                    loreHasTimer = true;
+                    break;
+                }
+            }
+        }
+
+        if (!nameHasTimer && !loreHasTimer) {
+            return;
+        }
+
+        String timerValue = plugin.getSpawnerGuiViewManager().calculateTimerDisplay(spawner, player);
+
+        if (nameHasTimer) {
+            meta.setDisplayName(meta.getDisplayName().replace("{time}", timerValue));
+        }
+        if (loreHasTimer) {
+            List<String> updatedLore = new ArrayList<>(lore.size());
+            for (String line : lore) {
+                updatedLore.add(line.replace("{time}", timerValue));
+            }
+            meta.setLore(updatedLore);
+        }
+        item.setItemMeta(meta);
     }
 
     public ItemStack createExpItem(SpawnerData spawner, GuiButton button) {
