@@ -58,7 +58,7 @@ Enables extra console output for troubleshooting. Keep this <code>false</code> i
 
 <ConfigGroup name="spawner_properties">
 <template #info>
-Controls the default behavior of all Smart Spawners. These values apply to every spawner unless overridden by per-mob settings.
+These settings apply to every Smart Spawner on the server. They control how often spawners generate, how far they reach, how much they store, and how they stack and place. Every spawner shares these values; there is no per-mob override here. Per-mob values such as XP and drop tables are set in <code>spawner_mobs.yml</code> instead. See [Mob Spawners](/docs/spawner-mobs).
 </template>
 
 <ConfigGroup name="default">

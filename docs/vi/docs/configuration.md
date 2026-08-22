@@ -56,7 +56,7 @@ Bật thêm đầu ra console để chẩn đoán. Nên giữ <code>false</code>
 
 <ConfigGroup name="spawner_properties">
 <template #info>
-Điều khiển hành vi mặc định của mọi Smart Spawner, trừ khi bị ghi đè bởi cấu hình riêng theo mob.
+Các thiết lập này áp dụng cho mọi Smart Spawner trên máy chủ. Chúng điều khiển tần suất tạo vật phẩm, phạm vi kích hoạt, dung lượng kho, cách xếp chồng và đặt spawner. Mọi spawner dùng chung các giá trị này; không có ghi đè riêng theo mob ở đây. Các giá trị riêng theo mob như XP và bảng vật phẩm được đặt trong <code>spawner_mobs.yml</code>. Xem [Mob Spawners](/vi/docs/spawner-mobs).
 </template>
 
 <ConfigGroup name="default">
