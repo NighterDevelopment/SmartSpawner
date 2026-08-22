@@ -4,6 +4,8 @@ All notable changes to SmartSpawner are documented in this file.
 
 ## 1.8.0
 
+**This release contains several breaking changes.** Back up the `plugins/SmartSpawner/` folder before updating. The give commands changed shape, spawner settings files were renamed and are not carried over, YAML storage and the Bedrock form menus were removed, and several config keys moved. Read the Removed and Notes sections below before updating a live server.
+
 ### Added
 - Custom spawners can now be created. The same mob or item can be set up under several names, each with its own drop table, so one entity can power many different spawners.
 - Custom items can now be spawner drops, including potions, enchanted gear, named items and items from other plugins. They keep all of their data and show their real in-game name in every menu.
