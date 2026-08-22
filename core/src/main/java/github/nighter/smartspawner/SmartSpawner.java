@@ -91,7 +91,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     @Getter
     private static SmartSpawner instance;
     public final int DATA_VERSION = 3;
-    private final boolean debugMode = getConfig().getBoolean("debug", false);
 
     // Integration Manager
     private IntegrationManager integrationManager;
@@ -375,8 +374,6 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
                     }
                 }
             }
-        } else {
-            debug("Local data migration is disabled in config.");
         }
 
         getLogger().info(dbType + " database storage initialized successfully.");
@@ -663,11 +660,5 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
 
     public long getTimeFromConfig(String path, String defaultValue) {
         return timeFormatter.getTimeFromConfig(path, defaultValue);
-    }
-
-    public void debug(String message) {
-        if (debugMode) {
-            getLogger().info("[DEBUG] " + message);
-        }
     }
 }

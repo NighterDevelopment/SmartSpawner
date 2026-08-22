@@ -54,7 +54,6 @@ public class DiscordEmbedConfigManager {
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(configFile);
         ConfigurationSection section = cfg.getConfigurationSection(SECTION + eventType.name());
         if (section == null) {
-            plugin.debug("No embed config found for event: " + eventType.name());
             return DiscordEventEmbedConfig.defaults();
         }
         return DiscordEventEmbedConfig.fromSection(section);

@@ -71,7 +71,7 @@ class ActivityLogConfigUpdaterTest {
     @Test
     @DisplayName("the logging section of config.yml becomes the file section, and is dropped from config.yml")
     void loggingSectionMovesIntoTheFileSection() {
-        write(folder, "config.yml", "language: en_US\n" + LEGACY_LOGGING_SECTION + "debug: false\n");
+        write(folder, "config.yml", "language: en_US\n" + LEGACY_LOGGING_SECTION + "gui_layout: DonutSMP\n");
 
         assertTrue(ActivityLogConfigUpdater.importLegacySources(folder.toFile(), silentLogger()));
 

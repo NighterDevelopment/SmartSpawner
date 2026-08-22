@@ -50,10 +50,6 @@ Thư mục ngôn ngữ được tải từ <code>plugins/SmartSpawner/language/<
 Thư mục bố cục GUI trong <code>plugins/SmartSpawner/gui_layouts/</code>. Tùy chọn có sẵn: <code>default</code>, <code>DonutSMP</code>, <code>DonutSMP_v2</code>.
 </ConfigProperty>
 
-<ConfigProperty name="debug" value="false" type="boolean">
-Bật thêm đầu ra console để chẩn đoán. Nên giữ <code>false</code> trên máy chủ production.
-</ConfigProperty>
-
 <ConfigGroup name="spawner_properties">
 <template #info>
 Các thiết lập này áp dụng cho mọi Smart Spawner trên máy chủ. Chúng điều khiển tần suất tạo vật phẩm, phạm vi kích hoạt, dung lượng kho, cách xếp chồng và đặt spawner. Mọi spawner dùng chung các giá trị này; không có ghi đè riêng theo mob ở đây. Các giá trị riêng theo mob như XP và bảng vật phẩm được đặt trong <code>spawner_mobs.yml</code>. Xem [Mob Spawners](/vi/docs/spawner-mobs).

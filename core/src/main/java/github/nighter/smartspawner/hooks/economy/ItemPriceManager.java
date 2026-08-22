@@ -333,59 +333,6 @@ public class ItemPriceManager {
         return sources.toString();
     }
 
-    public void debugPricesForMaterials(Set<Material> materials) {
-        plugin.debug("=== Item Prices Debug Info ===");
-        plugin.debug("Economy Enabled: " + economyEnabled);
-        plugin.debug("Mode: " + priceSourceMode);
-        plugin.debug("Custom Prices Enabled: " + customPricesEnabled);
-        plugin.debug("Shop Integration Enabled: " + shopIntegrationEnabled);
-        plugin.debug("Default Price: " + defaultPrice);
-        plugin.debug("Active Price Sources: " + getActivePriceSource());
-        plugin.debug("Sell Integration Available: " + hasSellIntegration());
-
-        if (!economyEnabled) {
-            plugin.debug("Economy is disabled - skipping detailed price debug");
-            return;
-        }
-
-        plugin.debug("Loaded " + materials.size() + " loot items with prices:");
-        for (Material material : materials) {
-            double finalPrice = getPrice(material);
-            double customPrice = getCustomPrice(material);
-            double shopPrice = getShopPrice(material);
-
-            StringBuilder debug = new StringBuilder();
-            debug.append("  ").append(material.name()).append(": Final=").append(String.format("%.2f", finalPrice));
-
-            debug.append(" [");
-            if (customPricesEnabled) {
-                debug.append("Custom=").append(String.format("%.2f", customPrice));
-            }
-            if (shopIntegrationEnabled) {
-                if (customPricesEnabled) debug.append(", ");
-                debug.append("Shop=").append(String.format("%.2f", shopPrice));
-            }
-            debug.append("]");
-
-            String source = determineActiveSource(customPrice, shopPrice);
-            debug.append(" <- ").append(source);
-
-            plugin.debug(debug.toString());
-        }
-    }
-
-    private String determineActiveSource(double customPrice, double shopPrice) {
-        if (!economyEnabled) return "Disabled";
-
-        return switch (priceSourceMode) {
-            case CUSTOM_ONLY -> "Custom";
-            case SHOP_ONLY -> "Shop";
-            case CUSTOM_PRIORITY -> (customPrice > 0) ? "Custom" : "Shop";
-            case SHOP_PRIORITY -> (shopPrice > 0) ? "Shop" : "Custom";
-            default -> "Default";
-        };
-    }
-
     private void saveConfig() {
         if (!economyEnabled) return;
 

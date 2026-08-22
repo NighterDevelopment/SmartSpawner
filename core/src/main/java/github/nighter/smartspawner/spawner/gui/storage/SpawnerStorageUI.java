@@ -238,9 +238,6 @@ public class SpawnerStorageUI {
 
     public void updateDisplay(Inventory inventory, SpawnerData spawner, int page, int totalPages) {
         if (!spawner.getInventoryLock().tryLock()) {
-            if (plugin.isDebugMode()) {
-                plugin.debug("Skipping GUI update - inventory operation in progress for spawner " + spawner.getSpawnerId());
-            }
             return;
         }
 

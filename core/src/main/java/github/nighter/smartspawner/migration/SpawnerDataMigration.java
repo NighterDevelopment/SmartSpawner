@@ -35,7 +35,6 @@ public class SpawnerDataMigration {
         File dataFile = new File(dataFolder, DATA_FILE);
 
         if (!dataFile.exists()) {
-            plugin.debug("No spawners_data.yml present, nothing to convert.");
             return false;
         }
 

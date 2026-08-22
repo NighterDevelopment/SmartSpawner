@@ -530,7 +530,6 @@ public class SpawnerMenuAction implements Listener {
             // Get the entity type from the spawner
             EntityType entityType = spawner.getEntityType();
             if (entityType == null) {
-                plugin.debug("Could not determine entity type for spawner at " + spawner.getSpawnerLocation());
                 return;
             }
 
@@ -539,7 +538,6 @@ public class SpawnerMenuAction implements Listener {
 
         } catch (Exception e) {
             plugin.getLogger().warning("Error giving AuraSkills XP: " + e.getMessage());
-            plugin.debug("AuraSkills integration error: " + e.toString());
         }
     }
 

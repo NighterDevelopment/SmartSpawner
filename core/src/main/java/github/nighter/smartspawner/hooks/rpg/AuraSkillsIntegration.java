@@ -37,7 +37,6 @@ public class AuraSkillsIntegration {
     private boolean initializeAuraSkills() {
         try {
             if (plugin.getServer().getPluginManager().getPlugin("AuraSkills") == null) {
-                plugin.debug("AuraSkills plugin not found");
                 return false;
             }
 
@@ -50,7 +49,6 @@ public class AuraSkillsIntegration {
             plugin.getLogger().info("AuraSkills integration initialized successfully!");
             return true;
         } catch (NoClassDefFoundError | Exception e) {
-            plugin.debug("AuraSkills not available: " + e.getMessage());
             return false;
         }
     }
@@ -64,8 +62,6 @@ public class AuraSkillsIntegration {
 
         config = YamlConfiguration.loadConfiguration(configFile);
         enabled = config.getBoolean("enabled", true);
-
-        plugin.debug("AuraSkills config loaded - Enabled: " + enabled);
     }
 
     private void loadEntityMappings() {
@@ -90,8 +86,6 @@ public class AuraSkillsIntegration {
 
                     SkillConfig skillConfig = new SkillConfig(skillName, ratio);
                     entitySkillMap.put(entityType, skillConfig);
-
-                    plugin.debug("Mapped " + entityType + " to skill " + skillName + " with ratio " + ratio);
                 }
             } catch (IllegalArgumentException e) {
                 plugin.getLogger().warning("Invalid entity type in auraskills.yml: " + entityName);
@@ -110,14 +104,12 @@ public class AuraSkillsIntegration {
 
         SkillConfig skillConfig = entitySkillMap.get(entityType);
         if (skillConfig == null) {
-            plugin.debug("No skill mapping found for entity: " + entityType);
             return;
         }
 
         try {
             SkillsUser user = auraSkillsApi.getUser(player.getUniqueId());
             if (user == null) {
-                plugin.debug("Could not get SkillsUser for player: " + player.getName());
                 return;
             }
 
@@ -172,10 +164,6 @@ public class AuraSkillsIntegration {
                 default:
                     plugin.getLogger().warning("Unknown skill type: " + skillConfig.skillName());
                     return;
-            }
-
-            if (config.getBoolean("debug", false)) {
-                plugin.getLogger().info("Gave " + skillXp + " " + skillConfig.skillName() + " XP to " + player.getName() + " from " + entityType + " spawner");
             }
 
         } catch (Exception e) {

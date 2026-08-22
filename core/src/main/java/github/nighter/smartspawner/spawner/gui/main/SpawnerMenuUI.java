@@ -159,8 +159,6 @@ public class SpawnerMenuUI {
                         break;
                     default:
                         // Unknown action: keep the button visible rather than hiding it.
-                        plugin.debug("Main GUI button '" + button.getButtonType()
-                                + "' has an unrecognized action '" + action + "', showing as a display item");
                         item = createStaticItem(button);
                         break;
                 }

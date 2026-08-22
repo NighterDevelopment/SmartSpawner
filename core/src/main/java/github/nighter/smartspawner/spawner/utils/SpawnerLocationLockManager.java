@@ -106,7 +106,6 @@ public class SpawnerLocationLockManager {
     private void startCleanupTask() {
         Scheduler.runTaskTimerAsync(() -> {
             Iterator<Map.Entry<Location, ReentrantLock>> iterator = locationLocks.entrySet().iterator();
-            int removed = 0;
 
             while (iterator.hasNext()) {
                 Map.Entry<Location, ReentrantLock> entry = iterator.next();
@@ -119,7 +118,6 @@ public class SpawnerLocationLockManager {
                         // Double-check spawner doesn't exist and block is not a spawner
                         if (spawnerManager.getSpawnerByLocation(location) == null) {
                             iterator.remove();
-                            removed++;
                         }
                     } finally {
                         lock.unlock();
@@ -127,9 +125,6 @@ public class SpawnerLocationLockManager {
                 }
             }
 
-            if (removed > 0) {
-                plugin.debug("SpawnerLocationLockManager: Cleaned up " + removed + " unused locks. Active locks: " + locationLocks.size());
-            }
         }, 6000L, 6000L); // Run every 5 minutes (6000 ticks)
     }
 

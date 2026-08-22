@@ -28,7 +28,7 @@ public class ShopGuiPlusProvider implements ShopProvider {
                 return true;
             }
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
-            plugin.debug("ShopGUIPlus API not found: " + e.getMessage());
+            // ShopGUIPlus API not present; integration unavailable.
         } catch (Exception e) {
             plugin.getLogger().warning("Error initializing ShopGUIPlus integration: " + e.getMessage());
         }
@@ -43,7 +43,6 @@ public class ShopGuiPlusProvider implements ShopProvider {
             return sellPrice > 0 ? sellPrice : 0.0;
 
         } catch (Exception e) {
-            plugin.debug("Error getting sell price for " + material + " from ShopGUIPlus: " + e.getMessage());
             return 0.0;
         }
     }

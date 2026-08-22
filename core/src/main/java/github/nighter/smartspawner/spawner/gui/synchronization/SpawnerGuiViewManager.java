@@ -187,11 +187,6 @@ public class SpawnerGuiViewManager {
             plugin.getSpawnerMenuUI().invalidateSpawnerCache(spawner.getSpawnerId());
         }
 
-        int viewerCount = viewers.size();
-        if (viewerCount > 10) {
-            plugin.debug(viewerCount + " spawner menu viewers to update for " + spawner.getSpawnerId() + " (batch update)");
-        }
-
         // Schedule updates for all viewers
         for (UUID viewerId : viewers) {
             Player viewer = Bukkit.getPlayer(viewerId);

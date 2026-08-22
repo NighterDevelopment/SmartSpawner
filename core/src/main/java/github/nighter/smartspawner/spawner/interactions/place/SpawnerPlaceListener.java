@@ -203,8 +203,6 @@ public class SpawnerPlaceListener implements Listener {
         }
 
         if (remainingToConsume > 0) {
-            plugin.debug("Could not consume enough items for player " + player.getName() +
-                    ". Remaining: " + remainingToConsume + ", Stack size requested: " + stackSize);
             return false;
         }
 
@@ -285,7 +283,6 @@ public class SpawnerPlaceListener implements Listener {
         // Check if a spawner already exists at this location (prevent duplicates/ghost spawners)
         SpawnerData existingSpawner = spawnerManager.getSpawnerByLocation(block.getLocation());
         if (existingSpawner != null) {
-            plugin.debug("Spawner already exists at " + block.getLocation() + " with ID " + existingSpawner.getSpawnerId());
             return;
         }
 
@@ -317,7 +314,6 @@ public class SpawnerPlaceListener implements Listener {
         // Check if a spawner already exists at this location (prevent duplicates/ghost spawners)
         SpawnerData existingSpawner = spawnerManager.getSpawnerByLocation(block.getLocation());
         if (existingSpawner != null) {
-            plugin.debug("Item spawner already exists at " + block.getLocation() + " with ID " + existingSpawner.getSpawnerId());
             return;
         }
 

@@ -52,10 +52,6 @@ To add a custom language, create a new folder in <code>language/</code>, copy th
 GUI layout folder to load from <code>plugins/SmartSpawner/gui_layouts/</code>. Built-in options: <code>default</code>, <code>DonutSMP</code>, <code>DonutSMP_v2</code>.
 </ConfigProperty>
 
-<ConfigProperty name="debug" value="false" type="boolean">
-Enables extra console output for troubleshooting. Keep this <code>false</code> in production.
-</ConfigProperty>
-
 <ConfigGroup name="spawner_properties">
 <template #info>
 These settings apply to every Smart Spawner on the server. They control how often spawners generate, how far they reach, how much they store, and how they stack and place. Every spawner shares these values; there is no per-mob override here. Per-mob values such as XP and drop tables are set in <code>spawner_mobs.yml</code> instead. See [Mob Spawners](/docs/spawner-mobs).

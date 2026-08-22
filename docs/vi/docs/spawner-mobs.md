@@ -90,11 +90,6 @@ poison_bogged_spawner:
 Mục nào máy chủ không đọc được sẽ bị bỏ qua và báo trong console kèm tên mob và tên mục. Phần còn
 lại của file vẫn nạp bình thường.
 
-::: tip
-Bật `debug` trong `config.yml` để xem mỗi dòng `item` thực sự tạo ra vật phẩm gì. Hữu ích khi chuỗi
-trông có vẻ đúng nhưng lại rơi ra thứ khác.
-:::
-
 ## Tham Chiếu Thuộc Tính
 
 ### Thuộc Tính Spawner

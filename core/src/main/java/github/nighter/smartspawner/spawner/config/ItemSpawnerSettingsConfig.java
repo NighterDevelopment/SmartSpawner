@@ -71,7 +71,6 @@ public class ItemSpawnerSettingsConfig {
         try {
             InputStream inputStream = plugin.getResource(RESOURCE);
             if (inputStream == null) {
-                plugin.debug("Could not find spawner_items.yml in plugin resources");
                 return;
             }
             
@@ -84,8 +83,6 @@ public class ItemSpawnerSettingsConfig {
                     writer.newLine();
                 }
             }
-            
-            plugin.debug("Created default spawner_items.yml configuration");
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to create default spawner_items.yml: " + e.getMessage());
         }
@@ -144,8 +141,6 @@ public class ItemSpawnerSettingsConfig {
             }
             defaultDefinitionsByMaterial.putIfAbsent(material, definition);
         }
-        
-        plugin.debug("Loaded " + validItemSpawnerMaterials.size() + " item spawner configurations");
     }
 
     private ItemStack parseDisplayItem(Material material, ConfigurationSection itemSection) {

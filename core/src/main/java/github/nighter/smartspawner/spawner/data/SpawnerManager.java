@@ -245,7 +245,6 @@ public class SpawnerManager {
                 Scheduler.runTask(() -> {
                     removeSpawner(spawnerId);
                     spawnerStorage.markSpawnerDeleted(spawnerId);
-                    plugin.debug("Removed ghost spawner " + spawnerId);
                 });
             });
         }

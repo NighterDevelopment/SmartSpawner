@@ -1,14 +1,11 @@
 package github.nighter.smartspawner.spawner.config;
 
-import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.hooks.economy.ItemPriceManager;
 import github.nighter.smartspawner.spawner.lootgen.loot.LootItem;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
 
 import java.util.logging.Logger;
 
@@ -87,11 +84,6 @@ final class LootEntryParser {
                 }
             }
 
-            // Reported so a server owner can see what an item string actually built, which is the
-            // one place a valid line can still produce something they did not mean.
-            SmartSpawner.getInstance().debug("Loot entry '" + key + "' for " + context
-                    + " resolved to " + describe(template));
-
             Material material = template.getType();
             double sellPrice = priceManager != null ? priceManager.getPrice(material) : 0.0;
 
@@ -103,29 +95,6 @@ final class LootEntryParser {
                     + ": amount and durability must be a number or a 'min-max' range");
             return null;
         }
-    }
-
-    /** Short human-readable form of a resolved template, for the debug log. */
-    private static String describe(ItemStack item) {
-        StringBuilder out = new StringBuilder(item.getType().name());
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return out.toString();
-        }
-
-        if (meta instanceof PotionMeta potionMeta && potionMeta.getBasePotionType() != null) {
-            out.append(" potion=").append(potionMeta.getBasePotionType().name());
-        }
-        if (meta instanceof Damageable damageable && damageable.hasDamage()) {
-            out.append(" damage=").append(damageable.getDamage());
-        }
-        if (meta.hasEnchants()) {
-            out.append(" enchants=").append(meta.getEnchants());
-        }
-        if (meta.hasDisplayName()) {
-            out.append(" named");
-        }
-        return out.toString();
     }
 
     /** Parses {@code "3"} as 3 to 3 and {@code "1-384"} as 1 to 384. */

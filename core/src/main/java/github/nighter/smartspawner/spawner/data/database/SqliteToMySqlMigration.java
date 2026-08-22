@@ -152,7 +152,6 @@ public class SqliteToMySqlMigration {
             }
         } catch (SQLException e) {
             // Table might not exist or other error
-            plugin.debug("SQLite check failed: " + e.getMessage());
         }
 
         return false;

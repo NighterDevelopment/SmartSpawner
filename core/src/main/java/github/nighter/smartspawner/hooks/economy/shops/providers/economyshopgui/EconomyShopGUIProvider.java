@@ -30,7 +30,6 @@ public class EconomyShopGUIProvider implements ShopProvider {
             for (String pluginName : PLUGIN_NAMES) {
                 economyShopGUI = Bukkit.getPluginManager().getPlugin(pluginName);
                 if (economyShopGUI != null) {
-                    plugin.debug("Found " + pluginName + " plugin");
                     break;
                 }
             }
@@ -57,7 +56,6 @@ public class EconomyShopGUIProvider implements ShopProvider {
             Double sellPrice = EconomyShopGUIHook.getItemSellPrice(shopItem, item);
             return sellPrice != null ? sellPrice : 0.0;
         } catch (Exception e) {
-            plugin.debug("Error getting sell price for " + material + " from EconomyShopGUI: " + e.getMessage());
             return 0.0;
         }
     }

@@ -492,8 +492,6 @@ public class DatabaseManager {
             } else {
                 stmt.execute(sql(CREATE_TABLE_MYSQL));
             }
-
-            plugin.debug("Database tables created/verified successfully.");
         }
     }
 
@@ -1016,7 +1014,6 @@ public class DatabaseManager {
              Statement stmt = conn.createStatement()) {
             stmt.execute("ALTER TABLE " + tableSpawners + " ADD COLUMN " + columnName + " " + definition);
         }
-        plugin.debug("Added column " + columnName + " to " + tableSpawners);
     }
 
     /**
@@ -1146,7 +1143,6 @@ public class DatabaseManager {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute("ALTER TABLE " + tableSpawners + " DROP COLUMN inventory_data");
-            plugin.debug("Dropped legacy inventory_data column.");
         } catch (SQLException e) {
             // Harmless if it stays: nothing reads or writes it any more.
             logger.warning("Could not drop the legacy inventory_data column, leaving it in place: " + e.getMessage());

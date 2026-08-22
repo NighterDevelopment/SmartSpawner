@@ -194,10 +194,8 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         }
 
         saveTask = Scheduler.runTaskTimerAsync(() -> {
-            plugin.debug("Running scheduled database save task");
             flushChanges();
         }, intervalTicks, intervalTicks);
-        plugin.debug("Database autosave runs every " + (intervalTicks / 20L) + "s");
     }
 
     /**
@@ -247,17 +245,14 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     @Override
     public void flushChanges() {
         if (dirtySpawners.isEmpty() && deletedSpawners.isEmpty()) {
-            plugin.debug("No database changes to flush");
             return;
         }
 
         if (isSaving) {
-            plugin.debug("Database flush operation already in progress");
             return;
         }
 
         isSaving = true;
-        plugin.debug("Flushing " + dirtySpawners.size() + " modified and " + deletedSpawners.size() + " deleted spawners to database");
 
         Scheduler.runTaskAsync(() -> {
             try {
@@ -310,7 +305,6 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
             stmt.executeBatch();
             conn.commit();
-            plugin.debug("Saved " + spawnerIds.size() + " spawners to database");
 
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error saving spawner batch to database", e);
@@ -334,7 +328,6 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
             stmt.executeBatch();
             conn.commit();
-            plugin.debug("Deleted " + spawnerIds.size() + " spawners from database");
 
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error deleting spawner batch from database", e);
@@ -425,7 +418,6 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                             locationCache.put(spawnerId, String.format("%s,%d,%d,%d", worldName, x, y, z));
                         }
                     } catch (Exception e) {
-                        plugin.debug("Error loading spawner " + spawnerId + ": " + e.getMessage());
                         loadedSpawners.put(spawnerId, null);
                     }
                 }
@@ -500,7 +492,6 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
         org.bukkit.World world = Bukkit.getWorld(worldName);
         if (world == null) {
-            plugin.debug("World not yet loaded for spawner " + spawnerId + ": " + worldName);
             return null;
         }
 

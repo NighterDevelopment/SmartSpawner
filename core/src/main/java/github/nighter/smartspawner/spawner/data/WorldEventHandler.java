@@ -8,7 +8,6 @@ import org.bukkit.World;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
@@ -41,23 +40,12 @@ public class WorldEventHandler implements Listener {
     }
 
     /**
-     * Called when a world is initialized (before it's fully loaded)
-     */
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onWorldInit(WorldInitEvent event) {
-        World world = event.getWorld();
-        plugin.debug("World initialized: " + world.getName());
-    }
-
-    /**
      * Called when a world is fully loaded and ready for use
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldLoad(WorldLoadEvent event) {
         World world = event.getWorld();
         String worldName = world.getName();
-
-        plugin.debug("World loaded: " + worldName);
 
         // Mark world as processed
         processedWorlds.add(worldName);
@@ -78,7 +66,6 @@ public class WorldEventHandler implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldSave(WorldSaveEvent event) {
         World world = event.getWorld();
-        plugin.debug("World saving: " + world.getName());
 
         // Flush any pending spawner changes for this world
         plugin.getSpawnerStorage().flushChanges();
@@ -91,8 +78,6 @@ public class WorldEventHandler implements Listener {
     public void onWorldUnload(WorldUnloadEvent event) {
         World world = event.getWorld();
         String worldName = world.getName();
-
-        plugin.debug("World unloading: " + worldName);
 
         // Remove world from processed set
         processedWorlds.remove(worldName);
@@ -114,7 +99,6 @@ public class WorldEventHandler implements Listener {
         }
 
         initialLoadAttempted = true;
-        plugin.debug("Attempting initial spawner load...");
 
         // Load spawner data from file
         Map<String, SpawnerData> allSpawnerData = plugin.getSpawnerStorage().loadAllSpawnersRaw();
@@ -184,7 +168,6 @@ public class WorldEventHandler implements Listener {
                     plugin.getSpawnerManager().addSpawnerToIndexes(spawnerId, spawner);
                     pendingSpawners.remove(spawnerId);
                     loadedCount++;
-                    plugin.debug("Loaded pending spawner " + spawnerId + " for world " + worldName);
                 }
             }
         }
@@ -226,7 +209,7 @@ public class WorldEventHandler implements Listener {
                 }
             }
         } catch (Exception e) {
-            plugin.debug("Error loading pending spawner data for " + spawnerId + ": " + e.getMessage());
+            // Could not resolve the spawner's world; leave it unloaded.
         }
 
         return null;

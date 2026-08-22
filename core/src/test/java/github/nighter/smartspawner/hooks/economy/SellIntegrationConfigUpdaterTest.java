@@ -55,14 +55,14 @@ class SellIntegrationConfigUpdaterTest {
     @Test
     @DisplayName("the old section is removed from config.yml, and the rest of the file is left alone")
     void oldSectionIsRemovedFromConfig() {
-        write(folder, "config.yml", "language: vi_VN\n" + LEGACY_SELL_SECTION + "debug: true\n");
+        write(folder, "config.yml", "language: vi_VN\n" + LEGACY_SELL_SECTION + "gui_layout: DonutSMP\n");
 
         SellIntegrationConfigUpdater.importLegacySources(folder.toFile(), silentLogger());
 
         YamlConfiguration config = read(folder, "config.yml");
         assertFalse(config.contains("sell_integration"));
         assertEquals("vi_VN", config.getString("language"));
-        assertTrue(config.getBoolean("debug"));
+        assertEquals("DonutSMP", config.getString("gui_layout"));
     }
 
     @Test

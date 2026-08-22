@@ -8,7 +8,6 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
 import org.jspecify.annotations.NullMarked;
 
-import java.util.Map;
 
 @NullMarked
 public class ReloadSubCommand extends BaseSubCommand {
@@ -43,11 +42,6 @@ public class ReloadSubCommand extends BaseSubCommand {
     private void reloadAll(CommandSender sender) {
         try {
             plugin.getMessageService().sendMessage(sender, "reload.start");
-
-            // Log current cache stats for debugging
-            if (plugin.getConfig().getBoolean("debug", false)) {
-                logCacheStats();
-            }
 
             // Clear all caches first to avoid using stale data during reload
             plugin.getSpawnerItemFactory().clearAllCaches();
@@ -90,24 +84,11 @@ public class ReloadSubCommand extends BaseSubCommand {
                 plugin.getSpawnerStorage().reloadSettings();
             }
 
-            // Log new cache stats after reload if in debug mode
-            if (plugin.getConfig().getBoolean("debug", false)) {
-                logCacheStats();
-            }
-
             plugin.getMessageService().sendMessage(sender, "reload.success");
         } catch (Exception e) {
             plugin.getLogger().severe("Error during reload: " + e.getMessage());
             e.printStackTrace();
             plugin.getMessageService().sendMessage(sender, "reload.error");
-        }
-    }
-
-    private void logCacheStats() {
-        Map<String, Object> stats = plugin.getLanguageManager().getCacheStats();
-        plugin.getLogger().info("Language cache statistics:");
-        for (Map.Entry<String, Object> entry : stats.entrySet()) {
-            plugin.getLogger().info("  " + entry.getKey() + ": " + entry.getValue());
         }
     }
 }

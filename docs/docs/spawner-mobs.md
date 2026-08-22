@@ -88,11 +88,6 @@ poison_bogged_spawner:
 An entry the server cannot read is skipped and reported in the console with the mob and entry name.
 The rest of the file still loads.
 
-::: tip
-Turn on `debug` in `config.yml` to see what each `item` line actually produced. Useful when an item
-string looks right but drops something unexpected.
-:::
-
 ## Properties Reference
 
 ### Spawner-Level Properties

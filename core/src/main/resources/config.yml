@@ -9,9 +9,6 @@ language: en_US
 # GUI layout folder under gui_layouts/. Bundled: default, DonutSMP, DonutSMP_v2.
 gui_layout: default
 
-# Verbose console output, for troubleshooting only.
-debug: false
-
 spawner_properties:
   default:
     # Mobs generated per cycle, rolled between the two values.

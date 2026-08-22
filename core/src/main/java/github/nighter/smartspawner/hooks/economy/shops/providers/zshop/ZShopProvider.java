@@ -36,7 +36,7 @@ public class ZShopProvider implements ShopProvider {
                 return manager != null;
             }
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
-            plugin.debug("zShop API not found: " + e.getMessage());
+            // zShop API not present; integration unavailable.
         } catch (Exception e) {
             plugin.getLogger().warning("Error initializing zShop integration: " + e.getMessage());
         }
@@ -56,7 +56,6 @@ public class ZShopProvider implements ShopProvider {
             return sellPrice > 0 ? sellPrice : 0.0;
 
         } catch (Exception e) {
-            plugin.debug("Error getting sell price for " + material + " from zShop: " + e.getMessage());
             return 0.0;
         }
     }
@@ -72,7 +71,6 @@ public class ZShopProvider implements ShopProvider {
                     .getProvider();
             return this.shopManager;
         } catch (Exception e) {
-            plugin.debug("Failed to get zShop ShopManager: " + e.getMessage());
             return null;
         }
     }
