@@ -46,9 +46,14 @@ public class SpawnerStorageUI {
     // Lightweight caches with better eviction strategies
     private final Map<String, ItemStack> navigationButtonCache;
     private final Map<String, ItemStack> pageIndicatorCache;
+    private final Map<String, ItemStack> sortButtonCache;
 
     // Cache expiry time reduced for more responsive updates
     private static final int MAX_CACHE_SIZE = 100;
+    // Sort button key cardinality is (spawner types x their loot items), ~200+ on a full vanilla
+    // server, so it gets a larger cap than the page-based caches to avoid thrashing. Each entry is
+    // a few KB, so even at this cap the retained memory stays around 1 MB.
+    private static final int MAX_SORT_CACHE_SIZE = 300;
     
     // Cache for title format to avoid repeated language lookups
     private String cachedStorageTitleFormat = null;
@@ -66,6 +71,7 @@ public class SpawnerStorageUI {
         this.staticButtons = new ConcurrentHashMap<>(16);
         this.navigationButtonCache = new ConcurrentHashMap<>(16);
         this.pageIndicatorCache = new ConcurrentHashMap<>(16);
+        this.sortButtonCache = new ConcurrentHashMap<>(16);
 
         initializeStaticButtons();
         startCleanupTask();
@@ -78,6 +84,7 @@ public class SpawnerStorageUI {
         // Clear caches to force reloading of buttons
         navigationButtonCache.clear();
         pageIndicatorCache.clear();
+        sortButtonCache.clear();
         staticButtons.clear();
         cachedStorageTitleFormat = null;
         cachedSingleStorageTitleFormat = null;
@@ -505,8 +512,24 @@ public class SpawnerStorageUI {
     }
 
     private ItemStack createSortButton(SpawnerData spawner, GuiButton button) {
-        Map<String, String> placeholders = new HashMap<>();
         Material currentSort = spawner.getPreferredSortItem();
+
+        // Cache key = loot identity (the available_items list) + selected sort + button look.
+        // These only change on click or reload, so the cached ItemStack is reused across redraws.
+        String lootKey = spawner.isItemSpawner()
+                ? "item:" + spawner.getSpawnedItemMaterial()
+                : "mob:" + spawner.getEntityType();
+        String cacheKey = lootKey
+                + "|" + (currentSort == null ? "none" : currentSort.name())
+                + "|" + button.getMaterial()
+                + "|" + button.getCustomTexture();
+
+        return sortButtonCache.computeIfAbsent(
+                cacheKey, ignored -> buildSortButton(spawner, button, currentSort)).clone();
+    }
+
+    private ItemStack buildSortButton(SpawnerData spawner, GuiButton button, Material currentSort) {
+        Map<String, String> placeholders = new HashMap<>();
 
         String selectedItemFormat = languageManager.getGuiItemName("sort_items_button.selected_item");
         String unselectedItemFormat = languageManager.getGuiItemName("sort_items_button.unselected_item");
@@ -669,11 +692,21 @@ public class SpawnerStorageUI {
                 pageIndicatorCache.remove(keysToRemove.get(i));
             }
         }
+
+        // LRU-like cleanup for sort buttons
+        if (sortButtonCache.size() > MAX_SORT_CACHE_SIZE) {
+            int toRemove = sortButtonCache.size() - (MAX_SORT_CACHE_SIZE / 2);
+            List<String> keysToRemove = new ArrayList<>(sortButtonCache.keySet());
+            for (int i = 0; i < Math.min(toRemove, keysToRemove.size()); i++) {
+                sortButtonCache.remove(keysToRemove.get(i));
+            }
+        }
     }
 
     public void cleanup() {
         navigationButtonCache.clear();
         pageIndicatorCache.clear();
+        sortButtonCache.clear();
         cachedStorageTitleFormat = null;
         cachedSingleStorageTitleFormat = null;
 
