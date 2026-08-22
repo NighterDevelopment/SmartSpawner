@@ -170,11 +170,11 @@ SmartSpawner ships with defaults for common valuable materials.
 ## Give Item Spawners
 
 ```bash
-/ss give item_spawner <player> <name> [amount]
+/ss give <player> item_spawner <name> [amount]
 ```
 
 Examples:
 ```bash
-/ss give item_spawner @p diamond_spawner 1
-/ss give item_spawner Player123 netherite_ingot_spawner 5
+/ss give Steve item_spawner diamond_spawner 1
+/ss give Player123 item_spawner netherite_ingot_spawner 5
 ```

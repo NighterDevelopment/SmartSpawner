@@ -20,13 +20,13 @@ All commands require `smartspawner.command.use` as a base permission, plus the s
 
 ## Give Commands
 
-### /ss give spawner
+### /ss give smart_spawner
 
-<CommandRow commands="/ss give spawner &lt;player&gt; &lt;name&gt; [amount]" permission="smartspawner.command.give">
+<CommandRow commands="/ss give &lt;player&gt; smart_spawner &lt;name&gt; [amount]" permission="smartspawner.command.give">
 
 Give Smart Spawners to a player.
 
-- `<player>`: Target player or selector (`@p`, `@a`, etc.)
+- `<player>`: Target player. Only online player names are suggested.
 - `<name>`: Top-level entry name from `spawner_mobs.yml` (e.g. `zombie_spawner`)
 - `[amount]`: Optional quantity 1–6400, default: 1
 
@@ -34,7 +34,7 @@ Give Smart Spawners to a player.
 
 ### /ss give vanilla_spawner
 
-<CommandRow commands="/ss give vanilla_spawner &lt;player&gt; &lt;type&gt; [amount]" permission="smartspawner.command.give">
+<CommandRow commands="/ss give &lt;player&gt; vanilla_spawner &lt;type&gt; [amount]" permission="smartspawner.command.give">
 
 Give vanilla Minecraft spawners to a player. No GUI, no stacking. Works exactly like a default spawner block placed from creative mode.
 
@@ -42,7 +42,7 @@ Give vanilla Minecraft spawners to a player. No GUI, no stacking. Works exactly 
 
 ### /ss give item_spawner
 
-<CommandRow commands="/ss give item_spawner &lt;player&gt; &lt;name&gt; [amount]" permission="smartspawner.command.give">
+<CommandRow commands="/ss give &lt;player&gt; item_spawner &lt;name&gt; [amount]" permission="smartspawner.command.give">
 
 Give Item Spawners to a player.
 

@@ -311,11 +311,11 @@ SmartSpawner ships with a comprehensive default `spawner_mobs.yml` covering all 
 ## Give Spawners
 
 ```bash
-/ss give spawner <player> <name> [amount]
+/ss give <player> smart_spawner <name> [amount]
 ```
 
 Examples:
 ```bash
-/ss give spawner @p skeleton_spawner 1
-/ss give spawner Player123 wither_skeleton_spawner 3
+/ss give Steve smart_spawner skeleton_spawner 1
+/ss give Player123 smart_spawner wither_skeleton_spawner 3
 ```

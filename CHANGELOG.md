@@ -16,7 +16,7 @@ All notable changes to SmartSpawner are documented in this file.
 - A spawner type change cancelled through the API no longer takes the player's spawn egg.
 
 ### Changed
-- `/ss give spawner` and `/ss give item_spawner` now select a spawner by its configured name.
+- Give commands now put the player first, as `/ss give <player> smart_spawner|item_spawner|vanilla_spawner`, and only suggest names of online players. The `spawner` type was renamed to `smart_spawner`. Smart and item spawners are still selected by their configured name.
 - SQLite is now the default storage and is faster than the old YAML files on servers of any size. MySQL and MariaDB work as before, including cross-server spawner listing.
 - How often spawner data is saved can now be set with `database.autosave-interval`, which defaults to 3 minutes.
 - Large spawner stacks and full storages use far less CPU and memory. Loot generation, storage menus, hoppers and selling were all reworked to stay fast with large amounts of items.

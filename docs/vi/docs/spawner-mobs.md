@@ -305,10 +305,10 @@ SmartSpawner cung cấp `spawner_mobs.yml` đầy đủ cho mọi mob vanilla v�
 ## Trao Spawner
 
 ```bash
-/ss give spawner <player> <name> [amount]
+/ss give <player> smart_spawner <name> [amount]
 ```
 
 ```bash
-/ss give spawner @p skeleton_spawner 1
-/ss give spawner Player123 wither_skeleton_spawner 3
+/ss give Steve smart_spawner skeleton_spawner 1
+/ss give Player123 smart_spawner wither_skeleton_spawner 3
 ```

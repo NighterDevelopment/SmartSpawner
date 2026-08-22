@@ -25,7 +25,7 @@ Tạo nguyên liệu như kim cương, ngọc lục bảo và thỏi netherite t
 
 - Cấu hình trong `spawner_items.yml`
 - Dùng chung GUI và hệ thống xếp chồng với Smart Spawner
-- Nhận bằng `/ss give item_spawner <player> <MATERIAL>`
+- Nhận bằng `/ss give <player> item_spawner <MATERIAL>`
 
 </FeatureCard>
 
@@ -34,7 +34,7 @@ Tạo nguyên liệu như kim cương, ngọc lục bảo và thỏi netherite t
 Spawner Minecraft thông thường được trao bằng lệnh plugin. Nó sinh mob thật theo cơ chế mặc định.
 
 - Không có GUI hoặc xếp chồng
-- Nhận bằng `/ss give vanilla_spawner <player> <type>`
+- Nhận bằng `/ss give <player> vanilla_spawner <type>`
 - Phù hợp mô hình máy chủ kết hợp
 
 </FeatureCard>

@@ -57,45 +57,56 @@ public class GiveSubCommand extends BaseSubCommand {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal(getName());
         builder.requires(source -> hasPermission(source.getSender()));
 
-        // Add subcommands for regular, vanilla, and item spawners
-        builder.then(buildRegularGiveCommand());
-        builder.then(buildVanillaGiveCommand());
-        builder.then(buildItemSpawnerGiveCommand());
+        // Order: /ss give <player> <spawner type> ...
+        // Only online player names are suggested (no @a, @e, @p selectors)
+        builder.then(Commands.argument("player", ArgumentTypes.player())
+                .suggests(createPlayerSuggestions())
+                .then(buildSmartSpawnerGiveCommand())
+                .then(buildVanillaGiveCommand())
+                .then(buildItemSpawnerGiveCommand()));
 
         return builder;
     }
 
-    private LiteralArgumentBuilder<CommandSourceStack> buildRegularGiveCommand() {
-        return Commands.literal("spawner")
-                .then(Commands.argument("player", ArgumentTypes.player())
-                        .then(Commands.argument("configName", StringArgumentType.word())
-                                .suggests(createSmartSpawnerSuggestions())
-                                .executes(context -> executeGive(context, false, 1))
-                                .then(Commands.argument("amount", IntegerArgumentType.integer(1, MAX_AMOUNT))
-                                        .executes(context -> executeGive(context, false,
-                                                IntegerArgumentType.getInteger(context, "amount"))))));
+    private LiteralArgumentBuilder<CommandSourceStack> buildSmartSpawnerGiveCommand() {
+        return Commands.literal("smart_spawner")
+                .then(Commands.argument("configName", StringArgumentType.word())
+                        .suggests(createSmartSpawnerSuggestions())
+                        .executes(context -> executeGive(context, false, 1))
+                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, MAX_AMOUNT))
+                                .executes(context -> executeGive(context, false,
+                                        IntegerArgumentType.getInteger(context, "amount")))));
     }
 
     private LiteralArgumentBuilder<CommandSourceStack> buildVanillaGiveCommand() {
         return Commands.literal("vanilla_spawner")
-                .then(Commands.argument("player", ArgumentTypes.player())
-                        .then(Commands.argument("mobType", StringArgumentType.word())
-                                .suggests(createMobSuggestions())
-                                .executes(context -> executeGive(context, true, 1))
-                                .then(Commands.argument("amount", IntegerArgumentType.integer(1, MAX_AMOUNT))
-                                        .executes(context -> executeGive(context, true,
-                                                IntegerArgumentType.getInteger(context, "amount"))))));
+                .then(Commands.argument("mobType", StringArgumentType.word())
+                        .suggests(createMobSuggestions())
+                        .executes(context -> executeGive(context, true, 1))
+                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, MAX_AMOUNT))
+                                .executes(context -> executeGive(context, true,
+                                        IntegerArgumentType.getInteger(context, "amount")))));
     }
 
     private LiteralArgumentBuilder<CommandSourceStack> buildItemSpawnerGiveCommand() {
         return Commands.literal("item_spawner")
-                .then(Commands.argument("player", ArgumentTypes.player())
-                        .then(Commands.argument("configName", StringArgumentType.word())
-                                .suggests(createItemSpawnerSuggestions())
-                                .executes(context -> executeGiveItemSpawner(context, 1))
-                                .then(Commands.argument("amount", IntegerArgumentType.integer(1, MAX_AMOUNT))
-                                        .executes(context -> executeGiveItemSpawner(context,
-                                                IntegerArgumentType.getInteger(context, "amount"))))));
+                .then(Commands.argument("configName", StringArgumentType.word())
+                        .suggests(createItemSpawnerSuggestions())
+                        .executes(context -> executeGiveItemSpawner(context, 1))
+                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, MAX_AMOUNT))
+                                .executes(context -> executeGiveItemSpawner(context,
+                                        IntegerArgumentType.getInteger(context, "amount")))));
+    }
+
+    private SuggestionProvider<CommandSourceStack> createPlayerSuggestions() {
+        return (context, builder) -> {
+            String input = builder.getRemaining().toLowerCase(Locale.ROOT);
+            plugin.getServer().getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(input))
+                    .forEach(builder::suggest);
+            return builder.buildFuture();
+        };
     }
 
     private SuggestionProvider<CommandSourceStack> createSmartSpawnerSuggestions() {
