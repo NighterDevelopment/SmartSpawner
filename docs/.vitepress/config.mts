@@ -80,6 +80,7 @@ const enManualSidebar = [
       },
       { text: 'AuraSkills', link: '/docs/integrations/auraskills' },
       { text: 'MythicMobs', link: '/docs/integrations/mythicmobs' },
+      { text: 'MMOItems', link: '/docs/integrations/mmoitems' },
       { text: 'Troubleshooting', link: '/docs/integrations/troubleshooting' }
     ]
   }
@@ -161,6 +162,7 @@ const viManualSidebar = [
       },
       { text: 'AuraSkills', link: '/vi/docs/integrations/auraskills' },
       { text: 'MythicMobs', link: '/vi/docs/integrations/mythicmobs' },
+      { text: 'MMOItems', link: '/vi/docs/integrations/mmoitems' },
       { text: 'Khắc phục sự cố', link: '/vi/docs/integrations/troubleshooting' }
     ]
   }
