@@ -16,6 +16,7 @@ import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SpawnerHologram {
@@ -138,7 +139,7 @@ public class SpawnerHologram {
     private String computeText() {
         // Refresh entity name cache only when the entity type or item material changes
         if (cachedEntityType != entityType || cachedSpawnedItemMaterial != spawnedItemMaterial
-                || !java.util.Objects.equals(cachedConfigName, configName)) {
+                || !Objects.equals(cachedConfigName, configName)) {
             cachedEntityType = entityType;
             cachedSpawnedItemMaterial = spawnedItemMaterial;
             cachedConfigName = configName;
@@ -198,7 +199,7 @@ public class SpawnerHologram {
                 && this.stackSize == stackSize
                 && this.entityType == entityType
                 && this.spawnedItemMaterial == spawnedItemMaterial
-                && java.util.Objects.equals(this.configName, configName)
+                && Objects.equals(this.configName, configName)
                 && this.currentExp == currentExp
                 && this.maxExp == maxExp
                 && this.currentItems == currentItems
