@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: '<span class="ss-brand-smart">Smart</span><span class="ss-brand-spawner">Spawner</span>'
-  tagline: Generate drops and experience directly, manage every spawner through a polished GUI, and keep mobs from weighing down your server.
+  tagline: A GUI-based spawner plugin that generates items and experience without spawning mobs.
   actions:
     - theme: brand
       text: Get Started
@@ -16,20 +16,23 @@ hero:
       link: /docs/download
 
 features:
-  - title: Drops Without the Lag
-    details: Get the loot. Skip the mobs.
+  - title: Loot without mobs
+    details: Spawners generate their items and experience into a virtual inventory instead of spawning entities.
     link: /features/
-  - title: Build Bigger
-    details: Stack massive farms into one block.
+  - title: Spawner stacking
+    details: Hundreds of spawners of the same type merge into a single block.
     link: /features/stacking-system
-  - title: Sell in One Click
-    details: Turn stored drops into money instantly.
+  - title: Mineable spawners
+    details: Spawners break and drop back into inventory with the right tools and enchantments.
+    link: /features/mineable-spawners
+  - title: One-click selling
+    details: Stored drops convert to money through a shop or economy plugin.
     link: /docs/integrations/shops/
-  - title: Claims Stay Protected
-    details: Your region and island rules still apply.
+  - title: Protection support
+    details: Works alongside WorldGuard, GriefPrevention and 13 other protection plugins.
     link: /docs/integrations/protections/
-  - title: Make It Yours
-    details: Extend everything with the open Java API.
+  - title: Developer API
+    details: A public Java API exposes events, drop data and GUI layout builders.
     link: /developer-api/
 ---
 
