@@ -3,10 +3,8 @@ package github.nighter.smartspawner.hooks;
 import com.plotsquared.core.PlotAPI;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.hooks.drops.MythicMobsHook;
-import github.nighter.smartspawner.hooks.protections.api.IridiumSkyblock;
-import github.nighter.smartspawner.hooks.protections.api.Lands;
-import github.nighter.smartspawner.hooks.protections.api.PlotSquared;
-import github.nighter.smartspawner.hooks.protections.api.SuperiorSkyblock2;
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
+import github.nighter.smartspawner.hooks.protections.api.*;
 import github.nighter.smartspawner.hooks.rpg.AuraSkillsIntegration;
 import lombok.Getter;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
@@ -17,6 +15,8 @@ import fr.xyness.SCS.SimpleClaimSystem;
 import fr.xyness.SimpleClaimSystem.API.SCS_API_Provider;
 import fr.xyness.SimpleClaimSystem.API.SCS_API;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 @Getter
@@ -41,6 +41,9 @@ public class IntegrationManager {
     private boolean hasFactions = false;
     private boolean hasBlockLocker = false;
 
+    // Active protection hooks, one per detected plugin, iterated by the Check* entry points.
+    private final List<ProtectionHook> protectionHooks = new ArrayList<>();
+
     // Integration plugin flags
     private boolean hasAuraSkills = false;
 
@@ -59,18 +62,26 @@ public class IntegrationManager {
     private void checkProtectionPlugins() {
         hasWorldGuard = checkPlugin("WorldGuard", () -> {
             Plugin worldGuardPlugin = Bukkit.getPluginManager().getPlugin("WorldGuard");
-            return worldGuardPlugin != null && worldGuardPlugin.isEnabled();
+            if (worldGuardPlugin != null && worldGuardPlugin.isEnabled()) {
+                protectionHooks.add(new WorldGuard());
+                return true;
+            }
+            return false;
         }, true);
 
         hasGriefPrevention = checkPlugin("GriefPrevention", () -> {
             Plugin griefPlugin = Bukkit.getPluginManager().getPlugin("GriefPrevention");
-            return griefPlugin instanceof GriefPrevention;
+            if (griefPlugin instanceof GriefPrevention) {
+                protectionHooks.add(new github.nighter.smartspawner.hooks.protections.api.GriefPrevention());
+                return true;
+            }
+            return false;
         }, true);
 
         hasLands = checkPlugin("Lands", () -> {
             Plugin landsPlugin = Bukkit.getPluginManager().getPlugin("Lands");
             if (landsPlugin != null) {
-                new Lands(plugin);
+                protectionHooks.add(new Lands(plugin));
                 return true;
             }
             return false;
@@ -78,7 +89,11 @@ public class IntegrationManager {
 
         hasTowny = checkPlugin("Towny", () -> {
             Plugin townyPlugin = Bukkit.getPluginManager().getPlugin("Towny");
-            return townyPlugin != null && townyPlugin.isEnabled();
+            if (townyPlugin != null && townyPlugin.isEnabled()) {
+                protectionHooks.add(new Towny());
+                return true;
+            }
+            return false;
         }, true);
 
         hasSuperiorSkyblock2 = checkPlugin("SuperiorSkyblock2", () -> {
@@ -86,6 +101,7 @@ public class IntegrationManager {
             if(superiorSkyblock2 != null) {
                 SuperiorSkyblock2 ssb2 = new SuperiorSkyblock2();
                 Bukkit.getPluginManager().registerEvents(ssb2, plugin);
+                protectionHooks.add(ssb2);
                 return true;
             }
             return false;
@@ -93,7 +109,11 @@ public class IntegrationManager {
 
         hasBentoBox = checkPlugin("BentoBox", () -> {
             Plugin bentoPlugin = Bukkit.getPluginManager().getPlugin("BentoBox");
-            return bentoPlugin != null && bentoPlugin.isEnabled();
+            if (bentoPlugin != null && bentoPlugin.isEnabled()) {
+                protectionHooks.add(new BentoBoxAPI());
+                return true;
+            }
+            return false;
         }, true);
 
         hasSimpleClaimSystem = checkPlugin("SimpleClaimSystem", () -> {
@@ -106,7 +126,11 @@ public class IntegrationManager {
                 return false;
             }
             SimpleClaimSystemAPI_Provider.initialize((SimpleClaimSystem) simpleClaimPlugin);
-            return SimpleClaimSystemAPI_Provider.getAPI() != null;
+            if (SimpleClaimSystemAPI_Provider.getAPI() != null) {
+                protectionHooks.add(new github.nighter.smartspawner.hooks.protections.api.SimpleClaimSystem());
+                return true;
+            }
+            return false;
         }, true);
 
         hasSimpleClaimSystem2 = checkPlugin("SimpleClaimSystem", () -> {
@@ -120,19 +144,30 @@ public class IntegrationManager {
             }
             if (SCS_API_Provider.isRegistered()) {
                 SCS_API api = SCS_API_Provider.get();
-                return api != null;
+                if (api != null) {
+                    protectionHooks.add(new SimpleClaimSystem2());
+                    return true;
+                }
             }
             return false;
         }, true);
 
         hasRedProtect = checkPlugin("RedProtect", () -> {
             Plugin pRP = Bukkit.getPluginManager().getPlugin("RedProtect");
-            return pRP != null && pRP.isEnabled();
+            if (pRP != null && pRP.isEnabled()) {
+                protectionHooks.add(new RedProtectAPI());
+                return true;
+            }
+            return false;
         }, true);
 
         hasMinePlots = checkPlugin("minePlots", () -> {
             Plugin mP = Bukkit.getPluginManager().getPlugin("minePlots");
-            return mP != null && mP.isEnabled();
+            if (mP != null && mP.isEnabled()) {
+                protectionHooks.add(new MinePlots());
+                return true;
+            }
+            return false;
         }, true);
 
         hasMythicMobs = checkPlugin("MythicMobs", () -> {
@@ -148,6 +183,7 @@ public class IntegrationManager {
             Plugin is = Bukkit.getPluginManager().getPlugin("IridiumSkyblock");
             if(is != null && is.isEnabled()) {
                 IridiumSkyblock.init(plugin);
+                protectionHooks.add(new IridiumSkyblock());
                 return true;
             }
             return false;
@@ -160,6 +196,7 @@ public class IntegrationManager {
                 PlotSquared ps = new PlotSquared();
                 api.registerListener(ps);
                 Bukkit.getPluginManager().registerEvents(ps, SmartSpawner.getInstance());
+                protectionHooks.add(ps);
                 return true;
             }
             return false;
@@ -167,17 +204,29 @@ public class IntegrationManager {
 
         hasResidence = checkPlugin("Residence", () -> {
             Plugin residence = Bukkit.getPluginManager().getPlugin("Residence");
-            return residence != null && residence.isEnabled();
+            if (residence != null && residence.isEnabled()) {
+                protectionHooks.add(new Residence());
+                return true;
+            }
+            return false;
         }, true);
 
         hasFactions = checkPlugin("FactionsUUID", () -> {
             Plugin factions = Bukkit.getPluginManager().getPlugin("FactionsUUID");
-            return factions != null && factions.isEnabled();
+            if (factions != null && factions.isEnabled()) {
+                protectionHooks.add(new Factions());
+                return true;
+            }
+            return false;
         }, true);
 
         hasBlockLocker = checkPlugin("BlockLocker", () -> {
             Plugin blockLocker = Bukkit.getPluginManager().getPlugin("BlockLocker");
-            return blockLocker != null && blockLocker.isEnabled();
+            if (blockLocker != null && blockLocker.isEnabled()) {
+                protectionHooks.add(new BlockLocker());
+                return true;
+            }
+            return false;
         }, true);
 
     }

@@ -28,11 +28,6 @@ spawner_activated:
   message: 'Spawner başarıyla&a aktif edildi. &rArtık düşen XP ve eşyaları toplayabilirsin.'
   sound: block.beacon.activate
 
-spawner_protected:
-  message: '&#FF4444Bu spawner korunuyor!'
-  action_bar: '&#FF4444Bu spawner korunuyor!'
-  sound: block.note_block.pling
-
 inventory_full:
   message: '&#FF4444Envanterin dolu.'
 

@@ -2,6 +2,16 @@
 
 All notable changes to SmartSpawner are documented in this file.
 
+## 1.8.1
+
+### Changed
+- Spawners that store tools, weapons or armor with different durability now save using less database space.
+- Sorting items in the storage menu is faster.
+- When a claim or region plugin blocks an action on a spawner, only that plugin's own message shows. SmartSpawner no longer adds a second protection message on top.
+
+### Notes
+- Spawner storage now uses a more compact save format. Existing data is read and upgraded automatically, and no action is required.
+
 ## 1.8.0
 
 **This release contains several breaking changes.** Back up the `plugins/SmartSpawner/` folder before updating. The give commands changed shape, spawner settings files were renamed and are not carried over, YAML storage and the Bedrock form menus were removed, and several config keys moved. Read the Removed and Notes sections below before updating a live server.

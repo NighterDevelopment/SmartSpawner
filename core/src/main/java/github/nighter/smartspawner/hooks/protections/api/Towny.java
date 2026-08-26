@@ -5,13 +5,30 @@ import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public class Towny {
+public class Towny implements ProtectionHook {
+
+    @Override
+    public boolean canBreak(@NotNull Player player, @NotNull Location location) {
+        return canPlayerInteractSpawner(player, location);
+    }
+
+    @Override
+    public boolean canStack(@NotNull Player player, @NotNull Location location) {
+        return canPlayerInteractSpawner(player, location);
+    }
+
+    @Override
+    public boolean canOpenMenu(@NotNull Player player, @NotNull Location location) {
+        return canPlayerInteractSpawner(player, location);
+    }
+
     // Check if player has a resident in the location
-    public static boolean canPlayerInteractSpawner(@NotNull Player player, @NotNull Location location) {
+    private static boolean canPlayerInteractSpawner(@NotNull Player player, @NotNull Location location) {
 
         Town town = null;
         try {

@@ -8,6 +8,7 @@ import com.bgsoftware.superiorskyblock.api.island.IslandPrivilege;
 
 import com.bgsoftware.superiorskyblock.api.world.Dimension;
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import org.bukkit.*;
 import org.bukkit.block.BlockState;
@@ -17,7 +18,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
-public class SuperiorSkyblock2 implements Listener {
+public class SuperiorSkyblock2 implements Listener, ProtectionHook {
 
     private static final String SPAWNER_STACK_PERM = "spawner_stack";
     private static final String SPAWNER_OPEN_MENU_PERM = "spawner_open_menu";
@@ -46,22 +47,26 @@ public class SuperiorSkyblock2 implements Listener {
         }
     }
 
-    public static boolean canPlayerStackBlock(@NotNull Player player, @NotNull Location location) {
+    // No canBreak override: SuperiorSkyblock2 does not police spawner breaking (defaults to allow).
+
+    @Override
+    public boolean canStack(@NotNull Player player, @NotNull Location location) {
         Island island = SuperiorSkyblockAPI.getIslandAt(location);
         if (island != null) {
-            return !island.hasPermission(SuperiorSkyblockAPI.getPlayer(player.getUniqueId()), SPAWNER_STACK);
+            return island.hasPermission(SuperiorSkyblockAPI.getPlayer(player.getUniqueId()), SPAWNER_STACK);
         }
-        // Player is not in island
-        return false;
+        // Not on an island: island protection does not apply here, so allow.
+        return true;
     }
 
-    public static boolean canPlayerOpenMenu(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canOpenMenu(@NotNull Player player, @NotNull Location location) {
         Island island = SuperiorSkyblockAPI.getIslandAt(location);
         if (island != null) {
-            return !island.hasPermission(SuperiorSkyblockAPI.getPlayer(player.getUniqueId()), SPAWNER_OPEN_MENU);
+            return island.hasPermission(SuperiorSkyblockAPI.getPlayer(player.getUniqueId()), SPAWNER_OPEN_MENU);
         }
-        // Player is not in island
-        return false;
+        // Not on an island: island protection does not apply here, so allow.
+        return true;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

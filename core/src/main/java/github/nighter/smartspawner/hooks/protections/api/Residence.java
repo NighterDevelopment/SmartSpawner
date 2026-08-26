@@ -4,20 +4,25 @@ import com.bekvon.bukkit.residence.api.ResidenceApi;
 import com.bekvon.bukkit.residence.containers.Flags;
 import com.bekvon.bukkit.residence.protection.ClaimedResidence;
 import com.bekvon.bukkit.residence.protection.FlagPermissions;
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public class Residence {
-    public static boolean canPlayerBreakBlock(@NotNull Player player, @NotNull Location location) {
+public class Residence implements ProtectionHook {
+
+    @Override
+    public boolean canBreak(@NotNull Player player, @NotNull Location location) {
         return check(player, location, "build");
     }
 
-    public static boolean canInteract(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canOpenMenu(@NotNull Player player, @NotNull Location location) {
         return check(player, location, "use");
     }
 
-    public static boolean canStack(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canStack(@NotNull Player player, @NotNull Location location) {
         return check(player, location, "build");
     }
 

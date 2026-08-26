@@ -172,7 +172,7 @@ public class SpawnerStackHandler {
 
     private boolean hasStackPermissions(Player player, Location location) {
         if (!CheckStackBlock.CanPlayerPlaceBlock(player, location)) {
-            messageService.sendMessage(player, "spawner_protected");
+            // The protection plugin that denied the action shows its own message; avoid a duplicate.
             return false;
         }
 

@@ -3,6 +3,8 @@ package github.nighter.smartspawner.spawner.data.storage;
 import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,22 +26,41 @@ import java.util.Map;
  * (enchantments, display name, lore, custom model data, persistent data) instead of the
  * material-and-damage summary the legacy string format kept.</p>
  *
- * <p>Layout of the produced blob:</p>
+ * <h2>Grouping by base item (format v2)</h2>
+ *
+ * <p>Damageable loot with a durability <em>range</em> rolls a fresh damage value per drop
+ * ({@code LootItem.createItemStack}), so a single loot entry fragments into many distinct
+ * {@link ItemSignature}s that differ only in their damage. Serializing each one in full repeats the
+ * whole base NBT (name, lore, enchantments) once per damage value. v2 instead groups entries that
+ * share the same base item &mdash; every component except the damage value &mdash; and serializes
+ * that base NBT once, followed by the compact {@code (damage, amount)} table for the group. The
+ * in-memory model is unchanged; this is purely a storage layout.</p>
+ *
+ * <p>Grouping is conservative: an item is only normalized (its damage stripped to build the group
+ * key) when it actually carries damage. Undamaged items and non-damageable items are never touched,
+ * so for the overwhelming common case the blob is byte-for-byte what v1 produced apart from the
+ * extra per-group counters, and decode reproduces the exact original {@link ItemStack}.</p>
+ *
+ * <p>Layout of the produced blob (v2):</p>
  * <pre>
- * byte   format version
- * int    entry count n
- * long   amount, repeated n times, in template order
+ * byte   format version (2)
+ * int    group count g
+ * -- per group, in template order:
+ *   int  variant count v
+ *   (int damage, long amount) repeated v times
  * int    length of the item payload
- * byte[] ItemStack.serializeItemsAsBytes(templates), n templates each with amount 1
+ * byte[] ItemStack.serializeItemsAsBytes(baseTemplates), g bases each with amount 1 and damage 0
  * </pre>
  *
- * <p>Bump {@link #FORMAT_VERSION} and keep a decode branch for the old value when the layout
- * changes. An empty inventory encodes to {@code null} so the column stays NULL rather than holding
- * an empty payload.</p>
+ * <p>The previous v1 layout was a flat {@code [int n][long amount x n][int len][payload]} with one
+ * full template per entry; {@link #decode(byte[])} still reads it. Bump {@link #FORMAT_VERSION} and
+ * keep a decode branch for each old value when the layout changes. An empty inventory encodes to
+ * {@code null} so the column stays NULL rather than holding an empty payload.</p>
  */
 public final class SpawnerInventoryCodec {
 
-    private static final byte FORMAT_VERSION = 1;
+    private static final byte FORMAT_VERSION = 2;
+    private static final byte FORMAT_VERSION_V1 = 1;
 
     private SpawnerInventoryCodec() {
     }
@@ -55,8 +76,9 @@ public final class SpawnerInventoryCodec {
             return null;
         }
 
-        List<ItemStack> templates = new ArrayList<>(items.size());
-        List<Long> amounts = new ArrayList<>(items.size());
+        // Group by base item (every component except the damage value) so shared NBT is stored once.
+        // Insertion order is preserved so the serialized base templates line up with the group table.
+        LinkedHashMap<ItemStack, LinkedHashMap<Integer, Long>> groups = new LinkedHashMap<>(Math.max(16, items.size() * 2));
 
         for (Map.Entry<ItemSignature, Long> entry : items.entrySet()) {
             Long amount = entry.getValue();
@@ -69,22 +91,39 @@ public final class SpawnerInventoryCodec {
                 continue;
             }
 
-            templates.add(template);
-            amounts.add(amount);
+            int damage = 0;
+            ItemMeta meta = template.hasItemMeta() ? template.getItemMeta() : null;
+            if (meta instanceof Damageable damageable) {
+                damage = damageable.getDamage();
+                // Only rewrite the meta for genuinely damaged items; leaving undamaged items untouched
+                // keeps their base identical to what v1 stored and to freshly built templates.
+                if (damage != 0) {
+                    damageable.setDamage(0);
+                    template.setItemMeta(damageable);
+                }
+            }
+
+            groups.computeIfAbsent(template, k -> new LinkedHashMap<>())
+                    .merge(damage, amount, Long::sum);
         }
 
-        if (templates.isEmpty()) {
+        if (groups.isEmpty()) {
             return null;
         }
 
-        byte[] itemPayload = ItemStack.serializeItemsAsBytes(templates);
+        List<ItemStack> baseTemplates = new ArrayList<>(groups.keySet());
+        byte[] itemPayload = ItemStack.serializeItemsAsBytes(baseTemplates);
 
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream(itemPayload.length + (amounts.size() * 8) + 16);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream(itemPayload.length + (groups.size() * 16) + 16);
         try (DataOutputStream out = new DataOutputStream(buffer)) {
             out.writeByte(FORMAT_VERSION);
-            out.writeInt(amounts.size());
-            for (Long amount : amounts) {
-                out.writeLong(amount);
+            out.writeInt(groups.size());
+            for (LinkedHashMap<Integer, Long> variants : groups.values()) {
+                out.writeInt(variants.size());
+                for (Map.Entry<Integer, Long> variant : variants.entrySet()) {
+                    out.writeInt(variant.getKey());
+                    out.writeLong(variant.getValue());
+                }
             }
             out.writeInt(itemPayload.length);
             out.write(itemPayload);
@@ -94,7 +133,7 @@ public final class SpawnerInventoryCodec {
     }
 
     /**
-     * Decode a blob produced by {@link #encode(Map)}.
+     * Decode a blob produced by {@link #encode(Map)}, or by any earlier format version.
      *
      * @param blob the stored payload, may be null or empty
      * @return item templates mapped to their total count, never null
@@ -106,50 +145,121 @@ public final class SpawnerInventoryCodec {
 
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(blob))) {
             byte version = in.readByte();
-            if (version != FORMAT_VERSION) {
-                throw new IOException("Unsupported spawner inventory format version: " + version);
-            }
+            return switch (version) {
+                case FORMAT_VERSION_V1 -> decodeV1(in);
+                case FORMAT_VERSION -> decodeV2(in);
+                default -> throw new IOException("Unsupported spawner inventory format version: " + version);
+            };
+        }
+    }
 
-            int count = in.readInt();
-            if (count < 0) {
-                throw new IOException("Negative spawner inventory entry count: " + count);
-            }
-            if (count == 0) {
-                return Map.of();
-            }
+    /** Legacy flat layout: one full template per entry. */
+    private static Map<ItemStack, Long> decodeV1(DataInputStream in) throws IOException {
+        int count = in.readInt();
+        if (count < 0) {
+            throw new IOException("Negative spawner inventory entry count: " + count);
+        }
+        if (count == 0) {
+            return Map.of();
+        }
 
-            long[] amounts = new long[count];
-            for (int i = 0; i < count; i++) {
-                amounts[i] = in.readLong();
-            }
+        long[] amounts = new long[count];
+        for (int i = 0; i < count; i++) {
+            amounts[i] = in.readLong();
+        }
 
-            int payloadLength = in.readInt();
-            if (payloadLength < 0) {
-                throw new IOException("Negative spawner inventory payload length: " + payloadLength);
-            }
+        byte[] itemPayload = readPayload(in);
 
-            byte[] itemPayload = in.readNBytes(payloadLength);
-            if (itemPayload.length != payloadLength) {
-                throw new IOException("Truncated spawner inventory payload: expected " + payloadLength
-                        + " bytes, got " + itemPayload.length);
-            }
+        ItemStack[] templates = ItemStack.deserializeItemsFromBytes(itemPayload);
+        if (templates.length != count) {
+            throw new IOException("Spawner inventory entry count mismatch: " + count
+                    + " amounts but " + templates.length + " items");
+        }
 
-            ItemStack[] templates = ItemStack.deserializeItemsFromBytes(itemPayload);
-            if (templates.length != count) {
-                throw new IOException("Spawner inventory entry count mismatch: " + count
-                        + " amounts but " + templates.length + " items");
+        Map<ItemStack, Long> result = new LinkedHashMap<>(Math.max(16, count * 2));
+        for (int i = 0; i < count; i++) {
+            ItemStack template = templates[i];
+            if (template == null || template.getType() == Material.AIR || amounts[i] <= 0L) {
+                continue;
             }
+            result.merge(template, amounts[i], Long::sum);
+        }
+        return result;
+    }
 
-            Map<ItemStack, Long> result = new LinkedHashMap<>(Math.max(16, count * 2));
-            for (int i = 0; i < count; i++) {
-                ItemStack template = templates[i];
-                if (template == null || template.getType() == Material.AIR || amounts[i] <= 0L) {
+    /** Grouped layout: one base template per group plus a {@code (damage, amount)} table. */
+    private static Map<ItemStack, Long> decodeV2(DataInputStream in) throws IOException {
+        int groupCount = in.readInt();
+        if (groupCount < 0) {
+            throw new IOException("Negative spawner inventory group count: " + groupCount);
+        }
+        if (groupCount == 0) {
+            return Map.of();
+        }
+
+        int[] variantCounts = new int[groupCount];
+        int[][] damages = new int[groupCount][];
+        long[][] amounts = new long[groupCount][];
+
+        for (int g = 0; g < groupCount; g++) {
+            int variants = in.readInt();
+            if (variants < 0) {
+                throw new IOException("Negative spawner inventory variant count: " + variants);
+            }
+            int[] groupDamages = new int[variants];
+            long[] groupAmounts = new long[variants];
+            for (int i = 0; i < variants; i++) {
+                groupDamages[i] = in.readInt();
+                groupAmounts[i] = in.readLong();
+            }
+            variantCounts[g] = variants;
+            damages[g] = groupDamages;
+            amounts[g] = groupAmounts;
+        }
+
+        byte[] itemPayload = readPayload(in);
+
+        ItemStack[] bases = ItemStack.deserializeItemsFromBytes(itemPayload);
+        if (bases.length != groupCount) {
+            throw new IOException("Spawner inventory group count mismatch: " + groupCount
+                    + " groups but " + bases.length + " base items");
+        }
+
+        Map<ItemStack, Long> result = new LinkedHashMap<>(Math.max(16, groupCount * 2));
+        for (int g = 0; g < groupCount; g++) {
+            ItemStack base = bases[g];
+            if (base == null || base.getType() == Material.AIR) {
+                continue;
+            }
+            for (int i = 0; i < variantCounts[g]; i++) {
+                long amount = amounts[g][i];
+                if (amount <= 0L) {
                     continue;
                 }
-                result.merge(template, amounts[i], Long::sum);
+                int damage = damages[g][i];
+                ItemStack variant = base.clone();
+                if (damage != 0 && variant.getItemMeta() instanceof Damageable damageable) {
+                    damageable.setDamage(damage);
+                    variant.setItemMeta(damageable);
+                }
+                result.merge(variant, amount, Long::sum);
             }
-            return result;
         }
+        return result;
+    }
+
+    private static byte[] readPayload(DataInputStream in) throws IOException {
+        int payloadLength = in.readInt();
+        if (payloadLength < 0) {
+            throw new IOException("Negative spawner inventory payload length: " + payloadLength);
+        }
+
+        byte[] itemPayload = in.readNBytes(payloadLength);
+        if (itemPayload.length != payloadLength) {
+            throw new IOException("Truncated spawner inventory payload: expected " + payloadLength
+                    + " bytes, got " + itemPayload.length);
+        }
+        return itemPayload;
     }
 
     /**

@@ -8,22 +8,26 @@ import dev.kitteh.factions.Faction;
 import dev.kitteh.factions.permissible.PermissibleAction;
 import dev.kitteh.factions.permissible.PermissibleActions;
 
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 // FactionsUUID (dev.kitteh) protection hook
-public class Factions {
+public class Factions implements ProtectionHook {
 
-    public static boolean canPlayerOpenMenu(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canOpenMenu(@NotNull Player player, @NotNull Location location) {
         return hasAccess(player, location, PermissibleActions.CONTAINER);
     }
 
-    public static boolean canPlayerBreakClaimBlock(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canBreak(@NotNull Player player, @NotNull Location location) {
         return hasAccess(player, location, PermissibleActions.DESTROY);
     }
 
-    public static boolean canPlayerStackClaimBlock(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canStack(@NotNull Player player, @NotNull Location location) {
         return hasAccess(player, location, PermissibleActions.BUILD);
     }
 

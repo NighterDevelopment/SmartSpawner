@@ -157,7 +157,7 @@ public class SpawnerClickManager implements Listener {
 
         // Check permission on claimed land
         if (!CheckOpenMenu.CanPlayerOpenMenu(player, block.getLocation())) {
-            messageService.sendMessage(player, "spawner_protected");
+            // The protection plugin that denied the action shows its own message; avoid a duplicate.
             return;
         }
 
