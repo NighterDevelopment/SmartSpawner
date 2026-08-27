@@ -64,11 +64,11 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             last_interacted_player, preferred_sort_item, filtered_items, storage_items, rev
             """;
 
-    // Schema v5 optimistic concurrency (Phase 5a). Writes go through a compare-and-set on the rev
-    // column rather than a blind upsert, so a foreign write (another server, a manual edit) that
-    // slips in between this server's flushes is detected instead of silently lost. The policy is
-    // last-writer-wins: on a conflict this server re-applies its in-memory state at the current rev.
-    // Both statements are identical on MySQL and SQLite, so no per-backend variant is needed.
+    // Schema v5 optimistic concurrency. Writes go through a compare-and-set on the rev column rather
+    // than a blind upsert, so a foreign write (another server, a manual edit) that slips in between
+    // this server's flushes is detected instead of silently lost. The policy is last-writer-wins: on
+    // a conflict this server re-applies its in-memory state at the current rev. Both statements are
+    // identical on MySQL and SQLite, so no per-backend variant is needed.
 
     // Positions match bindMutableColumns: 27 value columns at 1..27, new rev at 28, spawner_id at 29,
     // expected rev at 30.

@@ -51,15 +51,15 @@ public class SpawnerData {
     @Getter
     private final AtomicLong storageVersion = new AtomicLong(0);
 
-    // Phase 4: when the last storage viewer closed. Used as a lazy grace window so a quick reopen
-    // keeps the frozen item order, while a reopen after the grace re-sorts. 0 means never emptied.
+    // When the last storage viewer closed. Used as a lazy grace window so a quick reopen keeps the
+    // frozen item order, while a reopen after the grace re-sorts. 0 means never emptied.
     private volatile long storageLastEmptyAt = 0L;
 
     // Base values from config (immutable after load)
     @Getter
     private long baseMaxStoredExp;
     // Per-single-spawner storage capacity, in slots. Scaled by stackSize into maxSpawnerLootSlots.
-    // (Replaced baseMaxStoragePages in 1.9.0; 1 page == 45 slots. API pages accessors below convert.)
+    // 1 page == 45 slots; the API pages accessors below convert to and from pages.
     @Getter @Setter
     private int baseMaxStorageSlots;
     @Getter @Setter
@@ -911,7 +911,7 @@ public class SpawnerData {
         }
     }
 
-    // ============== Phase 4: frozen storage display order ==============
+    // ============== Frozen storage display order ==============
 
     /** @return timestamp (ms) the last storage viewer closed, or 0 if never. */
     public long getStorageLastEmptyAt() {

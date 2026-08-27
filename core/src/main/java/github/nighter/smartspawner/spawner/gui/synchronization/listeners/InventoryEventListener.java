@@ -80,7 +80,7 @@ public class InventoryEventListener implements Listener {
         }
 
         // Read the closing holder before untracking so we can tell when the LAST storage viewer of a
-        // spawner leaves and start the Phase 4 reorder grace window for it.
+        // spawner leaves and start the reorder grace window for it.
         InventoryHolder holder = event.getInventory().getHolder(false);
         viewerTrackingManager.untrackViewer(player.getUniqueId());
 

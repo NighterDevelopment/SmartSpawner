@@ -787,8 +787,8 @@ public class SpawnerStorageAction implements Listener {
             }
         }
 
-        // Apply the new sort preference: re-sorts and re-pins the frozen order (Phase 4), and bumps
-        // the storage version so other viewers redraw in the new order.
+        // Apply the new sort preference: re-sorts and re-pins the frozen order, and bumps the storage
+        // version so other viewers redraw in the new order.
         spawner.applySortPreference(nextSort);
 
         // Mark spawner as modified to save the preference

@@ -26,11 +26,10 @@ public class StorageUpdateService {
     }
 
     /**
-     * Phase 3 version-based refresh: re-renders one storage viewer only if its cached image is behind
-     * the spawner's current {@code storageVersion}. Runs the version gate and the render on the
-     * viewer's region thread, so a viewer that is already up to date costs only a cheap comparison.
-     * The batched update task calls this once per tick for every storage viewer, replacing the old
-     * per-mutation push in {@code updateSpawnerMenuViewers}.
+     * Version-based refresh: re-renders one storage viewer only if its cached image is behind the
+     * spawner's current {@code storageVersion}. Runs the version gate and the render on the viewer's
+     * region thread, so a viewer that is already up to date costs only a cheap comparison. The
+     * batched update task calls this once per tick for every storage viewer.
      *
      * @param viewer  the player viewing storage
      * @param spawner the spawner whose storage they are viewing

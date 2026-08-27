@@ -35,8 +35,8 @@ public class SpawnerStorageUI {
 
     private static final int INVENTORY_SIZE = 54;
 
-    // Phase 4: how long after the last viewer leaves the frozen item order is kept, so a quick reopen
-    // does not reshuffle. A reopen after this grace re-sorts fresh.
+    // How long after the last viewer leaves the frozen item order is kept, so a quick reopen does not
+    // reshuffle. A reopen after this grace re-sorts fresh.
     private static final long STORAGE_ORDER_GRACE_MS = 3_000L;
 
     private final SmartSpawner plugin;
@@ -238,11 +238,11 @@ public class SpawnerStorageUI {
 
         GuiLayout layout = layoutConfig.getStorageLayout(spawner, player);
 
-        // Phase 4: pin the item order while this spawner is being viewed. The opening player is not a
-        // tracked viewer yet (that happens on InventoryOpenEvent), so no storage viewers here means
-        // this is the first one. Re-sort fresh only when the order was never frozen or the reorder
-        // grace since the last viewer left has elapsed; otherwise keep the previous order so a quick
-        // reopen does not make items jump.
+        // Pin the item order while this spawner is being viewed. The opening player is not a tracked
+        // viewer yet (that happens on InventoryOpenEvent), so no storage viewers here means this is
+        // the first one. Re-sort fresh only when the order was never frozen or the reorder grace since
+        // the last viewer left has elapsed; otherwise keep the previous order so a quick reopen does
+        // not make items jump.
         if (!plugin.getSpawnerGuiViewManager().hasStorageViewers(spawner)) {
             long sinceEmpty = System.currentTimeMillis() - spawner.getStorageLastEmptyAt();
             boolean resort = !spawner.isStorageOrderFrozen() || sinceEmpty > STORAGE_ORDER_GRACE_MS;

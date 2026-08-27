@@ -81,7 +81,7 @@ public class SpawnerGuiViewManager {
             this::cleanupViewer
         );
 
-        // Phase 3: refresh storage viewers whose cached image is behind the spawner's storageVersion.
+        // Refresh storage viewers whose cached image is behind the spawner's storageVersion.
         processStorageUpdates();
 
         // Process timer updates only if enabled
@@ -96,10 +96,10 @@ public class SpawnerGuiViewManager {
     }
 
     /**
-     * Phase 3: version-based storage refresh. Iterates the storage viewers and lets each render only
-     * when its cached image is stale, so an idle viewer costs a cheap version comparison rather than
-     * a full repaint. Player-driven takes still repaint the acting player immediately in the action
-     * handler; this covers loot generation and every other viewer of the same spawner.
+     * Version-based storage refresh. Iterates the storage viewers and lets each render only when its
+     * cached image is stale, so an idle viewer costs a cheap version comparison rather than a full
+     * repaint. Player-driven takes still repaint the acting player immediately in the action handler;
+     * this covers loot generation and every other viewer of the same spawner.
      */
     private void processStorageUpdates() {
         for (java.util.Map.Entry<UUID, SpawnerData> entry : viewerTrackingManager.getStorageViewerEntries()) {
@@ -217,14 +217,14 @@ public class SpawnerGuiViewManager {
             // Schedule batched GUI update for main menu viewers
             guiUpdateService.scheduleUpdate(viewerId, GuiUpdateService.UPDATE_ALL);
 
-            // Storage viewers are no longer pushed here (Phase 3). The batched task refreshes them
-            // version-based via processStorageUpdates(), so a mutation only has to bump storageVersion.
+            // Storage viewers are refreshed version-based by processStorageUpdates() in the batched
+            // task, so a mutation only has to bump storageVersion rather than push a repaint here.
         }
     }
 
     /**
-     * Whether any player currently has this spawner's storage GUI open. Drives the Phase 4
-     * first-viewer freeze decision in {@code SpawnerStorageUI}.
+     * Whether any player currently has this spawner's storage GUI open. Drives the first-viewer
+     * freeze decision in {@code SpawnerStorageUI}.
      */
     public boolean hasStorageViewers(SpawnerData spawner) {
         return viewerTrackingManager.hasStorageViewers(spawner);

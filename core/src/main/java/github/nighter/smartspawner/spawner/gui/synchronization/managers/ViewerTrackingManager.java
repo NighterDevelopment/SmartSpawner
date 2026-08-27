@@ -69,8 +69,8 @@ public class ViewerTrackingManager {
     // Track filter GUI viewers to prevent duplication exploits
     private final Map<String, Set<UUID>> spawnerToFilterViewersMap = new ConcurrentHashMap<>();
 
-    // Track storage GUI viewers per spawner (Phase 3 version-based refresh, Phase 4 first/last-viewer
-    // freeze). Kept separate so the batched task can iterate only storage viewers.
+    // Track storage GUI viewers per spawner, kept separate so the batched task can iterate only
+    // storage viewers and so first/last-viewer transitions (which drive the freeze) can be detected.
     private final Map<String, Set<UUID>> spawnerToStorageViewersMap = new ConcurrentHashMap<>();
 
     /**

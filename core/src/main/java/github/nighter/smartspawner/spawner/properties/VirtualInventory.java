@@ -17,9 +17,9 @@ public class VirtualInventory {
     private List<Map.Entry<ItemSignature, Long>> sortedEntriesCache;
     private Material preferredSortMaterial;
 
-    // Phase 4: frozen display order. While a storage viewer is present the signature order is pinned
-    // so stored items keep their slots and freshly generated loot appends at the end instead of being
-    // re-sorted into the middle. Guarded by orderLock because the display is read without the owning
+    // Frozen display order: while a storage viewer is present the signature order is pinned so stored
+    // items keep their slots and freshly generated loot appends at the end instead of being re-sorted
+    // into the middle. Guarded by orderLock because the display is read without the owning
     // SpawnerData.inventoryLock in a few paths.
     private final Object orderLock = new Object();
     private volatile boolean orderFrozen = false;
@@ -335,11 +335,11 @@ public class VirtualInventory {
     }
 
     /**
-     * Pins the current display order (Phase 4). While frozen, {@link #getSortedEntries()} returns
-     * signatures in the captured order; a signature seen later (freshly looted) is appended at the
-     * end rather than sorted into the middle, and a depleted signature keeps its place so a refill
-     * reappears where it was. Callers hold {@code SpawnerData.inventoryLock}; the extra
-     * {@code orderLock} guards against the unlocked display reads.
+     * Pins the current display order. While frozen, {@link #getSortedEntries()} returns signatures in
+     * the captured order; a signature seen later (freshly looted) is appended at the end rather than
+     * sorted into the middle, and a depleted signature keeps its place so a refill reappears where it
+     * was. Callers hold {@code SpawnerData.inventoryLock}; the extra {@code orderLock} guards against
+     * the unlocked display reads.
      */
     public void freezeOrder() {
         synchronized (orderLock) {
@@ -353,7 +353,7 @@ public class VirtualInventory {
         }
     }
 
-    /** Releases the pinned order so the next display re-sorts by the sort preference (Phase 4). */
+    /** Releases the pinned order so the next display re-sorts by the sort preference. */
     public void unfreezeOrder() {
         synchronized (orderLock) {
             orderFrozen = false;
