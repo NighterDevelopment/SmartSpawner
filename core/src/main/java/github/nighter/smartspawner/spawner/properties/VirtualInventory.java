@@ -22,6 +22,7 @@ public class VirtualInventory {
     // of truth for totals; these cells mirror it and are what the GUI renders. Guarded by orderLock:
     // some display reads run without the owning SpawnerData.inventoryLock.
     private final Object orderLock = new Object();
+    @Getter
     private volatile boolean orderFrozen = false;
     private List<FrozenCell> frozenCells;
 
@@ -558,11 +559,6 @@ public class VirtualInventory {
             frozenCells = null;
             sortedEntriesCache = null;
         }
-    }
-
-    /** @return true if the display layout is currently pinned. */
-    public boolean isOrderFrozen() {
-        return orderFrozen;
     }
 
     /**

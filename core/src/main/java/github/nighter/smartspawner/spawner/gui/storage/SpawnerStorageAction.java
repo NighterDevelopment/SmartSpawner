@@ -813,21 +813,40 @@ public class SpawnerStorageAction implements Listener {
         VirtualInventory virtualInv = spawner.getVirtualInventory();
         PlayerInventory playerInv = player.getInventory();
 
-        // Source of truth, not the GUI slots: everything currently stored.
-        Map<ItemSignature, Long> available = virtualInv.getConsolidatedItems();
-        if (available.isEmpty()) {
+        int currentPage = holder.getCurrentPage();
+        int startSlot = (currentPage - 1) * StoragePageHolder.MAX_ITEMS_PER_PAGE;
+
+        // Scope to the page the player is actually viewing (like drop-page), projected from the
+        // count-map rather than the GUI slots. An empty page takes nothing, even if later pages hold items.
+        Int2ObjectMap<ItemStack> pageDisplay =
+                virtualInv.getDisplayPage(currentPage, StoragePageHolder.MAX_ITEMS_PER_PAGE);
+        if (pageDisplay.isEmpty()) {
             messageService.sendMessage(player, "spawner_storage_empty");
             return false;
         }
 
-        // How much the bag can actually accept, competing for the same slots as a real fill.
-        Map<ItemSignature, Long> desired = simulateBagFill(playerInv, available.entrySet());
+        // Consolidate this page's cells by signature: what the current page holds.
+        Map<ItemSignature, Long> pageAvailable = new HashMap<>();
+        for (ItemStack item : pageDisplay.values()) {
+            if (item == null || item.getType() == Material.AIR || item.getAmount() <= 0) {
+                continue;
+            }
+            pageAvailable.merge(VirtualInventory.getSignature(item), (long) item.getAmount(), Long::sum);
+        }
+        if (pageAvailable.isEmpty()) {
+            messageService.sendMessage(player, "spawner_storage_empty");
+            return false;
+        }
+
+        // How much of THIS page the bag can accept, competing for the same slots as a real fill.
+        Map<ItemSignature, Long> desired = simulateBagFill(playerInv, pageAvailable.entrySet());
         if (desired.isEmpty()) {
             messageService.sendMessage(player, "inventory_full");
             return false;
         }
 
-        if (SpawnerTakeAllEvent.getHandlerList().getRegisteredListeners().length != 0) {
+        boolean hasTakeListeners = SpawnerTakeAllEvent.getHandlerList().getRegisteredListeners().length != 0;
+        if (hasTakeListeners) {
             Map<Integer, ItemStack> projected = projectToSlots(desired);
             SpawnerTakeAllEvent event = new SpawnerTakeAllEvent(player, spawner.getSpawnerLocation(), projected);
             Bukkit.getPluginManager().callEvent(event);
@@ -837,7 +856,15 @@ public class SpawnerStorageAction implements Listener {
         }
 
         // Atomic removal; place back exactly what was removed (dupe-safe against stale views).
-        Map<ItemSignature, Long> removed = spawner.takeItems(desired);
+        // While frozen with no addon rewriting the list, empty this page's exact cells (capped by bag
+        // space) so the page clears in place instead of pulling items up from later pages. Otherwise
+        // fall back to a by-signature take built from the (possibly addon-modified) desired amounts.
+        Map<ItemSignature, Long> removed;
+        if (!hasTakeListeners && virtualInv.isOrderFrozen()) {
+            removed = takeFromPageCells(spawner, pageDisplay, startSlot, desired);
+        } else {
+            removed = spawner.takeItems(desired);
+        }
         if (removed.isEmpty()) {
             messageService.sendMessage(player, "inventory_full");
             return false;
@@ -853,7 +880,6 @@ public class SpawnerStorageAction implements Listener {
         player.updateInventory();
 
         int newTotalPages = calculateTotalPages(spawner);
-        int currentPage = holder.getCurrentPage();
 
         // Clamp current page to valid range (e.g., if on page 6 but only 5 pages remain)
         int adjustedPage = Math.max(1, Math.min(currentPage, newTotalPages));
@@ -892,6 +918,42 @@ public class SpawnerStorageAction implements Listener {
             );
         }
         return true;
+    }
+
+    /**
+     * Capacity-aware page take: removes from the exact display cells of the acted page, in slot order,
+     * up to the per-signature amounts the bag accepted. Mirrors drop-page's frozen behaviour (cells
+     * empty in place) but stops once each signature's bag budget is exhausted. Requires a frozen order.
+     *
+     * @param pageDisplay page cells keyed by page-relative slot (from {@code getDisplayPage})
+     * @param startSlot   global display slot the page starts at ({@code (page - 1) * MAX_ITEMS_PER_PAGE})
+     * @param desired     per-signature cap on how much to take (what the bag can accept)
+     * @return signature to amount actually removed
+     */
+    private Map<ItemSignature, Long> takeFromPageCells(
+            SpawnerData spawner, Int2ObjectMap<ItemStack> pageDisplay, int startSlot,
+            Map<ItemSignature, Long> desired) {
+        Map<ItemSignature, Long> removed = new HashMap<>();
+        Map<ItemSignature, Long> budget = new HashMap<>(desired);
+        for (int relativeSlot = 0; relativeSlot < StoragePageHolder.MAX_ITEMS_PER_PAGE; relativeSlot++) {
+            ItemStack cell = pageDisplay.get(relativeSlot);
+            if (cell == null || cell.getType() == Material.AIR || cell.getAmount() <= 0) {
+                continue;
+            }
+            ItemSignature sig = VirtualInventory.getSignature(cell);
+            long left = budget.getOrDefault(sig, 0L);
+            if (left <= 0) {
+                continue;
+            }
+            long want = Math.min(left, cell.getAmount());
+            Map<ItemSignature, Long> cellRemoved = spawner.takeItemFromCell(startSlot + relativeSlot, want);
+            long got = cellRemoved.getOrDefault(sig, 0L);
+            if (got > 0) {
+                removed.merge(sig, got, Long::sum);
+                budget.merge(sig, -got, Long::sum);
+            }
+        }
+        return removed;
     }
 
     private void playActionResult(
