@@ -87,3 +87,8 @@ CLAUDE.md
 ## run-paper test server
 ##############################
 run/
+
+##############################
+## Internal design notes (not shipped)
+##############################
+STORAGE_REDESIGN.md

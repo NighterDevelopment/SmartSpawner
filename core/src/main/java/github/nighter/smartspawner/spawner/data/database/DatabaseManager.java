@@ -144,6 +144,10 @@ public class DatabaseManager {
                 -- Virtual inventory, see SpawnerInventoryCodec
                 storage_items MEDIUMBLOB DEFAULT NULL,
 
+                -- Optimistic-concurrency revision, bumped on every write (schema v5). Detects a
+                -- foreign writer (another server, a manual DB edit) surviving across a flush cycle.
+                rev BIGINT NOT NULL DEFAULT 0,
+
                 -- Indexes. The table is one server's data, so none of these carry a server name.
                 UNIQUE KEY uk_spawner (spawner_id),
                 UNIQUE KEY uk_location (world, loc_x, loc_y, loc_z),
@@ -202,6 +206,9 @@ public class DatabaseManager {
                 -- Virtual inventory, see SpawnerInventoryCodec
                 storage_items BLOB DEFAULT NULL,
 
+                -- Optimistic-concurrency revision, bumped on every write (schema v5)
+                rev BIGINT NOT NULL DEFAULT 0,
+
                 -- Unique constraints
                 UNIQUE (spawner_id),
                 UNIQUE (world, loc_x, loc_y, loc_z)
@@ -217,7 +224,7 @@ public class DatabaseManager {
 
     private static final String SCHEMA_VERSION_KEY = "schema_version";
     private static final int LEGACY_SCHEMA_VERSION = 1;
-    private static final int CURRENT_SCHEMA_VERSION = 4;
+    private static final int CURRENT_SCHEMA_VERSION = 5;
 
     /** Rows converted per transaction while rewriting inventories during the v3 migration. */
     private static final int MIGRATION_BATCH_SIZE = 250;
@@ -557,7 +564,7 @@ public class DatabaseManager {
             entity_type, itemspawner_type, stack_size, max_stack_size,
             active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
             max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
-            last_interacted_player, preferred_sort_item, filtered_items, storage_items
+            last_interacted_player, preferred_sort_item, filtered_items, storage_items, rev
             """;
 
     /**
@@ -697,6 +704,9 @@ public class DatabaseManager {
     }
 
     private int detectInitialSchemaVersion() throws SQLException {
+        if (columnExists(tableSpawners, "rev")) {
+            return 5;
+        }
         if (columnExists(tableSpawners, "config_name")) {
             return 4;
         }
@@ -724,6 +734,7 @@ public class DatabaseManager {
             case 2 -> migrateXpColumnsToBigIntIfNeeded();
             case 3 -> migrateToChunkAndItemBlobColumns();
             case 4 -> addColumnIfMissing("config_name", "VARCHAR(128) DEFAULT NULL");
+            case 5 -> addColumnIfMissing("rev", "BIGINT NOT NULL DEFAULT 0");
             default -> throw new SQLException("No database migration handler found for schema version: " + targetVersion);
         }
     }

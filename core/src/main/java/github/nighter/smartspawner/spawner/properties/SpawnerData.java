@@ -15,8 +15,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
+
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -45,11 +46,22 @@ public class SpawnerData {
     // cleared (and spawner queued for save) when the GUI is closed or main menu is returned to.
     private final AtomicBoolean storageDirty = new AtomicBoolean(false);
 
+    // Monotonic counter bumped on every virtual-inventory mutation (loot, take, sell, drop).
+    // Storage views compare against it to decide whether a redraw is needed (version-based sync).
+    @Getter
+    private final AtomicLong storageVersion = new AtomicLong(0);
+
+    // Phase 4: when the last storage viewer closed. Used as a lazy grace window so a quick reopen
+    // keeps the frozen item order, while a reopen after the grace re-sorts. 0 means never emptied.
+    private volatile long storageLastEmptyAt = 0L;
+
     // Base values from config (immutable after load)
     @Getter
     private long baseMaxStoredExp;
+    // Per-single-spawner storage capacity, in slots. Scaled by stackSize into maxSpawnerLootSlots.
+    // (Replaced baseMaxStoragePages in 1.9.0; 1 page == 45 slots. API pages accessors below convert.)
     @Getter @Setter
-    private int baseMaxStoragePages;
+    private int baseMaxStorageSlots;
     @Getter @Setter
     private int baseMinMobs;
     @Getter @Setter
@@ -188,7 +200,7 @@ public class SpawnerData {
 
     public void loadConfigurationValues() {
         this.baseMaxStoredExp = plugin.getConfig().getLong("spawner_properties.default.max_stored_exp", 1000L);
-        this.baseMaxStoragePages = plugin.getConfig().getInt("spawner_properties.default.max_storage_pages", 1);
+        this.baseMaxStorageSlots = plugin.getConfig().getInt("spawner_properties.default.max_storage_slots", 45);
         this.baseMinMobs = plugin.getConfig().getInt("spawner_properties.default.min_mobs", 1);
         this.baseMaxMobs = plugin.getConfig().getInt("spawner_properties.default.max_mobs", 4);
         this.maxStackSize = plugin.getConfig().getInt("spawner_properties.default.max_stack_size", 1000);
@@ -248,11 +260,27 @@ public class SpawnerData {
 
     private void calculateStackBasedValues() {
         this.maxStoredExp = clampToLong(baseMaxStoredExp * stackSize, 0L, Long.MAX_VALUE);
-        this.maxStoragePages = clampToInt((long) baseMaxStoragePages * stackSize, 0, Integer.MAX_VALUE);
-        setMaxSpawnerLootSlots(clampToInt((long) maxStoragePages * 45L, 0, Integer.MAX_VALUE));
+        // Capacity is now slots directly (base slots x stack), no longer pages x 45.
+        setMaxSpawnerLootSlots(clampToInt((long) baseMaxStorageSlots * stackSize, 0, Integer.MAX_VALUE));
+        // maxStoragePages is derived for display only; the source of truth is the slot count.
+        this.maxStoragePages = github.nighter.smartspawner.spawner.gui.storage.PageGeometry.pageCount(this.maxSpawnerLootSlots);
         this.minMobs = clampToInt((long) baseMinMobs * stackSize, 0, Integer.MAX_VALUE);
         this.maxMobs = clampToInt((long) baseMaxMobs * stackSize, 0, Integer.MAX_VALUE);
         this.spawnerExp = clampToLong(this.spawnerExp, 0L, this.maxStoredExp);
+    }
+
+    /**
+     * API compatibility: storage capacity used to be expressed in pages (45 slots each). Addons still
+     * call these; they convert to and from the slot-based {@link #baseMaxStorageSlots}. Returns the
+     * page-equivalent, rounded up so a partial page still counts.
+     */
+    public int getBaseMaxStoragePages() {
+        return Math.max(1, (baseMaxStorageSlots + 44) / 45);
+    }
+
+    /** API compatibility: sets storage capacity from a page count (1 page = 45 slots). */
+    public void setBaseMaxStoragePages(int baseMaxStoragePages) {
+        this.baseMaxStorageSlots = Math.max(0, baseMaxStoragePages) * 45;
     }
 
     public void setMaxSpawnerLootSlots(int maxSpawnerLootSlots) {
@@ -790,6 +818,42 @@ public class SpawnerData {
                 Map<String, Double> priceCache = createPriceCache();
                 incrementSellValue(items, priceCache);
             }
+            storageVersion.incrementAndGet();
+        } finally {
+            inventoryLock.unlock();
+        }
+    }
+
+    /**
+     * Transactional take: atomically removes up to {@code desired} of each signature from the
+     * virtual inventory (the single source of truth), decrements the accumulated sell value,
+     * bumps {@link #storageVersion}, and returns exactly what was removed.
+     *
+     * <p>This is the dupe-safe primitive for player-driven takes (take-1, take-all, drop-page):
+     * callers compute how much they can accept, hand that in as {@code desired}, and give the
+     * player back only what this method reports as removed. Two players clicking at once are
+     * serialized on {@code inventoryLock}; the second sees a stale view and simply gets less or
+     * nothing, so a stale GUI is no longer a dupe path.
+     *
+     * @param desired signature to requested amount
+     * @return signature to amount actually removed; empty when selling or nothing available
+     */
+    public Map<ItemSignature, Long> takeItems(Map<ItemSignature, Long> desired) {
+        if (desired == null || desired.isEmpty() || isSelling()) {
+            return Collections.emptyMap();
+        }
+
+        inventoryLock.lock();
+        try {
+            Map<ItemSignature, Long> removed = virtualInventory.removeUpTo(desired);
+            if (!removed.isEmpty()) {
+                if (!sellValueDirty) {
+                    Map<String, Double> priceCache = createPriceCache();
+                    decrementSellValue(removed, priceCache);
+                }
+                storageVersion.incrementAndGet();
+            }
+            return removed;
         } finally {
             inventoryLock.unlock();
         }
@@ -837,11 +901,64 @@ public class SpawnerData {
                 Map<String, Double> priceCache = createPriceCache();
                 decrementSellValue(items, priceCache);
             }
+            if (removed) {
+                storageVersion.incrementAndGet();
+            }
 
             return removed;
         } finally {
             inventoryLock.unlock();
         }
+    }
+
+    // ============== Phase 4: frozen storage display order ==============
+
+    /** @return timestamp (ms) the last storage viewer closed, or 0 if never. */
+    public long getStorageLastEmptyAt() {
+        return storageLastEmptyAt;
+    }
+
+    /** Records that the last storage viewer just closed, starting the reorder grace window. */
+    public void markStorageEmptyNow() {
+        this.storageLastEmptyAt = System.currentTimeMillis();
+    }
+
+    /** @return true if the storage display order is currently pinned. */
+    public boolean isStorageOrderFrozen() {
+        return virtualInventory != null && virtualInventory.isOrderFrozen();
+    }
+
+    /**
+     * Pins the current storage order for the first viewer. Re-sorts first when {@code resort} is
+     * true (grace elapsed or never frozen), otherwise keeps the previous order for a fast reopen.
+     */
+    public void freezeStorageOrder(boolean resort) {
+        inventoryLock.lock();
+        try {
+            if (resort) {
+                virtualInventory.unfreezeOrder();
+            }
+            virtualInventory.freezeOrder();
+        } finally {
+            inventoryLock.unlock();
+        }
+    }
+
+    /**
+     * Applies a new sort preference while a viewer is present: re-sorts and re-pins the order so the
+     * change is visible immediately, and bumps the version so other viewers redraw.
+     */
+    public void applySortPreference(Material sort) {
+        this.preferredSortItem = sort;
+        inventoryLock.lock();
+        try {
+            virtualInventory.unfreezeOrder();
+            virtualInventory.sortItems(sort);
+            virtualInventory.freezeOrder();
+        } finally {
+            inventoryLock.unlock();
+        }
+        storageVersion.incrementAndGet();
     }
 
     public synchronized void storePreGeneratedLoot(Map<ItemSignature, Long> items, long experience) {

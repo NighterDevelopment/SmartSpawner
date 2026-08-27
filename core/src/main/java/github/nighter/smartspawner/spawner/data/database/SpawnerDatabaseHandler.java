@@ -5,7 +5,6 @@ import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.commands.list.gui.CrossServerSpawnerData;
 import github.nighter.smartspawner.spawner.data.storage.SpawnerInventoryCodec;
 import github.nighter.smartspawner.spawner.data.storage.SpawnerStorage;
-import github.nighter.smartspawner.spawner.data.storage.StorageMode;
 import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
@@ -45,6 +44,11 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     private final Set<String> dirtySpawners = ConcurrentHashMap.newKeySet();
     private final Set<String> deletedSpawners = ConcurrentHashMap.newKeySet();
 
+    // Last rev this server believes each spawner is at (schema v5). Seeded on load, advanced on every
+    // successful flush. The compare-and-set uses it as the expected value; a mismatch means a foreign
+    // writer got in between.
+    private final Map<String, Long> knownRev = new ConcurrentHashMap<>();
+
     private volatile boolean isSaving = false;
     private Scheduler.Task saveTask = null;
 
@@ -57,85 +61,37 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             entity_type, itemspawner_type, config_name, stack_size, max_stack_size,
             active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
             max_loot_slots, is_at_capacity, exp, max_stored_exp,
-            last_interacted_player, preferred_sort_item, filtered_items, storage_items
+            last_interacted_player, preferred_sort_item, filtered_items, storage_items, rev
             """;
 
-    // MySQL/MariaDB upsert syntax
-    private static final String UPSERT_SQL_MYSQL = """
+    // Schema v5 optimistic concurrency (Phase 5a). Writes go through a compare-and-set on the rev
+    // column rather than a blind upsert, so a foreign write (another server, a manual edit) that
+    // slips in between this server's flushes is detected instead of silently lost. The policy is
+    // last-writer-wins: on a conflict this server re-applies its in-memory state at the current rev.
+    // Both statements are identical on MySQL and SQLite, so no per-backend variant is needed.
+
+    // Positions match bindMutableColumns: 27 value columns at 1..27, new rev at 28, spawner_id at 29,
+    // expected rev at 30.
+    private static final String UPDATE_SQL = """
+            UPDATE %s SET
+                world = ?, loc_x = ?, loc_y = ?, loc_z = ?, chunk_x = ?, chunk_z = ?,
+                entity_type = ?, itemspawner_type = ?, stack_size = ?, max_stack_size = ?,
+                active = ?, stop = ?, activation_range = ?, delay = ?, last_spawn_time = ?, min_mobs = ?, max_mobs = ?,
+                max_loot_slots = ?, is_at_capacity = ?, total_items = ?, exp = ?, max_stored_exp = ?,
+                last_interacted_player = ?, preferred_sort_item = ?, filtered_items = ?, storage_items = ?, config_name = ?,
+                rev = ?
+            WHERE spawner_id = ? AND rev = ?
+            """;
+
+    // Positions: spawner_id at 1, 27 value columns at 2..28, rev at 29.
+    private static final String INSERT_SQL = """
             INSERT INTO %s (
                 spawner_id, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
                 entity_type, itemspawner_type, stack_size, max_stack_size,
                 active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
                 max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
-                last_interacted_player, preferred_sort_item, filtered_items, storage_items, config_name
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                world = VALUES(world),
-                loc_x = VALUES(loc_x),
-                loc_y = VALUES(loc_y),
-                loc_z = VALUES(loc_z),
-                chunk_x = VALUES(chunk_x),
-                chunk_z = VALUES(chunk_z),
-                entity_type = VALUES(entity_type),
-                itemspawner_type = VALUES(itemspawner_type),
-                stack_size = VALUES(stack_size),
-                max_stack_size = VALUES(max_stack_size),
-                active = VALUES(active),
-                stop = VALUES(stop),
-                activation_range = VALUES(activation_range),
-                delay = VALUES(delay),
-                last_spawn_time = VALUES(last_spawn_time),
-                min_mobs = VALUES(min_mobs),
-                max_mobs = VALUES(max_mobs),
-                max_loot_slots = VALUES(max_loot_slots),
-                is_at_capacity = VALUES(is_at_capacity),
-                total_items = VALUES(total_items),
-                exp = VALUES(exp),
-                max_stored_exp = VALUES(max_stored_exp),
-                last_interacted_player = VALUES(last_interacted_player),
-                preferred_sort_item = VALUES(preferred_sort_item),
-                filtered_items = VALUES(filtered_items),
-                storage_items = VALUES(storage_items),
-                config_name = VALUES(config_name)
-            """;
-
-    // SQLite upsert syntax (ON CONFLICT)
-    private static final String UPSERT_SQL_SQLITE = """
-            INSERT INTO %s (
-                spawner_id, world, loc_x, loc_y, loc_z, chunk_x, chunk_z,
-                entity_type, itemspawner_type, stack_size, max_stack_size,
-                active, stop, activation_range, delay, last_spawn_time, min_mobs, max_mobs,
-                max_loot_slots, is_at_capacity, total_items, exp, max_stored_exp,
-                last_interacted_player, preferred_sort_item, filtered_items, storage_items, config_name
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(spawner_id) DO UPDATE SET
-                world = excluded.world,
-                loc_x = excluded.loc_x,
-                loc_y = excluded.loc_y,
-                loc_z = excluded.loc_z,
-                chunk_x = excluded.chunk_x,
-                chunk_z = excluded.chunk_z,
-                entity_type = excluded.entity_type,
-                itemspawner_type = excluded.itemspawner_type,
-                stack_size = excluded.stack_size,
-                max_stack_size = excluded.max_stack_size,
-                active = excluded.active,
-                stop = excluded.stop,
-                activation_range = excluded.activation_range,
-                delay = excluded.delay,
-                last_spawn_time = excluded.last_spawn_time,
-                min_mobs = excluded.min_mobs,
-                max_mobs = excluded.max_mobs,
-                max_loot_slots = excluded.max_loot_slots,
-                is_at_capacity = excluded.is_at_capacity,
-                total_items = excluded.total_items,
-                exp = excluded.exp,
-                max_stored_exp = excluded.max_stored_exp,
-                last_interacted_player = excluded.last_interacted_player,
-                preferred_sort_item = excluded.preferred_sort_item,
-                filtered_items = excluded.filtered_items,
-                storage_items = excluded.storage_items,
-                config_name = excluded.config_name
+                last_interacted_player, preferred_sort_item, filtered_items, storage_items, config_name, rev
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
     /** Columns the cross-server list GUI needs. Deliberately excludes the item blob. */
@@ -152,6 +108,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     private final String selectLocationSql;
     private final String deleteSql;
     private final String deleteLocationConflictSql;
+    private final String selectRevSql;
 
     public SpawnerDatabaseHandler(SmartSpawner plugin, DatabaseManager databaseManager) {
         this.plugin = plugin;
@@ -168,6 +125,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         this.deleteSql = "DELETE FROM " + tableSpawners + " WHERE spawner_id = ?";
         this.deleteLocationConflictSql = "DELETE FROM " + tableSpawners
                 + " WHERE world = ? AND loc_x = ? AND loc_y = ? AND loc_z = ? AND spawner_id <> ?";
+        this.selectRevSql = "SELECT rev FROM " + tableSpawners + " WHERE spawner_id = ?";
     }
 
     @Override
@@ -237,6 +195,8 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             deletedSpawners.add(spawnerId);
             dirtySpawners.remove(spawnerId);
             locationCache.remove(spawnerId);
+            // Drop the CAS baseline: if the id is ever re-placed it must be treated as a new row.
+            knownRev.remove(spawnerId);
         }
     }
 
@@ -286,53 +246,23 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         });
     }
 
+    /**
+     * Flushes the dirty spawners with schema-v5 optimistic concurrency. Each spawner is written in
+     * its own transaction via {@link #writeSpawnerWithCas}, so one bad row cannot abort the others and
+     * a per-row conflict can be resolved on its own. A per-row commit is deliberate: SQLite runs in
+     * WAL/NORMAL where a commit is cheap, and it keeps the CAS retry logic simple and isolated.
+     */
     private void saveSpawnerBatch(Set<String> spawnerIds) {
         if (spawnerIds.isEmpty()) return;
 
-        // Select appropriate SQL based on storage mode
-        String upsertSql = (databaseManager.getStorageMode() == StorageMode.SQLITE
-                ? UPSERT_SQL_SQLITE
-                : UPSERT_SQL_MYSQL).formatted(tableSpawners);
+        String updateSql = UPDATE_SQL.formatted(tableSpawners);
+        String insertSql = INSERT_SQL.formatted(tableSpawners);
 
         try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(upsertSql)) {
-
-            conn.setAutoCommit(false);
-
-            for (String spawnerId : spawnerIds) {
-                SpawnerData spawner = plugin.getSpawnerManager().getSpawnerById(spawnerId);
-                if (spawner == null) continue;
-
-                if (setSpawnerParameters(stmt, spawner)) {
-                    stmt.addBatch();
-                }
-            }
-
-            stmt.executeBatch();
-            conn.commit();
-
-        } catch (SQLException e) {
-            // One bad row aborts the whole batch, so fall back to saving each spawner on its own.
-            // This isolates the offender and lets it self-heal a stale row that still occupies its
-            // location (a UNIQUE(world, loc_x, loc_y, loc_z) conflict) instead of blocking everyone.
-            logger.log(Level.WARNING, "Spawner batch save failed, retrying row by row", e);
-            saveSpawnersIndividually(spawnerIds);
-        }
-    }
-
-    /**
-     * Saves each spawner in its own transaction. Before the upsert, any other row occupying this
-     * spawner's location is removed, healing the case where a spawner was broken and re-placed at the
-     * same spot and the stale row's delete has not been applied yet.
-     */
-    private void saveSpawnersIndividually(Set<String> spawnerIds) {
-        String upsertSql = (databaseManager.getStorageMode() == StorageMode.SQLITE
-                ? UPSERT_SQL_SQLITE
-                : UPSERT_SQL_MYSQL).formatted(tableSpawners);
-
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement clearStmt = conn.prepareStatement(deleteLocationConflictSql);
-             PreparedStatement stmt = conn.prepareStatement(upsertSql)) {
+             PreparedStatement update = conn.prepareStatement(updateSql);
+             PreparedStatement insert = conn.prepareStatement(insertSql);
+             PreparedStatement selectRev = conn.prepareStatement(selectRevSql);
+             PreparedStatement clear = conn.prepareStatement(deleteLocationConflictSql)) {
 
             conn.setAutoCommit(false);
 
@@ -341,17 +271,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 if (spawner == null) continue;
 
                 try {
-                    Location loc = spawner.getSpawnerLocation();
-                    clearStmt.setString(1, loc.getWorld().getName());
-                    clearStmt.setInt(2, loc.getBlockX());
-                    clearStmt.setInt(3, loc.getBlockY());
-                    clearStmt.setInt(4, loc.getBlockZ());
-                    clearStmt.setString(5, spawnerId);
-                    clearStmt.executeUpdate();
-
-                    if (setSpawnerParameters(stmt, spawner)) {
-                        stmt.executeUpdate();
-                    }
+                    writeSpawnerWithCas(spawner, update, insert, selectRev, clear);
                     conn.commit();
                 } catch (SQLException rowError) {
                     logger.log(Level.SEVERE, "Failed to save spawner " + spawnerId
@@ -366,9 +286,85 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             }
 
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error saving spawners individually to database", e);
+            logger.log(Level.SEVERE, "Error saving spawner batch to database", e);
             // Re-add to dirty list for retry
             dirtySpawners.addAll(spawnerIds);
+        }
+    }
+
+    /**
+     * Writes one spawner with a compare-and-set on its {@code rev} column.
+     *
+     * <ol>
+     *   <li>Optimistic {@code UPDATE ... WHERE spawner_id = ? AND rev = expected}. One row updated
+     *       means we owned the latest state; advance the known rev and return.</li>
+     *   <li>Zero rows and no such spawner_id: a brand-new (or re-placed) spawner. Clear any stale row
+     *       still occupying this location, then {@code INSERT} at rev 0.</li>
+     *   <li>Zero rows but the row exists at a different rev: a foreign writer got in. Last-writer-wins
+     *       &ndash; re-apply this server's in-memory state at the current rev. If even that races
+     *       again, re-queue for the next flush rather than spin.</li>
+     * </ol>
+     *
+     * <p>Encoding failures bind nothing and re-queue the spawner (handled inside
+     * {@link #bindMutableColumns}), so the stored items are never overwritten with an empty blob.</p>
+     */
+    private void writeSpawnerWithCas(SpawnerData spawner, PreparedStatement update,
+                                     PreparedStatement insert, PreparedStatement selectRev,
+                                     PreparedStatement clear) throws SQLException {
+        String spawnerId = spawner.getSpawnerId();
+        long expected = knownRev.getOrDefault(spawnerId, 0L);
+
+        int n = bindMutableColumns(update, spawner, 1);
+        if (n < 0) return; // encode failure, already re-queued
+        update.setLong(28, expected + 1);
+        update.setString(29, spawnerId);
+        update.setLong(30, expected);
+        if (update.executeUpdate() >= 1) {
+            knownRev.put(spawnerId, expected + 1);
+            return;
+        }
+
+        Long current = readCurrentRev(selectRev, spawnerId);
+        if (current == null) {
+            // New or re-placed spawner: heal any stale row at this location first, then insert.
+            Location loc = spawner.getSpawnerLocation();
+            clear.setString(1, loc.getWorld().getName());
+            clear.setInt(2, loc.getBlockX());
+            clear.setInt(3, loc.getBlockY());
+            clear.setInt(4, loc.getBlockZ());
+            clear.setString(5, spawnerId);
+            clear.executeUpdate();
+
+            insert.setString(1, spawnerId);
+            int m = bindMutableColumns(insert, spawner, 2);
+            if (m < 0) return;
+            insert.setLong(29, 0L);
+            insert.executeUpdate();
+            knownRev.put(spawnerId, 0L);
+            return;
+        }
+
+        // Conflict: another writer advanced rev. Last-writer-wins re-apply at the current rev.
+        int n2 = bindMutableColumns(update, spawner, 1);
+        if (n2 < 0) return;
+        update.setLong(28, current + 1);
+        update.setString(29, spawnerId);
+        update.setLong(30, current);
+        if (update.executeUpdate() >= 1) {
+            knownRev.put(spawnerId, current + 1);
+            logger.warning("Spawner " + spawnerId + " was modified in the database by another writer; "
+                    + "kept this server's state (last-writer-wins), rev " + expected + " -> " + (current + 1) + ".");
+        } else {
+            logger.warning("Spawner " + spawnerId + " lost a database write race twice; "
+                    + "re-queuing it for the next flush.");
+            dirtySpawners.add(spawnerId);
+        }
+    }
+
+    private Long readCurrentRev(PreparedStatement selectRev, String spawnerId) throws SQLException {
+        selectRev.setString(1, spawnerId);
+        try (ResultSet rs = selectRev.executeQuery()) {
+            return rs.next() ? rs.getLong(1) : null;
         }
     }
 
@@ -396,12 +392,14 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     }
 
     /**
-     * Binds one spawner onto the upsert statement.
+     * Binds the 27 mutable value columns (world through config_name, in the order both the UPDATE and
+     * INSERT statements list them) starting at {@code startIdx}.
      *
-     * @return false when the inventory could not be encoded, in which case the caller must skip the
-     *         row. Writing it anyway would replace the stored items with an empty blob.
+     * @return the next free parameter index ({@code startIdx + 27}), or {@code -1} when the inventory
+     *         could not be encoded. On {@code -1} the caller must skip the row; the spawner is
+     *         re-queued here so its stored items are never overwritten with an empty blob.
      */
-    private boolean setSpawnerParameters(PreparedStatement stmt, SpawnerData spawner) throws SQLException {
+    private int bindMutableColumns(PreparedStatement stmt, SpawnerData spawner, int startIdx) throws SQLException {
         Location loc = spawner.getSpawnerLocation();
 
         byte[] items;
@@ -418,40 +416,40 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 logger.log(Level.WARNING, "Could not encode inventory for spawner " + spawner.getSpawnerId()
                         + ", skipping this save so the stored items are not lost", e);
                 dirtySpawners.add(spawner.getSpawnerId());
-                return false;
+                return -1;
             }
             totalItems = SpawnerInventoryCodec.totalItems(consolidated);
         }
 
-        stmt.setString(1, spawner.getSpawnerId());
-        stmt.setString(2, loc.getWorld().getName());
-        stmt.setInt(3, loc.getBlockX());
-        stmt.setInt(4, loc.getBlockY());
-        stmt.setInt(5, loc.getBlockZ());
-        stmt.setInt(6, loc.getBlockX() >> 4);
-        stmt.setInt(7, loc.getBlockZ() >> 4);
-        stmt.setString(8, spawner.getEntityType().name());
-        stmt.setString(9, spawner.isItemSpawner() ? spawner.getSpawnedItemMaterial().name() : null);
-        stmt.setInt(10, spawner.getStackSize());
-        stmt.setInt(11, spawner.getMaxStackSize());
-        stmt.setBoolean(12, spawner.getSpawnerActive());
-        stmt.setBoolean(13, spawner.getSpawnerStop().get());
-        stmt.setInt(14, spawner.getSpawnerRange());
-        stmt.setLong(15, spawner.getSpawnDelay());
-        stmt.setLong(16, spawner.getLastSpawnTime());
-        stmt.setInt(17, spawner.getMinMobs());
-        stmt.setInt(18, spawner.getMaxMobs());
-        stmt.setInt(19, spawner.getMaxSpawnerLootSlots());
-        stmt.setBoolean(20, spawner.getIsAtCapacity());
-        stmt.setLong(21, totalItems);
-        stmt.setLong(22, Math.max(0L, spawner.getSpawnerExp()));
-        stmt.setLong(23, spawner.getMaxStoredExp());
-        stmt.setString(24, spawner.getLastInteractedPlayer());
-        stmt.setString(25, spawner.getPreferredSortItem() != null ? spawner.getPreferredSortItem().name() : null);
-        stmt.setString(26, serializeFilteredItems(spawner.getFilteredItems()));
-        stmt.setBytes(27, items);
-        stmt.setString(28, spawner.getConfigName());
-        return true;
+        int i = startIdx;
+        stmt.setString(i++, loc.getWorld().getName());
+        stmt.setInt(i++, loc.getBlockX());
+        stmt.setInt(i++, loc.getBlockY());
+        stmt.setInt(i++, loc.getBlockZ());
+        stmt.setInt(i++, loc.getBlockX() >> 4);
+        stmt.setInt(i++, loc.getBlockZ() >> 4);
+        stmt.setString(i++, spawner.getEntityType().name());
+        stmt.setString(i++, spawner.isItemSpawner() ? spawner.getSpawnedItemMaterial().name() : null);
+        stmt.setInt(i++, spawner.getStackSize());
+        stmt.setInt(i++, spawner.getMaxStackSize());
+        stmt.setBoolean(i++, spawner.getSpawnerActive());
+        stmt.setBoolean(i++, spawner.getSpawnerStop().get());
+        stmt.setInt(i++, spawner.getSpawnerRange());
+        stmt.setLong(i++, spawner.getSpawnDelay());
+        stmt.setLong(i++, spawner.getLastSpawnTime());
+        stmt.setInt(i++, spawner.getMinMobs());
+        stmt.setInt(i++, spawner.getMaxMobs());
+        stmt.setInt(i++, spawner.getMaxSpawnerLootSlots());
+        stmt.setBoolean(i++, spawner.getIsAtCapacity());
+        stmt.setLong(i++, totalItems);
+        stmt.setLong(i++, Math.max(0L, spawner.getSpawnerExp()));
+        stmt.setLong(i++, spawner.getMaxStoredExp());
+        stmt.setString(i++, spawner.getLastInteractedPlayer());
+        stmt.setString(i++, spawner.getPreferredSortItem() != null ? spawner.getPreferredSortItem().name() : null);
+        stmt.setString(i++, serializeFilteredItems(spawner.getFilteredItems()));
+        stmt.setBytes(i++, items);
+        stmt.setString(i++, spawner.getConfigName());
+        return i;
     }
 
     @Override
@@ -544,6 +542,12 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
     private SpawnerData loadSpawnerFromResultSet(ResultSet rs) throws SQLException {
         String spawnerId = rs.getString("spawner_id");
+
+        // Seed the CAS baseline even for spawners whose world is not loaded yet: they materialize
+        // later through loadSpecificSpawner (which re-seeds), but recording it here keeps the first
+        // flush after a normal load from treating an existing row as brand new.
+        knownRev.put(spawnerId, rs.getLong("rev"));
+
         String worldName = rs.getString("world");
         int x = rs.getInt("loc_x");
         int y = rs.getInt("loc_y");

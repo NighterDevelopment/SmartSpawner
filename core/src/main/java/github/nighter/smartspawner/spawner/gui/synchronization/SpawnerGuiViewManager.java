@@ -2,7 +2,6 @@ package github.nighter.smartspawner.spawner.gui.synchronization;
 
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.Scheduler;
-import github.nighter.smartspawner.spawner.gui.storage.StoragePageHolder;
 import github.nighter.smartspawner.spawner.gui.storage.filter.FilterConfigHolder;
 import github.nighter.smartspawner.spawner.gui.synchronization.listeners.InventoryEventListener;
 import github.nighter.smartspawner.spawner.gui.synchronization.listeners.PlayerEventListener;
@@ -13,7 +12,6 @@ import github.nighter.smartspawner.spawner.gui.synchronization.services.StorageU
 import github.nighter.smartspawner.spawner.gui.synchronization.services.TimerUpdateService;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
@@ -82,7 +80,10 @@ public class SpawnerGuiViewManager {
             viewerTrackingManager::getViewerInfo,
             this::cleanupViewer
         );
-        
+
+        // Phase 3: refresh storage viewers whose cached image is behind the spawner's storageVersion.
+        processStorageUpdates();
+
         // Process timer updates only if enabled
         if (timerUpdateService.shouldProcessTimerUpdates()) {
             timerUpdateService.processTimerUpdates();
@@ -91,6 +92,24 @@ public class SpawnerGuiViewManager {
         // Stop task if no viewers remain
         if (!viewerTrackingManager.hasAnyViewers()) {
             updateTaskManager.stopTask();
+        }
+    }
+
+    /**
+     * Phase 3: version-based storage refresh. Iterates the storage viewers and lets each render only
+     * when its cached image is stale, so an idle viewer costs a cheap version comparison rather than
+     * a full repaint. Player-driven takes still repaint the acting player immediately in the action
+     * handler; this covers loot generation and every other viewer of the same spawner.
+     */
+    private void processStorageUpdates() {
+        for (java.util.Map.Entry<UUID, SpawnerData> entry : viewerTrackingManager.getStorageViewerEntries()) {
+            UUID viewerId = entry.getKey();
+            Player viewer = Bukkit.getPlayer(viewerId);
+            if (viewer == null || !viewer.isOnline()) {
+                cleanupViewer(viewerId);
+                continue;
+            }
+            storageUpdateService.refreshStorageViewer(viewer, entry.getValue());
         }
     }
 
@@ -198,34 +217,17 @@ public class SpawnerGuiViewManager {
             // Schedule batched GUI update for main menu viewers
             guiUpdateService.scheduleUpdate(viewerId, GuiUpdateService.UPDATE_ALL);
 
-            // Handle storage page updates - calculate pages on the correct thread
-            Inventory openInv = viewer.getOpenInventory().getTopInventory();
-            if (openInv.getHolder(false) instanceof StoragePageHolder holder) {
-                // Schedule storage update - page calculation happens inside
-                Location loc = viewer.getLocation();
-
-                if (!holder.getSpawnerData().getSpawnerId().equals(spawner.getSpawnerId())) {
-                    continue;
-                }
-                Scheduler.runLocationTask(loc, () -> {
-                    if (!viewer.isOnline()) {
-                        return;
-                    }
-
-                    Inventory inv = viewer.getOpenInventory().getTopInventory();
-                    if (inv.getHolder(false) instanceof StoragePageHolder spHolder) {
-
-                        if (!spHolder.getSpawnerData().getSpawnerId().equals(spawner.getSpawnerId())) {
-                            return;
-                        }
-                        int oldPages = storageUpdateService.calculateTotalPages(holder.getOldUsedSlots());
-                        int newPages = storageUpdateService.calculateTotalPages(spawner.getVirtualInventory().getUsedSlots());
-
-                        storageUpdateService.processStorageUpdateDirect(viewer, inv, spawner, spHolder, oldPages, newPages);
-                    }
-                });
-            }
+            // Storage viewers are no longer pushed here (Phase 3). The batched task refreshes them
+            // version-based via processStorageUpdates(), so a mutation only has to bump storageVersion.
         }
+    }
+
+    /**
+     * Whether any player currently has this spawner's storage GUI open. Drives the Phase 4
+     * first-viewer freeze decision in {@code SpawnerStorageUI}.
+     */
+    public boolean hasStorageViewers(SpawnerData spawner) {
+        return viewerTrackingManager.hasStorageViewers(spawner);
     }
 
     /**

@@ -21,8 +21,8 @@ spawner_properties:
     # Time between generation cycles.
     delay: 25s
 
-    # Storage size. Each page holds 45 slots.
-    max_storage_pages: 1
+    # Storage capacity in slots per single spawner, multiplied by the stack size.
+    max_storage_slots: 45
     max_stored_exp: 1000
     max_stack_size: 10000
 

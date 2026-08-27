@@ -19,6 +19,9 @@ public class StoragePageHolder implements InventoryHolder, SpawnerHolder {
     private int oldUsedSlots;
     @Getter
     private final GuiLayout layout;
+    // Per-open render cache for diff rendering (Phase 2). Owned by this open inventory.
+    @Getter
+    private final StorageView view = new StorageView();
 
     // Make these public static final for better performance and accessibility
     public static final int ROWS_PER_PAGE = 5;

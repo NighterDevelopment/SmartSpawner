@@ -17,6 +17,14 @@ public class VirtualInventory {
     private List<Map.Entry<ItemSignature, Long>> sortedEntriesCache;
     private Material preferredSortMaterial;
 
+    // Phase 4: frozen display order. While a storage viewer is present the signature order is pinned
+    // so stored items keep their slots and freshly generated loot appends at the end instead of being
+    // re-sorted into the middle. Guarded by orderLock because the display is read without the owning
+    // SpawnerData.inventoryLock in a few paths.
+    private final Object orderLock = new Object();
+    private volatile boolean orderFrozen = false;
+    private List<ItemSignature> frozenOrder;
+
     public VirtualInventory(int maxSlots) {
         this.maxSlots = maxSlots;
         this.consolidatedItems = new ConcurrentHashMap<>();
@@ -127,6 +135,66 @@ public class VirtualInventory {
         sortedEntriesCache = null;
 
         return true;
+    }
+
+    /**
+     * Current stored count for a single signature. Read-only.
+     */
+    public long available(ItemSignature signature) {
+        if (signature == null) {
+            return 0L;
+        }
+        return consolidatedItems.getOrDefault(signature, 0L);
+    }
+
+    /**
+     * Atomic, non-failing removal: for each requested signature removes
+     * {@code min(desired, available)} and returns the amount actually removed.
+     * Unlike {@link #removeItems(Map)} it never rejects the whole batch, so it is
+     * safe against stale views – a second caller acting on outdated display data
+     * simply gets back an empty or reduced map instead of over-removing.
+     *
+     * <p>Callers must hold the owning {@code SpawnerData.inventoryLock} for the
+     * removal to be atomic against concurrent mutations.
+     *
+     * @param desired signature to requested amount
+     * @return signature to amount actually removed (only positive entries)
+     */
+    public Map<ItemSignature, Long> removeUpTo(Map<ItemSignature, Long> desired) {
+        if (desired == null || desired.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<ItemSignature, Long> removed = new HashMap<>(desired.size());
+        boolean changed = false;
+
+        for (Map.Entry<ItemSignature, Long> entry : desired.entrySet()) {
+            ItemSignature signature = entry.getKey();
+            Long wantValue = entry.getValue();
+            if (signature == null || wantValue == null || wantValue <= 0) {
+                continue;
+            }
+
+            long want = wantValue;
+            long[] takenHolder = new long[1];
+            consolidatedItems.computeIfPresent(signature, (key, current) -> {
+                long take = Math.min(current, want);
+                takenHolder[0] = take;
+                long remaining = current - take;
+                return remaining <= 0 ? null : remaining;
+            });
+
+            if (takenHolder[0] > 0) {
+                removed.put(signature, takenHolder[0]);
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            sortedEntriesCache = null;
+        }
+
+        return removed;
     }
 
     public Int2ObjectMap<ItemStack> getDisplayPage(int page, int pageSize) {
@@ -266,12 +334,107 @@ public class VirtualInventory {
         return Int2ObjectMaps.unmodifiable(section);
     }
 
+    /**
+     * Pins the current display order (Phase 4). While frozen, {@link #getSortedEntries()} returns
+     * signatures in the captured order; a signature seen later (freshly looted) is appended at the
+     * end rather than sorted into the middle, and a depleted signature keeps its place so a refill
+     * reappears where it was. Callers hold {@code SpawnerData.inventoryLock}; the extra
+     * {@code orderLock} guards against the unlocked display reads.
+     */
+    public void freezeOrder() {
+        synchronized (orderLock) {
+            List<Map.Entry<ItemSignature, Long>> sorted = getSortedEntries();
+            List<ItemSignature> order = new ArrayList<>(sorted.size());
+            for (Map.Entry<ItemSignature, Long> entry : sorted) {
+                order.add(entry.getKey());
+            }
+            frozenOrder = order;
+            orderFrozen = true;
+        }
+    }
+
+    /** Releases the pinned order so the next display re-sorts by the sort preference (Phase 4). */
+    public void unfreezeOrder() {
+        synchronized (orderLock) {
+            orderFrozen = false;
+            frozenOrder = null;
+            sortedEntriesCache = null;
+        }
+    }
+
+    /** @return true if the display order is currently pinned. */
+    public boolean isOrderFrozen() {
+        return orderFrozen;
+    }
+
     private List<Map.Entry<ItemSignature, Long>> getSortedEntries() {
+        if (orderFrozen) {
+            List<Map.Entry<ItemSignature, Long>> frozen = buildFrozenEntries();
+            if (frozen != null) {
+                return frozen;
+            }
+        }
         if (sortedEntriesCache == null) {
             sortedEntriesCache = new ArrayList<>(consolidatedItems.entrySet());
             sortEntries(sortedEntriesCache);
         }
         return sortedEntriesCache;
+    }
+
+    /**
+     * Builds the display entry list honouring {@link #frozenOrder}: frozen signatures first (only
+     * those still present), then any newcomer signatures sorted and appended, growing the frozen
+     * order so their position stays stable for the rest of the freeze. Returns {@code null} if the
+     * order was concurrently unfrozen.
+     */
+    private List<Map.Entry<ItemSignature, Long>> buildFrozenEntries() {
+        synchronized (orderLock) {
+            if (!orderFrozen || frozenOrder == null) {
+                return null;
+            }
+            List<Map.Entry<ItemSignature, Long>> result = new ArrayList<>(frozenOrder.size() + 4);
+            Set<ItemSignature> known = new HashSet<>(frozenOrder);
+            for (ItemSignature sig : frozenOrder) {
+                Long amount = consolidatedItems.get(sig);
+                if (amount != null && amount > 0) {
+                    result.add(Map.entry(sig, amount));
+                }
+            }
+            List<ItemSignature> newcomers = null;
+            for (ItemSignature sig : consolidatedItems.keySet()) {
+                if (!known.contains(sig)) {
+                    if (newcomers == null) {
+                        newcomers = new ArrayList<>();
+                    }
+                    newcomers.add(sig);
+                }
+            }
+            if (newcomers != null) {
+                sortSignatures(newcomers);
+                for (ItemSignature sig : newcomers) {
+                    frozenOrder.add(sig);
+                    Long amount = consolidatedItems.get(sig);
+                    if (amount != null && amount > 0) {
+                        result.add(Map.entry(sig, amount));
+                    }
+                }
+            }
+            return result;
+        }
+    }
+
+    private void sortSignatures(List<ItemSignature> signatures) {
+        if (preferredSortMaterial != null) {
+            signatures.sort((a, b) -> {
+                boolean ap = a.getMaterial() == preferredSortMaterial;
+                boolean bp = b.getMaterial() == preferredSortMaterial;
+                if (ap && !bp) return -1;
+                if (!ap && bp) return 1;
+                return a.getMaterialName().compareTo(b.getMaterialName());
+            });
+        } else {
+            signatures.sort(Comparator.comparing(ItemSignature::getMaterialName));
+        }
     }
 
     private void sortEntries(List<Map.Entry<ItemSignature, Long>> entries) {

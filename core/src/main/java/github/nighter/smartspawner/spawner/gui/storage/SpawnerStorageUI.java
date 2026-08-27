@@ -35,6 +35,10 @@ public class SpawnerStorageUI {
 
     private static final int INVENTORY_SIZE = 54;
 
+    // Phase 4: how long after the last viewer leaves the frozen item order is kept, so a quick reopen
+    // does not reshuffle. A reopen after this grace re-sorts fresh.
+    private static final long STORAGE_ORDER_GRACE_MS = 3_000L;
+
     private final SmartSpawner plugin;
     private final LanguageManager languageManager;
     @Getter
@@ -58,6 +62,9 @@ public class SpawnerStorageUI {
     // Cache for title format to avoid repeated language lookups
     private String cachedStorageTitleFormat = null;
     private String cachedSingleStorageTitleFormat = null;
+
+    // Display-only filler pane for slots beyond a spawner's capacity on a partial last page.
+    private ItemStack fillerPane = null;
 
     // Cleanup task to remove stale entries from caches
     private Task cleanupTask;
@@ -231,6 +238,17 @@ public class SpawnerStorageUI {
 
         GuiLayout layout = layoutConfig.getStorageLayout(spawner, player);
 
+        // Phase 4: pin the item order while this spawner is being viewed. The opening player is not a
+        // tracked viewer yet (that happens on InventoryOpenEvent), so no storage viewers here means
+        // this is the first one. Re-sort fresh only when the order was never frozen or the reorder
+        // grace since the last viewer left has elapsed; otherwise keep the previous order so a quick
+        // reopen does not make items jump.
+        if (!plugin.getSpawnerGuiViewManager().hasStorageViewers(spawner)) {
+            long sinceEmpty = System.currentTimeMillis() - spawner.getStorageLastEmptyAt();
+            boolean resort = !spawner.isStorageOrderFrozen() || sinceEmpty > STORAGE_ORDER_GRACE_MS;
+            spawner.freezeStorageOrder(resort);
+        }
+
         // Create inventory with title including page info using placeholder-based format
         Inventory pageInv = Bukkit.createInventory(
                 new StoragePageHolder(spawner, page, totalPages, layout),
@@ -244,7 +262,8 @@ public class SpawnerStorageUI {
     }
 
     public void updateDisplay(Inventory inventory, SpawnerData spawner, int page, int totalPages) {
-        if (!spawner.getInventoryLock().tryLock()) {
+        StoragePageHolder holder = (StoragePageHolder) inventory.getHolder(false);
+        if (holder == null) {
             return;
         }
 
@@ -252,39 +271,57 @@ public class SpawnerStorageUI {
             totalPages = calculateTotalPages(spawner);
         }
 
-        // Track both changes and slots that need to be emptied
-        Map<Integer, ItemStack> updates = new HashMap<>();
-        Set<Integer> slotsToEmpty = new HashSet<>();
+        int size = inventory.getSize();
+        ItemStack[] target = new ItemStack[size];
 
-        // Clear storage area slots first
-        for (int i = 0; i < StoragePageHolder.MAX_ITEMS_PER_PAGE; i++) {
-            slotsToEmpty.add(i);
+        // Snapshot the requested page under the inventory lock, then release before touching Bukkit.
+        // If the lock is busy this tick, skip: the batched update task retries next tick, and the
+        // diff renderer means a skipped tick just leaves the (still-correct) previous image.
+        if (!spawner.getInventoryLock().tryLock()) {
+            return;
+        }
+        try {
+            Int2ObjectMap<ItemStack> displayItems =
+                    spawner.getVirtualInventory().getDisplayPage(page, StoragePageHolder.MAX_ITEMS_PER_PAGE);
+            for (Int2ObjectMap.Entry<ItemStack> entry : displayItems.int2ObjectEntrySet()) {
+                int slot = entry.getIntKey();
+                if (slot >= 0 && slot < size) {
+                    target[slot] = entry.getValue();
+                }
+            }
+        } finally {
+            spawner.getInventoryLock().unlock();
         }
 
-        // Also mark all button slots for potential clearing (fixes visual bug where buttons remain when they shouldn't)
-        StoragePageHolder holder = (StoragePageHolder) inventory.getHolder(false);
-        assert holder != null;
-        GuiLayout layout = holder.getLayout();
-        if (layout != null) {
-            slotsToEmpty.addAll(layout.getUsedSlots());
-        }
-
-        // Add items from virtual inventory
-        addPageItems(updates, slotsToEmpty, spawner, page);
-
-        // Add navigation buttons based on layout
-        addNavigationButtons(updates, spawner, page, totalPages, layout);
-
-        // Apply all updates in a batch
-        for (int slot : slotsToEmpty) {
-            if (!updates.containsKey(slot)) {
-                inventory.setItem(slot, null);
+        // Filler: on the capacity-final page of a spawner whose slot count is not a multiple of 45,
+        // the item slots beyond capacity can never hold anything, so mark them with filler panes to
+        // show the storage ceiling. Default installs (capacity = 45 x stack) never hit this.
+        int usable = usableItemSlots(spawner, page);
+        if (usable < StoragePageHolder.MAX_ITEMS_PER_PAGE) {
+            ItemStack filler = getFillerPane();
+            for (int slot = usable; slot < StoragePageHolder.MAX_ITEMS_PER_PAGE && slot < size; slot++) {
+                if (target[slot] == null) {
+                    target[slot] = filler;
+                }
             }
         }
 
-        for (Map.Entry<Integer, ItemStack> entry : updates.entrySet()) {
-            inventory.setItem(entry.getKey(), entry.getValue());
+        // Buttons overlay the item region's control row. A button slot the layout leaves unfilled
+        // this render (e.g. next_page on the last page) stays null in target and is cleared.
+        GuiLayout layout = holder.getLayout();
+        if (layout != null) {
+            Map<Integer, ItemStack> buttons = new HashMap<>();
+            addNavigationButtons(buttons, spawner, page, totalPages, layout);
+            for (Map.Entry<Integer, ItemStack> entry : buttons.entrySet()) {
+                int slot = entry.getKey();
+                if (slot >= 0 && slot < size) {
+                    target[slot] = entry.getValue();
+                }
+            }
         }
+
+        // Diff against the per-open cache; only changed slots are written, and no updateInventory().
+        StorageRenderer.patch(inventory, holder.getView(), target, spawner.getStorageVersion().get());
 
         // Update hologram if enabled
         if (plugin.getConfig().getBoolean("hologram.enabled", false)) {
@@ -300,26 +337,6 @@ public class SpawnerStorageUI {
             int newTotalPages = calculateTotalPages(spawner);
             holder.setTotalPages(newTotalPages);
             holder.updateOldUsedSlots();
-        }
-    }
-
-    private void addPageItems(Map<Integer, ItemStack> updates, Set<Integer> slotsToEmpty, SpawnerData spawner, int page) {
-        try {
-            // Read only the requested page instead of materializing the full logical inventory.
-            VirtualInventory virtualInv = spawner.getVirtualInventory();
-            Int2ObjectMap<ItemStack> displayItems = virtualInv.getDisplayPage(page, StoragePageHolder.MAX_ITEMS_PER_PAGE);
-
-            if (displayItems.isEmpty()) {
-                return;
-            }
-
-            for (Int2ObjectMap.Entry<ItemStack> entry : displayItems.int2ObjectEntrySet()) {
-                int displaySlot = entry.getIntKey();
-                updates.put(displaySlot, entry.getValue());
-                slotsToEmpty.remove(displaySlot);
-            }
-        } finally {
-            spawner.getInventoryLock().unlock();
         }
     }
 
@@ -434,6 +451,31 @@ public class SpawnerStorageUI {
     private int calculateTotalPages(SpawnerData spawner) {
         int usedSlots = spawner.getVirtualInventory().getUsedSlots();
         return Math.max(1, (int) Math.ceil((double) usedSlots / StoragePageHolder.MAX_ITEMS_PER_PAGE));
+    }
+
+    /**
+     * How many of a page's 45 item slots actually correspond to real storage capacity. Full for
+     * every page except the capacity-final one of a spawner whose slot count is not a multiple of 45,
+     * where it is the remainder. Item slots at or beyond this index are filler (display-only).
+     */
+    public static int usableItemSlots(SpawnerData spawner, int page) {
+        int capacity = spawner.getMaxSpawnerLootSlots();
+        int start = (Math.max(1, page) - 1) * StoragePageHolder.MAX_ITEMS_PER_PAGE;
+        int remaining = capacity - start;
+        if (remaining >= StoragePageHolder.MAX_ITEMS_PER_PAGE) {
+            return StoragePageHolder.MAX_ITEMS_PER_PAGE;
+        }
+        return Math.max(0, remaining);
+    }
+
+    private ItemStack getFillerPane() {
+        ItemStack pane = fillerPane;
+        if (pane == null) {
+            pane = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+            pane.editMeta(meta -> meta.displayName(Component.text(" ")));
+            fillerPane = pane;
+        }
+        return pane;
     }
 
     private ItemStack createButtonWithCustomTexture(GuiButton button, Consumer<ItemMeta> metaModifier) {

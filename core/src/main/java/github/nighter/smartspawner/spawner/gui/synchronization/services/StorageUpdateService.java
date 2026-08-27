@@ -26,6 +26,45 @@ public class StorageUpdateService {
     }
 
     /**
+     * Phase 3 version-based refresh: re-renders one storage viewer only if its cached image is behind
+     * the spawner's current {@code storageVersion}. Runs the version gate and the render on the
+     * viewer's region thread, so a viewer that is already up to date costs only a cheap comparison.
+     * The batched update task calls this once per tick for every storage viewer, replacing the old
+     * per-mutation push in {@code updateSpawnerMenuViewers}.
+     *
+     * @param viewer  the player viewing storage
+     * @param spawner the spawner whose storage they are viewing
+     */
+    public void refreshStorageViewer(Player viewer, SpawnerData spawner) {
+        Location loc = viewer.getLocation();
+        if (loc == null) {
+            return;
+        }
+        Scheduler.runLocationTask(loc, () -> {
+            if (!viewer.isOnline()) {
+                return;
+            }
+
+            Inventory openInv = viewer.getOpenInventory().getTopInventory();
+            if (!(openInv.getHolder(false) instanceof StoragePageHolder holder)) {
+                return;
+            }
+            if (!holder.getSpawnerData().getSpawnerId().equals(spawner.getSpawnerId())) {
+                return;
+            }
+
+            // Authoritative gate on the region thread that owns this inventory.
+            if (holder.getView().getRenderedVersion() >= spawner.getStorageVersion().get()) {
+                return;
+            }
+
+            int oldPages = calculateTotalPages(holder.getOldUsedSlots());
+            int newPages = calculateTotalPages(spawner.getVirtualInventory().getUsedSlots());
+            processStorageUpdateDirect(viewer, openInv, spawner, holder, oldPages, newPages);
+        });
+    }
+
+    /**
      * Processes storage update for a viewer.
      *
      * @param viewer The player viewing storage
@@ -69,10 +108,10 @@ public class StorageUpdateService {
         
         if (!pagesChanged) {
             // Just update contents - no title update needed, but MUST update oldUsedSlots
-            // to prevent stale values in future calculations
+            // to prevent stale values in future calculations. The diff renderer writes only the
+            // changed slots itself, so no viewer.updateInventory() (a full-inventory resend).
             spawnerStorageUI.updateDisplay(inventory, spawner, currentPage, newTotalPages);
             holder.updateOldUsedSlots();
-            viewer.updateInventory();
             return;
         }
         

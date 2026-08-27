@@ -69,6 +69,10 @@ public class ViewerTrackingManager {
     // Track filter GUI viewers to prevent duplication exploits
     private final Map<String, Set<UUID>> spawnerToFilterViewersMap = new ConcurrentHashMap<>();
 
+    // Track storage GUI viewers per spawner (Phase 3 version-based refresh, Phase 4 first/last-viewer
+    // freeze). Kept separate so the batched task can iterate only storage viewers.
+    private final Map<String, Set<UUID>> spawnerToStorageViewersMap = new ConcurrentHashMap<>();
+
     /**
      * Registers a player as viewing a specific spawner GUI.
      *
@@ -94,6 +98,12 @@ public class ViewerTrackingManager {
         // Separately track filter GUI viewers to prevent duplication exploits
         if (viewerType == ViewerType.FILTER) {
             spawnerToFilterViewersMap.computeIfAbsent(spawner.getSpawnerId(), k -> ConcurrentHashMap.newKeySet())
+                    .add(playerId);
+        }
+
+        // Separately track storage GUI viewers for version-based refresh and freeze
+        if (viewerType == ViewerType.STORAGE) {
+            spawnerToStorageViewersMap.computeIfAbsent(spawner.getSpawnerId(), k -> ConcurrentHashMap.newKeySet())
                     .add(playerId);
         }
     }
@@ -124,6 +134,15 @@ public class ViewerTrackingManager {
                 filterViewers.remove(playerId);
                 if (filterViewers.isEmpty()) {
                     spawnerToFilterViewersMap.remove(spawnerId);
+                }
+            }
+
+            // Remove from storage viewer tracking
+            Set<UUID> storageViewers = spawnerToStorageViewersMap.get(spawnerId);
+            if (storageViewers != null) {
+                storageViewers.remove(playerId);
+                if (storageViewers.isEmpty()) {
+                    spawnerToStorageViewersMap.remove(spawnerId);
                 }
             }
         }
@@ -225,6 +244,34 @@ public class ViewerTrackingManager {
     }
 
     /**
+     * Checks whether a spawner has any storage GUI viewers.
+     *
+     * @param spawner The spawner data
+     * @return true if at least one player has this spawner's storage GUI open
+     */
+    public boolean hasStorageViewers(SpawnerData spawner) {
+        Set<UUID> viewers = spawnerToStorageViewersMap.get(spawner.getSpawnerId());
+        return viewers != null && !viewers.isEmpty();
+    }
+
+    /**
+     * Snapshot of the current storage GUI viewers as (player UUID, spawner) pairs, for the batched
+     * version-based refresh.
+     *
+     * @return a fresh list, safe to iterate while viewers change
+     */
+    public List<Map.Entry<UUID, SpawnerData>> getStorageViewerEntries() {
+        List<Map.Entry<UUID, SpawnerData>> out = new ArrayList<>();
+        for (Map.Entry<UUID, ViewerInfo> entry : playerToSpawnerMap.entrySet()) {
+            ViewerInfo info = entry.getValue();
+            if (info.getViewerType() == ViewerType.STORAGE) {
+                out.add(Map.entry(entry.getKey(), info.getSpawnerData()));
+            }
+        }
+        return out;
+    }
+
+    /**
      * Checks if there are any viewers being tracked.
      *
      * @return true if any viewers are tracked
@@ -251,5 +298,6 @@ public class ViewerTrackingManager {
         mainMenuViewers.clear();
         spawnerToMainMenuViewers.clear();
         spawnerToFilterViewersMap.clear();
+        spawnerToStorageViewersMap.clear();
     }
 }

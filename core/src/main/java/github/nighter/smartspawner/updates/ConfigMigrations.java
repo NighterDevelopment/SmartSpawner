@@ -199,6 +199,20 @@ public final class ConfigMigrations {
             user.set("database.type", "SQLITE");
             changed = true;
         }
+        // 1.9.0: storage capacity moved from pages to slots. Not a plain rename – the value is
+        // scaled (1 page = 45 slots) – so it can't be a Rename entry. Preserve the owner's setting:
+        // set slots = pages * 45, then drop the old key so add-missing doesn't reintroduce it.
+        String pagesPath = "spawner_properties.default.max_storage_pages";
+        String slotsPath = "spawner_properties.default.max_storage_slots";
+        if (user.contains(pagesPath) && !user.contains(slotsPath)) {
+            int pages = Math.max(1, user.getInt(pagesPath, 1));
+            user.set(slotsPath, pages * 45);
+            changed = true;
+        }
+        if (user.contains(pagesPath)) {
+            user.set(pagesPath, null);
+            changed = true;
+        }
         // Everything worth keeping in these was moved by the renames above, so what is left is the
         // old nesting plus the HikariCP knobs 1.8.0 stopped exposing. Removing them keeps the
         // section from carrying two spellings of the same setting.
