@@ -54,10 +54,6 @@ Key concurrency problems addressed:
 | `SpawnerData.java` | `AtomicBoolean spawnerStop` | CAS flag (per spawner) | Thread-safe start/stop state for the spawner |
 | `SpawnerData.java` | `synchronized` methods | Intrinsic lock (per spawner) | Protects pre-generated loot storage (`storePreGeneratedLoot`, `getAndClearPreGeneratedItems`, etc.) |
 | `SpawnerData.java` | `volatile` fields (`accumulatedSellValue`, `sellValueDirty`, `preGeneratedItems`, `preGeneratedExperience`, `isPreGenerating`, `cachedHasNoLoot`) | Memory visibility | Allows safe reads from async threads without full locking |
-| `SpawnerLocationLockManager.java` | `ConcurrentHashMap<Location, ReentrantLock>` | Global location locks | Prevents race conditions between pickaxe break and stacking and placement operations |
-| `SpawnerLocationLockManager.java` | `ReentrantLock` (per location) | Fine-grained global lock | Same-location operations are serialized across all threads |
-| `SpawnerBreakListener.java` | `locationLockManager.tryLock()` | External global lock | Serializes break handling with stacking and placement operations |
-| `SpawnerRemovalService.java` | `locationLockManager.tryLock()` | External global lock | Serializes removal with break and GUI operations |
 | `SpawnerRemovalService.java` | `ConcurrentHashMap.newKeySet() pendingRemovalIds` | Concurrent set | Tracks spawners currently in the removal pipeline |
 | `SpawnerRemovalService.java` | `ConcurrentHashMap.newKeySet() pendingRemovalLocations` | Concurrent set | Tracks locations currently in the removal pipeline |
 | `SpawnerHighlightManager.java` | `AtomicBoolean cancelled` | CAS flag (per scan session) | Allows cross-thread cancellation of active scans |
@@ -116,27 +112,25 @@ updateStackSize(...);
 
 ---
 
-### 3.2 Global Location-Based Locks
+### 3.2 Global Location-Based Locks (removed)
 
-**File:** `SpawnerLocationLockManager.java`
+There was a `SpawnerLocationLockManager` holding one `ReentrantLock` per spawner location, used by
+`SpawnerBreakListener` and `SpawnerRemovalService`. It existed to serialize a GUI destack against a
+pickaxe break at the same block. The GUI stacker was removed, so that scenario no longer exists, and
+the lock was dropped.
 
-A global `ConcurrentHashMap<Location, ReentrantLock>` assigns one lock per spawner location. This serializes all operations that affect the same physical block, preventing duplication exploits such as:
+Same-location safety is now provided without it:
 
-- Clicking the GUI to remove spawners while breaking with a pickaxe.
-- Multiple players breaking the same spawner in the same tick.
-- Simultaneous operations that modify the stack size.
-
-**API:**
-- `getLock(Location)` — gets or creates a lock for the location.
-- `tryLock(Location)` — **non-blocking** acquire; returns `false` if already locked.
-- `unlock(Location)` — releases only if the current thread holds the lock (`isHeldByCurrentThread()` check).
-- `removeLock(Location)` — removes the lock entry when the spawner is deleted (prevents memory leaks).
-
-**Cleanup:** `Scheduler.runTaskTimerAsync(...)` runs every 5 minutes to purge unused locks for locations that no longer have a spawner.
-
-**Consumers of this lock:**
-- `SpawnerBreakListener` — both smart and vanilla spawner breaks.
-- `SpawnerRemovalService` — `claimRemoval()` and `removeBlockAndFinalize()`.
+- **Break vs break at the same block** — `BlockBreakEvent` for a given location always fires on that
+  location's region thread (main thread on Paper, region thread on Folia), so breaks of the same
+  spawner are already serialized by the thread model.
+- **Break vs removal** — every destructive mutation (`block.setType(AIR)`,
+  `SpawnerManager.removeSpawner`, `applyBreakResult`) runs through `Scheduler.runLocationTask`, i.e.
+  on the same region thread, and both paths re-verify the spawner identity before mutating.
+- **Removal vs removal** — `SpawnerRemovalService` claims a removal via the `pendingRemovalIds` /
+  `pendingRemovalLocations` concurrent sets; the CAS on `pendingRemovalLocations.add(blockPos)` lets
+  exactly one caller win, even from an async API thread.
+- **Anything vs sell** — guarded by the `SpawnerData.isSelling()` CAS.
 
 ---
 
@@ -217,7 +211,6 @@ Every method (`get`, `put`, `clear`, `size`, `capacity`, `resize`) is `synchroni
 
 | File | Collection | Purpose |
 |------|------------|---------|
-| `SpawnerLocationLockManager.java` | `ConcurrentHashMap<Location, ReentrantLock>` | Location lock registry |
 | `SpawnerManager.java` | `ConcurrentHashMap<String, SpawnerData>` | All loaded spawners |
 | `SpawnerManager.java` | `ConcurrentHashMap.newKeySet()` (`confirmedGhostSpawners`) | Confirmed ghost spawner IDs |
 | `VirtualInventory.java` | `ConcurrentHashMap<ItemSignature, Long>` | Consolidated item storage (note: writes are still protected by `inventoryLock` in `SpawnerData`) |
@@ -258,7 +251,6 @@ This is the single point of dispatch for every threaded operation in the plugin.
 - `SpawnerSellManager` — offloads sell math to async, then dispatches economy deposits back to the location thread.
 - `SpawnerHighlightManager` — offloads spawner scanning to async, then renders results on the main thread.
 - `SpawnerHologram` — every spawn/update/remove of the `TextDisplay` is dispatched to its owning region thread.
-- `SpawnerLocationLockManager` — cleanup task runs as an async timer.
 - `SpawnerSellConfirmListener` — reopens the previous GUI via `runEntityTask(player, ...)` so `ServerPlayer.initMenu()` runs on the player's own region thread.
 
 ---
@@ -269,7 +261,7 @@ This is the single point of dispatch for every threaded operation in the plugin.
 
 `removeSpawner(SpawnerData)` returns a `CompletableFuture<Boolean>`. The flow:
 
-1. Attempt to claim the removal (location lock + pending sets).
+1. Attempt to claim the removal (pending sets).
 2. If the chunk is already loaded, dispatch directly to `Scheduler.runLocationTask(...)`.
 3. If the chunk is **not** loaded, call `world.getChunkAtAsync(chunkX, chunkZ, true)` (Paper async chunk loading).
 4. In `whenComplete`, dispatch to `Scheduler.runLocationTask(...)` to remove the block on the correct region thread.
@@ -384,11 +376,10 @@ Key points:
 | File | Lock / Sync | Async / Scheduler | Primary Responsibility |
 |------|-------------|-------------------|------------------------|
 | `SpawnerData.java` | 3× `ReentrantLock`, `AtomicBoolean`, `synchronized`, `volatile` | None directly | Thread-safe spawner data container |
-| `SpawnerLocationLockManager.java` | `ConcurrentHashMap<Location, ReentrantLock>` | `runTaskTimerAsync` | Global location-based race prevention |
 | `SpawnerLootGenerator.java` | `lootGenerationLock`, `dataLock` (tryLock) | `runTaskAsync` → `runLocationTask` | Non-blocking loot generation |
 | `SpawnerSellManager.java` | `AtomicBoolean selling` (CAS) | `runTaskAsync` → `runLocationTask` | Non-blocking sell execution |
-| `SpawnerBreakListener.java` | `locationLockManager.tryLock()` | Callback dispatch via entity/location tasks | Safe spawner breaking |
-| `SpawnerRemovalService.java` | `locationLockManager`, pending sets (`ConcurrentHashMap`) | `CompletableFuture`, `getChunkAtAsync`, `runLocationTask` | Async-safe spawner removal |
+| `SpawnerBreakListener.java` | region-thread serialization, `isSelling()` CAS | Callback dispatch via entity/location tasks | Safe spawner breaking |
+| `SpawnerRemovalService.java` | pending sets (`ConcurrentHashMap`) | `CompletableFuture`, `getChunkAtAsync`, `runLocationTask` | Async-safe spawner removal |
 | `SpawnerHighlightManager.java` | `AtomicBoolean cancelled`, `CopyOnWriteArrayList` | `runTaskAsync` → `runTask` | Async scan + highlight rendering |
 | `SpawnerHologram.java` | `AtomicReference<TextDisplay>` | `runLocationTask`, `runEntityTask` | Folia-safe hologram management |
 | `VirtualInventory.java` | `ConcurrentHashMap` (internally, guarded by `inventoryLock`) | None | Item storage backing |
@@ -424,7 +415,7 @@ dataLock → inventoryLock
 
 ### 6.3 Try-Lock Non-Blocking Policy
 
-Both `SpawnerLootGenerator` and `SpawnerLocationLockManager` use `tryLock()` instead of `lock()`:
+`SpawnerLootGenerator` uses `tryLock()` instead of `lock()`:
 
 - If the lock is already held, the operation is **skipped** rather than blocked.
 - This guarantees that no server thread is ever blocked waiting for a spawner operation.
@@ -458,8 +449,6 @@ This keeps Bukkit API calls on the correct thread while still utilizing async pe
 
 2. **`preGeneratedItems` and `preGeneratedExperience` are `volatile`** and accessed via `synchronized` methods. Async callbacks write to them, and the location thread reads them — the combination of `volatile` + `synchronized` ensures visibility and atomicity.
 
-3. **`SpawnerLocationLockManager.unlock()`** only unlocks if `lock.isHeldByCurrentThread()`. This prevents `IllegalMonitorStateException` when `tryLock()` fails but `unlock()` is still reached in a `finally` block.
+3. **`CompletableFuture` in `SpawnerRemovalService`** must be completed **exactly once**. The code guards this with `if (!future.isDone()) future.complete(value)`.
 
-4. **`CompletableFuture` in `SpawnerRemovalService`** must be completed **exactly once**. The code guards this with `if (!future.isDone()) future.complete(value)`.
-
-5. **Cleanup task** in `SpawnerLocationLockManager` runs on an async timer. When purging old locks, it calls `tryLock()` first to ensure it never deletes a lock that is currently in use.
+4. **Same-location destructive operations** (break, removal) rely on running on the location's region thread rather than an explicit per-location lock. Any new code that mutates a spawner must run through `Scheduler.runLocationTask` (see the Folia invariant), otherwise this serialization guarantee is lost.

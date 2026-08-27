@@ -7,7 +7,6 @@ import github.nighter.smartspawner.extras.HopperService;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.spawner.data.storage.SpawnerStorage;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
-import github.nighter.smartspawner.spawner.utils.SpawnerLocationLockManager;
 import github.nighter.smartspawner.utils.BlockPos;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -25,7 +24,6 @@ public class SpawnerRemovalService {
     private final SmartSpawner plugin;
     private final SpawnerManager spawnerManager;
     private final SpawnerStorage spawnerStorage;
-    private final SpawnerLocationLockManager locationLockManager;
     private final Set<String> pendingRemovalIds = ConcurrentHashMap.newKeySet();
     private final Set<BlockPos> pendingRemovalLocations = ConcurrentHashMap.newKeySet();
 
@@ -33,7 +31,6 @@ public class SpawnerRemovalService {
         this.plugin = plugin;
         this.spawnerManager = plugin.getSpawnerManager();
         this.spawnerStorage = plugin.getSpawnerStorage();
-        this.locationLockManager = plugin.getSpawnerLocationLockManager();
     }
 
     public CompletableFuture<Boolean> removeSpawner(SpawnerData spawner) {
@@ -90,35 +87,30 @@ public class SpawnerRemovalService {
 
     private boolean claimRemoval(SpawnerData spawner, BlockPos blockPos) {
         Location location = spawner.getSpawnerLocation();
-        if (!locationLockManager.tryLock(location)) {
+
+        if (spawner.isSelling()) {
             return false;
         }
 
-        try {
-            if (spawner.isSelling()) {
-                return false;
-            }
-
-            SpawnerData currentById = spawnerManager.getSpawnerById(spawner.getSpawnerId());
-            SpawnerData currentByLocation = spawnerManager.getSpawnerByLocation(location);
-            if (currentById != spawner || currentByLocation != spawner) {
-                return false;
-            }
-
-            if (!pendingRemovalIds.add(spawner.getSpawnerId())) {
-                return false;
-            }
-
-            if (!pendingRemovalLocations.add(blockPos)) {
-                pendingRemovalIds.remove(spawner.getSpawnerId());
-                return false;
-            }
-
-            spawner.getSpawnerStop().set(true);
-            return true;
-        } finally {
-            locationLockManager.unlock(location);
+        SpawnerData currentById = spawnerManager.getSpawnerById(spawner.getSpawnerId());
+        SpawnerData currentByLocation = spawnerManager.getSpawnerByLocation(location);
+        if (currentById != spawner || currentByLocation != spawner) {
+            return false;
         }
+
+        // pendingRemovalLocations is the single-claim guard: the CAS on the concurrent
+        // set lets exactly one caller win removal for a given location, even across threads.
+        if (!pendingRemovalIds.add(spawner.getSpawnerId())) {
+            return false;
+        }
+
+        if (!pendingRemovalLocations.add(blockPos)) {
+            pendingRemovalIds.remove(spawner.getSpawnerId());
+            return false;
+        }
+
+        spawner.getSpawnerStop().set(true);
+        return true;
     }
 
     private void removeBlockAndFinalize(
@@ -139,12 +131,8 @@ public class SpawnerRemovalService {
             return;
         }
 
-        if (!locationLockManager.tryLock(location)) {
-            failRemoval(spawner, blockPos, previousStop, future);
-            return;
-        }
-
-        boolean removeLocationLock = false;
+        // Runs on the location's region thread, so it is already serialized against
+        // the block-break handler and any other removal for this same location.
         try {
             SpawnerData currentSpawner = spawnerManager.getSpawnerById(spawner.getSpawnerId());
             if (currentSpawner != spawner) {
@@ -165,15 +153,10 @@ public class SpawnerRemovalService {
             spawner.getSpawnerStop().set(true);
             spawnerManager.removeSpawner(spawner.getSpawnerId());
             spawnerStorage.markSpawnerDeleted(spawner.getSpawnerId());
-            removeLocationLock = true;
             completeFuture(future, true);
         } finally {
             pendingRemovalIds.remove(spawner.getSpawnerId());
             pendingRemovalLocations.remove(blockPos);
-            locationLockManager.unlock(location);
-            if (removeLocationLock) {
-                locationLockManager.removeLock(location);
-            }
         }
     }
 

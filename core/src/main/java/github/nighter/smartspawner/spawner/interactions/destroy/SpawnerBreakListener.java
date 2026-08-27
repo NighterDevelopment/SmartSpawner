@@ -12,7 +12,6 @@ import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.config.Config;
 import github.nighter.smartspawner.spawner.config.SpawnerSettingsConfig;
 import github.nighter.smartspawner.spawner.item.SpawnerItemFactory;
-import github.nighter.smartspawner.spawner.utils.SpawnerLocationLockManager;
 import lombok.Getter;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -40,7 +39,6 @@ public class SpawnerBreakListener implements Listener {
     private final MessageService messageService;
     private final SpawnerManager spawnerManager;
     private final SpawnerItemFactory spawnerItemFactory;
-    private final SpawnerLocationLockManager locationLockManager;
     private Config breakConfig;
 
     public SpawnerBreakListener(SmartSpawner plugin) {
@@ -52,7 +50,6 @@ public class SpawnerBreakListener implements Listener {
         this.messageService = plugin.getMessageService();
         this.spawnerManager = plugin.getSpawnerManager();
         this.spawnerItemFactory = plugin.getSpawnerItemFactory();
-        this.locationLockManager = plugin.getSpawnerLocationLockManager();
         loadConfig();
     }
 
@@ -129,64 +126,53 @@ public class SpawnerBreakListener implements Listener {
             return false;
         }
 
-        // Acquire location-based lock to prevent race conditions
-        // This prevents simultaneous GUI destack + pickaxe break duplication exploits
-        if (!locationLockManager.tryLock(location)) {
-            // Another break operation is already in progress
+        // Break handling runs on the block's region thread, so concurrent breaks of the
+        // same spawner are already serialized; re-verify the spawner is still the current one.
+        SpawnerData currentSpawner = spawnerManager.getSpawnerByLocation(location);
+        if (currentSpawner == null || !currentSpawner.getSpawnerId().equals(spawner.getSpawnerId())) {
+            // Spawner was removed/changed by another operation
+            return false;
+        }
+
+        // Block break while a sell is in progress
+        if (currentSpawner.isSelling()) {
             messageService.sendMessage(player, "action_in_progress");
             return false;
         }
 
-        try {
-            // Re-verify spawner still exists after acquiring lock
-            SpawnerData currentSpawner = spawnerManager.getSpawnerByLocation(location);
-            if (currentSpawner == null || !currentSpawner.getSpawnerId().equals(spawner.getSpawnerId())) {
-                // Spawner was removed/changed by another operation
-                return false;
-            }
+        boolean wantsStackBreak = player.isSneaking() && currentSpawner.getStackSize() > 1;
+        boolean bypassDropChance = hasDropChanceBypass(player);
+        if (wantsStackBreak && breakConfig.isSneakBreakEnabled() && !bypassDropChance && hasSmartSpawnerDropChance(currentSpawner)) {
+            messageService.sendMessage(player, "sneak_break_blocked");
+            return false;
+        }
 
-            // Block break while a sell is in progress
-            if (currentSpawner.isSelling()) {
-                messageService.sendMessage(player, "action_in_progress");
-                return false;
-            }
+        // Track player interaction for last interaction field
+        currentSpawner.updateLastInteractedPlayer(player.getName());
 
-            boolean wantsStackBreak = player.isSneaking() && currentSpawner.getStackSize() > 1;
-            boolean bypassDropChance = hasDropChanceBypass(player);
-            if (wantsStackBreak && breakConfig.isSneakBreakEnabled() && !bypassDropChance && hasSmartSpawnerDropChance(currentSpawner)) {
-                messageService.sendMessage(player, "sneak_break_blocked");
-                return false;
-            }
+        plugin.getSpawnerGuiViewManager().closeAllViewersInventory(currentSpawner);
 
-            // Track player interaction for last interaction field
-            currentSpawner.updateLastInteractedPlayer(player.getName());
+        SpawnerBreakResult result = processDrops(player, location, currentSpawner,
+                wantsStackBreak && breakConfig.isSneakBreakEnabled(), bypassDropChance);
+        if (!result.isSuccess()) {
+            return false;
+        }
 
-            plugin.getSpawnerGuiViewManager().closeAllViewersInventory(currentSpawner);
-
-            SpawnerBreakResult result = processDrops(player, location, currentSpawner,
-                    wantsStackBreak && breakConfig.isSneakBreakEnabled(), bypassDropChance);
-            if (!result.isSuccess()) {
-                return false;
-            }
-
-            if (result.isFullyRemoved()) {
-                // Option B: only trigger break-time auto claim/sell when the spawner is fully removed.
-                boolean cleanupDeferred = maybeAutoSellAndClaimExp(player, currentSpawner,
-                    () -> applyBreakResult(block, currentSpawner, player, result));
-                if (!cleanupDeferred) {
-                    applyBreakResult(block, currentSpawner, player, result);
-                }
-            } else {
+        if (result.isFullyRemoved()) {
+            // Option B: only trigger break-time auto claim/sell when the spawner is fully removed.
+            boolean cleanupDeferred = maybeAutoSellAndClaimExp(player, currentSpawner,
+                () -> applyBreakResult(block, currentSpawner, player, result));
+            if (!cleanupDeferred) {
                 applyBreakResult(block, currentSpawner, player, result);
             }
-
-            if (player.getGameMode() != GameMode.CREATIVE) {
-                reduceDurability(tool, player, result.getDurabilityLoss());
-            }
-            return true;
-        } finally {
-            locationLockManager.unlock(location);
+        } else {
+            applyBreakResult(block, currentSpawner, player, result);
         }
+
+        if (player.getGameMode() != GameMode.CREATIVE) {
+            reduceDurability(tool, player, result.getDurabilityLoss());
+        }
+        return true;
     }
 
     private boolean handleVanillaSpawnerBreak(Block block, CreatureSpawner creatureSpawner, Player player) {
@@ -197,49 +183,39 @@ public class SpawnerBreakListener implements Listener {
             return false;
         }
 
-        // Acquire location-based lock for vanilla spawners too
-        if (!locationLockManager.tryLock(location)) {
-            messageService.sendMessage(player, "action_in_progress");
+        // Runs on the block's region thread; re-check the block is still a spawner.
+        if (block.getType() != Material.SPAWNER) {
             return false;
         }
 
-        try {
-            // Re-check block is still a spawner after acquiring lock
-            if (block.getType() != Material.SPAWNER) {
-                return false;
-            }
+        EntityType entityType = creatureSpawner.getSpawnedType();
+        ItemStack spawnerItem;
+        if (breakConfig.isConvertNaturalToSmartSpawner()) {
+            spawnerItem = spawnerItemFactory.createSmartSpawnerItem(entityType);
+        } else {
+            spawnerItem = spawnerItemFactory.createVanillaSpawnerItem(entityType);
+        }
 
-            EntityType entityType = creatureSpawner.getSpawnedType();
-            ItemStack spawnerItem;
-            if (breakConfig.isConvertNaturalToSmartSpawner()) {
-                spawnerItem = spawnerItemFactory.createSmartSpawnerItem(entityType);
-            } else {
-                spawnerItem = spawnerItemFactory.createVanillaSpawnerItem(entityType);
-            }
+        World world = location.getWorld();
+        if (world != null) {
+            block.setType(Material.AIR);
 
-            World world = location.getWorld();
-            if (world != null) {
-                block.setType(Material.AIR);
-
-                if (hasDropChanceBypass(player) || shouldDropSpawner(getNaturalSpawnerDropChance(entityType))) {
-                    if (breakConfig.isDirectToInventory()) {
-                        giveSpawnersToPlayer(player, 1, spawnerItem);
-                        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
-                    } else {
-                        world.dropItemNaturally(findSafeDropLocation(block, player), spawnerItem);
-                    }
+            if (hasDropChanceBypass(player) || shouldDropSpawner(getNaturalSpawnerDropChance(entityType))) {
+                if (breakConfig.isDirectToInventory()) {
+                    giveSpawnersToPlayer(player, 1, spawnerItem);
+                    player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.2f);
                 } else {
-                    messageService.sendMessage(player, "drop_failed");
+                    world.dropItemNaturally(findSafeDropLocation(block, player), spawnerItem);
                 }
-
-                reduceDurability(tool, player, breakConfig.getDurabilityLoss());
-                return true;
+            } else {
+                messageService.sendMessage(player, "drop_failed");
             }
 
-            return false;
-        } finally {
-            locationLockManager.unlock(location);
+            reduceDurability(tool, player, breakConfig.getDurabilityLoss());
+            return true;
         }
+
+        return false;
     }
 
     private boolean validateBreakConditions(Player player, ItemStack tool, SpawnerData spawner) {
@@ -445,10 +421,6 @@ public class SpawnerBreakListener implements Listener {
         plugin.getRangeChecker().deactivateSpawner(spawner);
         spawnerManager.removeSpawner(spawnerId);
         spawnerManager.markSpawnerDeleted(spawnerId);
-
-        // Remove location lock to prevent memory leak
-        Location location = block.getLocation();
-        locationLockManager.removeLock(location);
     }
 
     /**
@@ -604,7 +576,6 @@ public class SpawnerBreakListener implements Listener {
         SpawnerManager getSpawnerManager();
         HopperService getHopperService();
         SpawnerItemFactory getSpawnerItemFactory();
-        SpawnerLocationLockManager getSpawnerLocationLockManager();
         SpawnerGuiViewManager getSpawnerGuiViewManager();
         SpawnerSettingsConfig getSpawnerSettingsConfig();
         boolean hasSellIntegration();
@@ -625,7 +596,6 @@ public class SpawnerBreakListener implements Listener {
         @Override public SpawnerManager getSpawnerManager() { return plugin.getSpawnerManager(); }
         @Override public HopperService getHopperService() { return plugin.getHopperService(); }
         @Override public SpawnerItemFactory getSpawnerItemFactory() { return plugin.getSpawnerItemFactory(); }
-        @Override public SpawnerLocationLockManager getSpawnerLocationLockManager() { return plugin.getSpawnerLocationLockManager(); }
         @Override public SpawnerGuiViewManager getSpawnerGuiViewManager() { return plugin.getSpawnerGuiViewManager(); }
         @Override public SpawnerSettingsConfig getSpawnerSettingsConfig() { return plugin.getSpawnerSettingsConfig(); }
         @Override public boolean hasSellIntegration() { return plugin.hasSellIntegration(); }
