@@ -10,6 +10,6 @@ updates:
     schedule:
       interval: "daily"
     assignees:
-      - "Nighter"
+      - "Nighterezi"
     commit-message:
       prefix: "chore"
