@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.spawner.gui.storage;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.Scheduler;
 import github.nighter.smartspawner.api.events.SpawnerDropAllEvent;
 import github.nighter.smartspawner.api.events.SpawnerTakeAllEvent;
 import github.nighter.smartspawner.api.gui.GuiLayoutType;
@@ -21,11 +22,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -33,7 +33,6 @@ import org.bukkit.util.Vector;
 import org.bukkit.entity.Item;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static github.nighter.smartspawner.spawner.gui.sell.SpawnerSellConfirmUI.PreviousGui.STORAGE;
 
@@ -48,9 +47,6 @@ public class SpawnerStorageAction implements Listener {
 
     private static final int INVENTORY_SIZE = 54;
     private static final int STORAGE_SLOTS = 45;
-
-    private final Map<UUID, Long> lastItemClickTime = new ConcurrentHashMap<>();
-    private static final long ITEM_CLICK_DELAY_MS = 100;
 
     public SpawnerStorageAction(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -76,8 +72,6 @@ public class SpawnerStorageAction implements Listener {
         }
 
         SpawnerData spawner = holder.getSpawnerData();
-        int slot = event.getRawSlot();
-        event.setCancelled(true);
 
         // Block ALL storage interactions while a sell is in progress.
         // This closes the race window where the storage GUI could be reopened (by the
@@ -85,33 +79,131 @@ public class SpawnerStorageAction implements Listener {
         // which would otherwise allow items to be taken from the virtual inventory twice –
         // once by the player and once by applySellResult.
         if (spawner.isSelling()) {
+            event.setCancelled(true);
             plugin.getMessageService().sendMessage(player, "action_in_progress");
             return;
         }
 
-        // Handle clicks outside valid storage GUI area
-        if (slot < 0 || slot >= INVENTORY_SIZE) {
+        int raw = event.getRawSlot();
+        if (raw < 0) {
             return;
         }
 
-        // Handle item slot clicks (taking items from storage)
-        if (isItemSlot(slot)) {
-            // Filler slots (beyond capacity on a partial last page) are display-only.
-            if (slot >= SpawnerStorageUI.usableItemSlots(spawner, holder.getCurrentPage())) {
-                return;
+        GuiLayout layout = holder.getLayout();
+
+        // Player's own inventory (bottom rows, raw >= 54): allow native moves within the bag, but never
+        // let items flow INTO storage. Shift-click (MOVE_TO_OTHER_INVENTORY) pushes into the top
+        // inventory and a double-click gather (COLLECT_TO_CURSOR) can pull from it, so both are
+        // cancelled here; every other action stays inside the player's inventory and needs no
+        // reconcile because storage does not change.
+        if (raw >= INVENTORY_SIZE) {
+            InventoryAction action = event.getAction();
+            if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY
+                    || action == InventoryAction.COLLECT_TO_CURSOR) {
+                event.setCancelled(true);
             }
-            handleItemSlotClick(player, slot, holder, spawner, event);
             return;
         }
 
-        // Handle control button clicks
-        if (isControlSlot(slot, holder.getLayout())) {
+        // Control buttons are fully handled by us, never natively.
+        if (isControlSlot(raw, layout)) {
+            event.setCancelled(true);
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() == Material.AIR) {
                 return;
             }
             handleControlSlotClick(
-                    player, slot, holder, spawner, event.getInventory(), event.getClick(), holder.getLayout());
+                    player, raw, holder, spawner, event.getInventory(), event.getClick(), layout);
+            return;
+        }
+
+        // Item region (raw 0..44): native take-out only, no deposit.
+        if (isItemSlot(raw)) {
+            // Filler slots (beyond capacity on a partial last page) are display-only.
+            if (raw >= SpawnerStorageUI.usableItemSlots(spawner, holder.getCurrentPage())) {
+                event.setCancelled(true);
+                return;
+            }
+            if (isTakeOutAction(event.getAction())) {
+                // Let Bukkit hand the item to the player, then reconcile the count-map next tick so
+                // the exact clicked cells are debited (loot that arrives meanwhile is preserved).
+                scheduleReconcile(player, holder, spawner);
+            } else {
+                // PLACE_*, SWAP_WITH_CURSOR, HOTBAR_*, NOTHING, UNKNOWN – block anything that could
+                // place an item into storage.
+                event.setCancelled(true);
+            }
+            return;
+        }
+
+        // Unused control-row slots (raw 45..53 with no button): consume the click.
+        event.setCancelled(true);
+    }
+
+    /**
+     * Actions that only ever move items OUT of the clicked storage slot. Only these are allowed to run
+     * natively on an item slot; everything else is a place/swap and is cancelled to enforce no-deposit.
+     */
+    private static boolean isTakeOutAction(InventoryAction action) {
+        return switch (action) {
+            case PICKUP_ALL, PICKUP_HALF, PICKUP_ONE, PICKUP_SOME,
+                 MOVE_TO_OTHER_INVENTORY, DROP_ONE_SLOT, DROP_ALL_SLOT, COLLECT_TO_CURSOR -> true;
+            default -> false;
+        };
+    }
+
+    /**
+     * Schedules the post-native reconcile on the player's region thread for the next tick. Bukkit
+     * applies the click result AFTER this LOWEST-priority listener returns, so the reconcile must run
+     * a tick later to observe the moved item.
+     */
+    private void scheduleReconcile(Player player, StoragePageHolder holder, SpawnerData spawner) {
+        Scheduler.runEntityTaskLater(player, () -> reconcileNativeTake(player, holder, spawner), 1L);
+    }
+
+    /**
+     * Reconciles the count-map with the Bukkit inventory after a native take. Uses the last painted
+     * image ({@code view}) as the baseline of what the player saw and acted on: for each item cell,
+     * the amount that disappeared from the Bukkit slot is debited from that exact frozen cell via
+     * {@link SpawnerData#takeItemFromCell}. Because that primitive clamps to the live cell amount,
+     * loot that topped a cell up between render and now is kept. This is safe only under the
+     * single-viewer lock, where no other Bukkit inventory of this spawner exists.
+     */
+    private void reconcileNativeTake(Player player, StoragePageHolder holder, SpawnerData spawner) {
+        if (!player.isOnline()) {
+            return;
+        }
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (!(inventory.getHolder(false) instanceof StoragePageHolder current) || current != holder) {
+            return;
+        }
+
+        int page = holder.getCurrentPage();
+        int startSlot = (page - 1) * STORAGE_SLOTS;
+        int usable = SpawnerStorageUI.usableItemSlots(spawner, page);
+        StorageView view = holder.getView();
+
+        boolean anyRemoved = false;
+        for (int i = 0; i < STORAGE_SLOTS && i < usable; i++) {
+            ItemStack painted = view.get(i);
+            if (painted == null || painted.getType() == Material.AIR) {
+                continue;
+            }
+            ItemStack now = inventory.getItem(i);
+            int nowAmount = (now != null && now.isSimilar(painted)) ? now.getAmount() : 0;
+            int removed = painted.getAmount() - nowAmount;
+            if (removed > 0) {
+                spawner.takeItemFromCell(startSlot + i, removed);
+                anyRemoved = true;
+            }
+        }
+
+        if (anyRemoved) {
+            // Repaint to the current frozen cells and resync pages/capacity/hologram/menu viewers.
+            // This also makes any later reconcile a no-op (painted == now), so loot is never
+            // double-counted.
+            updatePageAfterRemoval(player, inventory, spawner, holder);
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.0f);
         }
     }
 
@@ -282,140 +374,9 @@ public class SpawnerStorageAction implements Listener {
     }
 
     /**
-     * Handles clicks on item slots in the storage GUI.
-     * ALL clicks transfer items directly to player inventory (no cursor interaction).
-     * - LEFT CLICK: Take 1 item from stack
-     * - RIGHT CLICK: Take half of stack
-     * - SHIFT CLICK: Take entire stack
-     */
-    private void handleItemSlotClick(Player player, int slot, StoragePageHolder holder,
-                                    SpawnerData spawner, InventoryClickEvent event) {
-        // Anti-spam check
-        if (isItemClickTooFrequent(player)) {
-            return;
-        }
-        lastItemClickTime.put(player.getUniqueId(), System.currentTimeMillis());
-
-        Inventory inventory = event.getInventory();
-        ItemStack clickedItem = inventory.getItem(slot);
-
-        // Nothing to take from empty slot
-        if (clickedItem == null || clickedItem.getType() == Material.AIR) {
-            return;
-        }
-
-        // Determine amount to take based on click type
-        ClickType clickType = event.getClick();
-        int amountToTake;
-
-        switch (clickType) {
-            case LEFT:
-                // Left click = take only 1 item
-                amountToTake = 1;
-                break;
-            case RIGHT:
-                // Right click = take half
-                amountToTake = (int) Math.ceil(clickedItem.getAmount() / 2.0);
-                break;
-            case SHIFT_LEFT:
-            case SHIFT_RIGHT:
-                // Shift click = take all
-                amountToTake = clickedItem.getAmount();
-                break;
-            default:
-                // Ignore other click types
-                return;
-        }
-
-        // Global display slot the player clicked, so the take hits that exact pinned cell.
-        int globalSlot = (holder.getCurrentPage() - 1) * STORAGE_SLOTS + slot;
-
-        // Transfer items to player inventory
-        transferToPlayerInventory(player, clickedItem, amountToTake, globalSlot, inventory, spawner, holder);
-    }
-
-    /**
-     * Transfers a single item type from storage to the player inventory.
-     *
-     * <p>Transactional order (dupe-safe): compute how much the bag can accept (read-only), remove
-     * exactly that much from the source of truth, then place back into the bag only what was actually
-     * removed. While a viewer is present the layout is frozen, so the take targets the exact clicked
-     * cell ({@code globalSlot}) and leaves a hole there; only the pre-freeze fallback removes by
-     * signature.
-     */
-    private void transferToPlayerInventory(Player player, ItemStack clickedItem, int amountToTake,
-                                          int globalSlot, Inventory storageInv, SpawnerData spawner,
-                                          StoragePageHolder holder) {
-        PlayerInventory playerInv = player.getInventory();
-        ItemStack template = clickedItem.asQuantity(1);
-
-        // How much of this item can the bag actually accept, capped by the requested amount.
-        int acceptable = computeAcceptableAmount(playerInv, template, amountToTake);
-        if (acceptable <= 0) {
-            messageService.sendMessage(player, "inventory_full");
-            return;
-        }
-
-        ItemSignature signature = VirtualInventory.getSignature(template);
-        Map<ItemSignature, Long> removed = spawner.getVirtualInventory().isOrderFrozen()
-                ? spawner.takeItemFromCell(globalSlot, acceptable)
-                : spawner.takeItems(Map.of(signature, (long) acceptable));
-
-        long removedAmount = 0;
-        for (long amount : removed.values()) {
-            removedAmount += amount;
-        }
-
-        if (removedAmount <= 0) {
-            // Nothing left – another viewer emptied it, or a sell is running. Refresh the stale slot.
-            updatePageAfterRemoval(player, storageInv, spawner, holder);
-            return;
-        }
-
-        // Place back exactly what was removed. The cell always matches the clicked item while frozen,
-        // but keying off the removed signature keeps this correct even if it somehow did not.
-        for (Map.Entry<ItemSignature, Long> entry : removed.entrySet()) {
-            // removedAmount <= acceptable, so this always fits completely.
-            addToPlayerInventory(playerInv, entry.getKey().getTemplate(), entry.getValue().intValue());
-        }
-
-        updatePageAfterRemoval(player, storageInv, spawner, holder);
-        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.0f);
-
-        // Only warn "inventory full" when the bag (not the storage) was the limiter.
-        if (acceptable < amountToTake) {
-            messageService.sendMessage(player, "inventory_full");
-        }
-    }
-
-    /**
-     * Read-only: how much of {@code template} the player's main inventory can accept, capped
-     * at {@code cap}. Counts space in matching partial stacks plus empty slots. Does not mutate.
-     */
-    private int computeAcceptableAmount(PlayerInventory playerInv, ItemStack template, int cap) {
-        if (cap <= 0) {
-            return 0;
-        }
-        int maxStack = template.getMaxStackSize();
-        int space = 0;
-        for (int i = 0; i < 36 && space < cap; i++) {
-            ItemStack slot = playerInv.getItem(i);
-            if (slot == null || slot.getType() == Material.AIR) {
-                space += maxStack;
-            } else if (slot.isSimilar(template)) {
-                int room = maxStack - slot.getAmount();
-                if (room > 0) {
-                    space += room;
-                }
-            }
-        }
-        return Math.min(space, cap);
-    }
-
-    /**
      * Places {@code amount} of {@code template} into the player's main inventory, stacking into
-     * matching partial stacks first, then empty slots. The caller must have verified via
-     * {@link #computeAcceptableAmount} that {@code amount} fits, so nothing is dropped.
+     * matching partial stacks first, then empty slots. The caller (take-all / drop) must have verified
+     * the amount fits (e.g. via {@link #simulateBagFill}), so nothing is dropped.
      */
     private void addToPlayerInventory(PlayerInventory playerInv, ItemStack template, int amount) {
         int remaining = amount;
@@ -754,23 +715,6 @@ public class SpawnerStorageAction implements Listener {
         }
     }
 
-    private boolean isItemClickTooFrequent(Player player) {
-        long now = System.currentTimeMillis();
-        long last = lastItemClickTime.getOrDefault(player.getUniqueId(), 0L);
-
-        if ((now - last) < ITEM_CLICK_DELAY_MS) {
-            messageService.sendMessage(player, "click_too_fast");
-            return true;
-        }
-        return false;
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        UUID playerId = event.getPlayer().getUniqueId();
-        lastItemClickTime.remove(playerId);
-    }
-
     private boolean handleSortItemsClick(Player player, SpawnerData spawner, Inventory inventory) {
         // Validate loot config
         if (spawner.getLootConfig() == null || spawner.getLootConfig().getAllItems() == null) {
@@ -967,7 +911,14 @@ public class SpawnerStorageAction implements Listener {
         if (!(event.getInventory().getHolder(false) instanceof StoragePageHolder)) {
             return;
         }
-        event.setCancelled(true);
+        // A drag can only ever PLACE items, so any drag touching the top (storage) inventory is a
+        // deposit and is cancelled. A drag confined to the player's own inventory is allowed.
+        for (int raw : event.getRawSlots()) {
+            if (raw < INVENTORY_SIZE) {
+                event.setCancelled(true);
+                return;
+            }
+        }
     }
 
     @EventHandler

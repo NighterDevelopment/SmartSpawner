@@ -1,5 +1,6 @@
 package github.nighter.smartspawner.spawner.gui.synchronization.listeners;
 
+import github.nighter.smartspawner.language.MessageService;
 import github.nighter.smartspawner.spawner.gui.main.SpawnerMenuHolder;
 import github.nighter.smartspawner.spawner.gui.storage.StoragePageHolder;
 import github.nighter.smartspawner.spawner.gui.storage.filter.FilterConfigHolder;
@@ -24,16 +25,47 @@ public class InventoryEventListener implements Listener {
 
     private final ViewerTrackingManager viewerTrackingManager;
     private final Runnable onViewerAdded;
+    private final MessageService messageService;
     private final Set<Class<? extends InventoryHolder>> validHolderTypes;
 
-    public InventoryEventListener(ViewerTrackingManager viewerTrackingManager, Runnable onViewerAdded) {
+    public InventoryEventListener(ViewerTrackingManager viewerTrackingManager, Runnable onViewerAdded,
+                                  MessageService messageService) {
         this.viewerTrackingManager = viewerTrackingManager;
         this.onViewerAdded = onViewerAdded;
+        this.messageService = messageService;
         this.validHolderTypes = Set.of(
                 SpawnerMenuHolder.class,
                 StoragePageHolder.class,
                 FilterConfigHolder.class
         );
+    }
+
+    /**
+     * Single-viewer gate for storage GUIs. Runs before the tracking handler (which is at MONITOR):
+     * if another player already has this spawner's storage open, the open is cancelled and the
+     * player is told to wait. This is what keeps native item interaction dupe-safe, since only one
+     * Bukkit inventory ever exists per spawner storage at a time.
+     *
+     * <p>The gate looks only for a different UUID already viewing this spawner's storage, so it is
+     * independent of whether the opening player is tracked yet. A player's own reopen (after a sell
+     * or filter round-trip) closes the previous storage first, so their UUID is no longer present
+     * and the reopen passes.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onStorageOpenGate(InventoryOpenEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) {
+            return;
+        }
+
+        InventoryHolder holder = event.getInventory().getHolder(false);
+        if (!(holder instanceof StoragePageHolder storageHolder)) {
+            return;
+        }
+
+        if (viewerTrackingManager.isStorageViewedByOther(storageHolder.getSpawnerData(), player.getUniqueId())) {
+            event.setCancelled(true);
+            messageService.sendMessage(player, "storage_in_use");
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

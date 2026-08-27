@@ -13,19 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VirtualInventory {
     private final Map<ItemSignature, Long> consolidatedItems;
     @Getter private int maxSlots;
-    // Cache sorted entries to avoid resorting when display isn't changing
     private List<Map.Entry<ItemSignature, Long>> sortedEntriesCache;
     private Material preferredSortMaterial;
 
-    // Frozen slot layout: while a storage viewer is present the display is pinned at the slot level,
-    // with a per-cell amount, not just the signature order. Each element is one rendered stack bound
-    // to a fixed display cell; a null element is a permanently empty hole. Removals target the exact
-    // cells the player acted on (so dropping page N empties page N's slots, not the tail of some
-    // signature), an emptied cell stays a hole until the last viewer leaves, and freshly generated
-    // loot appends at the end. The count-map above stays the source of truth for totals (sell,
-    // persistence, capacity); these cells mirror it exactly and are what the GUI renders, which is
-    // what stops items sliding up ("dồn lên") after every action. Guarded by orderLock because the
-    // display is read without the owning SpawnerData.inventoryLock in a few paths.
+    // Frozen slot layout: while a viewer is present the display is pinned per slot (each cell holds
+    // its own amount), so takes hit the exact acted cells and leave holes instead of items sliding up.
+    // A null cell is a permanent hole; loot fills holes then appends. The count-map stays the source
+    // of truth for totals; these cells mirror it and are what the GUI renders. Guarded by orderLock:
+    // some display reads run without the owning SpawnerData.inventoryLock.
     private final Object orderLock = new Object();
     private volatile boolean orderFrozen = false;
     private List<FrozenCell> frozenCells;

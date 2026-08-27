@@ -53,7 +53,8 @@ public class SpawnerGuiViewManager {
         this.storageUpdateService = new StorageUpdateService(plugin);
         
         // Initialize listeners
-        this.inventoryEventListener = new InventoryEventListener(viewerTrackingManager, this::onViewerAdded);
+        this.inventoryEventListener = new InventoryEventListener(
+                viewerTrackingManager, this::onViewerAdded, plugin.getMessageService());
         this.playerEventListener = new PlayerEventListener(viewerTrackingManager);
         
         // Register event listeners

@@ -255,6 +255,30 @@ public class ViewerTrackingManager {
     }
 
     /**
+     * Whether a spawner's storage GUI is currently open for someone other than {@code playerId}.
+     * Used by the single-viewer gate: at most one player may have a spawner's storage open at a
+     * time, which is what makes native item interaction dupe-safe (only one Bukkit inventory exists
+     * per spawner). The gate does not depend on whether {@code playerId} is tracked yet, so it is
+     * correct regardless of listener ordering at open time.
+     *
+     * @param spawner  the spawner whose storage is being opened
+     * @param playerId the UUID of the player attempting to open
+     * @return true if any different player already has this spawner's storage open
+     */
+    public boolean isStorageViewedByOther(SpawnerData spawner, UUID playerId) {
+        Set<UUID> viewers = spawnerToStorageViewersMap.get(spawner.getSpawnerId());
+        if (viewers == null || viewers.isEmpty()) {
+            return false;
+        }
+        for (UUID viewer : viewers) {
+            if (!viewer.equals(playerId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Snapshot of the current storage GUI viewers as (player UUID, spawner) pairs, for the batched
      * version-based refresh.
      *

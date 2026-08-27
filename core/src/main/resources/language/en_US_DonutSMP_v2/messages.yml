@@ -38,6 +38,10 @@ action_in_progress:
   message: '&#F0C857There is already an action in progress. Please wait.'
   action_bar: '&#F0C857Action in progress. Please wait.'
 
+storage_in_use:
+  message: '&#F0C857This spawner storage is already open by another player. Please wait.'
+  action_bar: '&#F0C857Storage in use. Please wait.'
+
 action_failed:
   message: '&#FF4444The action failed. Please try again.'
   action_bar: '&#FF4444The action failed. Please try again.'
