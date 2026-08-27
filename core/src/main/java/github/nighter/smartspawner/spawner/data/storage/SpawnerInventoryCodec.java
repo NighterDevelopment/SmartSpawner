@@ -81,23 +81,21 @@ public final class SpawnerInventoryCodec {
         LinkedHashMap<ItemStack, LinkedHashMap<Integer, Long>> groups = new LinkedHashMap<>(Math.max(16, items.size() * 2));
 
         for (Map.Entry<ItemSignature, Long> entry : items.entrySet()) {
+            ItemSignature signature = entry.getKey();
             Long amount = entry.getValue();
             if (amount == null || amount <= 0L) {
                 continue;
             }
 
-            ItemStack template = entry.getKey().getTemplate();
+            ItemStack template = signature.getTemplate();
             if (template == null || template.getType() == Material.AIR) {
                 continue;
             }
 
-            int damage = 0;
-            ItemMeta meta = template.hasItemMeta() ? template.getItemMeta() : null;
-            if (meta instanceof Damageable damageable) {
-                damage = damageable.getDamage();
-                // Only rewrite the meta for genuinely damaged items; leaving undamaged items untouched
-                // keeps their base identical to what v1 stored and to freshly built templates.
-                if (damage != 0) {
+            int damage = signature.getDamage();
+            if (damage != 0) {
+                ItemMeta meta = signature.hasItemMeta() ? template.getItemMeta() : null;
+                if (meta instanceof Damageable damageable) {
                     damageable.setDamage(0);
                     template.setItemMeta(damageable);
                 }
