@@ -327,20 +327,25 @@ public class SpawnerStorageAction implements Listener {
                 return;
         }
 
+        // Global display slot the player clicked, so the take hits that exact pinned cell.
+        int globalSlot = (holder.getCurrentPage() - 1) * STORAGE_SLOTS + slot;
+
         // Transfer items to player inventory
-        transferToPlayerInventory(player, clickedItem, amountToTake, inventory, spawner, holder);
+        transferToPlayerInventory(player, clickedItem, amountToTake, globalSlot, inventory, spawner, holder);
     }
 
     /**
      * Transfers a single item type from storage to the player inventory.
      *
-     * <p>Transactional order (dupe-safe): compute how much the bag can accept (read-only),
-     * ask {@link SpawnerData#takeItems(Map)} to remove exactly that much from the source of
-     * truth, then place back into the bag only what was actually removed. The clicked GUI slot
-     * only identifies WHICH item; the amount is governed by capacity and by the atomic take.
+     * <p>Transactional order (dupe-safe): compute how much the bag can accept (read-only), remove
+     * exactly that much from the source of truth, then place back into the bag only what was actually
+     * removed. While a viewer is present the layout is frozen, so the take targets the exact clicked
+     * cell ({@code globalSlot}) and leaves a hole there; only the pre-freeze fallback removes by
+     * signature.
      */
     private void transferToPlayerInventory(Player player, ItemStack clickedItem, int amountToTake,
-                                          Inventory storageInv, SpawnerData spawner, StoragePageHolder holder) {
+                                          int globalSlot, Inventory storageInv, SpawnerData spawner,
+                                          StoragePageHolder holder) {
         PlayerInventory playerInv = player.getInventory();
         ItemStack template = clickedItem.asQuantity(1);
 
@@ -352,8 +357,14 @@ public class SpawnerStorageAction implements Listener {
         }
 
         ItemSignature signature = VirtualInventory.getSignature(template);
-        Map<ItemSignature, Long> removed = spawner.takeItems(Map.of(signature, (long) acceptable));
-        long removedAmount = removed.getOrDefault(signature, 0L);
+        Map<ItemSignature, Long> removed = spawner.getVirtualInventory().isOrderFrozen()
+                ? spawner.takeItemFromCell(globalSlot, acceptable)
+                : spawner.takeItems(Map.of(signature, (long) acceptable));
+
+        long removedAmount = 0;
+        for (long amount : removed.values()) {
+            removedAmount += amount;
+        }
 
         if (removedAmount <= 0) {
             // Nothing left – another viewer emptied it, or a sell is running. Refresh the stale slot.
@@ -361,8 +372,12 @@ public class SpawnerStorageAction implements Listener {
             return;
         }
 
-        // removedAmount <= acceptable, so this always fits completely.
-        addToPlayerInventory(playerInv, template, (int) removedAmount);
+        // Place back exactly what was removed. The cell always matches the clicked item while frozen,
+        // but keying off the removed signature keeps this correct even if it somehow did not.
+        for (Map.Entry<ItemSignature, Long> entry : removed.entrySet()) {
+            // removedAmount <= acceptable, so this always fits completely.
+            addToPlayerInventory(playerInv, entry.getKey().getTemplate(), entry.getValue().intValue());
+        }
 
         updatePageAfterRemoval(player, storageInv, spawner, holder);
         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.0f);
@@ -546,8 +561,9 @@ public class SpawnerStorageAction implements Listener {
         spawner.updateHologramData();
         spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
 
-        // Check capacity
-        if (spawner.getMaxSpawnerLootSlots() > holder.getOldUsedSlots() && spawner.getIsAtCapacity()) {
+        // Check capacity against real occupancy (packed), not the display layout which can carry holes.
+        if (spawner.getMaxSpawnerLootSlots() > spawner.getVirtualInventory().getUsedSlots()
+                && spawner.getIsAtCapacity()) {
             spawner.setIsAtCapacity(false);
         }
 
@@ -562,6 +578,7 @@ public class SpawnerStorageAction implements Listener {
         }
 
         VirtualInventory virtualInv = spawner.getVirtualInventory();
+        int startSlot = (holder.getCurrentPage() - 1) * StoragePageHolder.MAX_ITEMS_PER_PAGE;
 
         // Project the current page from the source of truth (count-map), not the GUI slots.
         Int2ObjectMap<ItemStack> pageDisplay =
@@ -572,29 +589,36 @@ public class SpawnerStorageAction implements Listener {
         }
 
         List<ItemStack> pageItems = new ArrayList<>(pageDisplay.values());
+        boolean hasDropListeners = SpawnerDropAllEvent.getHandlerList().getRegisteredListeners().length != 0;
 
-        if (SpawnerDropAllEvent.getHandlerList().getRegisteredListeners().length != 0) {
+        if (hasDropListeners) {
             SpawnerDropAllEvent event = new SpawnerDropAllEvent(player, spawner.getSpawnerLocation(), pageItems);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) return false;
             pageItems = event.getItems();
         }
 
-        // Build the requested amounts from the (possibly addon-modified) list.
-        Map<ItemSignature, Long> desired = new HashMap<>();
-        for (ItemStack item : pageItems) {
-            if (item == null || item.getType() == Material.AIR || item.getAmount() <= 0) {
-                continue;
-            }
-            desired.merge(VirtualInventory.getSignature(item), (long) item.getAmount(), Long::sum);
-        }
-        if (desired.isEmpty()) {
-            messageService.sendMessage(player, "spawner_storage_empty");
-            return false;
-        }
-
         // Atomic removal; drop back exactly what was removed (dupe-safe against stale views).
-        Map<ItemSignature, Long> removed = spawner.takeItems(desired);
+        // While frozen with no addon rewriting the list, empty the page's exact cells so the acted
+        // page clears in place instead of pulling items up from later pages. Otherwise fall back to a
+        // by-signature take built from the (possibly addon-modified) projected list.
+        Map<ItemSignature, Long> removed;
+        if (!hasDropListeners && virtualInv.isOrderFrozen()) {
+            removed = spawner.takeItemsFromCellRange(startSlot, StoragePageHolder.MAX_ITEMS_PER_PAGE);
+        } else {
+            Map<ItemSignature, Long> desired = new HashMap<>();
+            for (ItemStack item : pageItems) {
+                if (item == null || item.getType() == Material.AIR || item.getAmount() <= 0) {
+                    continue;
+                }
+                desired.merge(VirtualInventory.getSignature(item), (long) item.getAmount(), Long::sum);
+            }
+            if (desired.isEmpty()) {
+                messageService.sendMessage(player, "spawner_storage_empty");
+                return false;
+            }
+            removed = spawner.takeItems(desired);
+        }
         if (removed.isEmpty()) {
             messageService.sendMessage(player, "spawner_storage_empty");
             return false;
@@ -630,7 +654,9 @@ public class SpawnerStorageAction implements Listener {
         spawner.updateHologramData();
         spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
 
-        if (spawner.getMaxSpawnerLootSlots() > holder.getOldUsedSlots() && spawner.getIsAtCapacity()) {
+        // Capacity is about real occupancy (packed), not the display layout which can carry holes.
+        if (spawner.getMaxSpawnerLootSlots() > spawner.getVirtualInventory().getUsedSlots()
+                && spawner.getIsAtCapacity()) {
             spawner.setIsAtCapacity(false);
         }
         spawner.markStorageDirty();
@@ -711,8 +737,11 @@ public class SpawnerStorageAction implements Listener {
     }
 
     private int calculateTotalPages(SpawnerData spawner) {
-        int usedSlots = spawner.getVirtualInventory().getUsedSlots();
-        return Math.max(1, (int) Math.ceil((double) usedSlots / StoragePageHolder.MAX_ITEMS_PER_PAGE));
+        // Pages follow the display layout (frozen cells, holes included), not the packed item count,
+        // so navigation matches what is actually rendered. Must agree with
+        // SpawnerStorageUI.calculateTotalPages, which uses the same source.
+        int displaySlots = spawner.getVirtualInventory().getDisplaySlotCount();
+        return Math.max(1, (int) Math.ceil((double) displaySlots / StoragePageHolder.MAX_ITEMS_PER_PAGE));
     }
 
     private void updateInventoryTitle(Player player, SpawnerData spawner, int page, int totalPages) {
@@ -900,7 +929,9 @@ public class SpawnerStorageAction implements Listener {
 
         spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
 
-        if (spawner.getMaxSpawnerLootSlots() > holder.getOldUsedSlots() && spawner.getIsAtCapacity()) {
+        // Capacity is about real occupancy (packed), not the display layout which can carry holes.
+        if (spawner.getMaxSpawnerLootSlots() > spawner.getVirtualInventory().getUsedSlots()
+                && spawner.getIsAtCapacity()) {
             spawner.setIsAtCapacity(false);
         }
         spawner.markStorageDirty();

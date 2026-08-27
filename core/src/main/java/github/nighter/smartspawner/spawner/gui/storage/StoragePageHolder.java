@@ -32,7 +32,7 @@ public class StoragePageHolder implements InventoryHolder, SpawnerHolder {
         this.spawnerData = spawnerData;
         this.currentPage = Math.max(1, Math.min(currentPage, totalPages));
         this.totalPages = Math.max(1, totalPages);
-        this.oldUsedSlots = spawnerData.getVirtualInventory().getUsedSlots();
+        this.oldUsedSlots = spawnerData.getVirtualInventory().getDisplaySlotCount();
         this.layout = layout;
     }
 
@@ -51,6 +51,6 @@ public class StoragePageHolder implements InventoryHolder, SpawnerHolder {
     }
 
     public void updateOldUsedSlots() {
-        this.oldUsedSlots = spawnerData.getVirtualInventory().getUsedSlots();
+        this.oldUsedSlots = spawnerData.getVirtualInventory().getDisplaySlotCount();
     }
 }

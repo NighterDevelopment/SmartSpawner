@@ -57,8 +57,10 @@ public class StorageUpdateService {
                 return;
             }
 
+            // Pages follow the display layout (frozen cells, holes included). holder.getOldUsedSlots()
+            // already tracks the display slot count, so both sides use the same source.
             int oldPages = calculateTotalPages(holder.getOldUsedSlots());
-            int newPages = calculateTotalPages(spawner.getVirtualInventory().getUsedSlots());
+            int newPages = calculateTotalPages(spawner.getVirtualInventory().getDisplaySlotCount());
             processStorageUpdateDirect(viewer, openInv, spawner, holder, oldPages, newPages);
         });
     }

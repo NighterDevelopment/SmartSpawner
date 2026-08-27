@@ -860,6 +860,65 @@ public class SpawnerData {
     }
 
     /**
+     * Slot-targeted take for dropping a whole page: removes exactly the cells in
+     * {@code [startSlot, startSlot + count)} of the pinned display, so the acted page's slots empty in
+     * place instead of the tail of a signature sliding up. Only meaningful while the order is frozen
+     * (a viewer is present); returns empty otherwise or when selling.
+     *
+     * @param startSlot global display slot the page starts at ({@code (page - 1) * 45})
+     * @param count     how many slots the page spans
+     * @return signature to amount actually removed
+     */
+    public Map<ItemSignature, Long> takeItemsFromCellRange(int startSlot, int count) {
+        if (isSelling()) {
+            return Collections.emptyMap();
+        }
+        inventoryLock.lock();
+        try {
+            Map<ItemSignature, Long> removed = virtualInventory.takeCellRange(startSlot, count);
+            if (!removed.isEmpty()) {
+                if (!sellValueDirty) {
+                    Map<String, Double> priceCache = createPriceCache();
+                    decrementSellValue(removed, priceCache);
+                }
+                storageVersion.incrementAndGet();
+            }
+            return removed;
+        } finally {
+            inventoryLock.unlock();
+        }
+    }
+
+    /**
+     * Slot-targeted take for a single clicked slot: removes up to {@code maxAmount} from the exact
+     * display cell at {@code globalSlot}, leaving a hole if it empties. Only meaningful while frozen;
+     * returns empty otherwise, when selling, or when the slot is a hole.
+     *
+     * @param globalSlot global display slot the player clicked ({@code (page - 1) * 45 + slotInPage})
+     * @param maxAmount  cap on how much to take (bag space / click amount)
+     * @return signature to amount actually removed
+     */
+    public Map<ItemSignature, Long> takeItemFromCell(int globalSlot, long maxAmount) {
+        if (maxAmount <= 0 || isSelling()) {
+            return Collections.emptyMap();
+        }
+        inventoryLock.lock();
+        try {
+            Map<ItemSignature, Long> removed = virtualInventory.takeSingleCell(globalSlot, maxAmount);
+            if (!removed.isEmpty()) {
+                if (!sellValueDirty) {
+                    Map<String, Double> priceCache = createPriceCache();
+                    decrementSellValue(removed, priceCache);
+                }
+                storageVersion.incrementAndGet();
+            }
+            return removed;
+        } finally {
+            inventoryLock.unlock();
+        }
+    }
+
+    /**
      * Removes items from virtual inventory and updates accumulated sell value
      * THREAD-SAFE: Uses inventoryLock to ensure atomicity
      * @param items Items to remove

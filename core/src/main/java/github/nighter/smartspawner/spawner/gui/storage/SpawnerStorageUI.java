@@ -328,9 +328,10 @@ public class SpawnerStorageUI {
             Scheduler.runLocationTask(spawner.getSpawnerLocation(), spawner::updateHologramData);
         }
 
-        // Check if we need to update total pages
+        // Check if we need to update total pages. Uses the display slot count (the frozen layout
+        // length, holes included) so it matches how pages are actually laid out and rendered.
         int oldUsedSlots = holder.getOldUsedSlots();
-        int currentUsedSlots = spawner.getVirtualInventory().getUsedSlots();
+        int currentUsedSlots = spawner.getVirtualInventory().getDisplaySlotCount();
 
         // Only recalculate total pages if there's a significant change
         if (oldUsedSlots != currentUsedSlots) {
@@ -449,8 +450,10 @@ public class SpawnerStorageUI {
     }
 
     private int calculateTotalPages(SpawnerData spawner) {
-        int usedSlots = spawner.getVirtualInventory().getUsedSlots();
-        return Math.max(1, (int) Math.ceil((double) usedSlots / StoragePageHolder.MAX_ITEMS_PER_PAGE));
+        // Frozen layouts can leave permanent holes, so the display can span more cells than the packed
+        // used-slot count. getDisplaySlotCount() returns the layout length while frozen.
+        int displaySlots = spawner.getVirtualInventory().getDisplaySlotCount();
+        return Math.max(1, (int) Math.ceil((double) displaySlots / StoragePageHolder.MAX_ITEMS_PER_PAGE));
     }
 
     /**

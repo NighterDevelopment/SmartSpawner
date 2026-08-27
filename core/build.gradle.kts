@@ -136,7 +136,7 @@ tasks.build {
 
 
 tasks.runServer {
-    minecraftVersion("26.1.2")
+    minecraftVersion("26.2")
     runDirectory.set(rootProject.layout.projectDirectory.dir("run"))
     // Minecraft bundles JOML 1.10.8, whose Unsafe path is deprecated on Java 25.
     // Prefer JOML's NIO implementation and allow remaining upstream users (such as spark)
