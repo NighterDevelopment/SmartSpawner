@@ -8,29 +8,36 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * GriefPrevention support with per-action trust levels, mirroring how the plugin's own claim checks
+ * work. Breaking and placing a spawner is a build action, so it needs Build trust ({@code /trust});
+ * opening a spawner's storage GUI is a container action, so it only needs Container trust
+ * ({@code /containertrust}). GriefPrevention's trust is hierarchical - Build grants Inventory and
+ * Access, and the owner (and Manage trust) passes every check - so requiring the lower level for the
+ * menu lets a container-trusted player use the storage without also being able to break the block.
+ */
 public class GriefPrevention implements ProtectionHook {
 
-    @Override
-    public boolean canBreak(@NotNull Player player, @NotNull Location location) {
+    /** {@code checkPermission} returns null when the player is allowed, or a denial message supplier. */
+    private boolean hasTrust(@NotNull Player player, @NotNull Location location, @NotNull ClaimPermission level) {
         Claim claim = me.ryanhamshire.GriefPrevention.GriefPrevention.instance.dataStore.getClaimAt(location, true, null);
         if (claim == null) return true;
 
-        return claim.allowBreak(player, player.getLocation().getBlock().getType()) == null && claim.hasExplicitPermission(player, ClaimPermission.Build);
+        return claim.checkPermission(player, level, null) == null;
+    }
+
+    @Override
+    public boolean canBreak(@NotNull Player player, @NotNull Location location) {
+        return hasTrust(player, location, ClaimPermission.Build);
     }
 
     @Override
     public boolean canStack(@NotNull Player player, @NotNull Location location) {
-        Claim claim = me.ryanhamshire.GriefPrevention.GriefPrevention.instance.dataStore.getClaimAt(location, true, null);
-        if (claim == null) return true;
-
-        return claim.allowBuild(player, player.getLocation().getBlock().getType()) == null && claim.hasExplicitPermission(player, ClaimPermission.Build);
+        return hasTrust(player, location, ClaimPermission.Build);
     }
 
     @Override
     public boolean canOpenMenu(@NotNull Player player, @NotNull Location location) {
-        Claim claim = me.ryanhamshire.GriefPrevention.GriefPrevention.instance.dataStore.getClaimAt(location, true, null);
-        if (claim == null) return true;
-
-        return claim.allowContainers(player) == null && claim.hasExplicitPermission(player, ClaimPermission.Build);
+        return hasTrust(player, location, ClaimPermission.Inventory);
     }
 }

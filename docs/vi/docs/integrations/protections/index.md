@@ -21,7 +21,7 @@ Operator và người chơi có quyền wildcard `*` (cùng với `worldguard.re
 | Plugin | Mở menu | Xếp chồng | Phá |
 |---|---|---|---|
 | [WorldGuard](/vi/docs/integrations/protections/worldguard) | `interact` | `block-place` | `block-break` |
-| [GriefPrevention](/vi/docs/integrations/protections/griefprevention) | Build trust | Build trust | Build trust |
+| [GriefPrevention](/vi/docs/integrations/protections/griefprevention) | Container trust | Build trust | Build trust |
 | [Lands](/vi/docs/integrations/protections/lands) | `INTERACT_CONTAINER` | `BLOCK_PLACE` | `BLOCK_BREAK` |
 | [Towny](/vi/docs/integrations/protections/towny) | Cư dân / trusted | Cư dân / trusted | Cư dân / trusted |
 | [Residence](/vi/docs/integrations/protections/residence) | `use` | `build` | `build` |

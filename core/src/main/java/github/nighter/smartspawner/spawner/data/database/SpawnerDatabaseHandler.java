@@ -151,6 +151,7 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
     private final String selectOneSql;
     private final String selectLocationSql;
     private final String deleteSql;
+    private final String deleteLocationConflictSql;
 
     public SpawnerDatabaseHandler(SmartSpawner plugin, DatabaseManager databaseManager) {
         this.plugin = plugin;
@@ -165,6 +166,8 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
         this.selectLocationSql = "SELECT world, loc_x, loc_y, loc_z FROM " + tableSpawners
                 + " WHERE spawner_id = ?";
         this.deleteSql = "DELETE FROM " + tableSpawners + " WHERE spawner_id = ?";
+        this.deleteLocationConflictSql = "DELETE FROM " + tableSpawners
+                + " WHERE world = ? AND loc_x = ? AND loc_y = ? AND loc_z = ? AND spawner_id <> ?";
     }
 
     @Override
@@ -256,20 +259,22 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
 
         Scheduler.runTaskAsync(() -> {
             try {
+                // Handle deletes first: a spawner broken and re-placed at the same location within one
+                // flush window leaves the old row occupying that location. Removing it before the new
+                // row is inserted avoids a UNIQUE(world, loc_x, loc_y, loc_z) violation.
+                if (!deletedSpawners.isEmpty()) {
+                    Set<String> toDelete = new HashSet<>(deletedSpawners);
+                    deletedSpawners.removeAll(toDelete);
+
+                    deleteSpawnerBatch(toDelete);
+                }
+
                 // Handle updates
                 if (!dirtySpawners.isEmpty()) {
                     Set<String> toUpdate = new HashSet<>(dirtySpawners);
                     dirtySpawners.removeAll(toUpdate);
 
                     saveSpawnerBatch(toUpdate);
-                }
-
-                // Handle deletes
-                if (!deletedSpawners.isEmpty()) {
-                    Set<String> toDelete = new HashSet<>(deletedSpawners);
-                    deletedSpawners.removeAll(toDelete);
-
-                    deleteSpawnerBatch(toDelete);
                 }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Error during database flush", e);
@@ -307,7 +312,61 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
             conn.commit();
 
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error saving spawner batch to database", e);
+            // One bad row aborts the whole batch, so fall back to saving each spawner on its own.
+            // This isolates the offender and lets it self-heal a stale row that still occupies its
+            // location (a UNIQUE(world, loc_x, loc_y, loc_z) conflict) instead of blocking everyone.
+            logger.log(Level.WARNING, "Spawner batch save failed, retrying row by row", e);
+            saveSpawnersIndividually(spawnerIds);
+        }
+    }
+
+    /**
+     * Saves each spawner in its own transaction. Before the upsert, any other row occupying this
+     * spawner's location is removed, healing the case where a spawner was broken and re-placed at the
+     * same spot and the stale row's delete has not been applied yet.
+     */
+    private void saveSpawnersIndividually(Set<String> spawnerIds) {
+        String upsertSql = (databaseManager.getStorageMode() == StorageMode.SQLITE
+                ? UPSERT_SQL_SQLITE
+                : UPSERT_SQL_MYSQL).formatted(tableSpawners);
+
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement clearStmt = conn.prepareStatement(deleteLocationConflictSql);
+             PreparedStatement stmt = conn.prepareStatement(upsertSql)) {
+
+            conn.setAutoCommit(false);
+
+            for (String spawnerId : spawnerIds) {
+                SpawnerData spawner = plugin.getSpawnerManager().getSpawnerById(spawnerId);
+                if (spawner == null) continue;
+
+                try {
+                    Location loc = spawner.getSpawnerLocation();
+                    clearStmt.setString(1, loc.getWorld().getName());
+                    clearStmt.setInt(2, loc.getBlockX());
+                    clearStmt.setInt(3, loc.getBlockY());
+                    clearStmt.setInt(4, loc.getBlockZ());
+                    clearStmt.setString(5, spawnerId);
+                    clearStmt.executeUpdate();
+
+                    if (setSpawnerParameters(stmt, spawner)) {
+                        stmt.executeUpdate();
+                    }
+                    conn.commit();
+                } catch (SQLException rowError) {
+                    logger.log(Level.SEVERE, "Failed to save spawner " + spawnerId
+                            + ", re-queuing for the next flush", rowError);
+                    try {
+                        conn.rollback();
+                    } catch (SQLException ignored) {
+                        // rollback best-effort; the row is re-queued regardless
+                    }
+                    dirtySpawners.add(spawnerId);
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error saving spawners individually to database", e);
             // Re-add to dirty list for retry
             dirtySpawners.addAll(spawnerIds);
         }
@@ -611,12 +670,13 @@ public class SpawnerDatabaseHandler implements SpawnerStorage {
                 isSaving = true;
                 logger.info("Saving " + dirtySpawners.size() + " spawners to database on shutdown...");
 
-                if (!dirtySpawners.isEmpty()) {
-                    saveSpawnerBatch(new HashSet<>(dirtySpawners));
-                }
-
+                // Deletes before updates, for the same reason as flushChanges().
                 if (!deletedSpawners.isEmpty()) {
                     deleteSpawnerBatch(new HashSet<>(deletedSpawners));
+                }
+
+                if (!dirtySpawners.isEmpty()) {
+                    saveSpawnerBatch(new HashSet<>(dirtySpawners));
                 }
 
                 dirtySpawners.clear();

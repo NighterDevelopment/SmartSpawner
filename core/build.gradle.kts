@@ -127,7 +127,7 @@ tasks.shadowJar {
     relocate("org.mariadb.jdbc", "github.nighter.smartspawner.libs.mariadb")
     relocate("org.bstats", project.group.toString())
     mergeServiceFiles()
-    destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
+    // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
 }
 
 tasks.build {

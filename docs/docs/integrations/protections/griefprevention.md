@@ -6,15 +6,23 @@ title: GriefPrevention
 
 **Download:** [Modrinth](https://modrinth.com/plugin/griefprevention)
 
-SmartSpawner requires **Build trust** for every spawner action, including just opening the menu. Container trust and access trust are **not** enough.
+SmartSpawner uses a different trust level for each spawner action, the same way GriefPrevention treats other blocks. Opening a spawner's storage menu needs **container trust**. Stacking and breaking a spawner need **build trust**.
 
 | Action | Requirement |
 |---|---|
-| Open menu | Build trust |
+| Open menu | Container trust |
 | Stack | Build trust |
 | Break | Build trust |
 
+Build trust also covers opening the menu, so a build-trusted player can do everything.
+
 ## Grant access
+
+```bash
+/containertrust <player>
+```
+
+`/containertrust` lets a player open and use a spawner's storage menu.
 
 ```bash
 /trust <player>
@@ -24,7 +32,6 @@ SmartSpawner requires **Build trust** for every spawner action, including just o
 
 ## Commands that are not enough
 
-- `/containertrust` allows chests and containers, but not the SmartSpawner GUI.
-- `/accesstrust` allows buttons and doors only.
+- `/accesstrust` allows buttons and doors only, not the storage menu.
 
 Outside any claim, all actions are allowed.

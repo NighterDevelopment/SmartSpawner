@@ -4,10 +4,14 @@ All notable changes to SmartSpawner are documented in this file.
 
 ## 1.8.1
 
+### Fixed
+- Breaking a spawner and placing a new one at the same spot no longer triggers a database save error. Spawner data now saves reliably in this case.
+
 ### Changed
 - Spawners that store tools, weapons or armor with different durability now save using less database space.
 - Sorting items in the storage menu is faster.
 - When a claim or region plugin blocks an action on a spawner, only that plugin's own message shows. SmartSpawner no longer adds a second protection message on top.
+- GriefPrevention now uses separate trust levels for each action. Breaking or placing a spawner needs build trust, while opening a spawner's storage menu only needs container trust.
 
 ### Notes
 - Spawner storage now uses a more compact save format. Existing data is read and upgraded automatically, and no action is required.
