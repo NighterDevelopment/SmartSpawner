@@ -9,7 +9,21 @@ All notable changes to SmartSpawner are documented in this file.
 - Sulfur Cube spawner support for servers on Minecraft 26.2. Its spawner drops no items and gives 2 experience.
 
 ### Changed
+- The storage menu now works like a normal chest. Items can be picked up, shift-clicked and dragged out with the usual controls. Items still cannot be placed into storage.
+- Only one player can open a spawner's storage at a time. Anyone who tries to open it while another player is inside is told it is in use, and can open it once that player leaves.
+- Items in the storage menu keep their position while it is open. New drops fill empty spaces from the top instead of rearranging everything.
+- Storage capacity is now set in slots instead of pages. See the details below.
 - Happy Ghast, Copper Golem and Sulfur Cube now show a translated name in every language.
+
+### Notes
+- Existing spawner data is read and upgraded automatically. No action is required.
+
+<details>
+<summary>Configuration file details</summary>
+
+- `spawner_properties.default.max_storage_pages` became `max_storage_slots`. Existing values are converted automatically, one page to 45 slots.
+
+</details>
 
 ## 1.8.1
 
