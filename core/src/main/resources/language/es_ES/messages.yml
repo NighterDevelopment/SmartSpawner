@@ -1,0 +1,136 @@
+# SmartSpawner – messages.yml
+# Each entry supports: message, title, subtitle, action_bar, sound, enabled.
+#
+#   MESSAGE STRUCTURE:
+#   message_name:               # Unique identifier for the message
+#     enabled: true/false       # Enable or disable this entire message (default: true if not specified)
+#     message: "Text content"   # Main chat message (optional)
+#     title: "Title text"       # Title display (optional)
+#     subtitle: "Subtitle"      # Subtitle display (optional)
+#     action_bar: "Text"        # Action bar text (optional)
+#     sound: sound.effect       # Sound to play (optional)
+#
+#   KEY FEATURES:
+#   - If "enabled: false" is set, none of the components will be sent to the player
+#   - If multiple components are present (message, title, action_bar, sound), all will be sent
+#   - All components are optional - you can use any combination as needed
+#   - The "message" field is not required and can be omitted if you only want other components
+
+prefix: '&#3498dbSᴍᴀʀᴛSᴘᴀᴡɴᴇʀ &8⏩ &r'
+
+missing_message_key:
+  message: '&#FF4444Clave de mensaje faltante: &f{key}'
+
+# ──────────────────────────────────────────────────────
+#              Player Interaction (General)
+# ──────────────────────────────────────────────────────
+spawner_activated:
+  message: 'El generador ha sido&a activado. &rAhora puedes recolectar botín y experiencia.'
+  sound: block.beacon.activate
+
+inventory_full:
+  message: '&#FF4444Tu inventario está lleno.'
+
+spawner_storage_empty:
+  message: '&#FF4444El almacenamiento del generador está vacío.'
+
+action_in_progress:
+  message: '&#F0C857Ya hay una acción en progreso. Por favor, espera.'
+  action_bar: '&#F0C857Acción en progreso. Por favor, espera.'
+
+action_failed:
+  message: '&#FF4444La acción ha fallado. Por favor, inténtalo de nuevo.'
+  action_bar: '&#FF4444La acción ha fallado. Por favor, inténtalo de nuevo.'
+
+action_not_ready:
+  message: '&#F0C857Esta acción aún no está lista. Inténtalo de nuevo en &f{time}&#F0C857.'
+  sound: block.note_block.bass
+
+# ──────────────────────────────────────────────────────
+#             Spawner - Main GUI Interactions
+# ──────────────────────────────────────────────────────
+no_exp:
+  message: '&#FF4444No hay experiencia disponible'
+
+exp_collected:
+  message: 'Has recolectado &a{exp} &fde experiencia.'
+  action_bar: '&a+{exp} Experiencia'
+
+exp_collected_with_mending:
+  message: 'Has recolectado &a{exp} &fde experiencia. &c{exp_mending} &fse usó en reparación.'
+  action_bar: '&a+{exp} Experiencia &f| &c-{exp_mending} usada en reparación'
+
+# ──────────────────────────────────────────────────────
+#            Spawner - Storage GUI Interactions
+# ──────────────────────────────────────────────────────
+click_too_fast:
+  message: '&#FF4444Estás haciendo clic demasiado rápido.'
+  sound: block.note_block.bass
+
+# ──────────────────────────────────────────────────────
+#             Spawner - Stack Interaction
+# ──────────────────────────────────────────────────────
+spawner_different:
+  message: '&#FF4444Los generadores deben ser del mismo tipo para apilarse.'
+  action_bar: '&#FF4444Los generadores deben ser del mismo tipo.'
+  sound: block.note_block.pling
+
+spawner_stack_full:
+  action_bar: '&#FF4444Límite máximo de apilamiento: &f{max}'
+  sound: block.note_block.pling
+
+spawner_stack_success:
+  action_bar: '&aHas apilado con éxito &f{amount} &agenerador(es).'
+  sound: entity.player.levelup
+# ──────────────────────────────────────────────────────
+#             Spawner - Egg Interaction
+# ──────────────────────────────────────────────────────
+entity_changed:
+  message: 'El generador ha cambiado a &e{entity}&f.'
+  action_bar: '&fEl generador ha cambiado a &e{entity}&f.'
+  sound: entity.player.levelup
+
+# ──────────────────────────────────────────────────────
+#             Spawner - Break Interaction
+# ──────────────────────────────────────────────────────
+break_no_permission:
+  message: '&#FF4444No tienes permiso para romper este generador.'
+  sound: entity.villager.no
+
+break_silk_touch:
+  message: '&#FF4444Necesitas toque de seda para romper este generador.'
+  action_bar: '&#FF4444Necesitas toque de seda.'
+  sound: item.shield.block
+
+break_tool_required:
+  message: '&#FF4444No puedes romper el generador con esta herramienta.'
+  action_bar: '&#FF4444No puedes romper el generador con esta herramienta.'
+  sound: item.shield.block
+
+drop_failed:
+  message: '&#FF4444Sin suerte esta vez - el generador no ha soltado nada.'
+  action_bar: '&#FF4444El generador no se ha soltado.'
+  sound: block.note_block.pling
+
+sneak_break_blocked:
+  message: '&#FF4444No puedes romper el apilamiento completo si este generador tiene probabilidad de botín.'
+  action_bar: '&#FF4444No se puede romper el apilamiento completo.'
+  sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#              Sell Integration Messages
+# ──────────────────────────────────────────────────────
+no_sellable_items:
+  message: '&#FF4444No se encontraron objetos vendibles.'
+
+sell_success:
+  message: 'Has vendido &e{amount} &fobjeto(s) por &a${price}&f.'
+  action_bar: '&a+${price}'
+
+sell_and_exp_success:
+  message: 'Has vendido &e{amount} &fobjeto(s) por &a${price}&f y recolectado &a{exp} &fde experiencia.'
+  action_bar: '&a+${price} &f| &a+{exp} Experiencia'
+
+sell_and_exp_success_with_mending:
+  message: 'Has vendido &e{amount} &fobjeto(s) por &a${price}&f y recolectado &a{exp} &fde experiencia &f(&c{exp_mending} &fusada en reparación).'
+  action_bar: '&a+${price} &f| &a+{exp} experiencia &f(&c-{exp_mending} reparación)'

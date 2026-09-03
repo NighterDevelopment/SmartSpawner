@@ -199,7 +199,7 @@ public final class ConfigMigrations {
             user.set("database.type", "SQLITE");
             changed = true;
         }
-        // 1.9.0: storage capacity moved from pages to slots. Not a plain rename – the value is
+        // 1.8.2: storage capacity moved from pages to slots. Not a plain rename – the value is
         // scaled (1 page = 45 slots) – so it can't be a Rename entry. Preserve the owner's setting:
         // set slots = pages * 45, then drop the old key so add-missing doesn't reintroduce it.
         String pagesPath = "spawner_properties.default.max_storage_pages";
