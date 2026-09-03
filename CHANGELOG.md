@@ -2,6 +2,15 @@
 
 All notable changes to SmartSpawner are documented in this file.
 
+## 1.8.2
+
+### Added
+- Spanish (es_ES) language.
+- Sulfur Cube spawner support for servers on Minecraft 26.2. Its spawner drops no items and gives 2 experience.
+
+### Changed
+- Happy Ghast, Copper Golem and Sulfur Cube now show a translated name in every language.
+
 ## 1.8.1
 
 ### Fixed

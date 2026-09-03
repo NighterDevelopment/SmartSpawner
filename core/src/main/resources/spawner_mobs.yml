@@ -993,6 +993,14 @@ strider_spawner:
     item: "PLAYER_HEAD"
     hash_texture: "125851a86ee1c54c94fc5bed017823dfb3ba08eddbcab2a914ef45b596c1603"
 
+# Reference: https://minecraft.wiki/w/Sulfur_Cube#Drops
+sulfur_cube_spawner:
+  entity: SULFUR_CUBE
+  experience: 2
+  mob_head:
+    item: "PLAYER_HEAD"
+    hash_texture: "ca9570cd1dc43c1e83f36cc4995665513dc2405dad241d2114249e8da976fc3d"
+
 # Reference: https://minecraft.wiki/w/Tadpole#Drops
 tadpole_spawner:
   entity: TADPOLE
