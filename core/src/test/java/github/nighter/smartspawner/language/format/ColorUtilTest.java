@@ -25,4 +25,12 @@ class ColorUtilTest {
         assertEquals(TextDecoration.State.FALSE, component.decoration(TextDecoration.ITALIC));
         assertEquals(TextColor.color(0xE500D5), component.color());
     }
+
+    @Test
+    void acceptsAlreadySerializedLegacyHexFromPlaceholders() {
+        Component component = ColorUtil.deserialize("§x§f§f§d§c§4§8• Gunpowder");
+
+        assertEquals(TextDecoration.State.FALSE, component.decoration(TextDecoration.ITALIC));
+        assertEquals(TextColor.color(0xFFDC48), component.color());
+    }
 }
