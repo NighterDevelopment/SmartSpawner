@@ -46,7 +46,7 @@ towny = { module = "com.palmergames.bukkit.towny:towny", version = "0.103.0.7" }
 vault = { module = "com.github.MilkBowl:VaultAPI", version = "1.7.1" }
 worldguard = { module = "com.sk89q.worldguard:worldguard-bukkit", version = "7.1.0-SNAPSHOT" }
 zmenu = { module = "fr.maxlego08.menu:zmenu-api", version = "1.1.1.8" }
-zshop = { module = "fr.maxlego08.shop:zshop-api", version = "3.3.5" }
+zshop = { module = "fr.maxlego08.shop:zshop-api", version = "3.3.6" }
 
 # Transitive libraries the hooks and paper-api each request at a different version. The root build
 # script forces the whole bundle so compilation matches what the server runs. gson, guava, fastutil,
