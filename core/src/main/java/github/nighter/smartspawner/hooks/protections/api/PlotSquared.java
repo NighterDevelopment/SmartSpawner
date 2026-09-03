@@ -6,6 +6,7 @@ import com.plotsquared.core.events.Result;
 import com.plotsquared.core.plot.Plot;
 import github.nighter.smartspawner.SmartSpawner;
 import github.nighter.smartspawner.api.events.SpawnerPlaceEvent;
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -17,10 +18,25 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class PlotSquared implements Listener {
+public class PlotSquared implements Listener, ProtectionHook {
     private HashMap<Plot, HashSet<Location>> spawnersData = new HashMap<>();
 
-    public static boolean canInteract(@NotNull final Player player, @NotNull Location location) {
+    @Override
+    public boolean canBreak(@NotNull Player player, @NotNull Location location) {
+        return canInteract(player, location);
+    }
+
+    @Override
+    public boolean canStack(@NotNull Player player, @NotNull Location location) {
+        return canInteract(player, location);
+    }
+
+    @Override
+    public boolean canOpenMenu(@NotNull Player player, @NotNull Location location) {
+        return canInteract(player, location);
+    }
+
+    private static boolean canInteract(@NotNull final Player player, @NotNull Location location) {
         Plot plot = Plot.getPlot(com.plotsquared.core.location.Location.at(
                 location.getWorld().getName(),
                 location.getBlockX(),

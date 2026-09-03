@@ -1,5 +1,6 @@
 package github.nighter.smartspawner.hooks.protections.api;
 
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
 import nl.rutgerkok.blocklocker.BlockLockerAPI;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -7,17 +8,20 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 // BlockLocker (nl.rutgerkok) protection hook
-public class BlockLocker {
+public class BlockLocker implements ProtectionHook {
 
-    public static boolean canPlayerOpenMenu(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canOpenMenu(@NotNull Player player, @NotNull Location location) {
         return hasAccess(player, location);
     }
 
-    public static boolean canPlayerStackClaimBlock(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canStack(@NotNull Player player, @NotNull Location location) {
         return hasAccess(player, location);
     }
 
-    public static boolean canPlayerBreakClaimBlock(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canBreak(@NotNull Player player, @NotNull Location location) {
         return hasAccess(player, location);
     }
 

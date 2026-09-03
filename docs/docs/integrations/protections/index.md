@@ -21,7 +21,7 @@ Operators and players with the `*` wildcard permission (plus `worldguard.region.
 | Plugin | Open menu | Stack | Break |
 |---|---|---|---|
 | [WorldGuard](/docs/integrations/protections/worldguard) | `interact` | `block-place` | `block-break` |
-| [GriefPrevention](/docs/integrations/protections/griefprevention) | Build trust | Build trust | Build trust |
+| [GriefPrevention](/docs/integrations/protections/griefprevention) | Container trust | Build trust | Build trust |
 | [Lands](/docs/integrations/protections/lands) | `INTERACT_CONTAINER` | `BLOCK_PLACE` | `BLOCK_BREAK` |
 | [Towny](/docs/integrations/protections/towny) | Resident / trusted | Resident / trusted | Resident / trusted |
 | [Residence](/docs/integrations/protections/residence) | `use` | `build` | `build` |

@@ -6,15 +6,23 @@ title: GriefPrevention
 
 **Tải về:** [Modrinth](https://modrinth.com/plugin/griefprevention)
 
-SmartSpawner yêu cầu **Build trust** cho mọi thao tác spawner, kể cả chỉ mở menu. Container trust và access trust là **chưa đủ**.
+SmartSpawner dùng cấp độ trust riêng cho từng thao tác spawner, giống cách GriefPrevention xử lý các block khác. Mở menu kho của spawner cần **container trust**. Xếp chồng và phá spawner cần **build trust**.
 
 | Thao tác | Yêu cầu |
 |---|---|
-| Mở menu | Build trust |
+| Mở menu | Container trust |
 | Xếp chồng | Build trust |
 | Phá | Build trust |
 
+Build trust cũng bao gồm mở menu, nên người có build trust làm được mọi thao tác.
+
 ## Cấp quyền
+
+```bash
+/containertrust <player>
+```
+
+`/containertrust` cho phép người chơi mở và dùng menu kho của spawner.
 
 ```bash
 /trust <player>
@@ -24,7 +32,6 @@ SmartSpawner yêu cầu **Build trust** cho mọi thao tác spawner, kể cả c
 
 ## Các lệnh không đủ
 
-- `/containertrust` cho phép rương và container, nhưng không mở được GUI của SmartSpawner.
-- `/accesstrust` chỉ cho phép nút bấm và cửa.
+- `/accesstrust` chỉ cho phép nút bấm và cửa, không mở được menu kho.
 
 Bên ngoài mọi claim, tất cả thao tác đều được cho phép.

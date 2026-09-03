@@ -299,6 +299,12 @@ html:not(.dark) .VPHomeHero .ss-brand-spawner {
     box-shadow: 0 12px 40px rgba(7, 20, 30, 0.20);
 }
 
+/* Center the last feature row so an odd number of cards has no orphan hanging
+   at the left edge. Full rows still fill; only the trailing partial row centers. */
+.VPFeatures .items {
+    justify-content: center;
+}
+
 .VPFeature {
     border-radius: 14px !important;
     transition: transform 0.25s, border-color 0.25s, background-color 0.25s;

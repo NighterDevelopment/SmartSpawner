@@ -7,6 +7,7 @@ import com.iridium.iridiumskyblock.database.User;
 import com.iridium.iridiumskyblock.dependencies.iridiumcore.Item;
 import com.iridium.iridiumskyblock.dependencies.iridiumteams.Permission;
 import com.iridium.iridiumskyblock.dependencies.xseries.XMaterial;
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
 import github.nighter.smartspawner.language.format.ColorUtil;
 import github.nighter.smartspawner.updates.YamlMigrator;
 import org.bukkit.Location;
@@ -20,7 +21,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
-public class IridiumSkyblock {
+public class IridiumSkyblock implements ProtectionHook {
     private static final String FILE_NAME = "iridium_skyblock.yml";
     private static final String DEFAULT_LOCALE = "en_US";
     private static YamlConfiguration language = new YamlConfiguration();
@@ -93,11 +94,15 @@ public class IridiumSkyblock {
                 .toList();
     }
 
-    public static boolean canPlayerStackBlock(@NotNull Player player, @NotNull Location location) {
+    // No canBreak override: IridiumSkyblock does not police spawner breaking (defaults to allow).
+
+    @Override
+    public boolean canStack(@NotNull Player player, @NotNull Location location) {
         return checkPermission(player, location, "SpawnerStackPermission");
     }
 
-    public static boolean canPlayerOpenMenu(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canOpenMenu(@NotNull Player player, @NotNull Location location) {
         return checkPermission(player, location, "SpawnerOpenMenuPermission");
     }
 

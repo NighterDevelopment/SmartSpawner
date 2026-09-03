@@ -28,11 +28,6 @@ spawner_activated:
   message: 'The spawner has been&a activated. &rYou can now collect drops and EXP.'
   sound: block.beacon.activate
 
-spawner_protected:
-  message: '&#FF4444This spawner is protected'
-  action_bar: '&#FF4444This spawner is protected'
-  sound: block.note_block.pling
-
 inventory_full:
   message: '&#FF4444Your inventory is full.'
 

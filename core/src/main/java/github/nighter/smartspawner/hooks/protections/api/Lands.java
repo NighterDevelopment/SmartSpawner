@@ -1,5 +1,6 @@
 package github.nighter.smartspawner.hooks.protections.api;
 
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
 import me.angeschossen.lands.api.LandsIntegration;
 import me.angeschossen.lands.api.flags.Flags;
 import me.angeschossen.lands.api.land.LandWorld;
@@ -10,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-public class Lands {
+public class Lands implements ProtectionHook {
 
     private static LandsIntegration landsIntegration;
 
@@ -18,7 +19,8 @@ public class Lands {
         landsIntegration = LandsIntegration.of(smartSpawner);
     }
 
-    public static boolean canPlayerBreakClaimBlock(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canBreak(@NotNull Player player, @NotNull Location location) {
         if (landsIntegration == null) {
             return true;
         }
@@ -30,7 +32,8 @@ public class Lands {
         return true;
     }
 
-    public static boolean canPlayerStackClaimBlock(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canStack(@NotNull Player player, @NotNull Location location) {
         if (landsIntegration == null) {
             return true;
         }
@@ -42,7 +45,8 @@ public class Lands {
         return true;
     }
 
-    public static boolean CanPlayerInteractContainer(@NotNull Player player, @NotNull Location location) {
+    @Override
+    public boolean canOpenMenu(@NotNull Player player, @NotNull Location location) {
         if (landsIntegration == null) {
             return true;
         }

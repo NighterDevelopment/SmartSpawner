@@ -19,119 +19,118 @@
 prefix: '&#3498dbSᴍᴀʀᴛSᴘᴀᴡɴᴇʀ &8⏩ &r'
 
 missing_message_key:
-  message: '&#FF4444Missing message key: &f{key}'
+  message: '&#FF4444Clave de mensaje faltante: &f{key}'
 
 # ──────────────────────────────────────────────────────
 #              Player Interaction (General)
 # ──────────────────────────────────────────────────────
 spawner_activated:
-  message: 'The spawner has been&a activated. &rYou can now collect drops and EXP.'
+  message: 'El generador ha sido&a activado. &rAhora puedes recolectar botín y experiencia.'
   sound: block.beacon.activate
 
 inventory_full:
-  message: '&#FF4444Your inventory is full.'
+  message: '&#FF4444Tu inventario está lleno.'
 
 spawner_storage_empty:
-  message: '&#FF4444Spawner storage is empty.'
+  message: '&#FF4444El almacenamiento del generador está vacío.'
 
 action_in_progress:
-  message: '&#F0C857There is already an action in progress. Please wait.'
-  action_bar: '&#F0C857Action in progress. Please wait.'
+  message: '&#F0C857Ya hay una acción en progreso. Por favor, espera.'
+  action_bar: '&#F0C857Acción en progreso. Por favor, espera.'
 
 action_failed:
-  message: '&#FF4444The action failed. Please try again.'
-  action_bar: '&#FF4444The action failed. Please try again.'
+  message: '&#FF4444La acción ha fallado. Por favor, inténtalo de nuevo.'
+  action_bar: '&#FF4444La acción ha fallado. Por favor, inténtalo de nuevo.'
 
 action_not_ready:
-  message: '&#F0C857This action is not ready yet. Try again in &f{time}&#F0C857.'
+  message: '&#F0C857Esta acción aún no está lista. Inténtalo de nuevo en &f{time}&#F0C857.'
   sound: block.note_block.bass
 
 # ──────────────────────────────────────────────────────
 #             Spawner - Main GUI Interactions
 # ──────────────────────────────────────────────────────
 no_exp:
-  message: '&#FF4444There is no EXP available'
+  message: '&#FF4444No hay experiencia disponible'
 
 exp_collected:
-  message: 'You collected &a{exp} &fexperience.'
-  action_bar: '&a+{exp} EXP'
+  message: 'Has recolectado &a{exp} &fde experiencia.'
+  action_bar: '&a+{exp} Experiencia'
 
 exp_collected_with_mending:
-  message: 'You collected &a{exp} &fexperience. &c{exp_mending} &fwas used on Mending.'
-  action_bar: '&a+{exp} EXP &f| &c-{exp_mending} used on Mending'
+  message: 'Has recolectado &a{exp} &fde experiencia. &c{exp_mending} &fse usó en reparación.'
+  action_bar: '&a+{exp} Experiencia &f| &c-{exp_mending} usada en reparación'
 
 # ──────────────────────────────────────────────────────
 #            Spawner - Storage GUI Interactions
 # ──────────────────────────────────────────────────────
 click_too_fast:
-  message: '&#FF4444You are clicking too fast.'
+  message: '&#FF4444Estás haciendo clic demasiado rápido.'
   sound: block.note_block.bass
 
 # ──────────────────────────────────────────────────────
 #             Spawner - Stack Interaction
 # ──────────────────────────────────────────────────────
 spawner_different:
-  message: '&#FF4444Spawners must be the same type to stack.'
-  action_bar: '&#FF4444Spawners must be the same type.'
+  message: '&#FF4444Los generadores deben ser del mismo tipo para apilarse.'
+  action_bar: '&#FF4444Los generadores deben ser del mismo tipo.'
   sound: block.note_block.pling
 
 spawner_stack_full:
-  action_bar: '&#FF4444Maximum stack limit: &f{max}'
+  action_bar: '&#FF4444Límite máximo de apilamiento: &f{max}'
   sound: block.note_block.pling
 
 spawner_stack_success:
-  action_bar: '&aYou successfully stacked &f{amount} &aspawner(s).'
+  action_bar: '&aHas apilado con éxito &f{amount} &agenerador(es).'
   sound: entity.player.levelup
-
 # ──────────────────────────────────────────────────────
 #             Spawner - Egg Interaction
 # ──────────────────────────────────────────────────────
 entity_changed:
-  message: 'The spawner changed to &e{entity}&f.'
-  action_bar: '&fThe spawner changed to &e{entity}&f.'
+  message: 'El generador ha cambiado a &e{entity}&f.'
+  action_bar: '&fEl generador ha cambiado a &e{entity}&f.'
   sound: entity.player.levelup
 
 # ──────────────────────────────────────────────────────
 #             Spawner - Break Interaction
 # ──────────────────────────────────────────────────────
 break_no_permission:
-  message: '&#FF4444You do not have permission to break this spawner.'
+  message: '&#FF4444No tienes permiso para romper este generador.'
   sound: entity.villager.no
 
 break_silk_touch:
-  message: '&#FF4444You need Silk Touch to break this spawner.'
-  action_bar: '&#FF4444You need Silk Touch.'
+  message: '&#FF4444Necesitas toque de seda para romper este generador.'
+  action_bar: '&#FF4444Necesitas toque de seda.'
   sound: item.shield.block
 
 break_tool_required:
-  message: '&#FF4444You cannot break spawner with this tool.'
-  action_bar: '&#FF4444Cannot break spawner with this tool.'
+  message: '&#FF4444No puedes romper el generador con esta herramienta.'
+  action_bar: '&#FF4444No puedes romper el generador con esta herramienta.'
   sound: item.shield.block
 
 drop_failed:
-  message: '&#FF4444No luck this time - the spawner did not drop.'
-  action_bar: '&#FF4444The spawner did not drop.'
+  message: '&#FF4444Sin suerte esta vez - el generador no ha soltado nada.'
+  action_bar: '&#FF4444El generador no se ha soltado.'
   sound: block.note_block.pling
 
 sneak_break_blocked:
-  message: '&#FF4444You cannot break the whole stack when this spawner has drop chance.'
-  action_bar: '&#FF4444Cannot break whole stack.'
+  message: '&#FF4444No puedes romper el apilamiento completo si este generador tiene probabilidad de botín.'
+  action_bar: '&#FF4444No se puede romper el apilamiento completo.'
   sound: block.note_block.pling
 
 # ──────────────────────────────────────────────────────
 #              Sell Integration Messages
 # ──────────────────────────────────────────────────────
 no_sellable_items:
-  message: '&#FF4444No sellable items were found.'
+  message: '&#FF4444No se encontraron objetos vendibles.'
 
 sell_success:
-  message: 'You sold &e{amount} &fitem(s) for &a${price}&f.'
+  message: 'Has vendido &e{amount} &fobjeto(s) por &a${price}&f.'
   action_bar: '&a+${price}'
 
 sell_and_exp_success:
-  message: 'You sold &e{amount} &fitem(s) for &a${price}&f and collected &a{exp} &fEXP.'
-  action_bar: '&a+${price} &f| &a+{exp} EXP'
+  message: 'Has vendido &e{amount} &fobjeto(s) por &a${price}&f y recolectado &a{exp} &fde experiencia.'
+  action_bar: '&a+${price} &f| &a+{exp} Experiencia'
 
 sell_and_exp_success_with_mending:
-  message: 'You sold &e{amount} &fitem(s) for &a${price}&f, collected &a{exp} &fEXP &f(&c{exp_mending} &fused on Mending).'
-  action_bar: '&a+${price} &f| &a+{exp} EXP &f(&c-{exp_mending} Mending)'
+  message: 'Has vendido &e{amount} &fobjeto(s) por &a${price}&f y recolectado &a{exp} &fde experiencia &f(&c{exp_mending} &fusada en reparación).'
+  action_bar: '&a+${price} &f| &a+{exp} experiencia &f(&c-{exp_mending} reparación)'

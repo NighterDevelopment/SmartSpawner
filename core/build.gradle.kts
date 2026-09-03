@@ -129,7 +129,6 @@ tasks.shadowJar {
     relocate("org.mariadb.jdbc", "github.nighter.smartspawner.libs.mariadb")
     relocate("org.bstats", project.group.toString())
     mergeServiceFiles()
-
     // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
 }
 
@@ -145,11 +144,6 @@ tasks.runServer {
     // Prefer JOML's NIO implementation and allow remaining upstream users (such as spark)
     // until Paper updates them, preventing Java 25's terminal-deprecation warning block.
     jvmArgs("-Djoml.nounsafe=true", "--sun-misc-unsafe-memory-access=allow")
-
-//    downloadPlugins {
-//        url("https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar")
-//        modrinth("worldguard", "7.0.18")
-//    }
 }
 
 tasks.processResources {

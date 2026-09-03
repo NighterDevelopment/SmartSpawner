@@ -28,11 +28,6 @@ spawner_activated:
   message: 'Spawner đã được&a kích hoạt. &rBây giờ bạn có thể nhận vật phẩm và Exp.'
   sound: block.beacon.activate
 
-spawner_protected:
-  message: '&#FF4444Spawner này đang được bảo vệ'
-  action_bar: '&#FF4444Spawner này đang được bảo vệ'
-  sound: block.note_block.pling
-
 inventory_full:
   message: '&#FF4444Túi đồ của bạn đã đầy.'
 

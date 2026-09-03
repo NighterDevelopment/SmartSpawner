@@ -1,0 +1,232 @@
+# SmartSpawner – command_messages.yml
+# Messages related to plugin commands, including usage instructions and command errors.
+
+# ──────────────────────────────────────────────────────
+#                        General
+# ──────────────────────────────────────────────────────
+player_only:
+  message: "&#FF4444Este comando solo puede ser utilizado por jugadores."
+  sound: block.note_block.bass
+
+no_permission:
+  message: "&#FF4444No tienes permiso para hacer eso."
+  sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#                     /ss list
+# ──────────────────────────────────────────────────────
+list:
+  no_spawners_found:
+    message: '&#FF4444no se han encontrado generadores.'
+    sound: block.note_block.pling
+  teleported_to_spawner:
+    message: 'Has sido teletransportado al generador.'
+    sound: entity.enderman.teleport
+  teleport_failed:
+    message: '&#FF4444No ha sido posible teletransportarte al generador.'
+    sound: entity.enderman.teleport
+  spawner_removed:
+    message: '&fEl generador ha sido &#FF4444eliminado &fcorrectamente.'
+    sound: entity.item.break
+
+# ──────────────────────────────────────────────────────
+#                        /ss set
+# ──────────────────────────────────────────────────────
+set:
+  usage:
+    message: "Uso: &#3498db/ss set <tamaño_stack|rango|intervalo> <valor> [mundo x y z]"
+    sound: block.note_block.hat
+  invalid:
+    message: "&#FF4444Valor o ubicación de generador no válidos."
+    sound: block.note_block.pling
+  stack_size_exceeds_max:
+    message: "&#FF4444El tamaño del acumulado &f{value} &#FF4444supera el tamaño máximo de este generador: &f{max}"
+    sound: block.note_block.pling
+  location_required:
+    message: "&#F0C857La consola debe especificar una ubicación: &#3498db/ss set <tamaño_stack|rango|intervalo> <valor> <mundo> <x> <y> <z>"
+    sound: block.note_block.pling
+  success:
+    message: "Se ha cambiado &a{property} &fde &e{old_value} &fa &a{new_value} &fen &#3498db{world} {x} {y} {z}&f."
+    sound: entity.experience_orb.pickup
+
+# ──────────────────────────────────────────────────────
+#                        /ss near
+# ──────────────────────────────────────────────────────
+near:
+  bossbar:
+    analyzing: "Escaneando generadores cercanos... {percent}%"
+    found: "Se han encontrado {count} generador(es) a menos de {radius} bloques."
+    not_found: "No se han encontrado generadores a menos de {radius} bloques."
+  view_gui:
+    button: " [Ver en interfaz]"
+    hover: "Haz clic para examinar el/los {count} generador(es) encontrado(s) cerca."
+  scan_start:
+    message: "Escaneando generadores a menos de &e{radius} &fbloques..."
+    sound: block.note_block.hat
+  scan_found:
+    message: "Se han encontrado &a{count} &fgenerador(es) a menos de &e{radius} &fbloques. El resaltado dura &e30s&f."
+    sound: entity.experience_orb.pickup
+  scan_none:
+    message: "&#FF4444No se han encontrado generadores a menos de &f{radius} &#FF4444bloques."
+    sound: block.note_block.pling
+  scan_cancelled:
+    message: "&#F0C857Escaneo cancelado y resaltados eliminados."
+    sound: block.note_block.bass
+  no_active_scan:
+    message: "&#FF4444No tienes ningún escaneo activo para cancelar."
+    sound: block.note_block.bass
+  highlights_expired:
+    message: "&#888888El resaltado de los generadores ha expirado."
+
+# ──────────────────────────────────────────────────────
+#                        /ss give
+# ──────────────────────────────────────────────────────
+give:
+  player_not_found:
+    message: "&#FF4444Jugador no encontrado."
+    sound: block.note_block.pling
+  invalid_mob_type:
+    message: "&#FF4444Tipo de criatura o nombre de spawner no válido."
+    sound: block.note_block.pling
+  invalid_item_type:
+    message: "&#FF4444Tipo de objeto no válido."
+    sound: block.note_block.pling
+  invalid_item_spawner:
+    message: "&#FF4444Nombre de generador de objetos no válido."
+    sound: block.note_block.pling
+  inventory_full:
+    message: "&#FF4444Se han soltado algunos generadores al suelo porque el inventario está lleno."
+    sound: block.note_block.pling
+  spawner_received:
+    message: "Has recibido &a{amount} &fgenerador(es) de &a{entity}&f."
+    sound: entity.experience_orb.pickup
+  spawner_given:
+    message: "Has dado &a{amount} &fgenerador(es) de &a{entity} &fa &#3498db{player}&f."
+    sound: entity.experience_orb.pickup
+
+# ──────────────────────────────────────────────────────
+#                      /ss hologram
+# ──────────────────────────────────────────────────────
+hologram:
+  enabled:
+    message: "Los hologramas están &aactivados &fpara todos los generadores."
+    sound: entity.experience_orb.pickup
+  disabled:
+    message: "Los hologramas están &#FF4444desactivados &fpara todos los generadores."
+    sound: block.note_block.bass
+  cleared:
+    message: "Se han eliminado con éxito &atodos los hologramas&f."
+    sound: entity.experience_orb.pickup
+  clear_error:
+    message: "&#FF4444No se han podido eliminar los hologramas."
+    sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#                       /ss clear
+# ──────────────────────────────────────────────────────
+clear:
+  usage:
+    message: "Uso: &#3498db/ss clear <hologramas|generadores_fantasma>"
+    sound: block.note_block.hat
+  ghost_check_start:
+    message: "Comprobando si hay generadores fantasma..."
+    sound: block.note_block.hat
+  ghost_cleared:
+    message: "Se han eliminado con éxito &a{count} &fgenerador(es) fantasma."
+    sound: entity.experience_orb.pickup
+  ghost_none_found:
+    message: "&#FF4444No se han encontrado generadores fantasma."
+    sound: entity.experience_orb.pickup
+
+# ──────────────────────────────────────────────────────
+#                       /ss prices
+# ──────────────────────────────────────────────────────
+prices:
+  not_available:
+    message: "&#FF4444La integración de venta no está disponible. Por favor, configura la economía."
+    sound: block.note_block.pling
+  no_priceable_items:
+    message: "&#FF4444No se han encontrado objetos con precio."
+    sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#                      /ss reload
+# ──────────────────────────────────────────────────────
+reload:
+  start:
+    message: "&#F0C857Recargando el plugin... Por favor, espera."
+  success:
+    message: "Se ha recargado con éxito &#3498dbSmartSpawner&f."
+    sound: entity.experience_orb.pickup
+  error:
+    message: "&#FF4444Error al recargar SmartSpawner. Por favor, revisa la consola para más detalles."
+    sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#                      /ss language
+# ──────────────────────────────────────────────────────
+language:
+  current:
+    message: "Idioma actual: &a{current} &#888888| &fDisponibles: {available}"
+    sound: block.note_block.hat
+  invalid:
+    message: "&#FF4444Idioma desconocido: &f{value}&#FF4444. Prueba con: &f{available}"
+    sound: block.note_block.pling
+  already_set:
+    message: "&#F0C857El idioma ya está configurado en &f{value}&#F0C857."
+    sound: block.note_block.hat
+  success:
+    message: "Se ha cambiado el idioma de &e{old_value} &fa &a{new_value}&f."
+    sound: entity.experience_orb.pickup
+  error:
+    message: "&#FF4444Error al cambiar el idioma. Por favor, revisa la consola."
+    sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#                     /ss gui_layout
+# ──────────────────────────────────────────────────────
+gui_layout:
+  current:
+    message: "Diseño de interfaz actual: &a{current} &#888888| &fDisponibles: {available}"
+    sound: block.note_block.hat
+  invalid:
+    message: "&#FF4444Diseño de interfaz desconocido: &f{value}&#FF4444. Prueba con: &f{available}"
+    sound: block.note_block.pling
+  already_set:
+    message: "&#F0C857El diseño de interfaz ya está configurado en &f{value}&#F0C857."
+    sound: block.note_block.hat
+  success:
+    message: "Se ha cambiado el diseño de interfaz de &e{old_value} &fa &a{new_value}&f."
+    sound: entity.experience_orb.pickup
+  error:
+    message: "&#FF4444Error al cambiar el diseño de interfaz. Por favor, revisa la consola."
+    sound: block.note_block.pling
+
+# ──────────────────────────────────────────────────────
+#                     /ss editloot
+# ──────────────────────────────────────────────────────
+editloot:
+  usage:
+    message: "Uso: &#37eb9a/ss editloot <nombre_del_generador>&f. Ejemplo: &#37eb9a/ss editloot blaze_spawner"
+    sound: block.note_block.hat
+  unknown_entry:
+    message: "&#FF4444No hay ningún generador llamado &f{name}&#FF4444. Usa el tabulador para ver los nombres válidos."
+    sound: block.note_block.bass
+  entry_missing:
+    message: "&#FF4444Esa entrada ya no está en el archivo."
+    sound: block.note_block.bass
+  loot_added:
+    message: "&#37eb9aSe ha añadido la entrada de botín &f{label}&#37eb9a."
+    sound: entity.experience_orb.pickup
+  loot_saved:
+    message: "&#37eb9aSe ha guardado la entrada de botín &f{label}&#37eb9a."
+    sound: entity.experience_orb.pickup
+  loot_replaced:
+    message: "&#37eb9aSe ha actualizado el objeto para &f{label}&#37eb9a."
+    sound: entity.experience_orb.pickup
+  loot_deleted:
+    message: "&#FF6B6BSe ha eliminado la entrada de botín &f{label}&#FF6B6B."
+    sound: entity.item.pickup
+  capture_empty:
+    message: "&#FF4444Pon primero un objeto en la ranura central."
+    sound: block.note_block.bass

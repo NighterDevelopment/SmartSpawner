@@ -6,14 +6,16 @@ import fr.xyness.SimpleClaimSystem.API.SCS_API;
 import fr.xyness.SimpleClaimSystem.API.SCS_API_Provider;
 import fr.xyness.SimpleClaimSystem.Types.Claim;
 
+import github.nighter.smartspawner.hooks.protections.ProtectionHook;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public class SimpleClaimSystem2 {
+public class SimpleClaimSystem2 implements ProtectionHook {
     private static final SCS_API api = SCS_API_Provider.get();
 
-    public static boolean canPlayerBreakClaimBlock(@NotNull final Player player, @NotNull Location location) {
+    @Override
+    public boolean canBreak(@NotNull final Player player, @NotNull Location location) {
         if (api == null) return true;
         Optional<Claim> claim = api.getClaim(player.getLocation().getChunk());
         if(claim.isPresent()) {
@@ -28,7 +30,8 @@ public class SimpleClaimSystem2 {
         return true;
     }
 
-    public static boolean canPlayerStackClaimBlock(@NotNull final Player player, @NotNull Location location) {
+    @Override
+    public boolean canStack(@NotNull final Player player, @NotNull Location location) {
         if (api == null) return true;
         Optional<Claim> claim = api.getClaim(player.getLocation().getChunk());
         if(claim.isPresent()) {
@@ -39,7 +42,8 @@ public class SimpleClaimSystem2 {
         return true;
     }
 
-    public static boolean canPlayerOpenMenuOnClaim(@NotNull final Player player, @NotNull Location location) {
+    @Override
+    public boolean canOpenMenu(@NotNull final Player player, @NotNull Location location) {
         if (api == null) return true;
         Optional<Claim> claim = api.getClaim(player.getLocation().getChunk());
         if(claim.isPresent()) {
