@@ -1,6 +1,7 @@
 package github.nighter.smartspawner.benchmark;
 
 import github.nighter.smartspawner.SmartSpawner;
+import github.nighter.smartspawner.spawner.gui.storage.StoragePageHolder;
 import github.nighter.smartspawner.spawner.gui.storage.session.StorageSession;
 import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
@@ -38,9 +39,13 @@ public class StoragePerformanceBenchmark {
 
         Location loc = Bukkit.getWorlds().isEmpty() ? null : new Location(Bukkit.getWorlds().get(0), 0, 100, 0);
 
-        // Run Test Suite
+        // Run Full Test Suite
         benchmarkDisplayPageGeneration(plugin, sender, reportLines, loc);
         benchmarkTakeOperations(plugin, sender, reportLines, loc);
+        benchmarkPagination(plugin, sender, reportLines, loc);
+        benchmarkSortItems(plugin, sender, reportLines, loc);
+        benchmarkTakeAll(plugin, sender, reportLines, loc);
+        benchmarkDropPage(plugin, sender, reportLines, loc);
         benchmarkConcurrentOperations(plugin, sender, reportLines, loc);
 
         log(sender, reportLines, "===============================================================================");
@@ -49,7 +54,7 @@ public class StoragePerformanceBenchmark {
 
         // Save report to file
         saveReportToFile(reportLines);
-        sender.sendMessage(Component.text("§e[SmartSpawner Benchmark] §aBenchmark finished! Report saved to benchmark_results.txt"));
+        sender.sendMessage(Component.text("§e[SmartSpawner Benchmark] §aBenchmark finished! Report saved to storage_benchmark_report.txt"));
     }
 
     private static void log(CommandSender sender, List<String> reportLines, String line) {
@@ -68,43 +73,47 @@ public class StoragePerformanceBenchmark {
     }
 
     // ==============================================================================================
-    // BENCHMARK 1: Display Page Generation across multiple inventory scales
+    // BENCHMARK 1: Display Page Generation across multiple inventory scales (up to 10M items)
     // ==============================================================================================
     private static void benchmarkDisplayPageGeneration(SmartSpawner plugin, CommandSender sender, List<String> reportLines, Location loc) {
         log(sender, reportLines, "");
-        log(sender, reportLines, "### BENCHMARK 1: Display Page Materialization vs Cached Session");
-        log(sender, reportLines, "Measures display retrieval throughput and latency across different inventory sizes.");
-        log(sender, reportLines, String.format("%-32s | %-12s | %-12s | %-12s | %-14s | %-10s", 
-                "Inventory Scale", "Mode", "Avg (μs)", "P95 (μs)", "Throughput (op/s)", "Speedup"));
-        log(sender, reportLines, "---------------------------------------------------------------------------------------------------------");
+        log(sender, reportLines, "### BENCHMARK 1: Display Page Materialization vs Cached Session (up to 10M items)");
+        log(sender, reportLines, "Measures display retrieval throughput and latency across multi-million item quantities.");
+        log(sender, reportLines, String.format("%-36s | %-14s | %-12s | %-12s | %-16s | %-10s",
+                "Scale (Types / Total Items)", "Mode", "Avg (μs)", "P95 (μs)", "Throughput (op/s)", "Speedup"));
+        log(sender, reportLines, "------------------------------------------------------------------------------------------------------------------");
 
         List<Material> allMaterials = getValidItemMaterials();
-        int[] itemCounts = {5, 45, 200, 1000};
+        int[] typeCounts = {5, 20, 50, 50, 50};
+        long[] totalItemCounts = {1_000L, 100_000L, 1_000_000L, 5_000_000L, 10_000_000L};
         String[] scaleLabels = {
-                "Small (5 types / 320 items)",
-                "Medium (45 types / 2,880 items)",
-                "Large (200 types / 12.8k items)",
-                "Massive (1k types / 64k items)"
+                "Small (5 types / 1,000 items)",
+                "Medium (20 types / 100,000 items)",
+                "Large (50 types / 1,000,000 items)",
+                "Massive (50 types / 5,000,000 items)",
+                "Maximum (50 types / 10,000,000 items)"
         };
 
-        for (int i = 0; i < itemCounts.length; i++) {
-            int count = itemCounts[i];
+        for (int i = 0; i < typeCounts.length; i++) {
+            int types = typeCounts[i];
+            long totalItems = totalItemCounts[i];
+            long itemsPerType = totalItems / types;
             String label = scaleLabels[i];
 
-            SpawnerData spawner = new SpawnerData("bench_disp_" + count, loc, EntityType.ZOMBIE, plugin);
-            spawner.setMaxSpawnerLootSlots(count * 64);
+            SpawnerData spawner = new SpawnerData("bench_disp_" + i, loc, EntityType.ZOMBIE, plugin);
+            spawner.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
             VirtualInventory vi = spawner.getVirtualInventory();
 
-            // Populate items
-            for (int k = 0; k < count; k++) {
+            // Populate items with high long counts per signature
+            for (int k = 0; k < types; k++) {
                 Material m = allMaterials.get(k % allMaterials.size());
-                vi.addItem(new ItemStack(m, 64), 64);
+                vi.addItem(new ItemStack(m, 64), itemsPerType);
             }
 
-            int iterations = count <= 200 ? 10000 : 3000;
+            int iterations = totalItems <= 100_000L ? 5000 : 2000;
 
             // Warmup
-            for (int w = 0; w < 500; w++) {
+            for (int w = 0; w < 300; w++) {
                 vi.getDisplayPage(1, 45);
             }
 
@@ -134,7 +143,7 @@ public class StoragePerformanceBenchmark {
             session.setPageSlots(1, initialSlots);
 
             // Warmup session
-            for (int w = 0; w < 500; w++) {
+            for (int w = 0; w < 300; w++) {
                 session.getPageSlots(1);
             }
 
@@ -153,36 +162,37 @@ public class StoragePerformanceBenchmark {
 
             double speedup = avgOldUs / Math.max(0.001, avgNewUs);
 
-            log(sender, reportLines, String.format("%-32s | %-12s | %-12s | %-12s | %-14s | %-10s",
+            log(sender, reportLines, String.format("%-36s | %-14s | %-12s | %-12s | %-16s | %-10s",
                     label, "Old (Uncached)", DF.format(avgOldUs), DF.format(p95OldUs), INT_F.format(oldOpsPerSec), "1.0x"));
-            log(sender, reportLines, String.format("%-32s | %-12s | %-12s | %-12s | %-14s | %-10s",
+            log(sender, reportLines, String.format("%-36s | %-14s | %-12s | %-12s | %-16s | %-10s",
                     "", "New (Session)", DF.format(avgNewUs), DF.format(p95NewUs), INT_F.format(newOpsPerSec), DF.format(speedup) + "x"));
         }
     }
 
     // ==============================================================================================
-    // BENCHMARK 2: Take Operation Cycle (1,000 player takes)
+    // BENCHMARK 2: Item Take Operation Cycle (1,000 player takes on 10,000,000 item inventory)
     // ==============================================================================================
     private static void benchmarkTakeOperations(SmartSpawner plugin, CommandSender sender, List<String> reportLines, Location loc) {
         log(sender, reportLines, "");
-        log(sender, reportLines, "### BENCHMARK 2: Item Take Cycle (1,000 Consecutive Takes)");
+        log(sender, reportLines, "### BENCHMARK 2: Item Take Cycle (1,000 Consecutive Takes at 10M Item Scale)");
         log(sender, reportLines, "Compares old full-page repaint + auto-compact vs new native take + diff reconciliation.");
 
-        List<Material> materials = getValidItemMaterials();
+        List<Material> materials = getValidItemMaterials().subList(0, 50);
         final int TAKE_OPS = 1000;
+        final long TOTAL_ITEMS = 10_000_000L;
+        final long ITEMS_PER_TYPE = TOTAL_ITEMS / materials.size();
         ItemStack dummyButton = new ItemStack(Material.GOLD_BLOCK);
 
         // -------------------------------------------------------------
         // Test A: Old Path (Simulates handleItemSlotClick + updateDisplay)
         // -------------------------------------------------------------
         SpawnerData spawnerOld = new SpawnerData("bench_take_old", loc, EntityType.ZOMBIE, plugin);
-        spawnerOld.setMaxSpawnerLootSlots(45 * 64 * 10);
+        spawnerOld.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
         VirtualInventory viOld = spawnerOld.getVirtualInventory();
-        for (int s = 0; s < 45; s++) {
-            viOld.addItem(new ItemStack(materials.get(s % materials.size()), 64), 64);
+        for (Material m : materials) {
+            viOld.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
         }
         Inventory invOld = Bukkit.createInventory(null, 54, Component.text("Old Storage"));
-        // Initial populate
         for (var entry : viOld.getDisplayPage(1, 45).int2ObjectEntrySet()) {
             invOld.setItem(entry.getIntKey(), entry.getValue());
         }
@@ -229,10 +239,10 @@ public class StoragePerformanceBenchmark {
         // Test B: New Path (Native Take + reconcileStoragePage + deferred compact)
         // -------------------------------------------------------------
         SpawnerData spawnerNew = new SpawnerData("bench_take_new", loc, EntityType.ZOMBIE, plugin);
-        spawnerNew.setMaxSpawnerLootSlots(45 * 64 * 10);
+        spawnerNew.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
         VirtualInventory viNew = spawnerNew.getVirtualInventory();
-        for (int s = 0; s < 45; s++) {
-            viNew.addItem(new ItemStack(materials.get(s % materials.size()), 64), 64);
+        for (Material m : materials) {
+            viNew.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
         }
         Inventory invNew = Bukkit.createInventory(null, 54, Component.text("New Storage"));
         StorageSession session = new StorageSession(plugin, spawnerNew);
@@ -351,18 +361,413 @@ public class StoragePerformanceBenchmark {
     }
 
     // ==============================================================================================
-    // BENCHMARK 3: Concurrent Operations (Loot Gen + Hopper Transfer while GUI open)
+    // BENCHMARK 3: Pagination Navigation (500 Page Switches across 10M item inventory)
+    // ==============================================================================================
+    private static void benchmarkPagination(SmartSpawner plugin, CommandSender sender, List<String> reportLines, Location loc) {
+        log(sender, reportLines, "");
+        log(sender, reportLines, "### BENCHMARK 3: Pagination Navigation (500 Page Switches at 10M Item Scale)");
+        log(sender, reportLines, "Simulates player flipping between pages 1..10 (uncached slice building vs session-cached pages).");
+
+        List<Material> materials = getValidItemMaterials().subList(0, 50);
+        final int SWITCHES = 500;
+        final long TOTAL_ITEMS = 10_000_000L;
+        final long ITEMS_PER_TYPE = TOTAL_ITEMS / materials.size();
+
+        // Old Path
+        SpawnerData spawnerOld = new SpawnerData("bench_page_old", loc, EntityType.ZOMBIE, plugin);
+        spawnerOld.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+        VirtualInventory viOld = spawnerOld.getVirtualInventory();
+        for (Material m : materials) {
+            viOld.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
+        }
+        Inventory invOld = Bukkit.createInventory(null, 54, Component.text("Old Storage"));
+
+        long[] latenciesOld = new long[SWITCHES];
+        long startOld = System.nanoTime();
+        for (int i = 0; i < SWITCHES; i++) {
+            long t0 = System.nanoTime();
+            int page = (i % 10) + 1;
+            var pageItems = viOld.getDisplayPage(page, 45);
+            for (int s = 0; s < 45; s++) {
+                invOld.setItem(s, pageItems.get(s));
+            }
+            latenciesOld[i] = System.nanoTime() - t0;
+        }
+        long totalOldNs = System.nanoTime() - startOld;
+
+        // New Path
+        SpawnerData spawnerNew = new SpawnerData("bench_page_new", loc, EntityType.ZOMBIE, plugin);
+        spawnerNew.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+        VirtualInventory viNew = spawnerNew.getVirtualInventory();
+        for (Material m : materials) {
+            viNew.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
+        }
+        Inventory invNew = Bukkit.createInventory(null, 54, Component.text("New Storage"));
+        StorageSession session = new StorageSession(plugin, spawnerNew);
+
+        long[] latenciesNew = new long[SWITCHES];
+        long startNew = System.nanoTime();
+        for (int i = 0; i < SWITCHES; i++) {
+            long t0 = System.nanoTime();
+            int page = (i % 10) + 1;
+            ItemStack[] slots = session.getPageSlots(page);
+            for (int s = 0; s < 45; s++) {
+                invNew.setItem(s, slots[s]);
+            }
+            latenciesNew[i] = System.nanoTime() - t0;
+        }
+        long totalNewNs = System.nanoTime() - startNew;
+        session.endSession();
+
+        Arrays.sort(latenciesOld);
+        Arrays.sort(latenciesNew);
+
+        double avgOldUs = (totalOldNs / 1000.0) / SWITCHES;
+        double p95OldUs = latenciesOld[(int) (SWITCHES * 0.95)] / 1000.0;
+        double throughputOld = SWITCHES / (totalOldNs / 1_000_000_000.0);
+
+        double avgNewUs = (totalNewNs / 1000.0) / SWITCHES;
+        double p95NewUs = latenciesNew[(int) (SWITCHES * 0.95)] / 1000.0;
+        double throughputNew = SWITCHES / (totalNewNs / 1_000_000_000.0);
+
+        double speedup = avgOldUs / Math.max(0.001, avgNewUs);
+
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Metric", "Old (Uncached Slices)", "New (Cached Pages)", "Improvement"));
+        log(sender, reportLines, "---------------------------------------------------------------------------------------------");
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Total Time (500 flips)", DF.format(totalOldNs / 1_000_000.0) + " ms", DF.format(totalNewNs / 1_000_000.0) + " ms", DF.format(speedup) + "x faster"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Average Latency", DF.format(avgOldUs) + " μs", DF.format(avgNewUs) + " μs", DF.format(speedup) + "x faster"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "P95 Latency", DF.format(p95OldUs) + " μs", DF.format(p95NewUs) + " μs", DF.format(p95OldUs / Math.max(0.001, p95NewUs)) + "x"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Throughput", INT_F.format(throughputOld) + " flips/s", INT_F.format(throughputNew) + " flips/s", DF.format(speedup) + "x"));
+    }
+
+    // ==============================================================================================
+    // BENCHMARK 4: Sort Items Operation (sort_items across 1M, 5M, and 10M scales)
+    // ==============================================================================================
+    private static void benchmarkSortItems(SmartSpawner plugin, CommandSender sender, List<String> reportLines, Location loc) {
+        log(sender, reportLines, "");
+        log(sender, reportLines, "### BENCHMARK 4: Sort Items Operation (Cycling Preferred Sort Item)");
+        log(sender, reportLines, "Measures stream comparator re-sorting and display projection across multi-million item inventories.");
+        log(sender, reportLines, String.format("%-28s | %-14s | %-12s | %-12s | %-16s | %-10s",
+                "Scale (50 item types)", "Mode", "Avg (μs)", "P95 (μs)", "Throughput (sorts/s)", "Speedup"));
+        log(sender, reportLines, "--------------------------------------------------------------------------------------------------------------");
+
+        List<Material> materials = getValidItemMaterials().subList(0, 50);
+        long[] scales = {1_000_000L, 5_000_000L, 10_000_000L};
+        String[] labels = {"1,000,000 items (1M)", "5,000,000 items (5M)", "10,000,000 items (10M)"};
+        final int SORTS = 200;
+
+        for (int idx = 0; idx < scales.length; idx++) {
+            long total = scales[idx];
+            long itemsPerType = total / materials.size();
+            String label = labels[idx];
+
+            // Old Path
+            SpawnerData spawnerOld = new SpawnerData("bench_sort_old_" + idx, loc, EntityType.ZOMBIE, plugin);
+            spawnerOld.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+            VirtualInventory viOld = spawnerOld.getVirtualInventory();
+            for (Material m : materials) {
+                viOld.addItem(new ItemStack(m, 64), itemsPerType);
+            }
+            Inventory invOld = Bukkit.createInventory(null, 54, Component.text("Old Storage"));
+
+            long[] latenciesOld = new long[SORTS];
+            long startOld = System.nanoTime();
+            for (int it = 0; it < SORTS; it++) {
+                long t0 = System.nanoTime();
+                Material nextSort = materials.get(it % materials.size());
+                viOld.sortItems(nextSort);
+                var page = viOld.getDisplayPage(1, 45);
+                for (int s = 0; s < 45; s++) {
+                    invOld.setItem(s, page.get(s));
+                }
+                latenciesOld[it] = System.nanoTime() - t0;
+            }
+            long totalOldNs = System.nanoTime() - startOld;
+
+            // New Path
+            SpawnerData spawnerNew = new SpawnerData("bench_sort_new_" + idx, loc, EntityType.ZOMBIE, plugin);
+            spawnerNew.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+            VirtualInventory viNew = spawnerNew.getVirtualInventory();
+            for (Material m : materials) {
+                viNew.addItem(new ItemStack(m, 64), itemsPerType);
+            }
+            Inventory invNew = Bukkit.createInventory(null, 54, Component.text("New Storage"));
+            StorageSession session = new StorageSession(plugin, spawnerNew);
+
+            long[] latenciesNew = new long[SORTS];
+            long startNew = System.nanoTime();
+            for (int it = 0; it < SORTS; it++) {
+                long t0 = System.nanoTime();
+                Material nextSort = materials.get(it % materials.size());
+                viNew.sortItems(nextSort);
+                session.setPageSlots(1, null); // Invalidate cache for new sort order
+                ItemStack[] slots = session.getPageSlots(1);
+                for (int s = 0; s < 45; s++) {
+                    invNew.setItem(s, slots[s]);
+                }
+                latenciesNew[it] = System.nanoTime() - t0;
+            }
+            long totalNewNs = System.nanoTime() - startNew;
+            session.endSession();
+
+            Arrays.sort(latenciesOld);
+            Arrays.sort(latenciesNew);
+
+            double avgOldUs = (totalOldNs / 1000.0) / SORTS;
+            double p95OldUs = latenciesOld[(int) (SORTS * 0.95)] / 1000.0;
+            double throughputOld = SORTS / (totalOldNs / 1_000_000_000.0);
+
+            double avgNewUs = (totalNewNs / 1000.0) / SORTS;
+            double p95NewUs = latenciesNew[(int) (SORTS * 0.95)] / 1000.0;
+            double throughputNew = SORTS / (totalNewNs / 1_000_000_000.0);
+
+            double speedup = avgOldUs / Math.max(0.001, avgNewUs);
+
+            log(sender, reportLines, String.format("%-28s | %-14s | %-12s | %-12s | %-16s | %-10s",
+                    label, "Old (Uncached)", DF.format(avgOldUs), DF.format(p95OldUs), INT_F.format(throughputOld), "1.0x"));
+            log(sender, reportLines, String.format("%-28s | %-14s | %-12s | %-12s | %-16s | %-10s",
+                    "", "New (Session)", DF.format(avgNewUs), DF.format(p95NewUs), INT_F.format(throughputNew), DF.format(speedup) + "x"));
+        }
+    }
+
+    // ==============================================================================================
+    // BENCHMARK 5: "Take All" Page Operation (take_all at 10M scale)
+    // ==============================================================================================
+    private static void benchmarkTakeAll(SmartSpawner plugin, CommandSender sender, List<String> reportLines, Location loc) {
+        log(sender, reportLines, "");
+        log(sender, reportLines, "### BENCHMARK 5: \"Take All\" Page Operation (200 ops at 10M Item Scale)");
+        log(sender, reportLines, "Simulates extracting all displayed items from page 1 into player inventory.");
+
+        List<Material> materials = getValidItemMaterials().subList(0, 50);
+        final int OPS = 200;
+        final long TOTAL_ITEMS = 10_000_000L;
+        final long ITEMS_PER_TYPE = TOTAL_ITEMS / materials.size();
+
+        // Old Path
+        SpawnerData spawnerOld = new SpawnerData("bench_takeall_old", loc, EntityType.ZOMBIE, plugin);
+        spawnerOld.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+        VirtualInventory viOld = spawnerOld.getVirtualInventory();
+        for (Material m : materials) {
+            viOld.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
+        }
+        Inventory invOld = Bukkit.createInventory(null, 54, Component.text("Old Storage"));
+        for (var entry : viOld.getDisplayPage(1, 45).int2ObjectEntrySet()) {
+            invOld.setItem(entry.getIntKey(), entry.getValue());
+        }
+
+        long[] latenciesOld = new long[OPS];
+        long slotWritesOld = 0;
+        long startOld = System.nanoTime();
+        for (int it = 0; it < OPS; it++) {
+            long t0 = System.nanoTime();
+            // Take 36 stacks into player inventory (2,304 items)
+            List<ItemStack> taken = new ArrayList<>(36);
+            for (int s = 0; s < 36; s++) {
+                ItemStack item = invOld.getItem(s);
+                if (item != null) taken.add(item.clone());
+            }
+            spawnerOld.removeItemsAndUpdateSellValue(taken);
+
+            // Old full repaint
+            for (int s = 0; s < 45; s++) {
+                invOld.setItem(s, null);
+                slotWritesOld++;
+            }
+            var page = viOld.getDisplayPage(1, 45);
+            for (var entry : page.int2ObjectEntrySet()) {
+                if (entry.getIntKey() < 45) {
+                    invOld.setItem(entry.getIntKey(), entry.getValue());
+                    slotWritesOld++;
+                }
+            }
+            latenciesOld[it] = System.nanoTime() - t0;
+        }
+        long totalOldNs = System.nanoTime() - startOld;
+
+        // New Path
+        SpawnerData spawnerNew = new SpawnerData("bench_takeall_new", loc, EntityType.ZOMBIE, plugin);
+        spawnerNew.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+        VirtualInventory viNew = spawnerNew.getVirtualInventory();
+        for (Material m : materials) {
+            viNew.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
+        }
+        Inventory invNew = Bukkit.createInventory(null, 54, Component.text("New Storage"));
+        StorageSession session = new StorageSession(plugin, spawnerNew);
+        ItemStack[] initialSlots = new ItemStack[45];
+        for (var entry : viNew.getDisplayPage(1, 45).int2ObjectEntrySet()) {
+            if (entry.getIntKey() < 45) {
+                initialSlots[entry.getIntKey()] = entry.getValue();
+                invNew.setItem(entry.getIntKey(), entry.getValue());
+            }
+        }
+        session.setPageSlots(1, initialSlots);
+
+        long[] latenciesNew = new long[OPS];
+        long slotWritesNew = 0;
+        long startNew = System.nanoTime();
+        for (int it = 0; it < OPS; it++) {
+            long t0 = System.nanoTime();
+            List<ItemStack> taken = new ArrayList<>(36);
+            for (int s = 0; s < 36; s++) {
+                ItemStack item = invNew.getItem(s);
+                if (item != null) {
+                    taken.add(item.clone());
+                    invNew.setItem(s, null);
+                    slotWritesNew++;
+                }
+            }
+            spawnerNew.removeItemsAndUpdateSellValue(taken);
+
+            // Update session (only cleared slots are modified, remaining 9 stay intact)
+            ItemStack[] currentSlots = new ItemStack[45];
+            for (int s = 0; s < 45; s++) currentSlots[s] = invNew.getItem(s);
+            session.setPageSlots(1, currentSlots);
+
+            latenciesNew[it] = System.nanoTime() - t0;
+        }
+        long totalNewNs = System.nanoTime() - startNew;
+        session.endSession();
+
+        Arrays.sort(latenciesOld);
+        Arrays.sort(latenciesNew);
+
+        double avgOldUs = (totalOldNs / 1000.0) / OPS;
+        double p95OldUs = latenciesOld[(int) (OPS * 0.95)] / 1000.0;
+        double throughputOld = OPS / (totalOldNs / 1_000_000_000.0);
+
+        double avgNewUs = (totalNewNs / 1000.0) / OPS;
+        double p95NewUs = latenciesNew[(int) (OPS * 0.95)] / 1000.0;
+        double throughputNew = OPS / (totalNewNs / 1_000_000_000.0);
+
+        double speedup = avgOldUs / Math.max(0.001, avgNewUs);
+        double writeReduction = ((double) (slotWritesOld - slotWritesNew) / slotWritesOld) * 100.0;
+
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Metric", "Old (Full Repaint)", "New (Session Diff)", "Improvement"));
+        log(sender, reportLines, "---------------------------------------------------------------------------------------------");
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Total Time (200 ops)", DF.format(totalOldNs / 1_000_000.0) + " ms", DF.format(totalNewNs / 1_000_000.0) + " ms", DF.format(speedup) + "x faster"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Average Latency", DF.format(avgOldUs) + " μs", DF.format(avgNewUs) + " μs", DF.format(speedup) + "x faster"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "P95 Latency", DF.format(p95OldUs) + " μs", DF.format(p95NewUs) + " μs", DF.format(p95OldUs / Math.max(0.001, p95NewUs)) + "x"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Throughput", INT_F.format(throughputOld) + " ops/s", INT_F.format(throughputNew) + " ops/s", DF.format(speedup) + "x"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Inventory Slot Writes", INT_F.format(slotWritesOld), INT_F.format(slotWritesNew), "-" + DF.format(writeReduction) + "% fewer"));
+    }
+
+    // ==============================================================================================
+    // BENCHMARK 6: "Drop Page" Operation (drop_page at 10M scale)
+    // ==============================================================================================
+    private static void benchmarkDropPage(SmartSpawner plugin, CommandSender sender, List<String> reportLines, Location loc) {
+        log(sender, reportLines, "");
+        log(sender, reportLines, "### BENCHMARK 6: \"Drop Page\" Operation (200 ops at 10M Item Scale)");
+        log(sender, reportLines, "Simulates extracting all 45 slots of a page, debiting inventory, and loading the next page.");
+
+        List<Material> materials = getValidItemMaterials().subList(0, 50);
+        final int OPS = 200;
+        final long TOTAL_ITEMS = 10_000_000L;
+        final long ITEMS_PER_TYPE = TOTAL_ITEMS / materials.size();
+
+        // Old Path
+        SpawnerData spawnerOld = new SpawnerData("bench_drop_old", loc, EntityType.ZOMBIE, plugin);
+        spawnerOld.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+        VirtualInventory viOld = spawnerOld.getVirtualInventory();
+        for (Material m : materials) {
+            viOld.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
+        }
+        Inventory invOld = Bukkit.createInventory(null, 54, Component.text("Old Storage"));
+
+        long[] latenciesOld = new long[OPS];
+        long startOld = System.nanoTime();
+        for (int it = 0; it < OPS; it++) {
+            long t0 = System.nanoTime();
+            List<ItemStack> dropped = new ArrayList<>(45);
+            for (int s = 0; s < 45; s++) {
+                ItemStack item = invOld.getItem(s);
+                if (item != null) dropped.add(item.clone());
+            }
+            if (!dropped.isEmpty()) {
+                spawnerOld.removeItemsAndUpdateSellValue(dropped);
+            }
+
+            for (int s = 0; s < 45; s++) invOld.setItem(s, null);
+            var page = viOld.getDisplayPage(1, 45);
+            for (var entry : page.int2ObjectEntrySet()) {
+                if (entry.getIntKey() < 45) invOld.setItem(entry.getIntKey(), entry.getValue());
+            }
+            latenciesOld[it] = System.nanoTime() - t0;
+        }
+        long totalOldNs = System.nanoTime() - startOld;
+
+        // New Path
+        SpawnerData spawnerNew = new SpawnerData("bench_drop_new", loc, EntityType.ZOMBIE, plugin);
+        spawnerNew.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+        VirtualInventory viNew = spawnerNew.getVirtualInventory();
+        for (Material m : materials) {
+            viNew.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
+        }
+        Inventory invNew = Bukkit.createInventory(null, 54, Component.text("New Storage"));
+        StorageSession session = new StorageSession(plugin, spawnerNew);
+
+        long[] latenciesNew = new long[OPS];
+        long startNew = System.nanoTime();
+        for (int it = 0; it < OPS; it++) {
+            long t0 = System.nanoTime();
+            List<ItemStack> dropped = new ArrayList<>(45);
+            for (int s = 0; s < 45; s++) {
+                ItemStack item = invNew.getItem(s);
+                if (item != null) dropped.add(item.clone());
+            }
+            if (!dropped.isEmpty()) {
+                spawnerNew.removeItemsAndUpdateSellValue(dropped);
+            }
+
+            session.setPageSlots(1, null); // Clear page in session
+            ItemStack[] nextSlots = session.getPageSlots(1);
+            for (int s = 0; s < 45; s++) invNew.setItem(s, nextSlots[s]);
+
+            latenciesNew[it] = System.nanoTime() - t0;
+        }
+        long totalNewNs = System.nanoTime() - startNew;
+        session.endSession();
+
+        Arrays.sort(latenciesOld);
+        Arrays.sort(latenciesNew);
+
+        double avgOldUs = (totalOldNs / 1000.0) / OPS;
+        double p95OldUs = latenciesOld[(int) (OPS * 0.95)] / 1000.0;
+        double throughputOld = OPS / (totalOldNs / 1_000_000_000.0);
+
+        double avgNewUs = (totalNewNs / 1000.0) / OPS;
+        double p95NewUs = latenciesNew[(int) (OPS * 0.95)] / 1000.0;
+        double throughputNew = OPS / (totalNewNs / 1_000_000_000.0);
+
+        double speedup = avgOldUs / Math.max(0.001, avgNewUs);
+
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Metric", "Old (Full Repaint)", "New (Session Refresh)", "Improvement"));
+        log(sender, reportLines, "---------------------------------------------------------------------------------------------");
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Total Time (200 ops)", DF.format(totalOldNs / 1_000_000.0) + " ms", DF.format(totalNewNs / 1_000_000.0) + " ms", DF.format(speedup) + "x faster"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Average Latency", DF.format(avgOldUs) + " μs", DF.format(avgNewUs) + " μs", DF.format(speedup) + "x faster"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "P95 Latency", DF.format(p95OldUs) + " μs", DF.format(p95NewUs) + " μs", DF.format(p95OldUs / Math.max(0.001, p95NewUs)) + "x"));
+        log(sender, reportLines, String.format("%-25s | %-16s | %-16s | %-12s", "Throughput", INT_F.format(throughputOld) + " drops/s", INT_F.format(throughputNew) + " drops/s", DF.format(speedup) + "x"));
+    }
+
+    // ==============================================================================================
+    // BENCHMARK 7: Concurrent Operations (500 Loot Adds + 500 Hopper Takes at 10M scale)
     // ==============================================================================================
     private static void benchmarkConcurrentOperations(SmartSpawner plugin, CommandSender sender, List<String> reportLines, Location loc) {
         log(sender, reportLines, "");
-        log(sender, reportLines, "### BENCHMARK 3: Concurrent Operations (500 Loot Adds + 500 Hopper Takes)");
+        log(sender, reportLines, "### BENCHMARK 7: Concurrent Operations (500 Loot Adds + 500 Hopper Takes at 10M Scale)");
         log(sender, reportLines, "Simulates background loot generation and hopper extraction while GUI is viewed.");
 
-        List<Material> materials = getValidItemMaterials();
+        List<Material> materials = getValidItemMaterials().subList(0, 50);
         final int CYCLES = 500;
+        final long TOTAL_ITEMS = 10_000_000L;
+        final long ITEMS_PER_TYPE = TOTAL_ITEMS / materials.size();
 
         // Old Path
         SpawnerData spawnerOld = new SpawnerData("bench_conc_old", loc, EntityType.ZOMBIE, plugin);
+        spawnerOld.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+        VirtualInventory viOld = spawnerOld.getVirtualInventory();
+        for (Material m : materials) {
+            viOld.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
+        }
         Inventory invOld = Bukkit.createInventory(null, 54, Component.text("Storage"));
         long startOld = System.nanoTime();
         for (int i = 0; i < CYCLES; i++) {
@@ -386,6 +791,11 @@ public class StoragePerformanceBenchmark {
 
         // New Path
         SpawnerData spawnerNew = new SpawnerData("bench_conc_new", loc, EntityType.ZOMBIE, plugin);
+        spawnerNew.setMaxSpawnerLootSlots(Integer.MAX_VALUE / 2);
+        VirtualInventory viNew = spawnerNew.getVirtualInventory();
+        for (Material m : materials) {
+            viNew.addItem(new ItemStack(m, 64), ITEMS_PER_TYPE);
+        }
         StorageSession session = new StorageSession(plugin, spawnerNew);
         Inventory invNew = Bukkit.createInventory(null, 54, Component.text("Storage"));
         long startNew = System.nanoTime();
