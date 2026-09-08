@@ -1,0 +1,41 @@
+===============================================================================
+          SMARTSPAWNER MAIN BRANCH STORAGE PERFORMANCE BENCHMARK
+===============================================================================
+Branch: main (Baseline)
+Server: Paper 26.2 | Java: 25.0.3
+Date: Tue Sep 08 15:12:11 GMT+07:00 2026
+OS: Windows 11 (amd64)
+-------------------------------------------------------------------------------
+
+### BENCHMARK 1: Display Page Materialization (main branch)
+Measures display retrieval throughput and latency across different inventory sizes.
+Inventory Scale    | Mode         | Avg (μs)     | P95 (μs)     | Throughput (op/s)
+---------------------------------------------------------------------------------------------
+Small (5 items)    | main (Uncached) | 1.81         | 2.20         | 553,073       
+Medium (45 items)  | main (Uncached) | 1.60         | 3.50         | 626,480       
+Large (200 items)  | main (Uncached) | 1.79         | 2.10         | 559,068       
+Massive (1k items) | main (Uncached) | 1.04         | 1.50         | 962,773       
+
+### BENCHMARK 2: Item Take Cycle (1,000 Consecutive Takes - main branch)
+Measures full-page repaint + auto-compact on every take.
+Metric                    | main Branch Result  
+---------------------------------------------------------------------------------------------
+Total Time (1000 ops)     | 26.20 ms            
+Average Latency           | 26.20 μs            
+P50 Latency               | 19.00 μs            
+P95 Latency               | 41.40 μs            
+P99 Latency               | 123.20 μs           
+Max Latency               | 1,243.00 μs         
+Throughput                | 38,163 takes/s      
+Inventory Slot Writes     | 91,000              
+
+### BENCHMARK 3: Concurrent Operations (500 Loot Adds + 500 Hopper Takes - main branch)
+Simulates background loot generation and hopper extraction with full repaint push.
+Metric                    | main Branch Result  
+---------------------------------------------------------------------------------------------
+Total Time (1000 ops)     | 15.80 ms            
+Average per Operation     | 15.80 μs            
+Throughput                | 63,284 ops/s        
+===============================================================================
+                         BENCHMARK COMPLETED
+===============================================================================
