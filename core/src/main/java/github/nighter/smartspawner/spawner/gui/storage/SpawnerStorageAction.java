@@ -12,6 +12,9 @@ import github.nighter.smartspawner.spawner.gui.layout.GuiLayout;
 import github.nighter.smartspawner.spawner.lootgen.loot.LootItem;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
+import github.nighter.smartspawner.Scheduler;
+import github.nighter.smartspawner.spawner.properties.ItemSignature;
+import github.nighter.smartspawner.spawner.gui.storage.session.StorageSession;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
 import org.bukkit.*;
@@ -76,37 +79,80 @@ public class SpawnerStorageAction implements Listener {
 
         SpawnerData spawner = holder.getSpawnerData();
         int slot = event.getRawSlot();
-        event.setCancelled(true);
 
         // Block ALL storage interactions while a sell is in progress.
-        // This closes the race window where the storage GUI could be reopened (by the
-        // reopenPreviousGui callback) before the async sell's item-removal step has run,
-        // which would otherwise allow items to be taken from the virtual inventory twice –
-        // once by the player and once by applySellResult.
         if (spawner.isSelling()) {
+            event.setCancelled(true);
             plugin.getMessageService().sendMessage(player, "action_in_progress");
             return;
         }
 
-        // Handle clicks outside valid storage GUI area
-        if (slot < 0 || slot >= INVENTORY_SIZE) {
+        // Handle clicks outside valid window
+        if (slot < 0) {
             return;
         }
 
-        // Handle item slot clicks (taking items from storage)
-        if (isItemSlot(slot)) {
-            handleItemSlotClick(player, slot, holder, spawner, event);
+        // Handle control button clicks (slots 45-53)
+        if (slot >= STORAGE_SLOTS && slot < INVENTORY_SIZE) {
+            event.setCancelled(true);
+            if (isControlSlot(slot, holder.getLayout())) {
+                ItemStack clickedItem = event.getCurrentItem();
+                if (clickedItem != null && clickedItem.getType() != Material.AIR) {
+                    handleControlSlotClick(
+                            player, slot, holder, spawner, event.getInventory(), event.getClick(), holder.getLayout());
+                }
+            }
             return;
         }
 
-        // Handle control button clicks
-        if (isControlSlot(slot, holder.getLayout())) {
-            ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+        // Handle clicks inside player inventory (slot >= 54)
+        if (slot >= INVENTORY_SIZE) {
+            // Block shift-clicking from player inventory into storage
+            if (event.isShiftClick()) {
+                event.setCancelled(true);
                 return;
             }
-            handleControlSlotClick(
-                    player, slot, holder, spawner, event.getInventory(), event.getClick(), holder.getLayout());
+            // Allow native organization within player inventory
+            return;
+        }
+
+        // Handle item slot clicks (slots 0-44)
+        if (isItemSlot(slot)) {
+            // Block placing non-loot items into storage
+            ItemStack cursor = event.getCursor();
+            if (cursor != null && cursor.getType() != Material.AIR) {
+                if (!isValidStorageItem(spawner, cursor)) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+
+            // Block hotbar swap with non-loot item
+            if (event.getClick() == ClickType.NUMBER_KEY) {
+                int hotbarSlot = event.getHotbarButton();
+                if (hotbarSlot >= 0 && hotbarSlot < 9) {
+                    ItemStack hotbarItem = player.getInventory().getItem(hotbarSlot);
+                    if (hotbarItem != null && hotbarItem.getType() != Material.AIR) {
+                        if (!isValidStorageItem(spawner, hotbarItem)) {
+                            event.setCancelled(true);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // Native take allowed
+            event.setCancelled(false);
+
+            // Reconcile page after click on region thread
+            Scheduler.runLocationTask(player.getLocation(), () -> {
+                if (!player.isOnline()) return;
+                Inventory topInv = player.getOpenInventory().getTopInventory();
+                if (topInv.getHolder(false) instanceof StoragePageHolder pageHolder
+                        && pageHolder.getSpawnerData().getSpawnerId().equals(spawner.getSpawnerId())) {
+                    reconcileStoragePage(player, topInv, spawner, pageHolder);
+                }
+            });
         }
     }
 
@@ -148,6 +194,7 @@ public class SpawnerStorageAction implements Listener {
                 if (holder.getCurrentPage() > 1) {
                     plugin.getGuiButtonInteractionService().playNavigateSound(
                             player, button, clickTypeString);
+                    reconcileStoragePage(player, inventory, spawner, holder);
                     updatePageContent(player, spawner, holder.getCurrentPage() - 1, inventory);
                 }
                 break;
@@ -159,6 +206,7 @@ public class SpawnerStorageAction implements Listener {
                 if (holder.getCurrentPage() < holder.getTotalPages()) {
                     plugin.getGuiButtonInteractionService().playNavigateSound(
                             player, button, clickTypeString);
+                    reconcileStoragePage(player, inventory, spawner, holder);
                     updatePageContent(player, spawner, holder.getCurrentPage() + 1, inventory);
                 }
                 break;
@@ -277,160 +325,151 @@ public class SpawnerStorageAction implements Listener {
     }
 
     /**
-     * Handles clicks on item slots in the storage GUI.
-     * ALL clicks transfer items directly to player inventory (no cursor interaction).
-     * - LEFT CLICK: Take 1 item from stack
-     * - RIGHT CLICK: Take half of stack
-     * - SHIFT CLICK: Take entire stack
+     * Checks if an item is a valid loot item for this spawner.
+     * Prevents players from depositing non-spawner items into storage.
      */
-    private void handleItemSlotClick(Player player, int slot, StoragePageHolder holder,
-                                    SpawnerData spawner, InventoryClickEvent event) {
-        // Anti-spam check
-        if (isItemClickTooFrequent(player)) {
-            return;
+    private boolean isValidStorageItem(SpawnerData spawner, ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) {
+            return false;
         }
-        lastItemClickTime.put(player.getUniqueId(), System.currentTimeMillis());
-
-        Inventory inventory = event.getInventory();
-        ItemStack clickedItem = inventory.getItem(slot);
-
-        // Nothing to take from empty slot
-        if (clickedItem == null || clickedItem.getType() == Material.AIR) {
-            return;
+        if (spawner.isItemSpawner()) {
+            return item.getType() == spawner.getSpawnedItemMaterial();
         }
-
-        // Determine amount to take based on click type
-        ClickType clickType = event.getClick();
-        int amountToTake;
-
-        switch (clickType) {
-            case LEFT:
-                // Left click = take only 1 item
-                amountToTake = 1;
-                break;
-            case RIGHT:
-                // Right click = take half
-                amountToTake = (int) Math.ceil(clickedItem.getAmount() / 2.0);
-                break;
-            case SHIFT_LEFT:
-            case SHIFT_RIGHT:
-                // Shift click = take all
-                amountToTake = clickedItem.getAmount();
-                break;
-            default:
-                // Ignore other click types
-                return;
+        if (spawner.getLootConfig() == null) {
+            return false;
         }
-
-        // Transfer items to player inventory
-        transferToPlayerInventory(player, clickedItem, amountToTake, inventory, spawner, holder);
+        return spawner.getValidLootItems().stream()
+                .anyMatch(loot -> loot.material() == item.getType());
     }
 
     /**
-     * Optimized method to transfer items from storage to player inventory.
-     * Handles all click types with a single efficient path.
+     * Reconciles the current page contents with StorageSession and VirtualInventory.
+     * Preserves empty slots (does NOT auto-compact while viewing).
      */
-    private void transferToPlayerInventory(Player player, ItemStack clickedItem, int amountToTake,
-                                          Inventory storageInv, SpawnerData spawner, StoragePageHolder holder) {
-        PlayerInventory playerInv = player.getInventory();
-        ItemStack toTransfer = clickedItem.clone();
-        toTransfer.setAmount(amountToTake);
+    private void reconcileStoragePage(Player player, Inventory inventory, SpawnerData spawner, StoragePageHolder holder) {
+        int page = holder.getCurrentPage();
+        if (plugin.getStorageSessionManager() == null) {
+            return;
+        }
+        StorageSession session = plugin.getStorageSessionManager().getOrCreateSession(spawner);
 
-        int amountMoved = 0;
-        int remaining = amountToTake;
+        ItemStack[] currentSlots = new ItemStack[StoragePageHolder.MAX_ITEMS_PER_PAGE];
+        List<ItemStack> currList = new ArrayList<>();
 
-        // Optimize: Try to stack with existing items first (more efficient)
-        for (int i = 0; i < 36 && remaining > 0; i++) {
-            ItemStack slot = playerInv.getItem(i);
+        for (int i = 0; i < StoragePageHolder.MAX_ITEMS_PER_PAGE; i++) {
+            ItemStack item = inventory.getItem(i);
+            if (item != null && item.getType() != Material.AIR && item.getAmount() > 0) {
+                currentSlots[i] = item.clone();
+                currList.add(item.clone());
+            } else {
+                currentSlots[i] = null;
+            }
+        }
 
-            if (slot != null && slot.getType() != Material.AIR && slot.isSimilar(toTransfer)) {
-                // Found similar item - try to stack
-                int space = slot.getMaxStackSize() - slot.getAmount();
-                if (space > 0) {
-                    int add = Math.min(space, remaining);
-                    slot.setAmount(slot.getAmount() + add);
-                    amountMoved += add;
-                    remaining -= add;
+        ItemStack[] previousSlots = session.getPageSlots(page);
+        List<ItemStack> prevList = new ArrayList<>();
+        if (previousSlots != null) {
+            for (ItemStack prev : previousSlots) {
+                if (prev != null && prev.getType() != Material.AIR && prev.getAmount() > 0) {
+                    prevList.add(prev.clone());
                 }
             }
         }
 
-        // Then fill empty slots
-        for (int i = 0; i < 36 && remaining > 0; i++) {
-            ItemStack slot = playerInv.getItem(i);
+        // Update session's slot records for this page (preserves gaps!)
+        session.setPageSlots(page, currentSlots);
 
-            if (slot == null || slot.getType() == Material.AIR) {
-                int stackSize = Math.min(remaining, toTransfer.getMaxStackSize());
-                ItemStack newStack = toTransfer.clone();
-                newStack.setAmount(stackSize);
-                playerInv.setItem(i, newStack);
-                amountMoved += stackSize;
-                remaining -= stackSize;
+        // Cancel out matching items between current and previous using isSimilar
+        for (ItemStack curr : currList) {
+            for (ItemStack prev : prevList) {
+                if (curr.getAmount() > 0 && prev.getAmount() > 0 && curr.isSimilar(prev)) {
+                    int matched = Math.min(curr.getAmount(), prev.getAmount());
+                    curr.setAmount(curr.getAmount() - matched);
+                    prev.setAmount(prev.getAmount() - matched);
+                }
             }
         }
 
-        // Update VirtualInventory if any items were moved
-        if (amountMoved > 0) {
-            ItemStack removed = toTransfer.clone();
-            removed.setAmount(amountMoved);
-
-            if (spawner.removeItemsAndUpdateSellValue(List.of(removed))) {
-                // Update display efficiently
-                updatePageAfterRemoval(player, storageInv, spawner, holder);
-
-                // Single sound effect
-                player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.0f);
-
-                // Notify if inventory was full
-                if (remaining > 0) {
-                    messageService.sendMessage(player, "inventory_full");
-                }
+        // Any remainder in prevList with amount > 0 was REMOVED from storage
+        Map<ItemSignature, Long> removed = new HashMap<>();
+        for (ItemStack prev : prevList) {
+            if (prev.getAmount() > 0) {
+                removed.merge(VirtualInventory.getSignature(prev), (long) prev.getAmount(), Long::sum);
             }
-        } else {
-            // No items moved - inventory full
-            messageService.sendMessage(player, "inventory_full");
+        }
+
+        // Any remainder in currList with amount > 0 was ADDED to storage
+        Map<ItemSignature, Long> added = new HashMap<>();
+        for (ItemStack curr : currList) {
+            if (curr.getAmount() > 0) {
+                added.merge(VirtualInventory.getSignature(curr), (long) curr.getAmount(), Long::sum);
+            }
+        }
+
+        if (!removed.isEmpty()) {
+            spawner.removeItemsAndUpdateSellValue(removed);
+            spawner.markStorageDirty();
+        }
+        if (!added.isEmpty()) {
+            spawner.addItemsAndUpdateSellValue(added);
+            spawner.markStorageDirty();
+        }
+
+        if (!removed.isEmpty() || !added.isEmpty()) {
+            spawner.updateHologramData();
+            holder.updateOldUsedSlots();
+
+            if (spawner.getMaxSpawnerLootSlots() > holder.getOldUsedSlots() && spawner.getIsAtCapacity()) {
+                spawner.setIsAtCapacity(false);
+            }
+
+            // Update only the sell button display, keeping item slots untouched
+            updateSellButtonOnly(inventory, spawner, holder.getLayout());
+
+            // Sync other viewers viewing the exact same page
+            syncOtherPageViewers(spawner, player.getUniqueId(), page, currentSlots);
         }
     }
 
+    /**
+     * Updates sell buttons in the control row without redrawing storage item slots.
+     */
+    private void updateSellButtonOnly(Inventory inventory, SpawnerData spawner, GuiLayout layout) {
+        if (layout == null) return;
+        for (var button : layout.getAllButtons().values()) {
+            if (!button.isEnabled()) continue;
+            String action = button.getActionWithFallback("left_click");
+            if ("sell_all".equals(action)) {
+                inventory.setItem(button.getSlot(), plugin.getSpawnerStorageUI().createSellButton(spawner, button));
+            } else if ("sell_and_exp".equals(action)) {
+                inventory.setItem(button.getSlot(), plugin.getSpawnerStorageUI().createSellAndExpButton(spawner, button));
+            }
+        }
+    }
 
     /**
-     * Updates the page display after items are removed from storage.
+     * Syncs item slots to other players viewing the same page without shifting or repacking.
      */
-    private void updatePageAfterRemoval(Player player, Inventory inventory,
-                                       SpawnerData spawner, StoragePageHolder holder) {
-        // Recalculate pages
-        int newTotalPages = calculateTotalPages(spawner);
-        int currentPage = holder.getCurrentPage();
+    private void syncOtherPageViewers(SpawnerData spawner, UUID actingPlayerId, int page, ItemStack[] currentSlots) {
+        Set<Player> viewers = plugin.getSpawnerGuiViewManager().getViewers(spawner.getSpawnerId());
+        if (viewers == null || viewers.isEmpty()) return;
 
-        // Clamp to valid page range
-        int adjustedPage = Math.max(1, Math.min(currentPage, newTotalPages));
-
-        holder.setTotalPages(newTotalPages);
-        if (adjustedPage != currentPage) {
-            holder.setCurrentPage(adjustedPage);
+        for (Player viewer : viewers) {
+            if (viewer.getUniqueId().equals(actingPlayerId) || !viewer.isOnline()) {
+                continue;
+            }
+            Inventory openInv = viewer.getOpenInventory().getTopInventory();
+            if (openInv.getHolder(false) instanceof StoragePageHolder otherHolder) {
+                if (otherHolder.getSpawnerData().getSpawnerId().equals(spawner.getSpawnerId())
+                        && otherHolder.getCurrentPage() == page) {
+                    for (int i = 0; i < StoragePageHolder.MAX_ITEMS_PER_PAGE; i++) {
+                        openInv.setItem(i, currentSlots[i] != null ? currentSlots[i].clone() : null);
+                    }
+                    updateSellButtonOnly(openInv, spawner, otherHolder.getLayout());
+                    viewer.updateInventory();
+                }
+            }
         }
-        holder.updateOldUsedSlots();
-
-        // Update display
-        SpawnerStorageUI spawnerStorageUI = plugin.getSpawnerStorageUI();
-        spawnerStorageUI.updateDisplay(inventory, spawner, adjustedPage, newTotalPages);
-
-        // Update title if pages changed
-        if (newTotalPages != currentPage || adjustedPage != currentPage) {
-            updateInventoryTitle(player, spawner, adjustedPage, newTotalPages);
-        }
-
-        // Update hologram and other viewers
-        spawner.updateHologramData();
-        spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
-
-        // Check capacity
-        if (spawner.getMaxSpawnerLootSlots() > holder.getOldUsedSlots() && spawner.getIsAtCapacity()) {
-            spawner.setIsAtCapacity(false);
-        }
-
-        // Mark as modified
-        spawner.markStorageDirty();
     }
 
     private boolean handleDropPageItems(Player player, SpawnerData spawner, Inventory inventory) {
@@ -468,6 +507,13 @@ public class SpawnerStorageAction implements Listener {
 
         // Remove from VirtualInventory
         spawner.removeItemsAndUpdateSellValue(pageItems);
+
+        if (plugin.getStorageSessionManager() != null) {
+            StorageSession session = plugin.getStorageSessionManager().getSession(spawner.getSpawnerId());
+            if (session != null) {
+                session.setPageSlots(holder.getCurrentPage(), new ItemStack[StoragePageHolder.MAX_ITEMS_PER_PAGE]);
+            }
+        }
 
         dropItemsInDirection(player, pageItems);
 
@@ -647,6 +693,11 @@ public class SpawnerStorageAction implements Listener {
 
         // Re-sort VirtualInventory
         spawner.getVirtualInventory().sortItems(nextSort);
+
+        // Reset session if present so it reloads with new sort order
+        if (plugin.getStorageSessionManager() != null) {
+            plugin.getStorageSessionManager().removeSession(spawner.getSpawnerId());
+        }
 
         // Update GUI display to reflect VirtualInventory state
         StoragePageHolder holder = (StoragePageHolder) inventory.getHolder(false);
@@ -840,6 +891,18 @@ public class SpawnerStorageAction implements Listener {
             spawnerData.updateHologramData();
 
             holder.updateOldUsedSlots();
+
+            if (plugin.getStorageSessionManager() != null) {
+                StorageSession session = plugin.getStorageSessionManager().getSession(spawnerData.getSpawnerId());
+                if (session != null) {
+                    ItemStack[] currentSlots = new ItemStack[StoragePageHolder.MAX_ITEMS_PER_PAGE];
+                    for (int i = 0; i < StoragePageHolder.MAX_ITEMS_PER_PAGE; i++) {
+                        ItemStack it = sourceInventory.getItem(i);
+                        currentSlots[i] = (it != null && it.getType() != Material.AIR) ? it.clone() : null;
+                    }
+                    session.setPageSlots(holder.getCurrentPage(), currentSlots);
+                }
+            }
         }
 
         return new TransferResult(anyItemMoved, inventoryFull, totalAmountMoved);
@@ -855,10 +918,44 @@ public class SpawnerStorageAction implements Listener {
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (!(event.getInventory().getHolder(false) instanceof StoragePageHolder)) {
+        if (!(event.getInventory().getHolder(false) instanceof StoragePageHolder holder)) {
             return;
         }
-        event.setCancelled(true);
+
+        SpawnerData spawner = holder.getSpawnerData();
+        if (spawner.isSelling()) {
+            event.setCancelled(true);
+            return;
+        }
+
+        for (int rawSlot : event.getRawSlots()) {
+            // Never allow dragging on control buttons
+            if (rawSlot >= STORAGE_SLOTS && rawSlot < INVENTORY_SIZE) {
+                event.setCancelled(true);
+                return;
+            }
+            // Check dragging into storage slots
+            if (rawSlot >= 0 && rawSlot < STORAGE_SLOTS) {
+                ItemStack dragged = event.getOldCursor();
+                if (!isValidStorageItem(spawner, dragged)) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+
+        // Allow drag and reconcile on region thread
+        event.setCancelled(false);
+        if (event.getWhoClicked() instanceof Player player) {
+            Scheduler.runLocationTask(player.getLocation(), () -> {
+                if (!player.isOnline()) return;
+                Inventory topInv = player.getOpenInventory().getTopInventory();
+                if (topInv.getHolder(false) instanceof StoragePageHolder pageHolder
+                        && pageHolder.getSpawnerData().getSpawnerId().equals(spawner.getSpawnerId())) {
+                    reconcileStoragePage(player, topInv, spawner, pageHolder);
+                }
+            });
+        }
     }
 
     @EventHandler
@@ -868,11 +965,41 @@ public class SpawnerStorageAction implements Listener {
             return;
         }
 
-        // Inventory close events already execute on the owning player's region thread.
-        // Do not defer this work to the player's scheduler: after closing, a block-backed
-        // inventory could belong to a different region and resolving its holder there
-        // violates Folia's thread ownership rules.
-        handleInventoryClose(holder);
+        if (event.getPlayer() instanceof Player player) {
+            SpawnerData spawner = holder.getSpawnerData();
+
+            // Reconcile final page state
+            reconcileStoragePage(player, inventory, spawner, holder);
+
+            if (plugin.getStorageSessionManager() != null) {
+                StorageSession session = plugin.getStorageSessionManager().getSession(spawner.getSpawnerId());
+                if (session != null) {
+                    session.removeViewer(player.getUniqueId());
+
+                    // Check if any other viewers are still viewing storage of this spawner
+                    boolean hasRemainingStorageViewers = false;
+                    Set<Player> viewers = plugin.getSpawnerGuiViewManager().getViewers(spawner.getSpawnerId());
+                    for (Player viewer : viewers) {
+                        if (viewer.isOnline() && !viewer.getUniqueId().equals(player.getUniqueId())) {
+                            Inventory topInv = viewer.getOpenInventory().getTopInventory();
+                            if (topInv.getHolder(false) instanceof StoragePageHolder) {
+                                hasRemainingStorageViewers = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!hasRemainingStorageViewers && !session.hasViewers()) {
+                        // All viewers left! End session so next open naturally loads compacted VirtualInventory
+                        session.endSession();
+                        plugin.getStorageSessionManager().removeSession(spawner.getSpawnerId());
+                        plugin.getSpawnerManager().markSpawnerModified(spawner.getSpawnerId());
+                    }
+                }
+            }
+
+            handleInventoryClose(holder);
+        }
     }
 
     private void handleInventoryClose(StoragePageHolder holder) {

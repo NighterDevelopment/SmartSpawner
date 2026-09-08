@@ -136,6 +136,12 @@ public class SpawnerLootGenerator {
                             if (!lootToAdd.isEmpty()) {
                                 spawner.addItemsAndUpdateSellValue(lootToAdd);
                                 changed = true;
+                                if (plugin.getStorageSessionManager() != null) {
+                                    var session = plugin.getStorageSessionManager().getSession(spawner.getSpawnerId());
+                                    if (session != null) {
+                                        session.addLoot(lootToAdd);
+                                    }
+                                }
                             }
                         }
 
@@ -550,6 +556,12 @@ public class SpawnerLootGenerator {
                             if (!lootToAdd.isEmpty()) {
                                 spawner.addItemsAndUpdateSellValue(lootToAdd);
                                 changed = true;
+                                if (plugin.getStorageSessionManager() != null) {
+                                    var session = plugin.getStorageSessionManager().getSession(spawner.getSpawnerId());
+                                    if (session != null) {
+                                        session.addLoot(lootToAdd);
+                                    }
+                                }
                             }
                         }
                     }

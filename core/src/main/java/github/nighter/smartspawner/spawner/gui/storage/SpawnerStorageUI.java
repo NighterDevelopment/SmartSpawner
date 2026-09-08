@@ -240,6 +240,11 @@ public class SpawnerStorageUI {
 
         // Populate the inventory
         updateDisplay(pageInv, spawner, page, totalPages);
+
+        if (plugin.getStorageSessionManager() != null && player != null) {
+            plugin.getStorageSessionManager().getOrCreateSession(spawner).addViewer(player.getUniqueId());
+        }
+
         return pageInv;
     }
 
@@ -305,6 +310,19 @@ public class SpawnerStorageUI {
 
     private void addPageItems(Map<Integer, ItemStack> updates, Set<Integer> slotsToEmpty, SpawnerData spawner, int page) {
         try {
+            if (plugin.getStorageSessionManager() != null) {
+                var session = plugin.getStorageSessionManager().getOrCreateSession(spawner);
+                ItemStack[] pageSlots = session.getPageSlots(page);
+                for (int i = 0; i < StoragePageHolder.MAX_ITEMS_PER_PAGE; i++) {
+                    ItemStack item = pageSlots[i];
+                    if (item != null && item.getType() != Material.AIR && item.getAmount() > 0) {
+                        updates.put(i, item.clone());
+                        slotsToEmpty.remove(i);
+                    }
+                }
+                return;
+            }
+
             // Read only the requested page instead of materializing the full logical inventory.
             VirtualInventory virtualInv = spawner.getVirtualInventory();
             Int2ObjectMap<ItemStack> displayItems = virtualInv.getDisplayPage(page, StoragePageHolder.MAX_ITEMS_PER_PAGE);
@@ -475,7 +493,7 @@ public class SpawnerStorageUI {
         });
     }
 
-    private ItemStack createSellButton(SpawnerData spawner, GuiButton button) {
+    public ItemStack createSellButton(SpawnerData spawner, GuiButton button) {
         Map<String, String> placeholders = new HashMap<>();
         if (spawner.isSellValueDirty()) {
             spawner.recalculateSellValue();
@@ -488,7 +506,7 @@ public class SpawnerStorageUI {
         });
     }
 
-    private ItemStack createSellAndExpButton(SpawnerData spawner, GuiButton button) {
+    public ItemStack createSellAndExpButton(SpawnerData spawner, GuiButton button) {
         Map<String, String> placeholders = new HashMap<>();
         if (spawner.isSellValueDirty()) {
             spawner.recalculateSellValue();

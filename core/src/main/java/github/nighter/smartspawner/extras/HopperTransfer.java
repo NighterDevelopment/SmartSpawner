@@ -110,6 +110,12 @@ public class HopperTransfer {
 
             if (!removed.isEmpty()) {
                 spawner.removeItemsAndUpdateSellValue(removed);
+                if (plugin.getStorageSessionManager() != null) {
+                    var session = plugin.getStorageSessionManager().getSession(spawner.getSpawnerId());
+                    if (session != null) {
+                        session.removeLoot(removed);
+                    }
+                }
                 guiManager.updateSpawnerMenuViewers(spawner);
             }
         } catch (Exception ex) {

@@ -84,6 +84,18 @@ public class VirtualInventory {
         addItem(template, amount);
     }
 
+    /**
+     * Replaces the consolidated items in virtual inventory.
+     * Used when compacting storage or resetting inventory state.
+     */
+    public void setConsolidatedItems(Map<ItemSignature, Long> items) {
+        consolidatedItems.clear();
+        if (items != null && !items.isEmpty()) {
+            consolidatedItems.putAll(items);
+        }
+        sortedEntriesCache = null;
+    }
+
     public boolean removeItems(Map<ItemSignature, Long> items) {
         if (items == null || items.isEmpty()) {
             return true;

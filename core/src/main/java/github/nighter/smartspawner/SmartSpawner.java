@@ -51,6 +51,7 @@ import github.nighter.smartspawner.spawner.gui.sell.SpawnerSellConfirmListener;
 import github.nighter.smartspawner.spawner.gui.sell.SpawnerSellConfirmUI;
 import github.nighter.smartspawner.spawner.gui.storage.SpawnerStorageAction;
 import github.nighter.smartspawner.spawner.gui.storage.SpawnerStorageUI;
+import github.nighter.smartspawner.spawner.gui.storage.session.StorageSessionManager;
 import github.nighter.smartspawner.spawner.gui.storage.filter.FilterConfigUI;
 import github.nighter.smartspawner.spawner.gui.synchronization.SpawnerGuiViewManager;
 import github.nighter.smartspawner.spawner.interactions.click.SpawnerClickManager;
@@ -113,6 +114,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
     private GuiButtonInteractionService guiButtonInteractionService;
     private SpawnerMenuUI spawnerMenuUI;
     private SpawnerStorageUI spawnerStorageUI;
+    private StorageSessionManager storageSessionManager;
     private FilterConfigUI filterConfigUI;
     private SpawnerSellConfirmUI spawnerSellConfirmUI;
 
@@ -296,6 +298,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         this.guiLayoutRegistry = new GuiLayoutRegistryImpl(guiLayoutLoader, getLogger());
         this.guiLayoutConfig = new GuiLayoutConfig(this, guiLayoutLoader, guiLayoutRegistry);
         this.guiButtonInteractionService = new GuiButtonInteractionService(this);
+        this.storageSessionManager = new StorageSessionManager(this);
         this.spawnerStorageUI = new SpawnerStorageUI(this);
         this.filterConfigUI = new FilterConfigUI(this);
         this.spawnerMenuUI = new SpawnerMenuUI(this);
@@ -639,6 +642,7 @@ public class SmartSpawner extends JavaPlugin implements SmartSpawnerPlugin {
         if (spawnerGuiViewManager != null) spawnerGuiViewManager.cleanup();
         if (hopperService != null) hopperService.cleanup();
         if (spawnerClickManager != null) spawnerClickManager.cleanup();
+        if (storageSessionManager != null) storageSessionManager.cleanup();
         if (spawnerStorageUI != null) spawnerStorageUI.cleanup();
     }
 

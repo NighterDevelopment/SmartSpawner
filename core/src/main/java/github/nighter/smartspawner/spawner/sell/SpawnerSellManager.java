@@ -179,6 +179,9 @@ public class SpawnerSellManager {
         }
 
         // Invalidate GUI caches so the next open shows fresh data
+        if (plugin.getStorageSessionManager() != null) {
+            plugin.getStorageSessionManager().removeSession(spawner.getSpawnerId());
+        }
         spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
         plugin.getSpawnerManager().markSpawnerModified(spawner.getSpawnerId());
 
