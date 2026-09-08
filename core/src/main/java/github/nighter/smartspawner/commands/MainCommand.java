@@ -41,7 +41,8 @@ public class MainCommand {
                 new SetSubCommand(plugin),
                 new FolderConfigSubCommand(plugin, FolderConfigSubCommand.ConfigOption.LANGUAGE),
                 new FolderConfigSubCommand(plugin, FolderConfigSubCommand.ConfigOption.GUI_LAYOUT),
-                new EditLootSubCommand(plugin, plugin.getLootEditorService(), plugin.getLootEditorUI())
+                new EditLootSubCommand(plugin, plugin.getLootEditorService(), plugin.getLootEditorUI()),
+                new github.nighter.smartspawner.commands.benchmark.BenchmarkSubCommand(plugin)
         );
     }
 
