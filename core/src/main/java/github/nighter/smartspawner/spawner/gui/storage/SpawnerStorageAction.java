@@ -121,13 +121,14 @@ public class SpawnerStorageAction implements Listener {
             ClickType click = event.getClick();
 
             // Strict anti-exploit whitelist: only allow take/extraction actions.
-            // Blocks SWAP_OFFHAND (F key), NUMBER_KEY (1-9), CLONE, DOUBLE_CLICK, etc.
+            // Blocks SWAP_OFFHAND (F key), NUMBER_KEY (1-9), CLONE, etc.
             boolean isAllowedTake = click == ClickType.LEFT
                     || click == ClickType.RIGHT
                     || click == ClickType.SHIFT_LEFT
                     || click == ClickType.SHIFT_RIGHT
                     || click == ClickType.DROP
-                    || click == ClickType.CONTROL_DROP;
+                    || click == ClickType.CONTROL_DROP
+                    || click == ClickType.DOUBLE_CLICK;
 
             if (!isAllowedTake) {
                 event.setCancelled(true);
@@ -135,9 +136,10 @@ public class SpawnerStorageAction implements Listener {
             }
 
             // Strictly OUTPUT-ONLY: NEVER allow placing, depositing, or swapping items INTO storage.
-            // If the cursor is holding an item, any click on storage slots is cancelled.
+            // For standard clicks, if the cursor is holding an item, placing is cancelled.
+            // For DOUBLE_CLICK (COLLECT_TO_CURSOR), the cursor naturally holds the item being collected onto.
             ItemStack cursor = event.getCursor();
-            if (cursor != null && cursor.getType() != Material.AIR && cursor.getAmount() > 0) {
+            if (click != ClickType.DOUBLE_CLICK && cursor != null && cursor.getType() != Material.AIR && cursor.getAmount() > 0) {
                 event.setCancelled(true);
                 return;
             }

@@ -12,51 +12,24 @@ A comprehensive benchmark and architecture comparison between the **`main`** bra
 - **Compacting**: Items automatically and immediately shift forward to fill gaps on every single click. This causes item positions to jump while the player is rapidly clicking and generates a massive volume of slot-update network packets sent to the client.
 
 ### `feature/native-take-storage` Branch: Hardened Native Take & Deferred Compacting
-- **Click Model**: Allows native Minecraft client interactions (`event.setCancelled(false)` for slots 0..44) with strict anti-exploit whitelist. The client natively handles lifting, splitting, and dropping items without rubberbanding or artificial delay.
-- **Output-Only Enforcement**: Spawner storage is strictly output-only. Players can never deposit, place, or swap items into the spawner.
+- **Native Take Click Model**: Allows native Minecraft client interactions (`event.setCancelled(false)` for slots 0..44) with an anti-exploit whitelist. The client natively handles lifting, splitting, dropping, and collecting items without rubberbanding or artificial delay.
+  - *Allowed Actions*: `LEFT`, `RIGHT`, `SHIFT_LEFT`, `SHIFT_RIGHT`, `DROP` (Q), `CONTROL_DROP` (Ctrl+Q), and `DOUBLE_CLICK` (`COLLECT_TO_CURSOR`).
+  - *Blocked Actions*: `SWAP_OFFHAND` (Key F), `NUMBER_KEY` (1-9 hotbar swap), `CLONE` (creative middle-click), and unknown packet types are cancelled upfront.
+- **Output-Only Security Enforcement**: Spawner storage is strictly output-only; players can never deposit, place, or swap items into the spawner.
+  - If the cursor is holding an item (`!cursor.isEmpty()`), any click attempting to place items into storage slots 0..44 is immediately cancelled (`event.setCancelled(true)`).
+  - Dragging across any storage or control slot (< 54) is cancelled in `onInventoryDrag`.
+  - Shift-clicking from the bottom inventory into storage is cancelled.
+- **Why Drop & Double-Click Actions are Safe**:
+  - `DROP` (Q) and `CONTROL_DROP` (Ctrl+Q) throw items from the spawner slot onto the floor in front of the player.
+  - `DOUBLE_CLICK` (`COLLECT_TO_CURSOR`) only gathers matching items from storage into the cursor.
+  - Both actions strictly move items outward (spawner $\rightarrow$ cursor/floor), never inward. `reconcileStoragePage` immediately detects the slot count decreases across all 45 slots and debits them from `VirtualInventory`.
+- **Single-Viewer Lock**: Only one player can view a spawner's storage at a time. If another player attempts to open the same spawner, they receive a notification (`storage_in_use`). Stale viewers (e.g. disconnected players) are self-healed and pruned automatically. This permanently eliminates multi-viewer race conditions and duplicate exploits.
 - **Diff Reconciliation**: `reconcileStoragePage` compares the 45 displayed slots against the cached `StorageSession` slot array using `ItemStack.isSimilar()`. Only the delta is debited/credited in `VirtualInventory`, and only the dynamic Sell Button (slot 49) is updated in the Bukkit inventory. Zero item slots are wiped, and zero item slots are repainted.
-- **Single-Viewer Lock**: Only one player can view a spawner's storage at a time. If another player attempts to open it, they receive a notification (`storage_in_use`). This permanently eliminates multi-viewer duplication vectors.
 - **Deferred Compacting**: Empty slot gaps remain open while the player is viewing the GUI via `StorageSession`. Once the viewer closes the GUI, the session terminates. The next time any player opens the GUI, remaining items are projected sequentially from `VirtualInventory.getDisplayPage()`, naturally compacting without gaps and with zero data loss.
 
 ---
 
-## 2. Security & Anti-Exploit Hardening (UI-Utils Analysis)
-
-### What is the UI-Utils Mod?
-**UI-Utils** is a client-side Fabric utility mod designed to manipulate container click packets (`ServerboundContainerClickPacket` / `PacketPlayInWindowClick`). It bypasses client-side restrictions and can send arbitrary click types, invalid slot IDs, off-hand swap packets, and rapid packet bursts (50–100 clicks/tick).
-
-### How `main` Protected Against UI-Utils
-In `main`, `event.setCancelled(true)` was called unconditionally at `EventPriority.LOWEST` on every click and drag event. Bukkit immediately discarded the client's packet and restored the server's slot state. Item movement was handled purely server-side. Thus, `main` was 100% immune to UI-Utils.
-
-### How `feature/native-take-storage` is Hardened Against UI-Utils
-To combine high performance with 100% exploit immunity, the feature branch implements a multi-layer defense:
-
-1. **Strict ClickType Whitelist (Slots 0..44)**:
-   - **Allowed**: `LEFT`, `RIGHT`, `SHIFT_LEFT`, `SHIFT_RIGHT`, `DROP`, `CONTROL_DROP`.
-   - **Blocked (Cancelled)**: `SWAP_OFFHAND` (F key), `NUMBER_KEY` (1-9 hotbar swap), `DOUBLE_CLICK` / `PICKUP_ALL`, `CLONE` (middle click), `UNKNOWN`.
-   - *Result*: Attackers cannot use offhand swap (F) or hotbar keys (1-9) to inject illegal items (such as shulker boxes or modified NBT items) into the spawner.
-
-2. **Strict Output-Only Policy (No Placement / No Deposits)**:
-   - If `event.getCursor()` is holding any item (`!cursor.isEmpty()`), ANY click on storage slots 0..44 is immediately cancelled (`event.setCancelled(true)`).
-   - Dragging across any storage or control slot (< 54) is cancelled in `onInventoryDrag`.
-   - Shift-clicking from the bottom inventory into storage is cancelled.
-   - *Result*: Players can only extract items out of the spawner; they can never deposit items into it.
-
-3. **Why `DROP` (Q) and `CONTROL_DROP` (Ctrl+Q) are 100% Safe**:
-   - When a player hovers over slot 0..44 and presses Q or Ctrl+Q, Paper drops 1 item (or the full stack) from the spawner slot onto the floor in front of the player.
-   - The slot count decrements or becomes empty.
-   - `reconcileStoragePage` diffs the slots, detects that the items were removed from storage, and immediately debits them from `VirtualInventory`.
-   - Items only travel outward (spawner -> ground), never inward, making it completely safe and convenient for players.
-
-4. **Single-Viewer Lock (Multi-Viewer Dupe Prevention)**:
-   - `StorageSession.addViewer(UUID)` enforces that only 1 player can have a spawner's storage open at any given moment.
-   - If Player B attempts to open a spawner while Player A is viewing it, Player B is blocked and sent the `storage_in_use` localized message.
-   - Stale viewers (e.g. players who disconnected or closed the GUI without events) are self-healed and pruned automatically.
-   - *Result*: Completely eliminates the multi-client packet race condition where two players using UI-Utils could simultaneously click the same slot.
-
----
-
-## 3. Benchmark Results
+## 2. Benchmark Results
 
 All benchmarks were conducted via the `/ss benchmark` command on **Paper 26.2 / Java 25** under identical hardware and operating system conditions.
 
@@ -105,7 +78,7 @@ All benchmarks were conducted via the `/ss benchmark` command on **Paper 26.2 / 
 
 ---
 
-## 4. Understanding Throughput vs. Latency
+## 3. Understanding Throughput vs. Latency
 
 - **Throughput (ops/sec, takes/sec)**: The number of operations the server can process within **1 second**. **HIGHER IS BETTER**.
   - The feature branch achieves **156,742 takes/sec** compared to 64,683 takes/sec on `main`. This allows servers with hundreds of active players to handle heavy spawner interactions concurrently without dropping TPS.
@@ -114,7 +87,7 @@ All benchmarks were conducted via the `/ss benchmark` command on **Paper 26.2 / 
 
 ---
 
-## 5. Raw Benchmark Logs
+## 4. Raw Benchmark Logs
 
 Raw logs generated by the benchmark command are available in the repository root:
 - [`benchmark_results_main.txt`](./benchmark_results_main.txt): Benchmark output from the `main` branch.
