@@ -2,43 +2,43 @@
                 SMARTSPAWNER STORAGE PERFORMANCE BENCHMARK
 ===============================================================================
 Server: Paper 26.2 | Java: 25.0.3
-Date: Tue Sep 08 15:08:47 GMT+07:00 2026
+Date: Tue Sep 08 15:41:19 GMT+07:00 2026
 OS: Windows 11 (amd64)
 -------------------------------------------------------------------------------
 
 ### BENCHMARK 1: Display Page Materialization vs Cached Session
 Measures display retrieval throughput and latency across different inventory sizes.
-Inventory Scale    | Mode         | Avg (μs)     | P95 (μs)     | Throughput (op/s) | Speedup   
----------------------------------------------------------------------------------------------
-Small (5 items)    | Old (Uncached) | 1.24         | 1.80         | 803,374        | 1.0x      
-                   | New (Session) | 0.16         | 0.20         | 6,438,321      | 8.01x     
-Medium (45 items)  | Old (Uncached) | 0.81         | 1.00         | 1,230,133      | 1.0x      
-                   | New (Session) | 0.12         | 0.10         | 8,179,959      | 6.65x     
-Large (200 items)  | Old (Uncached) | 1.04         | 1.10         | 965,232        | 1.0x      
-                   | New (Session) | 0.12         | 0.10         | 8,283,632      | 8.58x     
-Massive (1k items) | Old (Uncached) | 0.95         | 1.10         | 1,054,370      | 1.0x      
-                   | New (Session) | 0.12         | 0.10         | 8,134,490      | 7.72x     
+Inventory Scale                  | Mode         | Avg (μs)     | P95 (μs)     | Throughput (op/s) | Speedup   
+---------------------------------------------------------------------------------------------------------
+Small (5 types / 320 items)      | Old (Uncached) | 2.09         | 3.90         | 478,469        | 1.0x      
+                                 | New (Session) | 0.42         | 0.40         | 2,369,668      | 4.95x     
+Medium (45 types / 2,880 items)  | Old (Uncached) | 2.46         | 3.20         | 406,777        | 1.0x      
+                                 | New (Session) | 0.15         | 0.10         | 6,829,202      | 16.79x    
+Large (200 types / 12.8k items)  | Old (Uncached) | 1.84         | 1.90         | 542,988        | 1.0x      
+                                 | New (Session) | 0.15         | 0.10         | 6,641,429      | 12.23x    
+Massive (1k types / 64k items)   | Old (Uncached) | 1.63         | 1.80         | 614,616        | 1.0x      
+                                 | New (Session) | 0.14         | 0.10         | 7,045,561      | 11.46x    
 
 ### BENCHMARK 2: Item Take Cycle (1,000 Consecutive Takes)
 Compares old full-page repaint + auto-compact vs new native take + diff reconciliation.
 Metric                    | Old (Full Repaint) | New (Native Take) | Improvement 
 ---------------------------------------------------------------------------------------------
-Total Time (1000 ops)     | 24.41 ms         | 7.28 ms          | 3.35x faster
-Average Latency           | 24.41 μs         | 7.28 μs          | 3.35x faster
-P50 Latency               | 19.60 μs         | 0.10 μs          | 196.00x     
-P95 Latency               | 50.40 μs         | 0.20 μs          | 252.00x     
-P99 Latency               | 140.00 μs        | 128.00 μs        | 1.09x       
-Max Latency               | 639.40 μs        | 1,793.00 μs      | -           
-Throughput                | 40,966 takes/s   | 137,334 takes/s  | 3.35x       
+Total Time (1000 ops)     | 15.46 ms         | 6.38 ms          | 2.42x faster
+Average Latency           | 15.46 μs         | 6.38 μs          | 2.42x faster
+P50 Latency               | 12.50 μs         | 0.10 μs          | 125.00x     
+P95 Latency               | 24.90 μs         | 0.20 μs          | 124.50x     
+P99 Latency               | 67.00 μs         | 216.80 μs        | 0.31x       
+Max Latency               | 493.10 μs        | 1,241.30 μs      | -           
+Throughput                | 64,683 takes/s   | 156,742 takes/s  | 2.42x       
 Inventory Slot Writes     | 91,000           | 90               | -99.90% fewer
 
 ### BENCHMARK 3: Concurrent Operations (500 Loot Adds + 500 Hopper Takes)
 Simulates background loot generation and hopper extraction while GUI is viewed.
 Metric                    | Old (Full Repaint) | New (Session Sync) | Improvement 
 ---------------------------------------------------------------------------------------------
-Total Time (1000 ops)     | 10.45 ms         | 4.43 ms          | 2.36x faster
-Average per Operation     | 10.45 μs         | 4.43 μs          | 2.36x faster
-Throughput                | 95,664 ops/s     | 225,774 ops/s    | 2.36x       
+Total Time (1000 ops)     | 13.79 ms         | 4.32 ms          | 3.19x faster
+Average per Operation     | 13.79 μs         | 4.32 μs          | 3.19x faster
+Throughput                | 72,490 ops/s     | 231,289 ops/s    | 3.19x       
 ===============================================================================
                          BENCHMARK COMPLETED
 ===============================================================================

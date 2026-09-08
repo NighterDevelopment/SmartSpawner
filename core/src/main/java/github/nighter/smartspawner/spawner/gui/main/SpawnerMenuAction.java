@@ -212,6 +212,9 @@ public class SpawnerMenuAction implements Listener {
 
     private void handleStorageClick(Player player, SpawnerData spawner, boolean playSound) {
         Inventory pageInventory = spawnerStorageUI.createStorageInventory(player, spawner, 1, -1);
+        if (pageInventory == null) {
+            return;
+        }
         if (playSound) {
             player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
         }

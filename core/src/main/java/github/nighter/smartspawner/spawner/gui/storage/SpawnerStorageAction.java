@@ -118,27 +118,28 @@ public class SpawnerStorageAction implements Listener {
 
         // Handle item slot clicks (slots 0-44)
         if (isItemSlot(slot)) {
-            // Block placing non-loot items into storage
-            ItemStack cursor = event.getCursor();
-            if (cursor != null && cursor.getType() != Material.AIR) {
-                if (!isValidStorageItem(spawner, cursor)) {
-                    event.setCancelled(true);
-                    return;
-                }
+            ClickType click = event.getClick();
+
+            // Strict anti-exploit whitelist: only allow take/extraction actions.
+            // Blocks SWAP_OFFHAND (F key), NUMBER_KEY (1-9), CLONE, DOUBLE_CLICK, etc.
+            boolean isAllowedTake = click == ClickType.LEFT
+                    || click == ClickType.RIGHT
+                    || click == ClickType.SHIFT_LEFT
+                    || click == ClickType.SHIFT_RIGHT
+                    || click == ClickType.DROP
+                    || click == ClickType.CONTROL_DROP;
+
+            if (!isAllowedTake) {
+                event.setCancelled(true);
+                return;
             }
 
-            // Block hotbar swap with non-loot item
-            if (event.getClick() == ClickType.NUMBER_KEY) {
-                int hotbarSlot = event.getHotbarButton();
-                if (hotbarSlot >= 0 && hotbarSlot < 9) {
-                    ItemStack hotbarItem = player.getInventory().getItem(hotbarSlot);
-                    if (hotbarItem != null && hotbarItem.getType() != Material.AIR) {
-                        if (!isValidStorageItem(spawner, hotbarItem)) {
-                            event.setCancelled(true);
-                            return;
-                        }
-                    }
-                }
+            // Strictly OUTPUT-ONLY: NEVER allow placing, depositing, or swapping items INTO storage.
+            // If the cursor is holding an item, any click on storage slots is cancelled.
+            ItemStack cursor = event.getCursor();
+            if (cursor != null && cursor.getType() != Material.AIR && cursor.getAmount() > 0) {
+                event.setCancelled(true);
+                return;
             }
 
             // Native take allowed
@@ -929,18 +930,10 @@ public class SpawnerStorageAction implements Listener {
         }
 
         for (int rawSlot : event.getRawSlots()) {
-            // Never allow dragging on control buttons
-            if (rawSlot >= STORAGE_SLOTS && rawSlot < INVENTORY_SIZE) {
+            // Strictly forbid dragging onto storage slots or control buttons (output-only)
+            if (rawSlot < INVENTORY_SIZE) {
                 event.setCancelled(true);
                 return;
-            }
-            // Check dragging into storage slots
-            if (rawSlot >= 0 && rawSlot < STORAGE_SLOTS) {
-                ItemStack dragged = event.getOldCursor();
-                if (!isValidStorageItem(spawner, dragged)) {
-                    event.setCancelled(true);
-                    return;
-                }
             }
         }
 

@@ -74,13 +74,18 @@ public class StoragePerformanceBenchmark {
         log(sender, reportLines, "");
         log(sender, reportLines, "### BENCHMARK 1: Display Page Materialization vs Cached Session");
         log(sender, reportLines, "Measures display retrieval throughput and latency across different inventory sizes.");
-        log(sender, reportLines, String.format("%-18s | %-12s | %-12s | %-12s | %-14s | %-10s", 
+        log(sender, reportLines, String.format("%-32s | %-12s | %-12s | %-12s | %-14s | %-10s", 
                 "Inventory Scale", "Mode", "Avg (μs)", "P95 (μs)", "Throughput (op/s)", "Speedup"));
-        log(sender, reportLines, "---------------------------------------------------------------------------------------------");
+        log(sender, reportLines, "---------------------------------------------------------------------------------------------------------");
 
         List<Material> allMaterials = getValidItemMaterials();
         int[] itemCounts = {5, 45, 200, 1000};
-        String[] scaleLabels = {"Small (5 items)", "Medium (45 items)", "Large (200 items)", "Massive (1k items)"};
+        String[] scaleLabels = {
+                "Small (5 types / 320 items)",
+                "Medium (45 types / 2,880 items)",
+                "Large (200 types / 12.8k items)",
+                "Massive (1k types / 64k items)"
+        };
 
         for (int i = 0; i < itemCounts.length; i++) {
             int count = itemCounts[i];
@@ -148,9 +153,9 @@ public class StoragePerformanceBenchmark {
 
             double speedup = avgOldUs / Math.max(0.001, avgNewUs);
 
-            log(sender, reportLines, String.format("%-18s | %-12s | %-12s | %-12s | %-14s | %-10s",
+            log(sender, reportLines, String.format("%-32s | %-12s | %-12s | %-12s | %-14s | %-10s",
                     label, "Old (Uncached)", DF.format(avgOldUs), DF.format(p95OldUs), INT_F.format(oldOpsPerSec), "1.0x"));
-            log(sender, reportLines, String.format("%-18s | %-12s | %-12s | %-12s | %-14s | %-10s",
+            log(sender, reportLines, String.format("%-32s | %-12s | %-12s | %-12s | %-14s | %-10s",
                     "", "New (Session)", DF.format(avgNewUs), DF.format(p95NewUs), INT_F.format(newOpsPerSec), DF.format(speedup) + "x"));
         }
     }

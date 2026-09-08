@@ -35,8 +35,12 @@ spawner_storage_empty:
   message: '&#FF4444Spawner deposu şu an boş.'
 
 action_in_progress:
-  message: '&#F0C857Şu anda devam eden bir işlem var. Lütfen bekle.'
-  action_bar: '&#F0C857İşlem sürüyor. Lütfen bekle.'
+  message: '&#F0C857Zaten devam eden bir işlem var. Lütfen bekleyin.'
+  action_bar: '&#F0C857İşlem devam ediyor. Lütfen bekleyin.'
+
+storage_in_use:
+  message: '&#FF4444Bu spawner deposu şu anda başka bir oyuncu tarafından açık.'
+  action_bar: '&#FF4444Depo başka bir oyuncu tarafından kullanılıyor.'
 
 action_failed:
   message: '&#FF4444İşlem başarısız oldu. Lütfen tekrar dene.'

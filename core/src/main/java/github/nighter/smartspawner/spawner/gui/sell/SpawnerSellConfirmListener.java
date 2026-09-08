@@ -231,7 +231,9 @@ public class SpawnerSellConfirmListener implements Listener {
             case STORAGE:
                 org.bukkit.inventory.Inventory storageInventory = plugin.getSpawnerStorageUI()
                         .createStorageInventory(player, spawner, 1, -1);
-                player.openInventory(storageInventory);
+                if (storageInventory != null) {
+                    player.openInventory(storageInventory);
+                }
                 break;
         }
     }

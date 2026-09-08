@@ -79,8 +79,20 @@ public class StorageSession {
         slots[slot] = (item != null && item.getType() != Material.AIR) ? item.clone() : null;
     }
 
-    public void addViewer(UUID playerId) {
+    public synchronized boolean addViewer(UUID playerId) {
+        if (!viewers.isEmpty() && !viewers.contains(playerId)) {
+            // Self-heal: prune viewers who went offline or closed the GUI without event
+            viewers.removeIf(id -> {
+                Player p = org.bukkit.Bukkit.getPlayer(id);
+                if (p == null || !p.isOnline()) return true;
+                return !(p.getOpenInventory().getTopInventory().getHolder(false) instanceof StoragePageHolder);
+            });
+            if (!viewers.isEmpty() && !viewers.contains(playerId)) {
+                return false; // Storage is locked by another active viewer
+            }
+        }
         viewers.add(playerId);
+        return true;
     }
 
     public void removeViewer(UUID playerId) {

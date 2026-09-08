@@ -275,7 +275,9 @@ public class FilterConfigUI implements Listener {
 
         // Open storage UI (page 1 with no specific slot focus)
         Inventory pageInventory = storageUI.createStorageInventory(player, spawner, 1, -1);
-        player.openInventory(pageInventory);
+        if (pageInventory != null) {
+            player.openInventory(pageInventory);
+        }
     }
 
     /**

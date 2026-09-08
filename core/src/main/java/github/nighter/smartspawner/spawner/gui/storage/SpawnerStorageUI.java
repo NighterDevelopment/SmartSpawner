@@ -7,6 +7,7 @@ import github.nighter.smartspawner.spawner.config.SpawnerMobHeadTexture;
 import github.nighter.smartspawner.spawner.gui.layout.GuiButton;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayout;
 import github.nighter.smartspawner.spawner.gui.layout.GuiLayoutConfig;
+import github.nighter.smartspawner.spawner.gui.storage.session.StorageSession;
 import github.nighter.smartspawner.spawner.lootgen.loot.EntityLootConfig;
 import github.nighter.smartspawner.spawner.lootgen.loot.LootItem;
 import github.nighter.smartspawner.spawner.properties.ItemSignature;
@@ -221,6 +222,14 @@ public class SpawnerStorageUI {
     }
 
     public Inventory createStorageInventory(Player player, SpawnerData spawner, int page, int totalPages) {
+        if (plugin.getStorageSessionManager() != null && player != null) {
+            StorageSession session = plugin.getStorageSessionManager().getOrCreateSession(spawner);
+            if (!session.addViewer(player.getUniqueId())) {
+                plugin.getMessageService().sendMessage(player, "storage_in_use");
+                return null;
+            }
+        }
+
         // Get total pages efficiently
         if (totalPages == -1) {
             totalPages = calculateTotalPages(spawner);
@@ -240,10 +249,6 @@ public class SpawnerStorageUI {
 
         // Populate the inventory
         updateDisplay(pageInv, spawner, page, totalPages);
-
-        if (plugin.getStorageSessionManager() != null && player != null) {
-            plugin.getStorageSessionManager().getOrCreateSession(spawner).addViewer(player.getUniqueId());
-        }
 
         return pageInv;
     }
