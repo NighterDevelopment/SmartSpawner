@@ -19,9 +19,6 @@ A comprehensive benchmark and architecture comparison between the **`main`** bra
   - If the cursor is holding an item (`!cursor.isEmpty()`), any click attempting to place items into storage slots 0..44 is immediately cancelled (`event.setCancelled(true)`).
   - Dragging across any storage or control slot (< 54) is cancelled in `onInventoryDrag`.
   - Shift-clicking from the bottom inventory into storage is cancelled.
-- **Why Drop & Double-Click Actions are Safe**:
-  - `DROP` (Q) and `CONTROL_DROP` (Ctrl+Q) throw items from the spawner slot onto the floor in front of the player.
-  - `DOUBLE_CLICK` (`COLLECT_TO_CURSOR`) only gathers matching items from storage into the cursor.
   - Both actions strictly move items outward (spawner $\rightarrow$ cursor/floor), never inward. `reconcileStoragePage` immediately detects the slot count decreases across all 45 slots and debits them from `VirtualInventory`.
 - **Single-Viewer Lock**: Only one player can view a spawner's storage at a time. If another player attempts to open the same spawner, they receive a notification (`storage_in_use`). Stale viewers (e.g. disconnected players) are self-healed and pruned automatically. This permanently eliminates multi-viewer race conditions and duplicate exploits.
 - **Diff Reconciliation**: `reconcileStoragePage` compares the 45 displayed slots against the cached `StorageSession` slot array using `ItemStack.isSimilar()`. Only the delta is debited/credited in `VirtualInventory`, and only the dynamic Sell Button (slot 49) is updated in the Bukkit inventory. Zero item slots are wiped, and zero item slots are repainted.
