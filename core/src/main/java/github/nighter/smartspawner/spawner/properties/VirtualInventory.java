@@ -84,18 +84,6 @@ public class VirtualInventory {
         addItem(template, amount);
     }
 
-    /**
-     * Replaces the consolidated items in virtual inventory.
-     * Used when compacting storage or resetting inventory state.
-     */
-    public void setConsolidatedItems(Map<ItemSignature, Long> items) {
-        consolidatedItems.clear();
-        if (items != null && !items.isEmpty()) {
-            consolidatedItems.putAll(items);
-        }
-        sortedEntriesCache = null;
-    }
-
     public boolean removeItems(Map<ItemSignature, Long> items) {
         if (items == null || items.isEmpty()) {
             return true;
@@ -218,22 +206,67 @@ public class VirtualInventory {
         }
     }
 
+    /**
+     * Projects one page directly into {@code out}, skipping the intermediate map that
+     * {@link #getDisplayPage} has to build. The paged GUI reads a page on every repaint and every
+     * page flip, so this is the allocation-free path for it.
+     *
+     * @param out array of at least {@code pageSize} entries; fully overwritten, gaps set to null
+     */
+    public void fillDisplayPage(int page, int pageSize, ItemStack[] out) {
+        if (out == null) {
+            return;
+        }
+        int limit = Math.min(out.length, Math.max(0, pageSize));
+        Arrays.fill(out, 0, limit, null);
+        if (limit <= 0) {
+            return;
+        }
+        fillDisplaySection((Math.max(1, page) - 1) * pageSize, limit, out);
+    }
+
     private Int2ObjectMap<ItemStack> buildDisplaySection(int startSlot, int maxResults) {
-        if (maxResults <= 0 || startSlot >= maxSlots) {
-            return Int2ObjectMaps.emptyMap();
-        }
-
-        if (consolidatedItems.isEmpty()) {
-            return Int2ObjectMaps.emptyMap();
-        }
-
-        int safeStart = Math.max(0, startSlot);
-        int sectionLimit = Math.min(maxResults, maxSlots - safeStart);
+        int sectionLimit = sectionLimit(startSlot, maxResults);
         if (sectionLimit <= 0) {
             return Int2ObjectMaps.emptyMap();
         }
 
-        Int2ObjectOpenHashMap<ItemStack> section = new Int2ObjectOpenHashMap<>(Math.min(sectionLimit, 45));
+        ItemStack[] scratch = new ItemStack[sectionLimit];
+        int filled = fillDisplaySection(startSlot, sectionLimit, scratch);
+        if (filled <= 0) {
+            return Int2ObjectMaps.emptyMap();
+        }
+
+        Int2ObjectOpenHashMap<ItemStack> section = new Int2ObjectOpenHashMap<>(filled);
+        for (int i = 0; i < filled; i++) {
+            if (scratch[i] != null) {
+                section.put(i, scratch[i]);
+            }
+        }
+        return Int2ObjectMaps.unmodifiable(section);
+    }
+
+    /** How many display slots this section can actually cover, or 0 when there is nothing to show. */
+    private int sectionLimit(int startSlot, int maxResults) {
+        if (maxResults <= 0 || startSlot >= maxSlots || consolidatedItems.isEmpty()) {
+            return 0;
+        }
+        return Math.min(maxResults, maxSlots - Math.max(0, startSlot));
+    }
+
+    /**
+     * Walks the sorted count-map, skipping whole entries until {@code startSlot}, and writes the
+     * stacks of the requested window into {@code out} starting at index 0.
+     *
+     * @return the number of slots written (the window may end early when items run out)
+     */
+    private int fillDisplaySection(int startSlot, int maxResults, ItemStack[] out) {
+        int sectionLimit = sectionLimit(startSlot, maxResults);
+        if (sectionLimit <= 0) {
+            return 0;
+        }
+
+        int safeStart = Math.max(0, startSlot);
         List<Map.Entry<ItemSignature, Long>> sortedEntries = getSortedEntries();
 
         int currentGlobalSlot = 0;
@@ -268,14 +301,14 @@ public class VirtualInventory {
             while (remainingAmount > 0 && relativeSlot < sectionLimit && currentGlobalSlot < maxSlots) {
                 ItemStack displayItem = sig.getTemplate();
                 displayItem.setAmount((int) Math.min(remainingAmount, maxStackSize));
-                section.put(relativeSlot++, displayItem);
+                out[relativeSlot++] = displayItem;
 
                 remainingAmount -= maxStackSize;
                 currentGlobalSlot++;
             }
         }
 
-        return Int2ObjectMaps.unmodifiable(section);
+        return relativeSlot;
     }
 
     private List<Map.Entry<ItemSignature, Long>> getSortedEntries() {

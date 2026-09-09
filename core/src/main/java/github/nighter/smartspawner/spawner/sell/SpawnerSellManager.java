@@ -179,8 +179,10 @@ public class SpawnerSellManager {
         }
 
         // Invalidate GUI caches so the next open shows fresh data
+        // Selling rewrites the whole count-map. Drop the buffered page layouts but keep the session,
+        // so a player still standing in the GUI keeps the exclusive lock and repaints from scratch.
         if (plugin.getStorageSessionManager() != null) {
-            plugin.getStorageSessionManager().removeSession(spawner.getSpawnerId());
+            plugin.getStorageSessionManager().resetSession(spawner.getSpawnerId());
         }
         spawnerGuiViewManager.updateSpawnerMenuViewers(spawner);
         plugin.getSpawnerManager().markSpawnerModified(spawner.getSpawnerId());

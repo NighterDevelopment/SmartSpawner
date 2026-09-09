@@ -844,23 +844,6 @@ public class SpawnerData {
         }
     }
 
-    /**
-     * Sets already-consolidated items to virtual inventory and recalculates accumulated sell value.
-     * THREAD-SAFE: Uses inventoryLock to ensure atomicity.
-     * Used when compacting storage.
-     *
-     * @param items Items to set, keyed by ItemSignature
-     */
-    public void setConsolidatedItemsAndUpdateSellValue(Map<ItemSignature, Long> items) {
-        inventoryLock.lock();
-        try {
-            virtualInventory.setConsolidatedItems(items);
-            recalculateSellValue();
-        } finally {
-            inventoryLock.unlock();
-        }
-    }
-
     public synchronized void storePreGeneratedLoot(Map<ItemSignature, Long> items, long experience) {
         this.preGeneratedItems = items;
         this.preGeneratedExperience = experience;

@@ -102,14 +102,18 @@ public class StorageUpdateService {
                 spawnerStorageUI.updateDisplay(inventory, spawner, targetPage, newTotalPages);
             } catch (Exception e) {
                 // Fall back to creating a new inventory
+                // Close first: closing releases the storage session, so building the replacement
+                // beforehand would hand the viewer an inventory whose session was just torn down.
+                viewer.closeInventory();
                 Inventory newInv = spawnerStorageUI.createStorageInventory(
                         viewer,
                         spawner,
                         targetPage,
                         newTotalPages
                 );
-                viewer.closeInventory();
-                viewer.openInventory(newInv);
+                if (newInv != null) {
+                    viewer.openInventory(newInv);
+                }
             }
         } else {
             // Just update contents

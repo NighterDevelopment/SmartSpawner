@@ -272,6 +272,18 @@ public final class Scheduler {
      * @param runnable The task to run
      * @return A Task object representing the scheduled task
      */
+    /**
+     * Whether the calling thread may already touch things owned by {@code location} — the Folia
+     * region that owns it, or the main thread on Paper. Lets a caller run inline instead of paying
+     * for a scheduled task plus a tick of latency when it is already on the right thread.
+     */
+    public static boolean isOwnedByCurrentThread(Location location) {
+        if (isFolia) {
+            return location != null && location.getWorld() != null && Bukkit.isOwnedByCurrentRegion(location);
+        }
+        return Bukkit.isPrimaryThread();
+    }
+
     public static Task runLocationTask(Location location, Runnable runnable) {
         if (isFolia && location != null && location.getWorld() != null) {
             if (Bukkit.isOwnedByCurrentRegion(location)) {

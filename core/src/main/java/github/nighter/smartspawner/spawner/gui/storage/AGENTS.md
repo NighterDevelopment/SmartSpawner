@@ -20,8 +20,8 @@ the count-map, and the page is repainted afterwards.
 | `SpawnerStorageUI` | Builds the inventory, buttons and title; loads page slots from `StorageSession` (falling back to `VirtualInventory.getDisplayPage`); owns button caches |
 | `StoragePageHolder` | `InventoryHolder` + `SpawnerHolder`: carries `SpawnerData`, `currentPage`, `totalPages`, `oldUsedSlots` and the resolved `GuiLayout`. Clamps page in its constructor and setters |
 | `SpawnerStorageAction` | The `Listener`. Handles native clicks, reconciles page diffs via `isSimilar`, manages control buttons, and handles session lifecycle on close |
-| `session/StorageSession` | Ephemeral session holding page slot arrays (`ItemStack[]`) during active viewing; preserves slot gaps, syncs real-time loot/hopper changes, and defers compacting |
-| `session/StorageSessionManager` | Tracks active `StorageSession`s per spawner; handles lifecycle and safe cleanup on shutdown |
+| `session/StorageSession` | Ephemeral session holding the slot arrays of the **on-screen** pages; preserves slot gaps, mirrors live loot/hopper changes into open GUIs, and owns `reconcilePage` |
+| `session/StorageSessionManager` | Tracks active `StorageSession`s per spawner; `getOrCreateSession` / `resetSession` / `removeSession` plus shutdown cleanup |
 | `filter/` | `FilterConfigHolder` / `FilterConfigUI`: which materials the spawner is allowed to store |
 | `utils/` | `ItemClickHandler`, `ItemMoveHelper`, `ItemMoveResult` — **dead code**, no live callers. Do not build on it; delete or rewrite if you touch this area |
 
@@ -37,18 +37,22 @@ protecting control buttons and spawner integrity:
    left-click, right-click, shift-click (taking from storage), and dragging natively with zero rubberbanding.
 4. Foreign item protection: shift-clicks originating from the player's bottom inventory into storage are
    cancelled to prevent accidental or unauthorized deposits.
-5. Diff reconciliation (`reconcileStoragePage`): runs immediately after native click execution. Diffs the
-   viewed slots (0-44) against the cached `StorageSession` page array using `ItemStack.isSimilar()`. Any
-   difference is applied directly to `VirtualInventory` via `removeItemsAndUpdateSellValue` or
-   `addItemsAndUpdateSellValue`. Dynamic buttons (such as the sell button) are updated in place without
-   repainting item slots.
+5. Diff reconciliation (`reconcileStoragePage` → `StorageSession.reconcilePage`): runs immediately after
+   native click execution. It reads slots 0-44 once and hands them to the session, which diffs them against
+   its buffer for that page **under the session lock** and adopts the new layout in the same critical
+   section, so async loot or hopper writes cannot interleave with the snapshot. Slots that did not change
+   are compared positionally (`amount` + `isSimilar`) and carried over with no clone and no `ItemSignature`
+   construction; only slots that actually moved reach the signature accounting. The returned `PageDiff` is
+   applied to `VirtualInventory` via `removeItemsAndUpdateSellValue` / `addItemsAndUpdateSellValue`.
+   Dynamic buttons (such as the sell button) are updated in place without repainting item slots.
 
 ## Deferred compacting
 
 Items do **not** automatically shift or compact forward while a player is viewing the storage. When an
 item is taken, its slot remains empty so the player can take items without slots shifting unpredictably:
 
-1. As long as at least one viewer has the GUI open, `StorageSession` retains the slot layout with gaps.
+1. As long as at least one viewer has the GUI open, `StorageSession` retains the slot layout with gaps —
+   but only for the pages that are on screen (see *Session memory* below).
 2. When the last viewer closes the GUI (`activeViewers == 0`), `storageSessionManager.endSession(spawner)`
    discards the session. Because `VirtualInventory` was already kept up to date during diff reconciliation,
    the session ends without overwriting `VirtualInventory` (preventing item loss or race conditions).
@@ -84,19 +88,45 @@ detection and the `isAtCapacity` reset, so refresh it or the diff misfires.
 ## Rendering and sessions
 
 When opening or updating a page, `SpawnerStorageUI` checks `StorageSessionManager.getOrCreateSession(spawner)`.
-If page slots exist in the session, they are rendered directly to preserve open gaps. Otherwise, slots are
-populated from `virtualInv.getDisplayPage()` and recorded in the session.
+If a buffer exists for that page it is rendered directly to preserve open gaps; otherwise the session projects
+the page from `virtualInv.getDisplayPage()` and buffers that.
 Buttons are cached in `SpawnerStorageUI` (static / navigation / page-indicator / sort caches) and evicted by
 a 30s task; sell, sort, collect-exp and info buttons are built per repaint because they show live values.
 
+### Session memory — the buffer is bounded by viewers, never by pages
+
+`StorageSession.pageSlots` is an **access-ordered `LinkedHashMap` capped at `max(2, viewers + 1)`**. A viewer
+only ever looks at one page, so that cap always covers every on-screen page plus headroom for an in-flight
+page switch; anything older is evicted. This is the difference between a session costing one `ItemStack[45]`
+and one costing an array per page ever visited — on a spawner with 100k pages the unbounded version retains
+millions of `ItemStack`s for one open GUI.
+
+Evicting a buffer is always safe: `VirtualInventory` is the source of truth, and an evicted page is
+re-projected on the next read. **Never widen the cap to "keep gaps across page flips"** — reconciliation
+already flushed the diff to the count-map before the flip, and gaps are cosmetic to the visible page only.
+
+`resetSession(spawnerId)` drops the buffers but keeps the session and its viewer lock; `removeSession` throws
+the whole session away. Operations that rewrite the count-map while the GUI stays open (`sort_items`,
+`SpawnerSellManager`) must use **reset**, not remove — removing releases the exclusive-viewer lock underneath
+a player who is still standing in the GUI.
+
 ## Cross-viewer sync and live loot
 
-Multiple players can view one spawner's storage at once:
-- When loot is generated by `SpawnerLootGenerator`, items are added to `VirtualInventory` and also inserted
-  into active `StorageSession`s (`addLoot`), populating existing gaps or appending to slots.
-- When hoppers extract items via `HopperTransfer`, items are removed from both `VirtualInventory` and active
-  `StorageSession`s (`removeLoot`).
+Storage is **viewer-exclusive**: `StorageSession.addViewer` refuses a second player (`storage_in_use`) and
+self-heals stale entries, so `createStorageInventory` returns `null` when the storage is taken. Every caller
+must null-check it. The cross-viewer plumbing below still exists for the main menu and for the moment between
+a close and the next open.
+
+- When loot is generated by `SpawnerLootGenerator`, items are added to `VirtualInventory` and also mirrored
+  into the session's on-screen buffers (`addLoot`), filling gaps or appending.
+- When hoppers extract items via `HopperTransfer`, items are removed from both `VirtualInventory` and the
+  session buffers (`removeLoot`).
+- `addLoot` / `removeLoot` are called from **async** tasks. They mutate buffers under the session lock and
+  then hand the resulting slot writes to `Scheduler.runLocationTask`, so Bukkit inventories are only ever
+  touched on the spawner's region thread, batched into one `updateInventory()` per viewer. Do not add a
+  direct `openInv.setItem` to these paths.
 - Push updates schedule `StorageUpdateService.processStorageUpdateDirect` to repaint viewers when necessary.
+  It closes before rebuilding, because closing tears the session down.
 
 ## Persistence
 
@@ -112,3 +142,5 @@ wrong region. Sorting also calls `queueSpawnerForSaving` directly so the prefere
 - `StoragePageHolder` clamps page numbers in its constructor and setters. Do not clamp again at call sites.
 - `take_all`/`drop_page` reading the display slots is safe only because they immediately remove that exact list from the count-map. Keep the read-then-remove atomic to the handler.
 - Recover the spawner by casting the holder, never by parsing the localized title.
+- `createStorageInventory` returns `null` when another viewer holds the storage. Null-check it at every call site.
+- Anything that caches per **page** in a spawner-lifetime structure is a leak waiting to happen: page counts are unbounded (`maxSpawnerLootSlots / 45`). Cache per viewer or per on-screen page.

@@ -1,6 +1,9 @@
-# SmartSpawner Storage Performance & Architecture Benchmark Report
+# SmartSpawner Storage Performance & Memory Benchmark Report
 
-A comprehensive benchmark and architecture comparison between the **`main`** branch (legacy) and the **`feature/native-take-storage`** branch (refactored).
+Comparison between the **`main`** branch (legacy full-repaint storage) and
+**`feature/native-take-storage`** (native take + `StorageSession`).
+
+Raw output: [`benchmark_results.txt`](benchmark_results.txt), regenerated with `/ss benchmark`.
 
 ---
 
@@ -9,146 +12,187 @@ A comprehensive benchmark and architecture comparison between the **`main`** bra
 ### `main` Branch (Legacy): Full Repaint & Immediate Compacting
 - **Click Model**: Cancels every click unconditionally upfront (`event.setCancelled(true)`), computes removal math in plugin code, and transfers items to the player's inventory manually (`transferToPlayerInventory`).
 - **Display Update**: On every click, the server clears all 45 item slots (`setItem(null)` x 45), queries `VirtualInventory.getDisplayPage(page, 45)`, allocates fresh `ItemStack` instances, and repaints all 45 slots.
-- **Compacting**: Items automatically and immediately shift forward to fill gaps on every single click. This causes item positions to jump while the player is rapidly clicking and generates a massive volume of slot-update network packets sent to the client.
+- **Compacting**: Items automatically and immediately shift forward to fill gaps on every single click. Item positions jump while the player is rapidly clicking, and every click generates a full page of slot-update packets.
 
 ### `feature/native-take-storage` Branch: Hardened Native Take & Deferred Compacting
 - **Native Take Click Model**: Allows native Minecraft client interactions (`event.setCancelled(false)` for slots 0..44) with an anti-exploit whitelist. The client natively handles lifting, splitting, dropping, and collecting items without rubberbanding or artificial delay.
   - *Allowed Actions*: `LEFT`, `RIGHT`, `SHIFT_LEFT`, `SHIFT_RIGHT`, `DROP` (Q), `CONTROL_DROP` (Ctrl+Q), and `DOUBLE_CLICK` (`COLLECT_TO_CURSOR`).
   - *Blocked Actions*: `SWAP_OFFHAND` (Key F), `NUMBER_KEY` (1-9 hotbar swap), `CLONE` (creative middle-click), and unknown packet types are cancelled upfront.
 - **Output-Only Security Enforcement**: Spawner storage is strictly output-only; players can never deposit, place, or swap items into the spawner.
-  - If the cursor is holding an item (`!cursor.isEmpty()`), any click attempting to place items into storage slots 0..44 is immediately cancelled (`event.setCancelled(true)`).
+  - If the cursor is holding an item, any click attempting to place items into storage slots 0..44 is cancelled.
   - Dragging across any storage or control slot (< 54) is cancelled in `onInventoryDrag`.
   - Shift-clicking from the bottom inventory into storage is cancelled.
-  - Both actions strictly move items outward (spawner $\rightarrow$ cursor/floor), never inward. `reconcileStoragePage` immediately detects the slot count decreases across all 45 slots and debits them from `VirtualInventory`.
-- **Single-Viewer Lock**: Only one player can view a spawner's storage at a time. If another player attempts to open the same spawner, they receive a notification (`storage_in_use`). Stale viewers (e.g. disconnected players) are self-healed and pruned automatically. This permanently eliminates multi-viewer race conditions and duplicate exploits.
-- **Diff Reconciliation**: `reconcileStoragePage` compares the 45 displayed slots against the cached `StorageSession` slot array using `ItemStack.isSimilar()`. Only the delta is debited/credited in `VirtualInventory`, and only the dynamic Sell Button (slot 49) is updated in the Bukkit inventory. Zero item slots are wiped, and zero item slots are repainted.
-- **Deferred Compacting**: Empty slot gaps remain open while the player is viewing the GUI via `StorageSession`. Once the viewer closes the GUI, the session terminates. The next time any player opens the GUI, remaining items are projected sequentially from `VirtualInventory.getDisplayPage()`, naturally compacting without gaps and with zero data loss.
+  - Both drop actions move items strictly outward (spawner → cursor/floor). `reconcilePage` detects the decrease and debits it from `VirtualInventory`.
+- **Single-Viewer Lock**: Only one player can view a spawner's storage at a time; a second player gets `storage_in_use`. Stale viewers (disconnected players, GUIs closed without an event) are self-healed and pruned. This eliminates multi-viewer race conditions and duplication windows.
+- **Diff Reconciliation**: `StorageSession.reconcilePage` compares the 45 displayed slots against the session's buffer for that page, under the session lock, and adopts the new layout in the same critical section. Only the delta is debited/credited in `VirtualInventory`, and only the dynamic sell button is repainted. Zero item slots are wiped or repainted.
+- **Deferred Compacting**: Gaps stay open while the player is viewing. When the last viewer closes, the session ends; the next open projects items sequentially from `VirtualInventory.getDisplayPage()`, compacting naturally with no data loss.
+
+### Memory model: the session is bounded by viewers, not by pages
+
+The first draft of this branch cached slot arrays in a `Map<Integer, ItemStack[]>` that grew for the
+lifetime of the session — one `ItemStack[45]` for every page a player ever scrolled past. Page count
+is `maxSpawnerLootSlots / 45` and is unbounded, so a player idly holding down "next page" on a large
+spawner would retain millions of `ItemStack`s until they closed the GUI.
+
+`StorageSession` now keeps page buffers in an **access-ordered `LinkedHashMap` capped at
+`max(2, viewers + 1)`**. A viewer looks at exactly one page, so the cap always covers every on-screen
+page plus headroom for an in-flight page switch. Evicting a buffer is free of risk: `VirtualInventory`
+is the source of truth and an evicted page is simply re-projected on the next read.
+
+Two further memory changes back this up:
+
+- `VirtualInventory.fillDisplayPage(page, size, out)` projects a page **straight into a slot array**,
+  skipping the intermediate `Int2ObjectMap` that `getDisplayPage` has to allocate. Reading a page from
+  a session buffer is now a zero-allocation operation.
+- `reconcilePage` compares slots positionally first. Slots that did not move are carried over with no
+  clone and no `ItemSignature` construction, so a single-item take does work proportional to what
+  actually changed instead of to the whole page. Live loot and hopper writes batch their slot updates
+  and apply them in one pass per viewer, on the spawner's region thread.
 
 ---
 
 ## 2. Benchmark Results
 
-All benchmarks were conducted via the `/ss benchmark` command on **Paper 26.2 / Java 25** under identical hardware and operating system conditions.
+Measured with `/ss benchmark` on **Paper 26.2 / Java 25**, 3970 MB max heap, Windows 11 (amd64).
+Both branches' code paths run in-process against identical data, so the comparison is not affected by
+run-to-run server variance.
 
-### Benchmark 1: Display Page Materialization & Retrieval (Scales up to 10,000,000 items)
-*Measures the time required to unpack, sort, and project storage data into a viewable 45-slot display page across multiple inventory scales.*
-*Note: Evaluates total item quantity (stored as `long` counts) across distinct item types.*
+Two memory numbers are reported and they answer different questions:
 
-| Inventory Scale | Item Types & Quantity | `main` Branch (Uncached) | `feature/native-take-storage` (Session) | Latency Improvement | Throughput Improvement |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Small** | 5 types / 1,000 items total | 2.61 μs (383,594 op/s) | **0.26 μs (3,913,588 op/s)** | **10.20x faster** | **+920%** |
-| **Medium** | 20 types / 100,000 items total | 1.82 μs (548,432 op/s) | **0.47 μs (2,124,495 op/s)** | **3.87x faster** | **+287%** |
-| **Large** | 50 types / 1,000,000 items total | 1.94 μs (516,622 op/s) | **0.15 μs (6,598,482 op/s)** | **12.77x faster** | **+1,177%** |
-| **Massive** | 50 types / 5,000,000 items total | 1.27 μs (786,813 op/s) | **0.20 μs (4,945,598 op/s)** | **6.29x faster** | **+529%** |
-| **Maximum** | 50 types / 10,000,000 items total | 0.99 μs (1,005,935 op/s) | **0.07 μs (13,670,540 op/s)** | **13.59x faster** | **+1,259%** |
+- **Alloc/op** — bytes allocated per operation (`ThreadMXBean`). This is GC pressure: how much garbage
+  one player click makes.
+- **Retained** — live heap still held afterwards. This is where a leak shows up.
 
-> **Analysis**: On `main`, every render must slice hash maps, calculate stack splits, and allocate fresh `ItemStack` instances. The feature branch reads directly from the pre-cached `ItemStack[]` array in `StorageSession`, reaching up to **13.6 Million display operations/second**.
+### Benchmark 1: Display page materialization (up to 10,000,000 items)
 
----
+| Inventory Scale | `main` (Uncached) | `feature` (Session) | Speedup | Alloc/op |
+| :--- | :--- | :--- | :--- | :--- |
+| Small — 5 types / 1,000 items | 1.68 μs (593,556 op/s) | **0.19 μs (5,252,101 op/s)** | **8.85x** | 6.50 KB → **0 B** |
+| Medium — 20 types / 100,000 items | 1.30 μs (770,297 op/s) | **0.22 μs (4,615,953 op/s)** | **5.99x** | 6.48 KB → **0 B** |
+| Large — 50 types / 1,000,000 items | 2.75 μs (363,280 op/s) | **0.21 μs (4,713,646 op/s)** | **12.98x** | 6.50 KB → **0 B** |
+| Massive — 50 types / 5,000,000 items | 2.46 μs (406,802 op/s) | **0.17 μs (5,722,461 op/s)** | **14.07x** | 6.50 KB → **0 B** |
+| Maximum — 50 types / 10,000,000 items | 2.31 μs (433,360 op/s) | **0.18 μs (5,476,451 op/s)** | **12.64x** | 6.49 KB → **0 B** |
 
-### Benchmark 2: Continuous Single Item Take Cycle (1,000 Consecutive Takes at 10M Item Scale)
-*Simulates 1,000 rapid player takes from a spawner holding 10,000,000 items across 50 item types.*
+Reading an already-buffered page allocates nothing at all — the display path produces zero garbage
+regardless of how many items the spawner holds.
 
-| Metric | `main` (Full Repaint / Auto-compact) | `feature/native-take-storage` (Hardened Native Take) | Improvement |
+### Benchmark 2: Item take cycle (1,000 consecutive takes at 10M items)
+
+| Metric | `main` (Full Repaint) | `feature` (reconcilePage) | Improvement |
 | :--- | :--- | :--- | :--- |
-| **Total Elapsed Time (1,000 ops)** | 40.45 ms | **8.52 ms** | **4.75x faster** |
-| **Average Latency** | 40.45 μs | **8.52 μs** | **4.75x faster** |
-| **P50 Latency (Median)** | 25.40 μs | **0.10 μs** | **254.0x faster** |
-| **P95 Latency** | 82.20 μs | **0.20 μs** | **411.0x faster** |
-| **P99 Latency** | 274.50 μs | **254.80 μs** | **1.08x faster** |
-| **Throughput** | 24,724 takes/sec | **117,414 takes/sec** | **+375% (+4.75x)** |
-| **Inventory Slot Writes** | **91,000 writes** | **90 writes** | **-99.90% writes!** |
+| Total time | 33.96 ms | **4.14 ms** | **8.20x faster** |
+| Average latency | 33.96 μs | **4.14 μs** | **8.20x faster** |
+| P50 latency | 25.80 μs | **0.10 μs** | **258x** |
+| P95 latency | 73.70 μs | **0.20 μs** | **368x** |
+| P99 latency | 196.90 μs | **61.30 μs** | **3.21x** |
+| Throughput | 29,450 takes/s | **241,470 takes/s** | **8.20x** |
+| **Alloc / op** | 12.80 KB | **178 B** | **−98.6%** |
+| Inventory slot writes | 91,000 | **90** | **−99.9%** |
 
-> **Real-World Impact on Network & UX**:
-> - The `main` branch performed **91,000 slot writes** to the Bukkit inventory (45 slot wipes + 45 slot repaints + 1 button write per click). This flooded clients with slot-update packets, resulting in visible inventory flickering and cursor desync/rubberbanding.
-> - The `feature/native-take-storage` branch performed only **90 slot writes** across 1,000 takes (updating only the single modified slot and the dynamic sell button). This achieves a **99.90% reduction** in network packets and eliminates GUI flickering completely.
+This is the hot path — one click, one reconcile. It went from 12.8 KB of garbage per click to 178 B.
 
----
+### Benchmark 3: Pagination (500 page switches at 10M items)
 
-### Benchmark 3: Pagination Navigation (500 Page Switches at 10M Item Scale)
-*Simulates a player browsing between pages 1..10 back and forth on a 10M item inventory (~3,472 virtual pages).*
-
-| Metric | `main` (Uncached Slices) | `feature/native-take-storage` (Cached Pages) | Improvement |
+| Metric | `main` (Uncached Slices) | `feature` (Session Buffers) | Change |
 | :--- | :--- | :--- | :--- |
-| **Total Elapsed Time (500 flips)** | 3.10 ms | **2.32 ms** | **1.33x faster** |
-| **Average Latency** | 6.19 μs | **4.64 μs** | **1.33x faster** |
-| **P95 Latency** | 7.00 μs | **4.90 μs** | **1.43x faster** |
-| **Throughput** | 161,488 flips/sec | **215,527 flips/sec** | **+33%** |
+| Average latency | 5.25 μs | 5.52 μs | 0.95x |
+| P50 latency | 4.80 μs | **3.70 μs** | **1.30x** |
+| Throughput | 190,454 flips/s | 181,245 flips/s | 0.95x |
+| Alloc / op | 8.93 KB | **8.32 KB** | **−6.8%** |
+| Page buffers held after 500 flips over 10 pages | — | **2** | — |
 
-> **Analysis**: `StorageSession` caches previously accessed pages during the viewing session. Revisiting pages bypasses recalculation from `VirtualInventory`, yielding instantaneous page flips and higher navigation throughput.
+This is the one place the bounded cache costs something, and the trade is deliberate. Holding all 10
+pages would make a flip a cache hit; holding 2 means most flips re-project the page. The measured
+cost is ~0.3 μs per button press, against the retained-memory result below. Average latency is within
+run-to-run noise of `main`, and P50 is actually better.
 
----
+### Benchmark 4: Page cache retained memory — the leak this branch had
 
-### Benchmark 4: Sort Items Operation (`sort_items` Cycling across 1M, 5M, 10M Item Scales)
-*Measures stream comparator re-sorting, cache invalidation, and GUI projection as the player cycles preferred sort materials.*
+A player paging through a large spawner. "Unbounded" is the per-page cache this branch started with;
+"Bounded" is `StorageSession` as it ships.
 
-| Inventory Scale (50 item types) | Mode | Average Latency | P95 Latency | Throughput (sorts/s) | Speedup |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **1,000,000 items (1M)** | `main` (Uncached) | 32.35 μs | 59.60 μs | 30,915 sorts/s | 1.0x |
-| | `feature` (Session) | 32.67 μs | 69.00 μs | 30,611 sorts/s | 0.99x |
-| **5,000,000 items (5M)** | `main` (Uncached) | 18.46 μs | 24.90 μs | 54,161 sorts/s | 1.0x |
-| | `feature` (Session) | 19.54 μs | 22.70 μs | 51,173 sorts/s | 0.94x |
-| **10,000,000 items (10M)** | `main` (Uncached) | 18.69 μs | 21.30 μs | 53,515 sorts/s | 1.0x |
-| | `feature` (Session) | 20.87 μs | 25.40 μs | 47,910 sorts/s | 0.90x |
+| Pages Walked | Unbounded (retained) | Bounded (retained) | Buffers Held | Reduction |
+| :--- | :--- | :--- | :--- | :--- |
+| 1,000 | 5.75 MB | **27.66 KB** | 2 | **99.53%** |
+| 10,000 | 57.44 MB | **7.05 KB** | 2 | **99.99%** |
+| 100,000 | **575.05 MB** | **17.49 KB** | 2 | **~100%** |
 
-> **Analysis**: Sorting performance is governed by `VirtualInventory.sortItems()`, which re-orders the 50 distinct map keys using Java streams. Both branches achieve ~50,000 sorts/sec with ~18-20 μs latency at 10M scale, confirming that the new caching mechanism maintains identical re-sorting performance without introducing overhead.
+One player, one spawner, 100k pages: **575 MB retained** versus **17 KB**. The bounded numbers do not
+grow with page count — the residual KB is measurement noise around a fixed two-array footprint, not a
+trend.
 
----
+### Benchmark 5: Sort items (cycling preferred sort item)
 
-### Benchmark 5: "Take All" Page Operation (200 Operations at 10M Item Scale)
-*Simulates extracting all 45 slots of items on page 1 into player inventory (`handleTakeAllItems`).*
+| Scale | `main` (Uncached) | `feature` (Session) | Speedup | Alloc/op |
+| :--- | :--- | :--- | :--- | :--- |
+| 1,000,000 items | 83.30 μs (12,005/s) | **33.99 μs (29,422/s)** | **2.45x** | 12.55 KB → **11.94 KB** |
+| 5,000,000 items | 20.64 μs (48,438/s) | **13.63 μs (73,389/s)** | **1.52x** | 12.55 KB → **11.94 KB** |
+| 10,000,000 items | 23.50 μs (42,549/s) | **15.93 μs (62,788/s)** | **1.48x** | 12.55 KB → **11.94 KB** |
 
-| Metric | `main` (Full Repaint) | `feature/native-take-storage` (Session Diff) | Improvement |
+`sort_items` now calls `resetSession` rather than `removeSession`: buffers are dropped so the new
+order shows, but the session and its viewer lock survive under the player still standing in the GUI.
+
+### Benchmark 6: "Take All" page operation (200 ops at 10M items)
+
+| Metric | `main` (Full Repaint) | `feature` (Session Adopt) | Improvement |
 | :--- | :--- | :--- | :--- |
-| **Total Elapsed Time (200 ops)** | 10.44 ms | **0.96 ms** | **10.89x faster** |
-| **Average Latency** | 52.22 μs | **4.80 μs** | **10.89x faster** |
-| **P95 Latency** | 89.40 μs | **5.10 μs** | **17.53x faster** |
-| **Throughput** | 19,151 ops/sec | **208,464 ops/sec** | **+988% (+10.89x)** |
-| **Inventory Slot Writes** | **18,000 writes** | **36 writes** | **-99.80% writes!** |
+| Average latency | 58.15 μs | **5.45 μs** | **10.66x faster** |
+| P95 latency | 145.00 μs | **6.30 μs** | **23.02x** |
+| P99 latency | 334.70 μs | **31.30 μs** | **10.69x** |
+| Throughput | 17,197 ops/s | **183,352 ops/s** | **10.66x** |
+| **Alloc / op** | 25.72 KB | **2.20 KB** | **−91.5%** |
+| Inventory slot writes | 18,000 | **36** | **−99.8%** |
 
-> **Analysis**: On `main`, taking all items triggered an unneeded 45-slot wipe followed by a full 45-slot redraw. In the feature branch, only the slots actually emptied are updated in the inventory, reducing slot updates by 99.8% and executing over **10.8x faster**.
+### Benchmark 7: "Drop Page" operation (200 ops at 10M items)
 
----
-
-### Benchmark 6: "Drop Page" Operation (200 Operations at 10M Item Scale)
-*Simulates extracting and dropping all 45 slots from page 1 into the world (`handleDropPageItems`).*
-
-| Metric | `main` (Full Repaint) | `feature/native-take-storage` (Session Refresh) | Improvement |
+| Metric | `main` (Full Repaint) | `feature` (Session Refresh) | Improvement |
 | :--- | :--- | :--- | :--- |
-| **Total Elapsed Time (200 ops)** | 8.17 ms | **5.47 ms** | **1.49x faster** |
-| **Average Latency** | 40.86 μs | **27.35 μs** | **1.49x faster** |
-| **P95 Latency** | 66.30 μs | **37.80 μs** | **1.75x faster** |
-| **Throughput** | 24,474 drops/sec | **36,562 drops/sec** | **+49% (+1.49x)** |
+| Average latency | 21.95 μs | **16.41 μs** | **1.34x faster** |
+| P95 latency | 42.80 μs | **21.50 μs** | **1.99x** |
+| P99 latency | 144.70 μs | **58.80 μs** | **2.46x** |
+| Throughput | 45,552 drops/s | **60,927 drops/s** | **1.34x** |
+| Alloc / op | 28.77 KB | **27.21 KB** | **−5.4%** |
 
----
+### Benchmark 8: Concurrent loot generation + hopper extraction (1,000 ops at 10M items)
 
-### Benchmark 7: Concurrent Operations (500 Spawner Loot Adds + 500 Hopper Takes at 10M Scale)
-*Simulates simultaneous background loot generation and hopper extractions while a viewer has the storage GUI open.*
-
-| Metric | `main` (Full Repaint on Viewers) | `feature/native-take-storage` (Session Sync) | Improvement |
+| Metric | `main` (Full Repaint) | `feature` (Session Sync) | Improvement |
 | :--- | :--- | :--- | :--- |
-| **Total Elapsed Time (1,000 ops)** | 17.17 ms | **3.92 ms** | **4.38x faster** |
-| **Average Latency per op** | 17.17 μs | **3.92 μs** | **4.38x faster** |
-| **Throughput** | 58,251 ops/sec | **254,900 ops/sec** | **4.38x higher (+338%)** |
+| Average latency | 11.28 μs | **7.97 μs** | **1.42x faster** |
+| P50 latency | 9.80 μs | **3.20 μs** | **3.06x** |
+| Throughput | 88,688 ops/s | **125,511 ops/s** | **1.42x** |
+| **Alloc / op** | 12.51 KB | **1.04 KB** | **−91.7%** |
+
+`addLoot` / `removeLoot` are called from async tasks. They mutate buffers under the session lock and
+then hand the resulting slot writes to the spawner's region thread — inline when the caller already
+owns it, otherwise via `Scheduler.runLocationTask` — batched into one `updateInventory()` per viewer
+instead of one per changed slot.
 
 ---
 
-## 3. Understanding Throughput vs. Latency
+## 3. Summary
 
-- **Throughput (ops/sec, takes/sec)**: The number of operations the server can process within **1 second**. **HIGHER IS BETTER**.
-  - For single item takes, the feature branch reaches **117,414 takes/sec** (compared to 24,724 takes/sec on `main`).
-  - For "Take All" operations, throughput increases from 19,151 ops/sec to **208,464 ops/sec** (+988%).
-  - For page display retrieval, throughput scales up to **13,670,540 ops/sec** (compared to 1,005,935 ops/sec on `main`).
-  - High throughput guarantees that even when dozens of players interact with large multi-million-item spawners simultaneously, the server tick loop remains completely uninhibited.
-- **Latency (μs, ms)**: The duration required to process a single operation. **LOWER IS BETTER**.
-  - P50 single-take latency dropped from **25.40 μs to 0.10 μs** (254x faster).
-  - P95 latency dropped from **82.20 μs to 0.20 μs** (411x faster).
-  - Low latency provides instant response to player actions and completely prevents GUI lag and desynchronization.
+| Dimension | Result |
+| :--- | :--- |
+| Single item take | **8.2x faster**, 98.6% less garbage, 99.9% fewer slot writes |
+| Take all / drop page | **10.7x / 1.3x faster**, 91% / 5% less garbage |
+| Display page read | **6–14x faster**, zero allocation |
+| Live loot + hopper sync | **1.4x faster**, 91.7% less garbage |
+| Page cache retained memory | **575 MB → 17 KB** at 100k pages |
+| Pagination | ~parity (0.95x avg, 1.30x P50), the cost of bounding the cache |
 
----
+## 4. Reproducing
 
-## 4. Raw Benchmark Logs
+```bash
+./gradlew runServer
+```
 
-Raw logs generated by the benchmark command on Paper 26.2:
-- [`benchmark_results_main.txt`](./benchmark_results_main.txt): Initial baseline benchmark output.
-- [`benchmark_results_feature_branch.txt`](./benchmark_results_feature_branch.txt): Complete benchmark output across all 7 operation suites up to 10M item scale.
+Then in the server console:
+
+```
+smartspawner benchmark
+```
+
+The report is written to `run/storage_benchmark_report.txt`. The benchmark runs both the legacy and
+the current code paths in the same JVM against identical data, so it does not need a `main` checkout
+to compare against. Allocation tracking needs a HotSpot JVM; the header line says whether it is
+active, and the columns read `n/a` if it is not.

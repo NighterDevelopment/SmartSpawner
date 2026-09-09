@@ -13,7 +13,6 @@ import github.nighter.smartspawner.spawner.lootgen.loot.LootItem;
 import github.nighter.smartspawner.spawner.data.SpawnerManager;
 import github.nighter.smartspawner.spawner.properties.VirtualInventory;
 import github.nighter.smartspawner.Scheduler;
-import github.nighter.smartspawner.spawner.properties.ItemSignature;
 import github.nighter.smartspawner.spawner.gui.storage.session.StorageSession;
 import github.nighter.smartspawner.language.LanguageManager;
 import github.nighter.smartspawner.spawner.properties.SpawnerData;
@@ -34,7 +33,6 @@ import org.bukkit.util.Vector;
 import org.bukkit.entity.Item;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static github.nighter.smartspawner.spawner.gui.sell.SpawnerSellConfirmUI.PreviousGui.STORAGE;
 
@@ -51,8 +49,6 @@ public class SpawnerStorageAction implements Listener {
     private static final int STORAGE_SLOTS = 45;
 
     private record TransferResult(boolean anyItemMoved, boolean inventoryFull, int totalMoved) {}
-    private final Map<UUID, Long> lastItemClickTime = new ConcurrentHashMap<>();
-    private static final long ITEM_CLICK_DELAY_MS = 100;
 
     public SpawnerStorageAction(SmartSpawner plugin) {
         this.plugin = plugin;
@@ -356,82 +352,36 @@ public class SpawnerStorageAction implements Listener {
         }
         StorageSession session = plugin.getStorageSessionManager().getOrCreateSession(spawner);
 
-        ItemStack[] currentSlots = new ItemStack[StoragePageHolder.MAX_ITEMS_PER_PAGE];
-        List<ItemStack> currList = new ArrayList<>();
-
+        // Read the page once into a scratch array; the session clones whatever it decides to keep.
+        ItemStack[] liveSlots = new ItemStack[StoragePageHolder.MAX_ITEMS_PER_PAGE];
         for (int i = 0; i < StoragePageHolder.MAX_ITEMS_PER_PAGE; i++) {
-            ItemStack item = inventory.getItem(i);
-            if (item != null && item.getType() != Material.AIR && item.getAmount() > 0) {
-                currentSlots[i] = item.clone();
-                currList.add(item.clone());
-            } else {
-                currentSlots[i] = null;
-            }
+            liveSlots[i] = inventory.getItem(i);
         }
 
-        ItemStack[] previousSlots = session.getPageSlots(page);
-        List<ItemStack> prevList = new ArrayList<>();
-        if (previousSlots != null) {
-            for (ItemStack prev : previousSlots) {
-                if (prev != null && prev.getType() != Material.AIR && prev.getAmount() > 0) {
-                    prevList.add(prev.clone());
-                }
-            }
+        StorageSession.PageDiff diff = session.reconcilePage(page, liveSlots);
+        if (diff.isEmpty()) {
+            return;
         }
 
-        // Update session's slot records for this page (preserves gaps!)
-        session.setPageSlots(page, currentSlots);
+        if (!diff.removed().isEmpty()) {
+            spawner.removeItemsAndUpdateSellValue(diff.removed());
+        }
+        if (!diff.added().isEmpty()) {
+            spawner.addItemsAndUpdateSellValue(diff.added());
+        }
+        spawner.markStorageDirty();
+        spawner.updateHologramData();
+        holder.updateOldUsedSlots();
 
-        // Cancel out matching items between current and previous using isSimilar
-        for (ItemStack curr : currList) {
-            for (ItemStack prev : prevList) {
-                if (curr.getAmount() > 0 && prev.getAmount() > 0 && curr.isSimilar(prev)) {
-                    int matched = Math.min(curr.getAmount(), prev.getAmount());
-                    curr.setAmount(curr.getAmount() - matched);
-                    prev.setAmount(prev.getAmount() - matched);
-                }
-            }
+        if (spawner.getMaxSpawnerLootSlots() > holder.getOldUsedSlots() && spawner.getIsAtCapacity()) {
+            spawner.setIsAtCapacity(false);
         }
 
-        // Any remainder in prevList with amount > 0 was REMOVED from storage
-        Map<ItemSignature, Long> removed = new HashMap<>();
-        for (ItemStack prev : prevList) {
-            if (prev.getAmount() > 0) {
-                removed.merge(VirtualInventory.getSignature(prev), (long) prev.getAmount(), Long::sum);
-            }
-        }
+        // Update only the sell button display, keeping item slots untouched
+        updateSellButtonOnly(inventory, spawner, holder.getLayout());
 
-        // Any remainder in currList with amount > 0 was ADDED to storage
-        Map<ItemSignature, Long> added = new HashMap<>();
-        for (ItemStack curr : currList) {
-            if (curr.getAmount() > 0) {
-                added.merge(VirtualInventory.getSignature(curr), (long) curr.getAmount(), Long::sum);
-            }
-        }
-
-        if (!removed.isEmpty()) {
-            spawner.removeItemsAndUpdateSellValue(removed);
-            spawner.markStorageDirty();
-        }
-        if (!added.isEmpty()) {
-            spawner.addItemsAndUpdateSellValue(added);
-            spawner.markStorageDirty();
-        }
-
-        if (!removed.isEmpty() || !added.isEmpty()) {
-            spawner.updateHologramData();
-            holder.updateOldUsedSlots();
-
-            if (spawner.getMaxSpawnerLootSlots() > holder.getOldUsedSlots() && spawner.getIsAtCapacity()) {
-                spawner.setIsAtCapacity(false);
-            }
-
-            // Update only the sell button display, keeping item slots untouched
-            updateSellButtonOnly(inventory, spawner, holder.getLayout());
-
-            // Sync other viewers viewing the exact same page
-            syncOtherPageViewers(spawner, player.getUniqueId(), page, currentSlots);
-        }
+        // Sync other viewers viewing the exact same page
+        syncOtherPageViewers(spawner, player.getUniqueId(), page, session.getPageSlots(page));
     }
 
     /**
@@ -455,7 +405,8 @@ public class SpawnerStorageAction implements Listener {
      */
     private void syncOtherPageViewers(SpawnerData spawner, UUID actingPlayerId, int page, ItemStack[] currentSlots) {
         Set<Player> viewers = plugin.getSpawnerGuiViewManager().getViewers(spawner.getSpawnerId());
-        if (viewers == null || viewers.isEmpty()) return;
+        // Storage is viewer-exclusive, so the acting player is normally the only entry here.
+        if (viewers == null || viewers.size() <= 1) return;
 
         for (Player viewer : viewers) {
             if (viewer.getUniqueId().equals(actingPlayerId) || !viewer.isOnline()) {
@@ -514,7 +465,7 @@ public class SpawnerStorageAction implements Listener {
         if (plugin.getStorageSessionManager() != null) {
             StorageSession session = plugin.getStorageSessionManager().getSession(spawner.getSpawnerId());
             if (session != null) {
-                session.setPageSlots(holder.getCurrentPage(), new ItemStack[StoragePageHolder.MAX_ITEMS_PER_PAGE]);
+                session.adoptPageSlots(holder.getCurrentPage(), new ItemStack[StoragePageHolder.MAX_ITEMS_PER_PAGE]);
             }
         }
 
@@ -625,21 +576,31 @@ public class SpawnerStorageAction implements Listener {
         }
     }
 
-    private boolean isItemClickTooFrequent(Player player) {
-        long now = System.currentTimeMillis();
-        long last = lastItemClickTime.getOrDefault(player.getUniqueId(), 0L);
-
-        if ((now - last) < ITEM_CLICK_DELAY_MS) {
-            messageService.sendMessage(player, "click_too_fast");
-            return true;
-        }
-        return false;
-    }
-
+    /**
+     * Safety net for the exclusive-viewer lock: a player who disconnects with storage open must not
+     * leave the session held. InventoryCloseEvent normally fires first and does the full teardown;
+     * this only releases anything it missed.
+     */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        UUID playerId = event.getPlayer().getUniqueId();
-        lastItemClickTime.remove(playerId);
+        if (plugin.getStorageSessionManager() == null) {
+            return;
+        }
+        Player player = event.getPlayer();
+        if (!(player.getOpenInventory().getTopInventory().getHolder(false) instanceof StoragePageHolder holder)) {
+            return;
+        }
+
+        String spawnerId = holder.getSpawnerData().getSpawnerId();
+        StorageSession session = plugin.getStorageSessionManager().getSession(spawnerId);
+        if (session == null) {
+            return;
+        }
+        session.removeViewer(player.getUniqueId());
+        if (!session.hasViewers()) {
+            session.endSession();
+            plugin.getStorageSessionManager().removeSession(spawnerId);
+        }
     }
 
     private boolean handleSortItemsClick(Player player, SpawnerData spawner, Inventory inventory) {
@@ -697,9 +658,10 @@ public class SpawnerStorageAction implements Listener {
         // Re-sort VirtualInventory
         spawner.getVirtualInventory().sortItems(nextSort);
 
-        // Reset session if present so it reloads with new sort order
+        // Drop the buffered layout so the next repaint reflects the new sort order.
+        // Keep the session itself: the player is still viewing and still owns the exclusive lock.
         if (plugin.getStorageSessionManager() != null) {
-            plugin.getStorageSessionManager().removeSession(spawner.getSpawnerId());
+            plugin.getStorageSessionManager().resetSession(spawner.getSpawnerId());
         }
 
         // Update GUI display to reflect VirtualInventory state
@@ -726,6 +688,9 @@ public class SpawnerStorageAction implements Listener {
         int totalPages = calculateTotalPages(spawner);
         final int finalPage = Math.max(1, Math.min(page, totalPages));
         Inventory pageInventory = spawnerStorageUI.createStorageInventory(player, spawner, finalPage, totalPages);
+        if (pageInventory == null) {
+            return; // Another viewer holds the storage lock
+        }
 
         // Log storage GUI opening
         if (plugin.getSpawnerActionLogger() != null) {
@@ -903,7 +868,8 @@ public class SpawnerStorageAction implements Listener {
                         ItemStack it = sourceInventory.getItem(i);
                         currentSlots[i] = (it != null && it.getType() != Material.AIR) ? it.clone() : null;
                     }
-                    session.setPageSlots(holder.getCurrentPage(), currentSlots);
+                    // Already cloned off the live inventory, so hand ownership over without re-cloning.
+                    session.adoptPageSlots(holder.getCurrentPage(), currentSlots);
                 }
             }
         }

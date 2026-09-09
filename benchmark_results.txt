@@ -1,0 +1,113 @@
+===============================================================================
+           SMARTSPAWNER STORAGE PERFORMANCE & MEMORY BENCHMARK
+===============================================================================
+Server: Paper 26.2 | Java: 25.0.3
+Date: Wed Sep 09 08:51:54 GMT+07:00 2026
+OS: Windows 11 (amd64)
+Heap: max 3,970.00 MB | allocation tracking: enabled
+-------------------------------------------------------------------------------
+
+### BENCHMARK 1: Display Page Materialization vs Session Buffer (up to 10M items)
+Display retrieval throughput, latency and allocation across multi-million item quantities.
+Scale (Types / Total Items)          | Mode           | Avg (us)   | P95 (us)   | Throughput (op/s) | Alloc/op    | Speedup 
+-------------------------------------------------------------------------------------------------------------------------
+Small (5 types / 1,000 items)        | Old (Uncached) | 1.68       | 2.50       | 593,556          | 6.50 KB     | 1.0x    
+                                     | New (Session)  | 0.19       | 0.20       | 5,252,101        | 0 B         | 8.85x   
+Medium (20 types / 100,000 items)    | Old (Uncached) | 1.30       | 2.00       | 770,297          | 6.48 KB     | 1.0x    
+                                     | New (Session)  | 0.22       | 0.20       | 4,615,953        | 0 B         | 5.99x   
+Large (50 types / 1,000,000 items)   | Old (Uncached) | 2.75       | 3.30       | 363,280          | 6.50 KB     | 1.0x    
+                                     | New (Session)  | 0.21       | 0.20       | 4,713,646        | 0 B         | 12.98x  
+Massive (50 types / 5,000,000 items) | Old (Uncached) | 2.46       | 2.70       | 406,802          | 6.50 KB     | 1.0x    
+                                     | New (Session)  | 0.17       | 0.10       | 5,722,461        | 0 B         | 14.07x  
+Maximum (50 types / 10,000,000 items) | Old (Uncached) | 2.31       | 2.60       | 433,360          | 6.49 KB     | 1.0x    
+                                     | New (Session)  | 0.18       | 0.20       | 5,476,451        | 0 B         | 12.64x  
+
+### BENCHMARK 2: Item Take Cycle (1,000 Consecutive Takes at 10M Item Scale)
+Old full-page repaint + auto-compact vs live StorageSession.reconcilePage() diffing.
+Metric                   | Old (Full Repaint)   | New (reconcilePage)  | Improvement   
+--------------------------------------------------------------------------------------------
+Total Time               | 33.96 ms             | 4.14 ms              | 8.20x faster  
+Average Latency          | 33.96 us             | 4.14 us              | 8.20x faster  
+P50 Latency              | 25.80 us             | 0.10 us              | 258.00x       
+P95 Latency              | 73.70 us             | 0.20 us              | 368.50x       
+P99 Latency              | 196.90 us            | 61.30 us             | 3.21x         
+Throughput               | 29,450 takes/s       | 241,470 takes/s      | 8.20x         
+Alloc / op (garbage)     | 12.80 KB             | 178 B                | -98.64%       
+Inventory Slot Writes    | 91,000               | 90                   | -99.90%       
+
+### BENCHMARK 3: Pagination Navigation (500 Page Switches at 10M Item Scale)
+Player flipping between pages 1..10: uncached slice building vs session buffers.
+Session page buffers held after 500 flips over 10 pages: 2 (bounded by viewer count, not page count)
+Metric                   | Old (Uncached Slices) | New (Session Buffers) | Improvement   
+--------------------------------------------------------------------------------------------
+Total Time               | 2.63 ms              | 2.76 ms              | 0.95x faster  
+Average Latency          | 5.25 us              | 5.52 us              | 0.95x faster  
+P50 Latency              | 4.80 us              | 3.70 us              | 1.30x         
+P95 Latency              | 6.60 us              | 7.00 us              | 0.94x         
+P99 Latency              | 19.10 us             | 39.90 us             | 0.48x         
+Throughput               | 190,454 flips/s      | 181,245 flips/s      | 0.95x         
+Alloc / op (garbage)     | 8.93 KB              | 8.32 KB              | -6.82%        
+
+### BENCHMARK 4: Page Cache Retained Memory (walking a huge storage page by page)
+A player paging through storage. 'Unbounded' is the per-page cache this branch started with
+(one ItemStack[45] retained per visited page); 'Bounded' is the current StorageSession.
+Pages Walked     | Unbounded (retained)   | Bounded (retained)     | Buffers Held     | Reduction     
+-------------------------------------------------------------------------------------------------------
+1,000            | 5.75 MB (1,000 pages)  | 27.66 KB               | 2 page(s)        | 99.53%        
+10,000           | 57.44 MB (10,000 pages) | 7.05 KB                | 2 page(s)        | 99.99%        
+100,000          | 575.05 MB (100,000 pages) | 17.49 KB               | 2 page(s)        | 100.00%       
+
+### BENCHMARK 5: Sort Items Operation (Cycling Preferred Sort Item)
+Stream comparator re-sorting and display projection across multi-million item inventories.
+Scale (50 item types)        | Mode           | Avg (us)   | P95 (us)   | Throughput (/s)  | Alloc/op    | Speedup 
+-------------------------------------------------------------------------------------------------------------------
+1,000,000 items (1M)         | Old (Uncached) | 83.30      | 278.40     | 12,005           | 12.55 KB    | 1.0x    
+                             | New (Session)  | 33.99      | 91.20      | 29,422           | 11.94 KB    | 2.45x   
+5,000,000 items (5M)         | Old (Uncached) | 20.64      | 31.90      | 48,438           | 12.55 KB    | 1.0x    
+                             | New (Session)  | 13.63      | 20.20      | 73,389           | 11.94 KB    | 1.52x   
+10,000,000 items (10M)       | Old (Uncached) | 23.50      | 48.40      | 42,549           | 12.55 KB    | 1.0x    
+                             | New (Session)  | 15.93      | 24.70      | 62,788           | 11.94 KB    | 1.48x   
+
+### BENCHMARK 6: "Take All" Page Operation (200 ops at 10M Item Scale)
+Extracting all displayed items from page 1 into a player inventory.
+Metric                   | Old (Full Repaint)   | New (Session Adopt)  | Improvement   
+--------------------------------------------------------------------------------------------
+Total Time               | 11.63 ms             | 1.09 ms              | 10.66x faster 
+Average Latency          | 58.15 us             | 5.45 us              | 10.66x faster 
+P50 Latency              | 37.80 us             | 4.50 us              | 8.40x         
+P95 Latency              | 145.00 us            | 6.30 us              | 23.02x        
+P99 Latency              | 334.70 us            | 31.30 us             | 10.69x        
+Throughput               | 17,197 ops/s         | 183,352 ops/s        | 10.66x        
+Alloc / op (garbage)     | 25.72 KB             | 2.20 KB              | -91.45%       
+Inventory Slot Writes    | 18,000               | 36                   | -99.80%       
+
+### BENCHMARK 7: "Drop Page" Operation (200 ops at 10M Item Scale)
+Extracting all 45 slots of a page and debiting the count-map. The old path re-materializes
+page 1 so items compact forward; the new path blanks the page buffer (gaps are kept while
+viewing) and repaints, then the player pages on. Both include re-seeding page 1 for the next
+iteration so the two loops do identical amounts of real work.
+Metric                   | Old (Full Repaint)   | New (Session Refresh) | Improvement   
+--------------------------------------------------------------------------------------------
+Total Time               | 4.39 ms              | 3.28 ms              | 1.34x faster  
+Average Latency          | 21.95 us             | 16.41 us             | 1.34x faster  
+P50 Latency              | 19.10 us             | 15.10 us             | 1.26x         
+P95 Latency              | 42.80 us             | 21.50 us             | 1.99x         
+P99 Latency              | 144.70 us            | 58.80 us             | 2.46x         
+Throughput               | 45,552 drops/s       | 60,927 drops/s       | 1.34x         
+Alloc / op (garbage)     | 28.77 KB             | 27.21 KB             | -5.43%        
+
+### BENCHMARK 8: Concurrent Operations (500 Loot Adds + 500 Hopper Takes at 10M Scale)
+Background loot generation and hopper extraction while the GUI is open.
+Metric                   | Old (Full Repaint)   | New (Session Sync)   | Improvement   
+--------------------------------------------------------------------------------------------
+Total Time               | 11.28 ms             | 7.97 ms              | 1.42x faster  
+Average Latency          | 11.28 us             | 7.97 us              | 1.42x faster  
+P50 Latency              | 9.80 us              | 3.20 us              | 3.06x         
+P95 Latency              | 21.00 us             | 18.20 us             | 1.15x         
+P99 Latency              | 42.40 us             | 51.70 us             | 0.82x         
+Throughput               | 88,688 ops/s         | 125,511 ops/s        | 1.42x         
+Alloc / op (garbage)     | 12.51 KB             | 1.04 KB              | -91.72%       
+
+===============================================================================
+                         BENCHMARK COMPLETED
+===============================================================================

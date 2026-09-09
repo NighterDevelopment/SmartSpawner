@@ -39,6 +39,20 @@ public class StorageSessionManager {
     }
 
     /**
+     * Drops the buffered page layouts of a session but keeps it (and its viewer lock) alive.
+     * Use this when an operation rewrites the whole inventory — sorting, selling — while the GUI is
+     * still open. Removing the session outright would release the exclusive-viewer lock and leave
+     * the open GUI reconciling against a session nobody owns.
+     */
+    public void resetSession(String spawnerId) {
+        if (spawnerId == null) return;
+        StorageSession session = sessions.get(spawnerId);
+        if (session != null) {
+            session.resetPages();
+        }
+    }
+
+    /**
      * Ends all active sessions and clears cache.
      * Called during plugin disable or server shutdown.
      */
