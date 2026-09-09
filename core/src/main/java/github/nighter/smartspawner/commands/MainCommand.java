@@ -13,6 +13,7 @@ import github.nighter.smartspawner.commands.near.NearSubCommand;
 import github.nighter.smartspawner.commands.prices.PricesSubCommand;
 import github.nighter.smartspawner.commands.reload.ReloadSubCommand;
 import github.nighter.smartspawner.commands.set.SetSubCommand;
+import github.nighter.smartspawner.commands.benchmark.BenchmarkSubCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +43,7 @@ public class MainCommand {
                 new FolderConfigSubCommand(plugin, FolderConfigSubCommand.ConfigOption.LANGUAGE),
                 new FolderConfigSubCommand(plugin, FolderConfigSubCommand.ConfigOption.GUI_LAYOUT),
                 new EditLootSubCommand(plugin, plugin.getLootEditorService(), plugin.getLootEditorUI()),
-                new github.nighter.smartspawner.commands.benchmark.BenchmarkSubCommand(plugin)
+                new BenchmarkSubCommand(plugin)
         );
     }
 
